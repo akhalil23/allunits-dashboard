@@ -1,4 +1,5 @@
-import type { ActionItem, Qualifier, QualifierResult, QualifierDistribution, ViewType, AcademicYear } from './types';
+import type { ActionItem, Qualifier, QualifierResult, QualifierDistributionItem, ViewType, AcademicYear, Term, TermData } from './types';
+import { getTermWindowKey } from './types';
 import { AY_BOUNDARIES, QUALIFIER_COLORS, RISK_WEIGHTS } from './constants';
 
 export function computeTimeProgress(observedAt: string, academicYear: AcademicYear): number {
@@ -26,7 +27,6 @@ export function computeItemQualifier(
     return { qualifier: 'Execution Shortfall', lagPercent, timeProgressPercent: timeProgress };
   }
 
-  // Not Started special rules
   if (status === 'Not Started') {
     if (timeProgress >= 50) return { qualifier: 'Critical Risk', lagPercent, timeProgressPercent: timeProgress };
     if (timeProgress >= 30) return { qualifier: 'Emerging Risk', lagPercent, timeProgressPercent: timeProgress };
@@ -39,22 +39,30 @@ export function computeItemQualifier(
   return { qualifier: 'On Track', lagPercent, timeProgressPercent: timeProgress };
 }
 
-export function getItemStatus(item: ActionItem, viewType: ViewType) {
-  return viewType === 'cumulative' ? item.spStatus : item.yearlyStatus;
+export function getTermData(item: ActionItem, term: Term, academicYear: AcademicYear): TermData {
+  const key = getTermWindowKey(term, academicYear);
+  return item.terms[key];
 }
 
-export function getItemCompletion(item: ActionItem, viewType: ViewType) {
-  return viewType === 'cumulative' ? item.spCompletion : item.yearlyCompletion;
+export function getItemStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): string {
+  const td = getTermData(item, term, academicYear);
+  return viewType === 'cumulative' ? td.spStatus : td.yearlyStatus;
+}
+
+export function getItemCompletion(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): number {
+  const td = getTermData(item, term, academicYear);
+  return viewType === 'cumulative' ? td.spCompletion : td.yearlyCompletion;
 }
 
 export function computeQualifierDistribution(
   items: ActionItem[],
   viewType: ViewType,
+  term: Term,
   observedAt: string,
   academicYear: AcademicYear
-): QualifierDistribution[] {
+): QualifierDistributionItem[] {
   const timeProgress = computeTimeProgress(observedAt, academicYear);
-  const applicable = items.filter(i => getItemStatus(i, viewType) !== 'Not Applicable');
+  const applicable = items.filter(i => getItemStatus(i, viewType, term, academicYear) !== 'Not Applicable');
 
   const counts: Record<Qualifier, number> = {
     'Not Applicable': 0,
@@ -67,8 +75,8 @@ export function computeQualifierDistribution(
 
   applicable.forEach(item => {
     const { qualifier } = computeItemQualifier(
-      getItemStatus(item, viewType),
-      getItemCompletion(item, viewType),
+      getItemStatus(item, viewType, term, academicYear),
+      getItemCompletion(item, viewType, term, academicYear),
       timeProgress
     );
     counts[qualifier]++;
@@ -88,18 +96,19 @@ export function computeQualifierDistribution(
 export function computeRiskIndex(
   items: ActionItem[],
   viewType: ViewType,
+  term: Term,
   observedAt: string,
   academicYear: AcademicYear
 ): number {
   const timeProgress = computeTimeProgress(observedAt, academicYear);
-  const applicable = items.filter(i => getItemStatus(i, viewType) !== 'Not Applicable');
+  const applicable = items.filter(i => getItemStatus(i, viewType, term, academicYear) !== 'Not Applicable');
   if (applicable.length === 0) return 0;
 
   let weightedSum = 0;
   applicable.forEach(item => {
     const { qualifier } = computeItemQualifier(
-      getItemStatus(item, viewType),
-      getItemCompletion(item, viewType),
+      getItemStatus(item, viewType, term, academicYear),
+      getItemCompletion(item, viewType, term, academicYear),
       timeProgress
     );
     weightedSum += RISK_WEIGHTS[qualifier];

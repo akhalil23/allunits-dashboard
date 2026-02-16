@@ -1,1 +1,4 @@
 project_id = "slmskfdoinjqtuagaoky"
+
+[functions.fetch-gsr-data]
+verify_jwt = false
