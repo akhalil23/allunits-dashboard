@@ -39,9 +39,19 @@ export function computeItemQualifier(
   return { qualifier: 'On Track', lagPercent, timeProgressPercent: timeProgress };
 }
 
+const DEFAULT_TERM_DATA: TermData = {
+  spStatus: 'Not Applicable',
+  spCompletion: 0,
+  spTarget: '',
+  yearlyStatus: 'Not Applicable',
+  yearlyCompletion: 0,
+  yearlyTarget: '',
+  supportingDoc: '',
+};
+
 export function getTermData(item: ActionItem, term: Term, academicYear: AcademicYear): TermData {
   const key = getTermWindowKey(term, academicYear);
-  return item.terms[key];
+  return item.terms?.[key] ?? DEFAULT_TERM_DATA;
 }
 
 export function getItemStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): string {
