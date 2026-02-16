@@ -1,4 +1,5 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Header from '@/components/layout/Header';
 import FilterBar from '@/components/dashboard/FilterBar';
@@ -7,27 +8,24 @@ import PillarHealthGrid from '@/components/dashboard/PillarHealthGrid';
 import IntelligencePanel from '@/components/dashboard/IntelligencePanel';
 import AIInsightCard from '@/components/dashboard/AIInsightCard';
 import { useDashboard } from '@/contexts/DashboardContext';
-import { mockFetchResult } from '@/lib/mock-data';
+import { useGSRData } from '@/hooks/use-gsr-data';
 import { PILLAR_LABELS } from '@/lib/constants';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function Index() {
-  const { viewMode, viewType, academicYear, selectedPillar } = useDashboard();
-  const [fetchResult, setFetchResult] = useState(mockFetchResult);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { viewMode, viewType, academicYear, term, selectedPillar } = useDashboard();
+  const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
+  const queryClient = useQueryClient();
 
   const filteredItems = useMemo(() => {
+    if (!fetchResult?.data) return [];
     if (selectedPillar === 'all') return fetchResult.data;
     return fetchResult.data.filter(i => i.pillar === selectedPillar);
-  }, [fetchResult.data, selectedPillar]);
+  }, [fetchResult?.data, selectedPillar]);
 
   const handleRefresh = useCallback(() => {
-    setIsRefreshing(true);
-    // Mock refresh
-    setTimeout(() => {
-      setFetchResult({ ...mockFetchResult, observedAt: new Date().toISOString() });
-      setIsRefreshing(false);
-    }, 800);
-  }, []);
+    queryClient.invalidateQueries({ queryKey: ['gsr-data'] });
+  }, [queryClient]);
 
   const sectionTitle = selectedPillar === 'all'
     ? 'All Pillars'
@@ -36,46 +34,52 @@ export default function Index() {
   const aiContext = useMemo(() => {
     const total = filteredItems.length;
     if (total === 0) return '';
-    return `Based on ${total} action items across ${selectedPillar === 'all' ? '5 pillars' : `Pillar ${selectedPillar}`}, the current ${viewType === 'cumulative' ? 'cumulative' : 'yearly'} data suggests that execution tracking may benefit from focused attention on items showing limited progress relative to the academic year timeline. This pattern potentially indicates areas where resource allocation review could be valuable.`;
+    return `Based on ${total} action items across ${selectedPillar === 'all' ? '5 pillars' : `Pillar ${selectedPillar}`}, the current ${viewType === 'cumulative' ? 'cumulative' : 'yearly'} data suggests that execution tracking may benefit from focused attention on items showing limited progress relative to the academic year timeline.`;
   }, [filteredItems, selectedPillar, viewType]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            <p className="text-sm text-muted-foreground">Loading GSR data from source…</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isError || !fetchResult) {
+    return (
+      <DashboardLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-3 max-w-md">
+            <AlertCircle className="w-8 h-8 text-destructive mx-auto" />
+            <p className="text-sm text-foreground font-medium">Failed to load data</p>
+            <p className="text-xs text-muted-foreground">{error?.message || 'Unknown error'}</p>
+            <button onClick={handleRefresh} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">Retry</button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
-      <Header
-        observedAt={fetchResult.observedAt}
-        dataQuality={fetchResult.dataQuality}
-        onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
-      />
+      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} />
       <FilterBar />
-
       <main className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-8 max-w-[1600px]">
-          {/* Section title */}
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold text-foreground">
-              {sectionTitle}
-            </h2>
-            <span className="text-xs text-muted-foreground">
-              {viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly'} • AY {academicYear}
-            </span>
+            <h2 className="font-display text-lg font-semibold text-foreground">{sectionTitle}</h2>
+            <span className="text-xs text-muted-foreground">{viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly'} • AY {academicYear} • {term === 'mid' ? 'Mid-Year' : 'End-of-Year'}</span>
           </div>
-
-          {/* Layer 1: Reporting */}
-          <StatusOverview items={filteredItems} viewType={viewType} />
-          <PillarHealthGrid items={filteredItems} viewType={viewType} />
-
-          {/* Layer 2: Intelligence (if enabled) */}
+          <StatusOverview items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} />
+          <PillarHealthGrid items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} />
           {viewMode === 'intelligence' && (
-            <IntelligencePanel
-              items={filteredItems}
-              viewType={viewType}
-              observedAt={fetchResult.observedAt}
-              academicYear={academicYear}
-            />
+            <IntelligencePanel items={filteredItems} viewType={viewType} term={term} observedAt={fetchResult.observedAt} academicYear={academicYear} />
           )}
-
-          {/* AI Insight */}
           <AIInsightCard context={aiContext} />
         </div>
       </main>

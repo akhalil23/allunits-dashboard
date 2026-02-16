@@ -1,4 +1,4 @@
-import type { ActionItem, FetchResult, DataQuality, PillarId, Status } from './types';
+import type { ActionItem, FetchResult, DataQuality, PillarId, Status, TermData, TermWindowKey } from './types';
 
 const statuses: Status[] = [
   'Not Applicable', 'Not Started', 'In Progress',
@@ -9,11 +9,26 @@ function r(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function genTermData(status?: Status): TermData {
+  const s = status || statuses[r(0, 4)];
+  return {
+    spStatus: s,
+    spCompletion: s === 'Not Applicable' ? 0
+      : s === 'Completed – On Target' ? 100
+      : s === 'Completed – Below Target' ? r(50, 80)
+      : s === 'Not Started' ? 0
+      : r(10, 85),
+    spTarget: '',
+    yearlyStatus: statuses[r(0, 4)],
+    yearlyCompletion: r(0, 100),
+    yearlyTarget: '',
+    supportingDoc: '',
+  };
+}
+
 function genItems(pillar: PillarId, count: number, startRow: number): ActionItem[] {
   const items: ActionItem[] = [];
   for (let i = 0; i < count; i++) {
-    const spStatus = statuses[r(0, 4)];
-    const yearlyStatus = statuses[r(0, 4)];
     items.push({
       id: `${pillar}-${i + 1}`,
       pillar,
@@ -21,32 +36,16 @@ function genItems(pillar: PillarId, count: number, startRow: number): ActionItem
       objective: `Objective ${pillar}.${Math.ceil((i + 1) / 2)}`,
       actionStep: `Action Step ${pillar}.${i + 1}`,
       owner: ['Dean', 'Associate Dean', 'Director', 'Coordinator', 'Faculty'][r(0, 4)],
-      spStatus,
-      spCompletion: spStatus === 'Not Applicable' ? 0
-        : spStatus === 'Completed – On Target' ? 100
-        : spStatus === 'Completed – Below Target' ? r(50, 80)
-        : spStatus === 'Not Started' ? 0
-        : r(10, 85),
-      spTarget: `Target ${i + 1}`,
-      yearlyStatus,
-      yearlyCompletion: yearlyStatus === 'Not Applicable' ? 0
-        : yearlyStatus === 'Completed – On Target' ? 100
-        : yearlyStatus === 'Completed – Below Target' ? r(50, 80)
-        : yearlyStatus === 'Not Started' ? 0
-        : r(10, 85),
-      yearlyTarget: `Yearly Target ${i + 1}`,
+      terms: {
+        'mid-2025-2026': genTermData(),
+        'end-2025-2026': genTermData(),
+        'mid-2026-2027': genTermData(),
+        'end-2026-2027': genTermData(),
+      },
       sheetRow: startRow + i,
     });
   }
   return items;
-}
-
-// Deterministic seed for consistent mock data
-const seed = 42;
-let _s = seed;
-function seededR(min: number, max: number) {
-  _s = (_s * 16807) % 2147483647;
-  return min + (_s % (max - min + 1));
 }
 
 const mockItems: ActionItem[] = [

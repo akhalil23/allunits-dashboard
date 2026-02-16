@@ -19,6 +19,18 @@ export type AcademicYear = '2025-2026' | '2026-2027';
 export type Term = 'mid' | 'end';
 export type PillarId = 'I' | 'II' | 'III' | 'IV' | 'V';
 
+export type TermWindowKey = 'mid-2025-2026' | 'end-2025-2026' | 'mid-2026-2027' | 'end-2026-2027';
+
+export interface TermData {
+  spStatus: Status;
+  spCompletion: number;
+  spTarget: string;
+  yearlyStatus: Status;
+  yearlyCompletion: number;
+  yearlyTarget: string;
+  supportingDoc: string;
+}
+
 export interface ActionItem {
   id: string;
   pillar: PillarId;
@@ -26,14 +38,8 @@ export interface ActionItem {
   objective: string;
   actionStep: string;
   owner: string;
-  spStatus: Status;
-  spCompletion: number;
-  spTarget: string;
-  yearlyStatus: Status;
-  yearlyCompletion: number;
-  yearlyTarget: string;
+  terms: Record<TermWindowKey, TermData>;
   sheetRow: number;
-  evidenceLink?: string;
 }
 
 export interface DashboardFilters {
@@ -69,9 +75,13 @@ export interface StatusDistribution {
   color: string;
 }
 
-export interface QualifierDistribution {
+export interface QualifierDistributionItem {
   qualifier: Qualifier;
   count: number;
   percent: number;
   color: string;
+}
+
+export function getTermWindowKey(term: Term, academicYear: AcademicYear): TermWindowKey {
+  return `${term}-${academicYear}` as TermWindowKey;
 }
