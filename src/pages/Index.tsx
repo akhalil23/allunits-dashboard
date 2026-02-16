@@ -31,11 +31,7 @@ export default function Index() {
     ? 'All Pillars'
     : `Pillar ${selectedPillar} — ${PILLAR_LABELS[selectedPillar]}`;
 
-  const aiContext = useMemo(() => {
-    const total = filteredItems.length;
-    if (total === 0) return '';
-    return `Based on ${total} action items across ${selectedPillar === 'all' ? '5 pillars' : `Pillar ${selectedPillar}`}, the current ${viewType === 'cumulative' ? 'cumulative' : 'yearly'} data suggests that execution tracking may benefit from focused attention on items showing limited progress relative to the academic year timeline.`;
-  }, [filteredItems, selectedPillar, viewType]);
+  // AI insights are now generated on-demand inside AIInsightCard
 
   if (isLoading) {
     return (
@@ -80,7 +76,7 @@ export default function Index() {
           {viewMode === 'intelligence' && (
             <IntelligencePanel items={filteredItems} viewType={viewType} term={term} observedAt={fetchResult.observedAt} academicYear={academicYear} />
           )}
-          <AIInsightCard context={aiContext} />
+          <AIInsightCard items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} observedAt={fetchResult.observedAt} selectedPillar={selectedPillar} />
         </div>
       </main>
     </DashboardLayout>
