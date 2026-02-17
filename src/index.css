@@ -150,6 +150,23 @@
     background: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(217 33% 17%) 60%, hsl(152 40% 16%) 100%);
   }
 
+  .header-gradient-animated {
+    background: linear-gradient(135deg, hsl(160 72% 14%) 0%, hsl(152 80% 22%) 35%, hsl(148 100% 28%) 65%, hsl(152 60% 24%) 100%);
+    background-size: 200% 200%;
+    animation: header-shimmer 8s ease-in-out infinite;
+  }
+
+  .dark .header-gradient-animated {
+    background: linear-gradient(135deg, hsl(222 47% 9%) 0%, hsl(220 40% 14%) 35%, hsl(160 30% 14%) 65%, hsl(222 47% 11%) 100%);
+    background-size: 200% 200%;
+    animation: header-shimmer 8s ease-in-out infinite;
+  }
+
+  @keyframes header-shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
   .filter-pill {
     @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer select-none;
     @apply bg-card text-muted-foreground border border-border;
