@@ -46,7 +46,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center gap-3">
-          <img src={lauLogo} alt="LAU Logo" className="w-10 h-10 rounded-lg object-cover" />
+          <img src={lauLogo} alt="LAU Logo" className="h-10 rounded-lg object-contain" />
           <div>
             <h1 className="text-white font-display font-bold text-base leading-tight">GSR</h1>
             <p className="text-white/60 text-xs">Strategic Plan IV</p>
