@@ -3,9 +3,10 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { PILLAR_LABELS } from '@/lib/constants';
 import type { PillarId } from '@/lib/types';
 import {
-  LayoutDashboard, FlaskConical, Sparkles, ChevronRight,
+  LayoutDashboard, FlaskConical, ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import lauLogo from '@/assets/lau-logo.jpg';
 
 const pillars: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
@@ -45,9 +46,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
+          <img src={lauLogo} alt="LAU Logo" className="w-10 h-10 rounded-lg object-cover" />
           <div>
             <h1 className="text-white font-display font-bold text-base leading-tight">GSR</h1>
             <p className="text-white/60 text-xs">Strategic Plan IV</p>
