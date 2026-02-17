@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Header from '@/components/layout/Header';
@@ -16,6 +16,7 @@ export default function Index() {
   const { viewMode, viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
   const queryClient = useQueryClient();
+  const mainRef = useRef<HTMLElement>(null);
 
   const filteredItems = useMemo(() => {
     if (!fetchResult?.data) return [];
@@ -61,11 +62,12 @@ export default function Index() {
     );
   }
 
+
   return (
     <DashboardLayout>
-      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} />
+      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} scrollContainerRef={mainRef} />
       <FilterBar />
-      <main className="flex-1 overflow-y-auto">
+      <main ref={mainRef} className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-8 max-w-[1600px]">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-foreground">{sectionTitle}</h2>
