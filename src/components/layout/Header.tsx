@@ -3,7 +3,8 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
 import { Moon, Sun, RefreshCw, Shield, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 
 interface HeaderProps {
   observedAt: string;
@@ -16,6 +17,14 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
   const { theme, toggleTheme } = useTheme();
   const { viewMode, setViewMode } = useDashboard();
   const integrity = getDataIntegrityLevel(dataQuality);
+  const headerRef = useRef<HTMLElement>(null);
+
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 300], [0, 60]);
+  const contentY = useTransform(scrollY, [0, 300], [0, 15]);
+  const headerOpacity = useTransform(scrollY, [0, 200], [1, 0.92]);
+  const glowScale = useTransform(scrollY, [0, 300], [1, 1.4]);
+  const glowOpacity = useTransform(scrollY, [0, 300], [0.1, 0.02]);
 
   const integrityConfig = integrity === 'Good'
     ? { bg: 'bg-emerald-400/15', text: 'text-emerald-300', border: 'border-emerald-400/25', dot: 'bg-emerald-400' }
@@ -24,31 +33,44 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
     : { bg: 'bg-red-400/15', text: 'text-red-300', border: 'border-red-400/25', dot: 'bg-red-400' };
 
   return (
-    <header className="relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 header-gradient-animated" />
-      
-      {/* Subtle mesh overlay */}
-      <div className="absolute inset-0 opacity-[0.04]" style={{
-        backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)',
-        backgroundSize: '60px 60px, 80px 80px',
-      }} />
+    <header ref={headerRef} className="relative overflow-hidden">
+      {/* Animated gradient background with parallax */}
+      <motion.div className="absolute inset-0 header-gradient-animated" style={{ y: bgY }} />
 
-      {/* Glow accent */}
+      {/* Subtle mesh overlay */}
       <motion.div
-        className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-10"
-        style={{ background: 'radial-gradient(circle, hsl(152 100% 50%) 0%, transparent 70%)' }}
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)',
+          backgroundSize: '60px 60px, 80px 80px',
+          y: useTransform(scrollY, [0, 300], [0, 30]),
+        }}
+      />
+
+      {/* Glow accent with parallax */}
+      <motion.div
+        className="absolute -top-20 -right-20 w-72 h-72 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, hsl(152 100% 50%) 0%, transparent 70%)',
+          scale: glowScale,
+          opacity: glowOpacity,
+          y: useTransform(scrollY, [0, 300], [0, 40]),
+        }}
         animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.14, 0.08] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute -bottom-16 left-1/3 w-56 h-56 rounded-full opacity-10"
-        style={{ background: 'radial-gradient(circle, hsl(152 80% 45%) 0%, transparent 70%)' }}
+        className="absolute -bottom-16 left-1/3 w-56 h-56 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, hsl(152 80% 45%) 0%, transparent 70%)',
+          opacity: glowOpacity,
+          y: useTransform(scrollY, [0, 300], [0, 20]),
+        }}
         animate={{ scale: [1.1, 1, 1.1], opacity: [0.06, 0.12, 0.06] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      <div className="relative z-10 px-6 py-5">
+      <motion.div className="relative z-10 px-6 py-5" style={{ y: contentY, opacity: headerOpacity }}>
         <div className="flex items-start justify-between">
           {/* Left */}
           <motion.div
@@ -173,7 +195,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             </span>
           )}
         </motion.div>
-      </div>
+      </motion.div>
     </header>
   );
 }
