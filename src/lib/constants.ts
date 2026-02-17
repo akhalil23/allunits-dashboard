@@ -18,11 +18,11 @@ export const QUALIFIER_COLORS: Record<Qualifier, string> = {
 };
 
 export const PILLAR_LABELS: Record<PillarId, string> = {
-  I: 'Academic Excellence',
-  II: 'Research & Innovation',
-  III: 'Community & Impact',
-  IV: 'Institutional Capacity',
-  V: 'Student Experience',
+  I: 'Enhance Scholarly Footprint and Visibility',
+  II: 'Educate for Impact Innovate',
+  III: 'Innovate to Inspire',
+  IV: 'Advance & Educate Beyond Boundaries',
+  V: 'Strategic Accelerator: Empower with Purpose, Agility & Sustainability',
 };
 
 export const AY_BOUNDARIES = {
