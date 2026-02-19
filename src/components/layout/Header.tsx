@@ -9,7 +9,8 @@ import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
 import { getTermWindowKey } from '@/lib/types';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PILLAR_LABELS } from '@/lib/constants';
+import { exportPDF } from '@/lib/export-pdf';
+
 
 interface HeaderProps {
   observedAt: string;
@@ -58,61 +59,9 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
   }, [getExportRows, academicYear, term]);
 
   const handleExportPDF = useCallback(() => {
-    const data = getExportRows();
-    if (!data || !term || !academicYear) return;
-    const vt = viewType || 'cumulative';
-    const termLabel = term === 'mid' ? 'Mid-Year' : 'End-of-Year';
-    const viewLabel = vt === 'cumulative' ? 'Cumulative (SP)' : 'Yearly';
-
-    const html = `
-<!DOCTYPE html>
-<html><head>
-<meta charset="utf-8">
-<title>GSR Report</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a2e; padding: 40px; }
-  .header { margin-bottom: 32px; border-bottom: 3px solid #00843D; padding-bottom: 16px; }
-  .header h1 { font-size: 22px; font-weight: 700; color: #00843D; }
-  .header p { font-size: 12px; color: #64748b; margin-top: 4px; }
-  .meta { display: flex; gap: 24px; margin-bottom: 24px; font-size: 11px; color: #475569; }
-  .meta span { background: #f1f5f9; padding: 4px 10px; border-radius: 4px; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  th { background: #00843D; color: white; padding: 8px 10px; text-align: left; font-weight: 600; }
-  td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; }
-  tr:nth-child(even) td { background: #f8fafc; }
-  tr:hover td { background: #f1f5f9; }
-  .footer { margin-top: 32px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; }
-  @media print { body { padding: 20px; } }
-</style>
-</head><body>
-<div class="header">
-  <h1>GSR — Strategic Plan IV Report</h1>
-  <p>Graduate Studies & Research Intelligence Dashboard</p>
-</div>
-<div class="meta">
-  <span>Academic Year: ${academicYear}</span>
-  <span>Term: ${termLabel}</span>
-  <span>View: ${viewLabel}</span>
-  <span>Generated: ${new Date().toLocaleDateString()}</span>
-  <span>Items: ${data.rows.length}</span>
-</div>
-<table>
-  <thead><tr>${data.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-  <tbody>${data.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-</table>
-<div class="footer">GSR Strategic Plan IV — Auto-generated report</div>
-</body></html>`;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.print();
-    };
-  }, [getExportRows, term, academicYear, viewType]);
-
+    if (!items?.length || !term || !academicYear) return;
+    exportPDF({ items, term, academicYear, viewType: viewType || 'cumulative' });
+  }, [items, term, academicYear, viewType]);
   const integrityConfig = integrity === 'Good'
     ? { bg: 'bg-emerald-400/15', text: 'text-emerald-300', border: 'border-emerald-400/25', dot: 'bg-emerald-400' }
     : integrity === 'Moderate'
