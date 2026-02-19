@@ -2,12 +2,14 @@ import { useTheme } from '@/hooks/use-theme';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
-import { Moon, Sun, RefreshCw, Shield, Sparkles, Download } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Shield, Sparkles, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
 import { getTermWindowKey } from '@/lib/types';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PILLAR_LABELS } from '@/lib/constants';
 
 interface HeaderProps {
   observedAt: string;
@@ -26,8 +28,8 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
   const integrity = getDataIntegrityLevel(dataQuality);
   const headerRef = useRef<HTMLElement>(null);
 
-  const handleExport = useCallback(() => {
-    if (!items?.length || !term || !academicYear) return;
+  const getExportRows = useCallback(() => {
+    if (!items?.length || !term || !academicYear) return null;
     const twk = getTermWindowKey(term, academicYear);
     const vt = viewType || 'cumulative';
     const headers = ['Pillar', 'Goal', 'Objective', 'Action Step', 'Owner', 'Status', 'Completion %', 'Target'];
@@ -39,7 +41,13 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
       const target = vt === 'cumulative' ? td.spTarget : td.yearlyTarget;
       return [item.pillar, item.goal, item.objective, item.actionStep, item.owner, status, `${completion}%`, target];
     });
-    const csvContent = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    return { headers, rows };
+  }, [items, term, academicYear, viewType]);
+
+  const handleExportCSV = useCallback(() => {
+    const data = getExportRows();
+    if (!data) return;
+    const csvContent = [data.headers, ...data.rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -47,7 +55,63 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
     a.download = `GSR_Report_${academicYear}_${term}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [items, term, academicYear, viewType]);
+  }, [getExportRows, academicYear, term]);
+
+  const handleExportPDF = useCallback(() => {
+    const data = getExportRows();
+    if (!data || !term || !academicYear) return;
+    const vt = viewType || 'cumulative';
+    const termLabel = term === 'mid' ? 'Mid-Year' : 'End-of-Year';
+    const viewLabel = vt === 'cumulative' ? 'Cumulative (SP)' : 'Yearly';
+
+    const html = `
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>GSR Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a2e; padding: 40px; }
+  .header { margin-bottom: 32px; border-bottom: 3px solid #00843D; padding-bottom: 16px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #00843D; }
+  .header p { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .meta { display: flex; gap: 24px; margin-bottom: 24px; font-size: 11px; color: #475569; }
+  .meta span { background: #f1f5f9; padding: 4px 10px; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { background: #00843D; color: white; padding: 8px 10px; text-align: left; font-weight: 600; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  tr:hover td { background: #f1f5f9; }
+  .footer { margin-top: 32px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+  @media print { body { padding: 20px; } }
+</style>
+</head><body>
+<div class="header">
+  <h1>GSR — Strategic Plan IV Report</h1>
+  <p>Graduate Studies & Research Intelligence Dashboard</p>
+</div>
+<div class="meta">
+  <span>Academic Year: ${academicYear}</span>
+  <span>Term: ${termLabel}</span>
+  <span>View: ${viewLabel}</span>
+  <span>Generated: ${new Date().toLocaleDateString()}</span>
+  <span>Items: ${data.rows.length}</span>
+</div>
+<table>
+  <thead><tr>${data.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+  <tbody>${data.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+</table>
+<div class="footer">GSR Strategic Plan IV — Auto-generated report</div>
+</body></html>`;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  }, [getExportRows, term, academicYear, viewType]);
 
   const integrityConfig = integrity === 'Good'
     ? { bg: 'bg-emerald-400/15', text: 'text-emerald-300', border: 'border-emerald-400/25', dot: 'bg-emerald-400' }
@@ -159,25 +223,38 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
               ))}
             </div>
 
-            {/* Export */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    onClick={handleExport}
-                    disabled={!items?.length}
-                    className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Export report as CSV</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Export Dropdown */}
+            <DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <motion.button
+                        disabled={!items?.length}
+                        className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Download className="w-4 h-4" />
+                      </motion.button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Export report</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <DropdownMenuContent align="end" className="min-w-[160px]">
+                <DropdownMenuItem onClick={handleExportCSV} className="gap-2 cursor-pointer">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF} className="gap-2 cursor-pointer">
+                  <FileText className="w-4 h-4" />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Refresh */}
             <motion.button
