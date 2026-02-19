@@ -65,7 +65,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} />
+      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} />
       <FilterBar />
       <main className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-8 max-w-[1600px]">

@@ -2,22 +2,52 @@ import { useTheme } from '@/hooks/use-theme';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
-import { Moon, Sun, RefreshCw, Shield, Sparkles } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Shield, Sparkles, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
+import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
+import { getTermWindowKey } from '@/lib/types';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 interface HeaderProps {
   observedAt: string;
   dataQuality: DataQuality;
   onRefresh: () => void;
   isRefreshing?: boolean;
+  items?: ActionItem[];
+  term?: Term;
+  academicYear?: AcademicYear;
+  viewType?: ViewType;
 }
 
-export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing }: HeaderProps) {
+export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { viewMode, setViewMode } = useDashboard();
   const integrity = getDataIntegrityLevel(dataQuality);
   const headerRef = useRef<HTMLElement>(null);
+
+  const handleExport = useCallback(() => {
+    if (!items?.length || !term || !academicYear) return;
+    const twk = getTermWindowKey(term, academicYear);
+    const vt = viewType || 'cumulative';
+    const headers = ['Pillar', 'Goal', 'Objective', 'Action Step', 'Owner', 'Status', 'Completion %', 'Target'];
+    const rows = items.map(item => {
+      const td = item.terms[twk];
+      if (!td) return [item.pillar, item.goal, item.objective, item.actionStep, item.owner, '—', '—', '—'];
+      const status = vt === 'cumulative' ? td.spStatus : td.yearlyStatus;
+      const completion = vt === 'cumulative' ? td.spCompletion : td.yearlyCompletion;
+      const target = vt === 'cumulative' ? td.spTarget : td.yearlyTarget;
+      return [item.pillar, item.goal, item.objective, item.actionStep, item.owner, status, `${completion}%`, target];
+    });
+    const csvContent = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `GSR_Report_${academicYear}_${term}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [items, term, academicYear, viewType]);
 
   const integrityConfig = integrity === 'Good'
     ? { bg: 'bg-emerald-400/15', text: 'text-emerald-300', border: 'border-emerald-400/25', dot: 'bg-emerald-400' }
@@ -128,6 +158,26 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
                 </button>
               ))}
             </div>
+
+            {/* Export */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={handleExport}
+                    disabled={!items?.length}
+                    className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Download className="w-4 h-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Export report as CSV</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             {/* Refresh */}
             <motion.button
