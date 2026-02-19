@@ -3,6 +3,8 @@ import type { ActionItem, ViewType, PillarId, Status, Term, AcademicYear } from 
 import { PILLAR_LABELS, STATUS_COLORS } from '@/lib/constants';
 import { getItemStatus } from '@/lib/intelligence';
 import { motion } from 'framer-motion';
+import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
   items: ActionItem[];
@@ -35,7 +37,19 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
 
   return (
     <div>
-      <h3 className="font-display text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider px-1">Pillar Performance Overview</h3>
+      <div className="flex items-center gap-2 mb-4 px-1">
+        <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pillar Performance Overview</h3>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+              <p>Each pillar shows the percentage of action items that are <strong>On Target</strong>. The stacked bar reflects the distribution across all statuses. Items marked "Not Applicable" are excluded from calculations.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         {pillarData.map((pd, i) => (
           <motion.div key={pd.pillar} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="card-elevated p-5 hover:shadow-md transition-shadow duration-300 cursor-pointer">
