@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import type { ActionItem, ViewType, Status, Term, AcademicYear } from '@/lib/types';
 import { STATUS_COLORS } from '@/lib/constants';
 import { getItemStatus } from '@/lib/intelligence';
 import { motion } from 'framer-motion';
+import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
   items: ActionItem[];
@@ -51,7 +53,19 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Applicability */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-6">
-        <h3 className="font-display text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Applicability Context</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Applicability Context</h3>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+                <p>Shows how many action items are <strong>applicable</strong> vs <strong>not applicable</strong> for the selected filters. Only applicable items are used in progress calculations.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <div className="flex items-center gap-6">
           <div className="w-32 h-32">
             <ResponsiveContainer>
@@ -59,7 +73,7 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
                 <Pie data={applicabilityData} innerRadius={38} outerRadius={56} dataKey="value" startAngle={90} endAngle={-270} strokeWidth={0}>
                   {applicabilityData.map((d, i) => <Cell key={i} fill={d.color} />)}
                 </Pie>
-                <Tooltip />
+                <RechartsTooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -83,7 +97,19 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
 
       {/* Progress Distribution */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-6">
-        <h3 className="font-display text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Progress Distribution</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Progress Distribution</h3>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+                <p>Breaks down applicable items by status: <strong>Not Started</strong>, <strong>In Progress</strong>, <strong>Completed – On Target</strong>, or <strong>Completed – Below Target</strong>.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <div className="flex items-center gap-6">
           <div className="w-32 h-32">
             <ResponsiveContainer>
@@ -91,7 +117,7 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
                 <Pie data={statusDist} innerRadius={38} outerRadius={56} dataKey="count" startAngle={90} endAngle={-270} strokeWidth={0}>
                   {statusDist.map((d, i) => <Cell key={i} fill={d.color} />)}
                 </Pie>
-                <Tooltip />
+                <RechartsTooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>
