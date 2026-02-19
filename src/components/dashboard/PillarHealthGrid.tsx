@@ -35,7 +35,7 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
 
   return (
     <div>
-      <h3 className="font-display text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider px-1">Pillar Health</h3>
+      <h3 className="font-display text-sm font-semibold text-muted-foreground mb-4 uppercase tracking-wider px-1">Pillar Performance Overview</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         {pillarData.map((pd, i) => (
           <motion.div key={pd.pillar} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="card-elevated p-5 hover:shadow-md transition-shadow duration-300 cursor-pointer">
