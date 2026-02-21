@@ -8,18 +8,18 @@ const corsHeaders = {
 
 const SPREADSHEET_ID = '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk';
 
-// Dynamic open-ended ranges — no fixed row limits
+// Explicit cell ranges with generous upper bounds for full row coverage
 const RANGES = [
-  "'Pillar I'!A4:G",
-  "'Pillar I'!BX4:CY",
-  "'Pillar II'!A4:G",
-  "'Pillar II'!BX4:CY",
-  "'Pillar III'!A4:G",
-  "'Pillar III'!BX4:CY",
-  "'Pillar IV'!A4:G",
-  "'Pillar IV'!BX4:CY",
-  "'Pillar V'!A4:G",
-  "'Pillar V'!BX4:CY",
+  "'Pillar I'!A4:G300",
+  "'Pillar I'!BX4:CY300",
+  "'Pillar II'!A4:G300",
+  "'Pillar II'!BX4:CY300",
+  "'Pillar III'!A4:G300",
+  "'Pillar III'!BX4:CY300",
+  "'Pillar IV'!A4:G400",
+  "'Pillar IV'!BX4:CY400",
+  "'Pillar V'!A4:G300",
+  "'Pillar V'!BX4:CY300",
 ];
 
 // Term window indices (each window = 7 columns in the BX:CY range)
@@ -129,6 +129,9 @@ function normalizeStatus(raw: string | undefined): Status | null {
   if (s.includes('below target') && s.includes('completed')) return 'Completed – Below Target';
   if (s.includes('above target')) return null; // Forbidden
 
+  // FIX: Any status containing "%" (e.g. "% Completion of activity", "In progress (%)") → In Progress
+  if (s.includes('%')) return 'In Progress';
+
   return null;
 }
 
@@ -152,10 +155,16 @@ function isRowFullyBlank(row: any[]): boolean {
   return row.every((c: any) => !c || String(c).trim() === '');
 }
 
-/** Check if a row is a valid action step: Column A must not be empty */
-function isValidActionStepRow(coreRow: any[]): boolean {
+/** 
+ * Check if a row is a valid ITEM row.
+ * A row is valid if Column A in core is non-empty OR any cell in the term row is non-empty.
+ */
+function isValidItemRow(coreRow: any[], termRow: any[]): boolean {
   const colA = safeGet(coreRow, 0);
-  return colA.trim() !== '';
+  if (colA.trim() !== '') return true;
+  // Also valid if any BX:CY cell has data
+  if (termRow && termRow.length > 0 && !isRowFullyBlank(termRow)) return true;
+  return false;
 }
 
 interface TermData {
@@ -169,7 +178,7 @@ interface TermData {
 }
 
 interface AnomalyLog {
-  unexpectedStatuses: string[];
+  unexpectedStatuses: { row: string; rawValue: string }[];
   outOfRangeCompletions: string[];
   missingTermColumns: string[];
 }
@@ -199,11 +208,11 @@ function extractTermData(
 
   if (rawSpStatus && rawSpStatus.trim() !== '' && !spStatus) {
     invalidStatuses++;
-    anomalies.unexpectedStatuses.push(`${rowId}:sp="${rawSpStatus}"`);
+    anomalies.unexpectedStatuses.push({ row: rowId, rawValue: `sp="${rawSpStatus}"` });
   }
   if (rawYearlyStatus && rawYearlyStatus.trim() !== '' && !yearlyStatus) {
     invalidStatuses++;
-    anomalies.unexpectedStatuses.push(`${rowId}:yearly="${rawYearlyStatus}"`);
+    anomalies.unexpectedStatuses.push({ row: rowId, rawValue: `yearly="${rawYearlyStatus}"` });
   }
 
   const spCompResult = parseCompletion(rawSpComp);
@@ -260,9 +269,9 @@ function processPillarData(
 
   const maxRows = Math.max(coreRows.length, termRows.length);
 
-  // Track consecutive blank rows to stop at trailing blank block
+  // Track consecutive blank rows — stop after 10 consecutive fully blank rows
   let consecutiveBlanks = 0;
-  const BLANK_THRESHOLD = 3; // Stop after 3 consecutive fully blank rows
+  const BLANK_THRESHOLD = 10;
 
   for (let i = 0; i < maxRows; i++) {
     const core = coreRows[i] || [];
@@ -272,15 +281,14 @@ function processPillarData(
     if (isRowFullyBlank(core) && isRowFullyBlank(term)) {
       consecutiveBlanks++;
       if (consecutiveBlanks >= BLANK_THRESHOLD) {
-        // Trailing blank block detected — stop parsing
         break;
       }
       continue;
     }
     consecutiveBlanks = 0; // Reset on non-blank row
 
-    // Valid action step: Column A must not be empty
-    if (!isValidActionStepRow(core)) continue;
+    // Valid item: Column A non-empty OR any BX:CY cell non-empty
+    if (!isValidItemRow(core, term)) continue;
 
     const actionStep = safeGet(core, CORE_ACTION_STEP);
     const goal = safeGet(core, CORE_GOAL);
@@ -399,6 +407,7 @@ serve(async (req) => {
           unexpectedStatusCount: anomalies.unexpectedStatuses.length,
           outOfRangeCompletionCount: anomalies.outOfRangeCompletions.length,
           missingTermColumnCount: anomalies.missingTermColumns.length,
+          unexpectedStatusDetails: anomalies.unexpectedStatuses.slice(0, 50),
         },
       },
     };

@@ -54,6 +54,7 @@ export interface DataQualityAnomalies {
   unexpectedStatusCount: number;
   outOfRangeCompletionCount: number;
   missingTermColumnCount: number;
+  unexpectedStatusDetails?: { row: string; rawValue: string }[];
 }
 
 export interface DataQuality {
