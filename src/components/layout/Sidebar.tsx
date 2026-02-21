@@ -46,17 +46,16 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-4 pt-5 pb-4">
         <div className="relative rounded-2xl overflow-hidden">
-          {/* Background fill matching sidebar */}
           <div className="absolute inset-0 sidebar-gradient opacity-80" />
-          <div className="relative flex items-center gap-3 px-3 py-3">
+          <div className="relative flex flex-col items-center gap-2 px-3 py-4">
             <img
               src={lauLogo}
               alt="LAU Logo"
-              className="h-14 w-auto object-contain mix-blend-lighten brightness-110 drop-shadow-lg"
+              className="h-16 w-auto object-contain mix-blend-lighten brightness-110 drop-shadow-lg"
             />
-            <div>
-              <h1 className="text-white font-display font-bold text-base leading-tight">GSR</h1>
-              <p className="text-white/50 text-[11px] tracking-wide">Strategic Plan IV</p>
+            <div className="text-center">
+              <h1 className="text-white font-display font-bold text-sm leading-tight">GSR</h1>
+              <p className="text-white/50 text-[10px] tracking-wide">Strategic Plan IV</p>
             </div>
           </div>
         </div>
