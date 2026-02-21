@@ -44,20 +44,20 @@ export default function Sidebar() {
   return (
     <aside className="sidebar-gradient w-64 min-h-screen flex flex-col shrink-0">
       {/* Logo */}
-      <div className="px-5 pt-6 pb-4">
-        <div className="relative flex items-center gap-4">
-          <div className="relative w-14 h-14 shrink-0">
-            {/* Soft glow behind logo */}
-            <div className="absolute inset-0 rounded-2xl bg-white/10 blur-xl scale-125" />
+      <div className="px-4 pt-5 pb-4">
+        <div className="relative rounded-2xl overflow-hidden">
+          {/* Background fill matching sidebar */}
+          <div className="absolute inset-0 sidebar-gradient opacity-80" />
+          <div className="relative flex items-center gap-3 px-3 py-3">
             <img
               src={lauLogo}
               alt="LAU Logo"
-              className="relative w-14 h-14 rounded-2xl object-cover mix-blend-lighten opacity-90"
+              className="h-14 w-auto object-contain mix-blend-lighten brightness-110 drop-shadow-lg"
             />
-          </div>
-          <div>
-            <h1 className="text-white font-display font-bold text-base leading-tight">GSR</h1>
-            <p className="text-white/50 text-[11px] tracking-wide">Strategic Plan IV</p>
+            <div>
+              <h1 className="text-white font-display font-bold text-base leading-tight">GSR</h1>
+              <p className="text-white/50 text-[11px] tracking-wide">Strategic Plan IV</p>
+            </div>
           </div>
         </div>
       </div>
