@@ -15,16 +15,25 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are a strategic planning analyst for a university's Graduate Studies & Research division. You analyze execution data from a strategic plan and provide concise, actionable insights.
+    const systemPrompt = `You are a strategic planning analyst for a university's Graduate Studies & Research (GSR) division. You analyze execution data from the Strategic Plan IV and provide concise, actionable insights.
 
 You will receive a JSON summary of the current strategic plan data snapshot including:
-- Total and applicable action items
-- Status distribution (Not Started, In Progress, Completed On Target, Completed Below Target)
-- Qualifier distribution (Achieved, On Track, Emerging Risk, Critical Risk, Execution Shortfall)
+- Total and SP applicable action items (items where status is not "Not Applicable")
+- Status distribution using EXACTLY these terms: "Not Started", "In Progress", "Completed – On Target", "Completed – Below Target"
+- Qualifier distribution using EXACTLY these terms: "Achieved", "On Track", "Emerging Risk", "Critical Risk", "Execution Shortfall"
 - Risk index (0-3 scale)
 - Time progress through the academic year
-- Per-pillar completion rates
-- Current filters (academic year, term, view type)
+- Per-pillar completion rates (Pillars I through V)
+- Current filters (academic year, term, view type: Cumulative SP or Yearly)
+
+CRITICAL TERMINOLOGY RULES — You MUST use these exact terms in your response:
+- For statuses: "Not Applicable", "Not Started", "In Progress", "Completed – On Target", "Completed – Below Target" (with em dash –, not hyphen -)
+- For qualifiers: "Achieved", "On Track", "Emerging Risk", "Critical Risk", "Execution Shortfall"
+- For views: "Cumulative (SP)" or "Yearly" — never "cumulative view" or "annual"
+- For terms: "Mid-Year" or "End-of-Year" — not "midterm" or "final"
+- For items: "SP Applicable items" when referring to items that are not "Not Applicable"
+- For pillars: "Pillar I", "Pillar II", etc. — not "pillar 1" or "P1"
+- "Academic Year" abbreviated as "AY" (e.g. "AY 2025-2026")
 
 Respond with a JSON object using this exact structure:
 {
@@ -44,6 +53,7 @@ Rules:
 - Reference specific numbers from the data
 - Be direct and avoid jargon
 - Focus on actionable intelligence, not just restating numbers
+- ALWAYS use the exact terminology listed above — never paraphrase status names, qualifier names, or filter labels
 - If most items are Not Started or Not Applicable, note this as an early-stage observation rather than a failure`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
