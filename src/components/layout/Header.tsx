@@ -1,6 +1,7 @@
 import { useTheme } from '@/hooks/use-theme';
 
 import { getDataIntegrityLevel } from '@/lib/intelligence';
+import type { IntegrityAuditResult } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
 import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,12 +22,13 @@ interface HeaderProps {
   term?: Term;
   academicYear?: AcademicYear;
   viewType?: ViewType;
+  integrityAudit?: IntegrityAuditResult | null;
 }
 
-export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType }: HeaderProps) {
+export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType, integrityAudit }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   
-  const integrity = getDataIntegrityLevel(dataQuality);
+  const integrity = integrityAudit?.level ?? getDataIntegrityLevel(dataQuality);
   const headerRef = useRef<HTMLElement>(null);
 
   const getExportRows = useCallback(() => {
@@ -128,17 +130,39 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
             {/* Data Integrity Badge */}
-            <motion.div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-sm text-[11px] font-semibold ${integrityConfig.bg} ${integrityConfig.text} ${integrityConfig.border}`}
-              whileHover={{ scale: 1.03 }}
-            >
-              <span className="relative flex h-2 w-2">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${integrityConfig.dot} opacity-50`} />
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${integrityConfig.dot}`} />
-              </span>
-              <Shield className="w-3 h-3" />
-              Data: {integrity}
-            </motion.div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-sm text-[11px] font-semibold ${integrityConfig.bg} ${integrityConfig.text} ${integrityConfig.border}`}
+                    whileHover={{ scale: 1.03 }}
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${integrityConfig.dot} opacity-50`} />
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${integrityConfig.dot}`} />
+                    </span>
+                    <Shield className="w-3 h-3" />
+                    Data: {integrity}
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
+                  {integrityAudit ? (
+                    <div className="space-y-1">
+                      <p><strong>{integrityAudit.applicableItems}</strong> applicable / <strong>{integrityAudit.totalItems}</strong> total items</p>
+                      {integrityAudit.diagnosticMessages.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {integrityAudit.diagnosticMessages.map((m, i) => <li key={i}>{m}</li>)}
+                        </ul>
+                      ) : (
+                        <p>All integrity checks passed.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p>Data integrity: {integrity}</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
 
             {/* Export Dropdown */}

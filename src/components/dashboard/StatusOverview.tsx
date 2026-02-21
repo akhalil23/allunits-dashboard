@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import type { ActionItem, ViewType, Status, Term, AcademicYear } from '@/lib/types';
+import { isNotApplicableStatus } from '@/lib/types';
 import { STATUS_COLORS } from '@/lib/constants';
-import { getItemStatus } from '@/lib/intelligence';
+import { getItemStatus, getItemCompletion, getApplicableItems, computeInProgressAvgCompletion } from '@/lib/intelligence';
 import { motion } from 'framer-motion';
-import { Info } from 'lucide-react';
+import { Info, TrendingUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export default function StatusOverview({ items, viewType, term, academicYear }: Props) {
-  const { applicableCount, naCount, statusDist } = useMemo(() => {
+  const { applicableCount, naCount, statusDist, inProgressAvg } = useMemo(() => {
     let naCount = 0;
     const counts: Record<Status, number> = {
       'Not Applicable': 0,
@@ -27,8 +28,12 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
 
     items.forEach(item => {
       const s = getItemStatus(item, viewType, term, academicYear) as Status;
-      counts[s] = (counts[s] || 0) + 1;
-      if (s === 'Not Applicable') naCount++;
+      if (isNotApplicableStatus(s)) {
+        naCount++;
+        counts['Not Applicable']++;
+      } else {
+        counts[s] = (counts[s] || 0) + 1;
+      }
     });
 
     const applicableCount = items.length - naCount;
@@ -41,13 +46,25 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
         color: STATUS_COLORS[status],
       }));
 
-    return { applicableCount, naCount, statusDist };
+    const inProgressAvg = computeInProgressAvgCompletion(items, viewType, term, academicYear);
+
+    return { applicableCount, naCount, statusDist, inProgressAvg };
   }, [items, viewType, term, academicYear]);
 
   const applicabilityData = [
     { name: 'Applicable', value: applicableCount, color: '#00843D' },
     { name: 'Not Applicable', value: naCount, color: '#B0B7C3' },
   ];
+
+  // Handle zero applicable items
+  if (applicableCount === 0) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-8 text-center">
+        <p className="text-sm font-medium text-muted-foreground">No Applicable Items for Selected Context</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">All {items.length} item(s) are marked as Not Applicable for the current view.</p>
+      </motion.div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -90,7 +107,9 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
               <span className="text-sm text-muted-foreground">Not Applicable</span>
               <span className="text-lg font-semibold text-muted-foreground">{naCount}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">Progress metrics use SP Applicable items only.</p>
+            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
+              Progress metrics use {viewType === 'cumulative' ? 'SP' : 'Yearly'} Applicable items only.
+            </p>
           </div>
         </div>
       </motion.div>
@@ -105,7 +124,7 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
                 <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
-                <p>Breaks down applicable items by status: <strong>Not Started</strong>, <strong>In Progress</strong>, <strong>Completed – On Target</strong>, or <strong>Completed – Below Target</strong>.</p>
+                <p>Breaks down applicable items by status. Only items with a recognized status in the selected term window are included.</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -130,6 +149,14 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
                 <span className="text-xs text-muted-foreground w-8 text-right">{d.percent}%</span>
               </div>
             ))}
+            {/* In-Progress Average Completion */}
+            {inProgressAvg && (
+              <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="text-[11px] text-muted-foreground">Avg Completion (In Progress):</span>
+                <span className="text-[11px] font-semibold text-foreground">{inProgressAvg.avgCompletion}%</span>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
