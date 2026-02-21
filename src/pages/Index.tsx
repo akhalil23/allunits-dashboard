@@ -86,7 +86,7 @@ export default function Index() {
           {/* Section 2: Strategic Intelligence */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-1 h-6 rounded-full bg-accent" />
+              <div className="w-1 h-6 rounded-full bg-primary/60" />
               <h2 className="font-display text-lg font-bold text-foreground">Strategic Intelligence & Risk Signals</h2>
             </div>
             <IntelligencePanel items={filteredItems} viewType={viewType} term={term} observedAt={fetchResult.observedAt} academicYear={academicYear} />
