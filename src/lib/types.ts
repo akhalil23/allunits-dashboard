@@ -50,11 +50,18 @@ export interface DashboardFilters {
   selectedPillar: 'all' | PillarId;
 }
 
+export interface DataQualityAnomalies {
+  unexpectedStatusCount: number;
+  outOfRangeCompletionCount: number;
+  missingTermColumnCount: number;
+}
+
 export interface DataQuality {
   invalidStatuses: number;
   invalidCompletions: number;
   missingBlocks: number;
   totalItems: number;
+  anomalies?: DataQualityAnomalies;
 }
 
 export interface FetchResult {
@@ -84,4 +91,13 @@ export interface QualifierDistributionItem {
 
 export function getTermWindowKey(term: Term, academicYear: AcademicYear): TermWindowKey {
   return `${term}-${academicYear}` as TermWindowKey;
+}
+
+/** Check if a status value should be treated as Not Applicable */
+export function isNotApplicableStatus(status: string | null | undefined): boolean {
+  if (status === null || status === undefined) return true;
+  const s = status.trim();
+  if (s === '') return true;
+  const lower = s.toLowerCase();
+  return lower === 'not applicable' || lower === 'na' || lower === 'n/a' || s === '-' || s === '—';
 }

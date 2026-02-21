@@ -8,24 +8,21 @@ const corsHeaders = {
 
 const SPREADSHEET_ID = '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk';
 
+// Dynamic open-ended ranges — no fixed row limits
 const RANGES = [
-  "'Pillar I'!A4:G62",
-  "'Pillar I'!BX4:CY62",
-  "'Pillar II'!A4:G81",
-  "'Pillar II'!BX4:CY81",
-  "'Pillar III'!A4:G100",
-  "'Pillar III'!BX4:CY100",
-  "'Pillar IV'!A4:G224",
-  "'Pillar IV'!BX4:CY224",
-  "'Pillar V'!A4:G157",
-  "'Pillar V'!BX4:CY157",
+  "'Pillar I'!A4:G",
+  "'Pillar I'!BX4:CY",
+  "'Pillar II'!A4:G",
+  "'Pillar II'!BX4:CY",
+  "'Pillar III'!A4:G",
+  "'Pillar III'!BX4:CY",
+  "'Pillar IV'!A4:G",
+  "'Pillar IV'!BX4:CY",
+  "'Pillar V'!A4:G",
+  "'Pillar V'!BX4:CY",
 ];
 
 // Term window indices (each window = 7 columns in the BX:CY range)
-// Window 0: Mid-Year 2025-2026 (cols 0-6)
-// Window 1: End-Year 2025-2026 (cols 7-13)
-// Window 2: Mid-Year 2026-2027 (cols 14-20)
-// Window 3: End-Year 2026-2027 (cols 21-27)
 const TERM_WINDOW_KEYS = [
   'mid-2025-2026',
   'end-2025-2026',
@@ -44,11 +41,13 @@ const WIN_YEARLY_COMP = 5;
 const WIN_SUPPORTING_DOC = 6;
 const WINDOW_SIZE = 7;
 
-// Core columns (A:G): Goals=0, Action=1, Action KPIs=2, Action Step=3, Action Step KPIs=4, Step Champion=5, Champion details=6
+// Core columns (A:G)
 const CORE_GOAL = 0;
 const CORE_ACTION = 1;
 const CORE_ACTION_STEP = 3;
 const CORE_OWNER = 5;
+
+// --- Helpers ---
 
 async function createJWT(serviceAccount: any): Promise<string> {
   const header = { alg: "RS256", typ: "JWT" };
@@ -110,11 +109,20 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
 
 type Status = 'Not Applicable' | 'Not Started' | 'In Progress' | 'Completed – On Target' | 'Completed – Below Target';
 
+/** Check if a raw value should be treated as Not Applicable */
+function isNotApplicableRaw(raw: string | undefined | null): boolean {
+  if (raw === null || raw === undefined) return true;
+  const s = raw.trim();
+  if (s === '') return true;
+  const lower = s.toLowerCase();
+  return lower === 'na' || lower === 'n/a' || lower === 'not applicable' || s === '-' || s === '—';
+}
+
 function normalizeStatus(raw: string | undefined): Status | null {
   if (!raw || raw.trim() === '') return null;
   const s = raw.trim().toLowerCase();
 
-  if (s === 'na' || s === 'n/a' || s === 'not applicable') return 'Not Applicable';
+  if (s === 'na' || s === 'n/a' || s === 'not applicable' || s === '-' || s === '—') return 'Not Applicable';
   if (s === 'not started') return 'Not Started';
   if (s.startsWith('in progress')) return 'In Progress';
   if (s.includes('on target') && s.includes('completed')) return 'Completed – On Target';
@@ -124,14 +132,9 @@ function normalizeStatus(raw: string | undefined): Status | null {
   return null;
 }
 
-function isNA(raw: string): boolean {
-  const s = raw.trim().toLowerCase();
-  return s === 'na' || s === 'n/a' || s === 'not applicable' || s === '-' || s === '—';
-}
-
 function parseCompletion(raw: string | undefined): { value: number | null; isInvalid: boolean } {
   if (!raw || raw.trim() === '') return { value: null, isInvalid: false };
-  if (isNA(raw)) return { value: null, isInvalid: false };
+  if (isNotApplicableRaw(raw)) return { value: null, isInvalid: false };
   const cleaned = raw.replace('%', '').replace(',', '.').trim();
   const n = parseFloat(cleaned);
   if (isNaN(n) || n < 0 || n > 100) return { value: null, isInvalid: true };
@@ -141,6 +144,18 @@ function parseCompletion(raw: string | undefined): { value: number | null; isInv
 function safeGet(arr: any[], idx: number): string {
   if (idx < 0 || !arr || idx >= arr.length) return '';
   return String(arr[idx] ?? '');
+}
+
+/** Check if an entire row is blank (all cells empty or whitespace) */
+function isRowFullyBlank(row: any[]): boolean {
+  if (!row || row.length === 0) return true;
+  return row.every((c: any) => !c || String(c).trim() === '');
+}
+
+/** Check if a row is a valid action step: Column A must not be empty */
+function isValidActionStepRow(coreRow: any[]): boolean {
+  const colA = safeGet(coreRow, 0);
+  return colA.trim() !== '';
 }
 
 interface TermData {
@@ -153,7 +168,18 @@ interface TermData {
   supportingDoc: string;
 }
 
-function extractTermData(termRow: any[], windowIdx: number): { td: TermData; invalidStatuses: number; invalidCompletions: number } {
+interface AnomalyLog {
+  unexpectedStatuses: string[];
+  outOfRangeCompletions: string[];
+  missingTermColumns: string[];
+}
+
+function extractTermData(
+  termRow: any[],
+  windowIdx: number,
+  anomalies: AnomalyLog,
+  rowId: string
+): { td: TermData; invalidStatuses: number; invalidCompletions: number } {
   const offset = windowIdx * WINDOW_SIZE;
   let invalidStatuses = 0;
   let invalidCompletions = 0;
@@ -163,24 +189,45 @@ function extractTermData(termRow: any[], windowIdx: number): { td: TermData; inv
   const rawSpComp = safeGet(termRow, offset + WIN_SP_COMP);
   const rawYearlyComp = safeGet(termRow, offset + WIN_YEARLY_COMP);
 
+  // Check if term window columns exist
+  if (termRow.length < offset + WINDOW_SIZE) {
+    anomalies.missingTermColumns.push(`${rowId}:window-${windowIdx}`);
+  }
+
   const spStatus = normalizeStatus(rawSpStatus);
   const yearlyStatus = normalizeStatus(rawYearlyStatus);
 
-  if (rawSpStatus && !spStatus) invalidStatuses++;
-  if (rawYearlyStatus && !yearlyStatus) invalidStatuses++;
+  if (rawSpStatus && rawSpStatus.trim() !== '' && !spStatus) {
+    invalidStatuses++;
+    anomalies.unexpectedStatuses.push(`${rowId}:sp="${rawSpStatus}"`);
+  }
+  if (rawYearlyStatus && rawYearlyStatus.trim() !== '' && !yearlyStatus) {
+    invalidStatuses++;
+    anomalies.unexpectedStatuses.push(`${rowId}:yearly="${rawYearlyStatus}"`);
+  }
 
   const spCompResult = parseCompletion(rawSpComp);
   const yearlyCompResult = parseCompletion(rawYearlyComp);
 
-  if (spCompResult.isInvalid) invalidCompletions++;
-  if (yearlyCompResult.isInvalid) invalidCompletions++;
+  if (spCompResult.isInvalid) {
+    invalidCompletions++;
+    anomalies.outOfRangeCompletions.push(`${rowId}:sp="${rawSpComp}"`);
+  }
+  if (yearlyCompResult.isInvalid) {
+    invalidCompletions++;
+    anomalies.outOfRangeCompletions.push(`${rowId}:yearly="${rawYearlyComp}"`);
+  }
+
+  // Default empty/null status to Not Applicable (not Not Started) for cleaner applicability
+  const resolvedSpStatus = spStatus ?? (isNotApplicableRaw(rawSpStatus) ? 'Not Applicable' : 'Not Started');
+  const resolvedYearlyStatus = yearlyStatus ?? (isNotApplicableRaw(rawYearlyStatus) ? 'Not Applicable' : 'Not Started');
 
   return {
     td: {
-      spStatus: spStatus || 'Not Started',
+      spStatus: resolvedSpStatus,
       spCompletion: spCompResult.value ?? 0,
       spTarget: safeGet(termRow, offset + WIN_SP_TARGET),
-      yearlyStatus: yearlyStatus || 'Not Started',
+      yearlyStatus: resolvedYearlyStatus,
       yearlyCompletion: yearlyCompResult.value ?? 0,
       yearlyTarget: safeGet(termRow, offset + WIN_YEARLY_TARGET),
       supportingDoc: safeGet(termRow, offset + WIN_SUPPORTING_DOC),
@@ -204,7 +251,8 @@ interface ActionItem {
 function processPillarData(
   pillarId: string,
   coreRows: any[][],
-  termRows: any[][]
+  termRows: any[][],
+  anomalies: AnomalyLog
 ): { items: ActionItem[]; invalidStatuses: number; invalidCompletions: number } {
   let totalInvalidStatuses = 0;
   let totalInvalidCompletions = 0;
@@ -212,35 +260,51 @@ function processPillarData(
 
   const maxRows = Math.max(coreRows.length, termRows.length);
 
+  // Track consecutive blank rows to stop at trailing blank block
+  let consecutiveBlanks = 0;
+  const BLANK_THRESHOLD = 3; // Stop after 3 consecutive fully blank rows
+
   for (let i = 0; i < maxRows; i++) {
     const core = coreRows[i] || [];
     const term = termRows[i] || [];
 
+    // Check if both core and term rows are fully blank
+    if (isRowFullyBlank(core) && isRowFullyBlank(term)) {
+      consecutiveBlanks++;
+      if (consecutiveBlanks >= BLANK_THRESHOLD) {
+        // Trailing blank block detected — stop parsing
+        break;
+      }
+      continue;
+    }
+    consecutiveBlanks = 0; // Reset on non-blank row
+
+    // Valid action step: Column A must not be empty
+    if (!isValidActionStepRow(core)) continue;
+
     const actionStep = safeGet(core, CORE_ACTION_STEP);
     const goal = safeGet(core, CORE_GOAL);
     const action = safeGet(core, CORE_ACTION);
-
-    // Skip completely empty rows
-    if (!actionStep && !goal && !action && term.every((c: any) => !c || String(c).trim() === '')) continue;
+    const rowId = `P${pillarId}-R${i + 5}`;
 
     const terms: Record<string, TermData> = {};
 
     for (let w = 0; w < 4; w++) {
-      const { td, invalidStatuses, invalidCompletions } = extractTermData(term, w);
+      const { td, invalidStatuses, invalidCompletions } = extractTermData(term, w, anomalies, rowId);
       terms[TERM_WINDOW_KEYS[w]] = td;
       totalInvalidStatuses += invalidStatuses;
       totalInvalidCompletions += invalidCompletions;
     }
 
     items.push({
-      id: `${pillarId}-${i + 1}`,
+      id: `${pillarId}-${items.length + 1}`,
       pillar: pillarId,
       goal,
       objective: action,
-      actionStep: actionStep || action || `Action ${pillarId}.${i + 1}`,
+      actionStep: actionStep || action || `Action ${pillarId}.${items.length + 1}`,
       owner: safeGet(core, CORE_OWNER),
       terms,
-      sheetRow: i + 5,
+      sheetRow: i + 5, // row 4 is header (index 0), data starts at row 5
     });
   }
 
@@ -283,6 +347,12 @@ serve(async (req) => {
     let totalInvalidCompletions = 0;
     let missingBlocks = 0;
 
+    const anomalies: AnomalyLog = {
+      unexpectedStatuses: [],
+      outOfRangeCompletions: [],
+      missingTermColumns: [],
+    };
+
     for (let p = 0; p < 5; p++) {
       const coreRange = valueRanges[p * 2];
       const termRange = valueRanges[p * 2 + 1];
@@ -298,12 +368,23 @@ serve(async (req) => {
       const termRows = termRange.values.slice(1);
 
       const { items, invalidStatuses, invalidCompletions } = processPillarData(
-        pillarIds[p], coreRows, termRows
+        pillarIds[p], coreRows, termRows, anomalies
       );
 
       allItems = allItems.concat(items);
       totalInvalidStatuses += invalidStatuses;
       totalInvalidCompletions += invalidCompletions;
+    }
+
+    // Log anomalies server-side for diagnostics
+    if (anomalies.unexpectedStatuses.length > 0) {
+      console.warn('Unexpected statuses:', anomalies.unexpectedStatuses.slice(0, 20));
+    }
+    if (anomalies.outOfRangeCompletions.length > 0) {
+      console.warn('Out-of-range completions:', anomalies.outOfRangeCompletions.slice(0, 20));
+    }
+    if (anomalies.missingTermColumns.length > 0) {
+      console.warn('Missing term columns:', anomalies.missingTermColumns.slice(0, 20));
     }
 
     const result = {
@@ -314,6 +395,11 @@ serve(async (req) => {
         invalidCompletions: totalInvalidCompletions,
         missingBlocks,
         totalItems: allItems.length,
+        anomalies: {
+          unexpectedStatusCount: anomalies.unexpectedStatuses.length,
+          outOfRangeCompletionCount: anomalies.outOfRangeCompletions.length,
+          missingTermColumnCount: anomalies.missingTermColumns.length,
+        },
       },
     };
 

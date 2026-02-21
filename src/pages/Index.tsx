@@ -10,19 +10,25 @@ import AIInsightCard from '@/components/dashboard/AIInsightCard';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useGSRData } from '@/hooks/use-gsr-data';
 import { PILLAR_LABELS } from '@/lib/constants';
+import { runIntegrityAudit } from '@/lib/intelligence';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function Index() {
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
   const queryClient = useQueryClient();
-  
 
   const filteredItems = useMemo(() => {
     if (!fetchResult?.data) return [];
     if (selectedPillar === 'all') return fetchResult.data;
     return fetchResult.data.filter(i => i.pillar === selectedPillar);
   }, [fetchResult?.data, selectedPillar]);
+
+  // Run integrity audit before rendering
+  const integrityAudit = useMemo(() => {
+    if (!fetchResult) return null;
+    return runIntegrityAudit(filteredItems, viewType, term, fetchResult.observedAt, academicYear, fetchResult.dataQuality);
+  }, [filteredItems, viewType, term, fetchResult, academicYear]);
 
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['gsr-data'] });
@@ -65,7 +71,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} />
+      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} integrityAudit={integrityAudit} />
       <FilterBar />
       <main className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-8 max-w-[1600px]">
