@@ -46,17 +46,16 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-6 pb-4">
         <div className="relative flex items-center gap-4">
-          {/* Glowing backdrop */}
-          <div className="absolute -inset-1 rounded-xl bg-white/5 blur-lg pointer-events-none" />
-          <div className="relative">
-            <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-white/20 to-white/5 blur-sm" />
+          <div className="relative w-14 h-14 shrink-0">
+            {/* Soft glow behind logo */}
+            <div className="absolute inset-0 rounded-2xl bg-white/10 blur-xl scale-125" />
             <img
               src={lauLogo}
               alt="LAU Logo"
-              className="relative h-12 w-12 rounded-xl object-cover ring-2 ring-white/15 shadow-xl shadow-black/30"
+              className="relative w-14 h-14 rounded-2xl object-cover mix-blend-lighten opacity-90"
             />
           </div>
-          <div className="relative">
+          <div>
             <h1 className="text-white font-display font-bold text-base leading-tight">GSR</h1>
             <p className="text-white/50 text-[11px] tracking-wide">Strategic Plan IV</p>
           </div>
