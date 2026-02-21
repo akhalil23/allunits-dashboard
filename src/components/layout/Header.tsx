@@ -1,8 +1,8 @@
 import { useTheme } from '@/hooks/use-theme';
-import { useDashboard } from '@/contexts/DashboardContext';
+
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
-import { Moon, Sun, RefreshCw, Shield, Sparkles, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
@@ -25,7 +25,7 @@ interface HeaderProps {
 
 export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
-  const { viewMode, setViewMode } = useDashboard();
+  
   const integrity = getDataIntegrityLevel(dataQuality);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -106,19 +106,9 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
             <div className="flex flex-col">
-              <div className="flex items-center gap-3 mb-1.5">
-                <motion.span
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 backdrop-blur-sm text-white/90 text-[11px] font-bold tracking-[0.15em] uppercase border border-white/10"
-                  whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.15)' }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Sparkles className="w-3 h-3 text-emerald-300" />
-                  GSR
-                </motion.span>
-                <h1 className="text-white font-display text-xl font-bold tracking-tight">
-                  Graduate Studies & Research
-                </h1>
-              </div>
+              <h1 className="text-white font-display text-2xl font-bold tracking-tight mb-1.5">
+                Graduate Studies & Research
+              </h1>
               <motion.p
                 className="text-white/50 text-sm font-medium tracking-wide"
                 initial={{ opacity: 0, y: 4 }}
@@ -150,27 +140,6 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
               Data: {integrity}
             </motion.div>
 
-            {/* View Mode Toggle */}
-            <div className="flex rounded-full bg-white/8 p-0.5 border border-white/10 backdrop-blur-sm">
-              {(['basic', 'intelligence'] as const).map(mode => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className="relative px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300"
-                >
-                  {viewMode === mode && (
-                    <motion.div
-                      layoutId="viewModeIndicator"
-                      className="absolute inset-0 bg-white rounded-full shadow-lg"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className={`relative z-10 ${viewMode === mode ? 'text-primary' : 'text-white/60 hover:text-white/90'}`}>
-                    {mode === 'basic' ? 'Basic' : 'Intelligence'}
-                  </span>
-                </button>
-              ))}
-            </div>
 
             {/* Export Dropdown */}
             <DropdownMenu>

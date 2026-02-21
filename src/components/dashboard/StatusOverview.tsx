@@ -54,7 +54,7 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
       {/* Applicability */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-6">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Applicability Context</h3>
+          <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Item Applicability</h3>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -90,7 +90,7 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
               <span className="text-sm text-muted-foreground">Not Applicable</span>
               <span className="text-lg font-semibold text-muted-foreground">{naCount}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">Progress metrics use Applicable items only.</p>
+            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">Progress metrics use SP Applicable items only.</p>
           </div>
         </div>
       </motion.div>

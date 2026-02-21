@@ -44,12 +44,21 @@ export default function Sidebar() {
   return (
     <aside className="sidebar-gradient w-64 min-h-screen flex flex-col shrink-0">
       {/* Logo */}
-      <div className="px-6 pt-6 pb-4">
-        <div className="flex items-center gap-3">
-          <img src={lauLogo} alt="LAU Logo" className="h-10 rounded-lg object-contain" />
-          <div>
+      <div className="px-5 pt-6 pb-4">
+        <div className="relative flex items-center gap-4">
+          {/* Glowing backdrop */}
+          <div className="absolute -inset-1 rounded-xl bg-white/5 blur-lg pointer-events-none" />
+          <div className="relative">
+            <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-white/20 to-white/5 blur-sm" />
+            <img
+              src={lauLogo}
+              alt="LAU Logo"
+              className="relative h-12 w-12 rounded-xl object-cover ring-2 ring-white/15 shadow-xl shadow-black/30"
+            />
+          </div>
+          <div className="relative">
             <h1 className="text-white font-display font-bold text-base leading-tight">GSR</h1>
-            <p className="text-white/60 text-xs">Strategic Plan IV</p>
+            <p className="text-white/50 text-[11px] tracking-wide">Strategic Plan IV</p>
           </div>
         </div>
       </div>

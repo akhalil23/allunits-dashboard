@@ -13,7 +13,7 @@ import { PILLAR_LABELS } from '@/lib/constants';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function Index() {
-  const { viewMode, viewType, academicYear, term, selectedPillar } = useDashboard();
+  const { viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
   const queryClient = useQueryClient();
   
@@ -73,12 +73,25 @@ export default function Index() {
             <h2 className="font-display text-lg font-semibold text-foreground">{sectionTitle}</h2>
             <span className="text-xs text-muted-foreground">{viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly'} • AY {academicYear} • {term === 'mid' ? 'Mid-Year' : 'End-of-Year'}</span>
           </div>
-          <StatusOverview items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} />
-          <PillarHealthGrid items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} />
-          {viewMode === 'intelligence' && (
+          {/* Section 1: Performance Overview */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-6 rounded-full bg-primary" />
+              <h2 className="font-display text-lg font-bold text-foreground">Pillar Performance Overview</h2>
+            </div>
+            <StatusOverview items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} />
+            <PillarHealthGrid items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} />
+          </div>
+
+          {/* Section 2: Strategic Intelligence */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-6 rounded-full bg-accent" />
+              <h2 className="font-display text-lg font-bold text-foreground">Strategic Intelligence & Risk Signals</h2>
+            </div>
             <IntelligencePanel items={filteredItems} viewType={viewType} term={term} observedAt={fetchResult.observedAt} academicYear={academicYear} />
-          )}
-          <AIInsightCard items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} observedAt={fetchResult.observedAt} selectedPillar={selectedPillar} />
+            <AIInsightCard items={filteredItems} viewType={viewType} term={term} academicYear={academicYear} observedAt={fetchResult.observedAt} selectedPillar={selectedPillar} />
+          </div>
         </div>
       </main>
     </DashboardLayout>
