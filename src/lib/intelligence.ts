@@ -213,7 +213,13 @@ export function runIntegrityAudit(
   // D) Data quality anomalies from server
   if (dataQuality.anomalies) {
     if (dataQuality.anomalies.unexpectedStatusCount > 0) {
-      diagnosticMessages.push(`${dataQuality.anomalies.unexpectedStatusCount} unexpected status value(s) detected.`);
+      let msg = `${dataQuality.anomalies.unexpectedStatusCount} unexpected status value(s) detected.`;
+      if (dataQuality.anomalies.unexpectedStatusDetails?.length) {
+        const details = dataQuality.anomalies.unexpectedStatusDetails.slice(0, 5)
+          .map(d => `${d.row}: ${d.rawValue}`).join('; ');
+        msg += ` [${details}]`;
+      }
+      diagnosticMessages.push(msg);
     }
     if (dataQuality.anomalies.outOfRangeCompletionCount > 0) {
       diagnosticMessages.push(`${dataQuality.anomalies.outOfRangeCompletionCount} completion value(s) outside 0–100 range.`);
