@@ -6,9 +6,7 @@ import {
   LayoutDashboard, FlaskConical, ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import lauLogoOfficial from '@/assets/lau-logo-official.png';
-import lauLogoWhite from '@/assets/lau-logo-white-official.png';
-import { useTheme } from '@/hooks/use-theme';
+import lauLogo from '@/assets/lau-logo.jpg';
 
 const pillars: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
@@ -16,11 +14,7 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedPillar, setSelectedPillar } = useDashboard();
-  const { theme } = useTheme();
   const isEvolutionLab = location.pathname === '/evolution-lab';
-
-  // Always use white logo on sidebar's dark green background
-  const logoSrc = lauLogoWhite;
 
   const navItems = [
     {
@@ -50,21 +44,24 @@ export default function Sidebar() {
   return (
     <aside className="sidebar-gradient w-64 min-h-screen flex flex-col shrink-0">
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5">
-        <div className="flex flex-col items-center gap-3">
-          <img
-            src={logoSrc}
-            alt="Lebanese American University"
-            className="h-16 w-auto object-contain drop-shadow-lg"
-          />
-          <div className="text-center">
-            <h1 className="text-white font-display font-bold text-sm leading-tight tracking-wide">GSR Dashboard</h1>
-            <p className="text-white/45 text-[10px] tracking-widest uppercase mt-0.5">Strategic Plan IV</p>
+      <div className="px-4 pt-5 pb-4">
+        <div className="relative rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 sidebar-gradient opacity-80" />
+          <div className="relative flex flex-col items-center gap-2 px-3 py-4">
+            <img
+              src={lauLogo}
+              alt="LAU Logo"
+              className="h-16 w-auto object-contain mix-blend-lighten brightness-110 drop-shadow-lg"
+            />
+            <div className="text-center">
+              <h1 className="text-white font-display font-bold text-sm leading-tight">GSR</h1>
+              <p className="text-white/50 text-[10px] tracking-wide">Strategic Plan IV</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="h-px bg-white/10 mx-5" />
+      <div className="h-px bg-white/10 mx-4" />
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -76,7 +73,7 @@ export default function Sidebar() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.03 }}
             className={`
-              w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+              w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
               transition-all duration-300 group relative
               ${item.active
                 ? 'bg-white/15 text-white glow-left'
@@ -111,7 +108,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-4 pb-4">
-        <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+        <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10">
           <p className="text-[10px] text-white/40 leading-tight">
             Graduate Studies & Research<br />
             Lebanese American University

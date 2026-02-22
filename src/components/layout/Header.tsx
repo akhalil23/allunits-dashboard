@@ -1,5 +1,4 @@
 import { useTheme } from '@/hooks/use-theme';
-import lauLogoWhite from '@/assets/lau-logo-white-official.png';
 
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { IntegrityAuditResult } from '@/lib/intelligence';
@@ -65,7 +64,6 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
     if (!items?.length || !term || !academicYear) return;
     exportPDF({ items, term, academicYear, viewType: viewType || 'cumulative' });
   }, [items, term, academicYear, viewType]);
-  
   const integrityConfig = integrity === 'Good'
     ? { bg: 'bg-emerald-400/15', text: 'text-emerald-300', border: 'border-emerald-400/25', dot: 'bg-emerald-400' }
     : integrity === 'Moderate'
@@ -79,7 +77,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
 
       {/* Subtle mesh overlay */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)',
           backgroundSize: '60px 60px, 80px 80px',
@@ -88,36 +86,29 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
 
       {/* Glow accent */}
       <motion.div
-        className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-8"
+        className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-10"
         style={{ background: 'radial-gradient(circle, hsl(152 100% 50%) 0%, transparent 70%)' }}
-        animate={{ scale: [1, 1.15, 1], opacity: [0.06, 0.12, 0.06] }}
+        animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.14, 0.08] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute -bottom-16 left-1/3 w-56 h-56 rounded-full opacity-8"
-        style={{ background: 'radial-gradient(circle, hsl(147 67% 37%) 0%, transparent 70%)' }}
-        animate={{ scale: [1.1, 1, 1.1], opacity: [0.04, 0.1, 0.04] }}
+        className="absolute -bottom-16 left-1/3 w-56 h-56 rounded-full opacity-10"
+        style={{ background: 'radial-gradient(circle, hsl(152 80% 45%) 0%, transparent 70%)' }}
+        animate={{ scale: [1.1, 1, 1.1], opacity: [0.06, 0.12, 0.06] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
       />
 
       <div className="relative z-10 px-6 py-5">
         <div className="flex items-start justify-between">
-          {/* Left — Logo + Title */}
+          {/* Left */}
           <motion.div
             className="flex items-center gap-4"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
-            {/* LAU Logo in header */}
-            <img
-              src={lauLogoWhite}
-              alt="Lebanese American University"
-              className="h-12 w-auto object-contain drop-shadow-md"
-            />
-            <div className="h-8 w-px bg-white/20" />
             <div className="flex flex-col">
-              <h1 className="text-white font-display text-2xl font-bold tracking-tight mb-1">
+              <h1 className="text-white font-display text-2xl font-bold tracking-tight mb-1.5">
                 Graduate Studies & Research
               </h1>
               <motion.p
@@ -173,6 +164,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
               </Tooltip>
             </TooltipProvider>
 
+
             {/* Export Dropdown */}
             <DropdownMenu>
               <TooltipProvider>
@@ -181,7 +173,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
                     <DropdownMenuTrigger asChild>
                       <motion.button
                         disabled={!items?.length}
-                        className="p-2 rounded-xl bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -209,7 +201,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             {/* Refresh */}
             <motion.button
               onClick={onRefresh}
-              className="p-2 rounded-xl bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+              className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
               title="Refresh data"
@@ -220,7 +212,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             {/* Theme toggle */}
             <motion.button
               onClick={toggleTheme}
-              className="p-2 rounded-xl bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+              className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
             >
