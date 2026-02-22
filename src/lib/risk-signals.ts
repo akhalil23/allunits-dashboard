@@ -1,4 +1,4 @@
-import type { ActionItem, ViewType, AcademicYear, Term } from './types';
+import type { ActionItem, ViewType, AcademicYear, Term, PillarId } from './types';
 import { isNotApplicableStatus } from './types';
 import { getItemStatus, getItemCompletion, getApplicableItems, getTermData } from './intelligence';
 
@@ -41,29 +41,20 @@ export function mapItemToRiskSignal(
   completion: number,
   completionValid: boolean
 ): RiskSignal {
-  // 1) Not Applicable
   if (isNotApplicableStatus(status)) return 'Not Applicable';
-
-  // 2) Completed – Below Target → Realized Risk
   if (status === 'Completed – Below Target') return 'Realized Risk (Needs Mitigation Strategy)';
-
-  // 3) Completed – On Target → No Risk
   if (status === 'Completed – On Target') return 'No Risk (On Track)';
 
-  // 4-7) In Progress / Not Started with completion overrides
   if (status === 'In Progress') {
-    // Rule 7: In Progress but completion = 0 → Critical
     if (completionValid && completion === 0) return 'Critical Risk (Needs Close Attention)';
     return 'Emerging Risk (Needs Attention)';
   }
 
   if (status === 'Not Started') {
-    // Rule 6: Not Started but completion > 0 → Emerging
     if (completionValid && completion > 0) return 'Emerging Risk (Needs Attention)';
     return 'Critical Risk (Needs Close Attention)';
   }
 
-  // Fallback for unknown status → Critical
   return 'Critical Risk (Needs Close Attention)';
 }
 
@@ -133,6 +124,42 @@ export function computeNewRiskIndex(
   return parseFloat((weightedSum / applicable.length).toFixed(2));
 }
 
+// ─── Per-Pillar Risk Index ───────────────────────────────────────────────────
+
+const PILLAR_IDS: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
+
+export interface PillarRiskInfo {
+  pillar: PillarId;
+  riskIndex: number;
+  applicableCount: number;
+}
+
+export function computePillarRiskIndices(
+  items: ActionItem[],
+  viewType: ViewType,
+  term: Term,
+  academicYear: AcademicYear
+): PillarRiskInfo[] {
+  return PILLAR_IDS.map(p => {
+    const pillarItems = items.filter(i => i.pillar === p);
+    const ri = computeNewRiskIndex(pillarItems, viewType, term, academicYear);
+    const applicable = getApplicableItems(pillarItems, viewType, term, academicYear);
+    return { pillar: p, riskIndex: ri, applicableCount: applicable.length };
+  });
+}
+
+export function getWorstPillar(
+  items: ActionItem[],
+  viewType: ViewType,
+  term: Term,
+  academicYear: AcademicYear
+): PillarRiskInfo | null {
+  const indices = computePillarRiskIndices(items, viewType, term, academicYear)
+    .filter(p => p.applicableCount > 0);
+  if (indices.length === 0) return null;
+  return indices.reduce((worst, p) => p.riskIndex > worst.riskIndex ? p : worst, indices[0]);
+}
+
 // ─── Enriched Item for Drill-Down ────────────────────────────────────────────
 
 export interface RiskSignalItem {
@@ -176,7 +203,9 @@ export function getEnrichedItems(
 export function generateNarrative(
   dist: RiskSignalDistItem[],
   riskIndex: number,
-  applicableCount: number
+  applicableCount: number,
+  worstPillar: PillarRiskInfo | null,
+  pillarLabels: Record<PillarId, string>
 ): string {
   if (applicableCount === 0) return 'No applicable items for the selected context.';
 
@@ -195,6 +224,9 @@ export function generateNarrative(
   narrative += `Largest share: ${largest.signal} (${largestPct}%). `;
   if (attentionPct > 0) {
     narrative += `Action focus: ${attentionPct}% of items require close attention or mitigation. `;
+  }
+  if (worstPillar && worstPillar.riskIndex > 0) {
+    narrative += `Highest risk: Pillar ${worstPillar.pillar} — ${pillarLabels[worstPillar.pillar]} (${worstPillar.riskIndex.toFixed(2)}). `;
   }
   narrative += 'See the distribution bar chart for details.';
 

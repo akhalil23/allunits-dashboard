@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import type { ActionItem, PillarId, Status } from '@/lib/types';
+import type { ActionItem } from '@/lib/types';
 import type { AxisConfig } from './AxisSelector';
-import { PILLAR_LABELS } from '@/lib/constants';
-import { getItemStatus, computeItemQualifier, computeTimeProgress } from '@/lib/intelligence';
+import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
+import { mapItemToRiskSignal, RISK_SIGNAL_COLORS, type RiskSignal } from '@/lib/risk-signals';
 import { motion } from 'framer-motion';
 import { ArrowRight, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react';
 
@@ -17,8 +17,8 @@ interface ChangedItem {
   item: ActionItem;
   statusA: string;
   statusB: string;
-  qualifierA: string;
-  qualifierB: string;
+  signalA: RiskSignal;
+  signalB: RiskSignal;
 }
 
 export default function WhatChangedPanel({ items, axisA, axisB, observedAt }: Props) {
@@ -26,9 +26,6 @@ export default function WhatChangedPanel({ items, axisA, axisB, observedAt }: Pr
     const improved: ChangedItem[] = [];
     const regressed: ChangedItem[] = [];
     let unchanged = 0;
-
-    const tpA = computeTimeProgress(observedAt, axisA.academicYear);
-    const tpB = computeTimeProgress(observedAt, axisB.academicYear);
 
     const statusRank: Record<string, number> = {
       'Not Applicable': 0,
@@ -47,23 +44,27 @@ export default function WhatChangedPanel({ items, axisA, axisB, observedAt }: Pr
         return;
       }
 
-      const qA = computeItemQualifier(sA, 0, tpA).qualifier;
-      const qB = computeItemQualifier(sB, 0, tpB).qualifier;
+      const cA = getItemCompletion(item, axisA.viewType, axisA.term, axisA.academicYear);
+      const cB = getItemCompletion(item, axisB.viewType, axisB.term, axisB.academicYear);
+      const cvA = typeof cA === 'number' && cA >= 0 && cA <= 100;
+      const cvB = typeof cB === 'number' && cB >= 0 && cB <= 100;
+      const signalA = mapItemToRiskSignal(sA, cA, cvA);
+      const signalB = mapItemToRiskSignal(sB, cB, cvB);
 
       const rankA = statusRank[sA] ?? 0;
       const rankB = statusRank[sB] ?? 0;
 
       if (rankB > rankA) {
-        improved.push({ item, statusA: sA, statusB: sB, qualifierA: qA, qualifierB: qB });
+        improved.push({ item, statusA: sA, statusB: sB, signalA, signalB });
       } else if (rankB < rankA) {
-        regressed.push({ item, statusA: sA, statusB: sB, qualifierA: qA, qualifierB: qB });
+        regressed.push({ item, statusA: sA, statusB: sB, signalA, signalB });
       } else {
         unchanged++;
       }
     });
 
     return { improved, regressed, unchanged };
-  }, [items, axisA, axisB, observedAt]);
+  }, [items, axisA, axisB]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
@@ -101,9 +102,15 @@ export default function WhatChangedPanel({ items, axisA, axisB, observedAt }: Pr
               <div key={c.item.id} className="flex items-center gap-2 text-xs py-1 border-b border-border last:border-0">
                 <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">{c.item.pillar}</span>
                 <span className="text-foreground flex-1 truncate">{c.item.actionStep}</span>
-                <span className="text-muted-foreground shrink-0 text-[10px]">{c.statusA}</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: RISK_SIGNAL_COLORS[c.signalA] }} />
+                  <span className="text-muted-foreground text-[10px]">{c.statusA}</span>
+                </div>
                 <ArrowRight className="w-3 h-3 text-green-500 shrink-0" />
-                <span className="text-green-600 font-medium shrink-0 text-[10px]">{c.statusB}</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: RISK_SIGNAL_COLORS[c.signalB] }} />
+                  <span className="text-green-600 font-medium text-[10px]">{c.statusB}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -121,9 +128,15 @@ export default function WhatChangedPanel({ items, axisA, axisB, observedAt }: Pr
               <div key={c.item.id} className="flex items-center gap-2 text-xs py-1 border-b border-border last:border-0">
                 <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">{c.item.pillar}</span>
                 <span className="text-foreground flex-1 truncate">{c.item.actionStep}</span>
-                <span className="text-muted-foreground shrink-0 text-[10px]">{c.statusA}</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: RISK_SIGNAL_COLORS[c.signalA] }} />
+                  <span className="text-muted-foreground text-[10px]">{c.statusA}</span>
+                </div>
                 <ArrowRight className="w-3 h-3 text-red-500 shrink-0" />
-                <span className="text-red-500 font-medium shrink-0 text-[10px]">{c.statusB}</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: RISK_SIGNAL_COLORS[c.signalB] }} />
+                  <span className="text-red-500 font-medium text-[10px]">{c.statusB}</span>
+                </div>
               </div>
             ))}
           </div>
