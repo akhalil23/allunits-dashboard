@@ -6,7 +6,7 @@ import {
   LayoutDashboard, FlaskConical, ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import lauLogo from '@/assets/lau-logo.jpg';
+import lauLogo from '@/assets/lau-logo-white.png';
 
 const pillars: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
