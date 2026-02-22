@@ -1,10 +1,14 @@
 import { useMemo } from 'react';
 import type { ActionItem, PillarId } from '@/lib/types';
 import type { AxisConfig } from './AxisSelector';
-import { PILLAR_LABELS, QUALIFIER_COLORS } from '@/lib/constants';
-import { getItemStatus, computeRiskIndex, computeQualifierDistribution } from '@/lib/intelligence';
+import { PILLAR_LABELS } from '@/lib/constants';
+import { getItemStatus } from '@/lib/intelligence';
+import {
+  computeNewRiskIndex,
+  computeRiskSignalDistribution,
+} from '@/lib/risk-signals';
 import { motion } from 'framer-motion';
-import { ArrowUp, ArrowDown, Minus, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
 interface Props {
   items: ActionItem[];
@@ -31,16 +35,16 @@ function DeltaIndicator({ value, suffix = '', invert = false }: { value: number;
 
 export default function DeltaStrip({ items, axisA, axisB, observedAt }: Props) {
   const deltas = useMemo(() => {
-    const riskA = computeRiskIndex(items, axisA.viewType, axisA.term, observedAt, axisA.academicYear);
-    const riskB = computeRiskIndex(items, axisB.viewType, axisB.term, observedAt, axisB.academicYear);
+    const riskA = computeNewRiskIndex(items, axisA.viewType, axisA.term, axisA.academicYear);
+    const riskB = computeNewRiskIndex(items, axisB.viewType, axisB.term, axisB.academicYear);
 
-    const qualA = computeQualifierDistribution(items, axisA.viewType, axisA.term, observedAt, axisA.academicYear);
-    const qualB = computeQualifierDistribution(items, axisB.viewType, axisB.term, observedAt, axisB.academicYear);
+    const distA = computeRiskSignalDistribution(items, axisA.viewType, axisA.term, axisA.academicYear);
+    const distB = computeRiskSignalDistribution(items, axisB.viewType, axisB.term, axisB.academicYear);
 
-    const achievedA = qualA.find(q => q.qualifier === 'Achieved')?.percent ?? 0;
-    const achievedB = qualB.find(q => q.qualifier === 'Achieved')?.percent ?? 0;
-    const criticalA = qualA.find(q => q.qualifier === 'Critical Risk')?.percent ?? 0;
-    const criticalB = qualB.find(q => q.qualifier === 'Critical Risk')?.percent ?? 0;
+    const noRiskA = distA.find(d => d.signal === 'No Risk (On Track)')?.percent ?? 0;
+    const noRiskB = distB.find(d => d.signal === 'No Risk (On Track)')?.percent ?? 0;
+    const criticalA = distA.find(d => d.signal === 'Critical Risk (Needs Close Attention)')?.percent ?? 0;
+    const criticalB = distB.find(d => d.signal === 'Critical Risk (Needs Close Attention)')?.percent ?? 0;
 
     const pillarDeltas = pillars.map(p => {
       const pi = items.filter(i => i.pillar === p);
@@ -55,12 +59,12 @@ export default function DeltaStrip({ items, axisA, axisB, observedAt }: Props) {
 
     return {
       riskDelta: riskB - riskA,
-      achievedDelta: achievedB - achievedA,
+      noRiskDelta: noRiskB - noRiskA,
       criticalDelta: criticalB - criticalA,
-      riskA, riskB, achievedA, achievedB, criticalA, criticalB,
+      riskA, riskB, noRiskA, noRiskB, criticalA, criticalB,
       pillarDeltas,
     };
-  }, [items, axisA, axisB, observedAt]);
+  }, [items, axisA, axisB]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
@@ -79,10 +83,10 @@ export default function DeltaStrip({ items, axisA, axisB, observedAt }: Props) {
         </div>
         <div className="card-elevated p-4 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Achieved Δ</p>
-            <p className="text-xs text-muted-foreground mt-1">{deltas.achievedA}% → {deltas.achievedB}%</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">No Risk Δ</p>
+            <p className="text-xs text-muted-foreground mt-1">{deltas.noRiskA}% → {deltas.noRiskB}%</p>
           </div>
-          <DeltaIndicator value={deltas.achievedDelta} suffix="%" />
+          <DeltaIndicator value={deltas.noRiskDelta} suffix="%" />
         </div>
         <div className="card-elevated p-4 flex items-center justify-between">
           <div>
@@ -102,9 +106,7 @@ export default function DeltaStrip({ items, axisA, axisB, observedAt }: Props) {
               <span className="text-xs font-medium text-muted-foreground w-6">{pd.pillar}</span>
               <span className="text-[10px] text-muted-foreground w-20 truncate">{pd.label}</span>
               <div className="flex-1 h-3 rounded-full bg-muted relative overflow-hidden">
-                {/* Axis A */}
                 <div className="absolute left-0 top-0 h-full rounded-full bg-blue-400/60" style={{ width: `${pd.pctA}%` }} />
-                {/* Axis B */}
                 <div className="absolute left-0 top-0 h-full rounded-full bg-primary/70" style={{ width: `${pd.pctB}%` }} />
               </div>
               <span className="text-[10px] text-muted-foreground w-8 text-right">{pd.pctA}%</span>

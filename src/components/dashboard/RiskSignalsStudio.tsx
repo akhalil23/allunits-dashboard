@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Info, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import type { ActionItem, ViewType, Term, AcademicYear } from '@/lib/types';
+import { PILLAR_LABELS } from '@/lib/constants';
 import { getApplicableItems } from '@/lib/intelligence';
 import {
   computeRiskSignalDistribution,
   computeNewRiskIndex,
   getEnrichedItems,
   generateNarrative,
+  getWorstPillar,
   RISK_SIGNAL_COLORS,
   RISK_SIGNAL_ORDER,
   type RiskSignal,
@@ -33,13 +34,11 @@ function RiskGauge({ value }: { value: number }) {
 
   return (
     <div className="relative h-3 rounded-full bg-muted overflow-hidden mt-3">
-      {/* Color zones */}
       <div className="absolute inset-0 flex">
         <div className="flex-1 bg-[#16A34A]/20" />
         <div className="flex-1 bg-[#F59E0B]/20" />
         <div className="flex-1 bg-[#EF4444]/20" />
       </div>
-      {/* Marker */}
       <motion.div
         className="absolute top-0 h-full w-1 rounded-full"
         style={{ backgroundColor: color }}
@@ -141,7 +140,8 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
   const applicableItems = useMemo(() => getApplicableItems(items, viewType, term, academicYear), [items, viewType, term, academicYear]);
   const dist = useMemo(() => computeRiskSignalDistribution(items, viewType, term, academicYear), [items, viewType, term, academicYear]);
   const riskIndex = useMemo(() => computeNewRiskIndex(items, viewType, term, academicYear), [items, viewType, term, academicYear]);
-  const narrative = useMemo(() => generateNarrative(dist, riskIndex, applicableItems.length), [dist, riskIndex, applicableItems.length]);
+  const worstPillar = useMemo(() => getWorstPillar(items, viewType, term, academicYear), [items, viewType, term, academicYear]);
+  const narrative = useMemo(() => generateNarrative(dist, riskIndex, applicableItems.length, worstPillar, PILLAR_LABELS), [dist, riskIndex, applicableItems.length, worstPillar]);
   const enrichedItems = useMemo(() => getEnrichedItems(items, viewType, term, academicYear), [items, viewType, term, academicYear]);
 
   const filteredTableItems = useMemo(() => {
@@ -149,7 +149,6 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
     return enrichedItems.filter(i => i.riskSignal === activeSignal);
   }, [enrichedItems, activeSignal]);
 
-  // Empty state
   if (applicableItems.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -194,7 +193,6 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Executive Summary</span>
             <p className="text-sm text-foreground leading-relaxed mt-3">{narrative}</p>
           </div>
-          {/* Distribution Notes */}
           <div className="mt-4 pt-3 border-t border-border space-y-1">
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Signal Definitions</span>
             <ul className="space-y-0.5 text-[10px] text-muted-foreground">
@@ -288,8 +286,6 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
     </motion.div>
   );
 }
-
-// ─── Section Header ──────────────────────────────────────────────────────────
 
 function SectionHeader() {
   return (
