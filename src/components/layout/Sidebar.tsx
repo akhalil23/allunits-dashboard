@@ -49,7 +49,7 @@ export default function Sidebar() {
           <img
             src={lauLogo}
             alt="LAU Logo"
-            className="h-14 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]"
+            className="h-20 w-auto object-contain"
           />
           <div className="text-center">
             <h1 className="text-white font-display font-bold text-sm leading-tight tracking-wider">GSR</h1>
