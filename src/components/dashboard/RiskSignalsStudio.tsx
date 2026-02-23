@@ -193,13 +193,28 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Executive Summary</span>
             <p className="text-sm text-foreground leading-relaxed mt-3">{narrative}</p>
           </div>
-          <div className="mt-4 pt-3 border-t border-border space-y-1">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Signal Definitions</span>
-            <ul className="space-y-0.5 text-[10px] text-muted-foreground">
-              <li>• <strong className="text-foreground">No Risk</strong> — on-target completion.</li>
-              <li>• <strong className="text-foreground">Emerging Risk</strong> — active execution needing attention.</li>
-              <li>• <strong className="text-foreground">Critical Risk</strong> — inactivity or stalled execution requiring close attention.</li>
-              <li>• <strong className="text-foreground">Realized Risk</strong> — below-target completion requiring mitigation strategy.</li>
+          <div className="mt-4 pt-3 border-t border-border space-y-2">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">How Risk Signals Work</span>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Each action item is automatically classified into a risk signal based on its <strong className="text-foreground">execution status</strong> and <strong className="text-foreground">completion percentage</strong>. The <strong className="text-foreground">Risk Index</strong> (0–3) is a weighted average: No Risk = 0, Emerging = 1, Critical = 2, Realized = 3. Only applicable items are included; "Not Applicable" items are excluded.
+            </p>
+            <ul className="space-y-1 text-[10px] text-muted-foreground">
+              <li className="flex items-start gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#16A34A] mt-0.5 shrink-0" />
+                <span><strong className="text-foreground">No Risk (On Track)</strong> — Status is "Completed – On Target." The item has met or exceeded its goal.</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#F59E0B] mt-0.5 shrink-0" />
+                <span><strong className="text-foreground">Emerging Risk (Needs Attention)</strong> — Status is "In Progress" with some completion, or "Not Started" but showing early progress. Execution is underway but not yet secured.</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#EF4444] mt-0.5 shrink-0" />
+                <span><strong className="text-foreground">Critical Risk (Needs Close Attention)</strong> — Status is "Not Started" with 0% completion, or "In Progress" with 0% completion. No meaningful execution has occurred.</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#7F1D1D] mt-0.5 shrink-0" />
+                <span><strong className="text-foreground">Realized Risk (Needs Mitigation)</strong> — Status is "Completed – Below Target." The item finished but fell short of its goal, requiring a mitigation strategy.</span>
+              </li>
             </ul>
           </div>
         </div>
