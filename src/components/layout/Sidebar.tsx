@@ -6,7 +6,7 @@ import {
   LayoutDashboard, FlaskConical, ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import lauLogo from '@/assets/lau-logo.jpg';
+import lauLogo from '@/assets/lau-logo.png';
 
 const pillars: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
@@ -46,13 +46,11 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-4 pt-5 pb-4">
         <div className="flex flex-col items-center gap-3 px-3 py-4">
-          <div className="relative h-16 w-16 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.08)]">
-            <img
-              src={lauLogo}
-              alt="LAU Logo"
-              className="h-12 w-12 object-contain rounded-full mix-blend-lighten brightness-125 contrast-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
-            />
-          </div>
+          <img
+            src={lauLogo}
+            alt="LAU Logo"
+            className="h-14 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]"
+          />
           <div className="text-center">
             <h1 className="text-white font-display font-bold text-sm leading-tight tracking-wider">GSR</h1>
             <p className="text-white/50 text-[10px] tracking-widest uppercase">Strategic Plan IV</p>
