@@ -135,7 +135,7 @@
 
 @layer utilities {
   .sidebar-gradient {
-    background: linear-gradient(180deg, hsl(152 72% 20%) 0%, hsl(152 100% 26%) 100%);
+    background: linear-gradient(180deg, hsl(174 100% 22%) 0%, hsl(170 80% 18%) 100%);
   }
 
   .dark .sidebar-gradient {
