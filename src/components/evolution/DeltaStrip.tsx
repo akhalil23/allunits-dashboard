@@ -73,7 +73,7 @@ export default function DeltaStrip({ items, axisA, axisB, observedAt }: Props) {
       </h3>
 
       {/* Summary deltas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
         <div className="card-elevated p-4 flex items-center justify-between">
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Risk Index Δ</p>

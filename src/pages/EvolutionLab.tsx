@@ -47,7 +47,7 @@ export default function EvolutionLab() {
     return (
       <DashboardLayout>
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-3 max-w-md">
+          <div className="text-center space-y-3 max-w-md px-4">
             <AlertCircle className="w-8 h-8 text-destructive mx-auto" />
             <p className="text-sm text-foreground font-medium">Failed to load data</p>
             <p className="text-xs text-muted-foreground">{error?.message || 'Unknown error'}</p>
@@ -67,20 +67,20 @@ export default function EvolutionLab() {
     <DashboardLayout>
       <Header observedAt={observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} />
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-6 max-w-[1600px]">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px]">
           {/* Title */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <FlaskConical className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <h2 className="font-display text-lg font-bold text-foreground">Strategic Evolution Lab</h2>
+            <div className="min-w-0">
+              <h2 className="font-display text-base sm:text-lg font-bold text-foreground">Strategic Evolution Lab</h2>
               <p className="text-xs text-muted-foreground">Compare any two snapshots of the strategic plan across years, terms, and view types</p>
             </div>
           </motion.div>
 
-          {/* Axis selectors */}
+          {/* Axis selectors - stack on mobile */}
           <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-center">
             <AxisSelector label="Axis A (Baseline)" accent="bg-blue-400" config={axisA} onChange={setAxisA} />
             <div className="flex items-center justify-center">
@@ -91,8 +91,8 @@ export default function EvolutionLab() {
             <AxisSelector label="Axis B (Comparison)" accent="bg-primary" config={axisB} onChange={setAxisB} />
           </div>
 
-          {/* Snapshot cards side by side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Snapshot cards side by side - stack on mobile */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <SnapshotCard label="Axis A" accent="bg-blue-400" items={items} config={axisA} observedAt={observedAt} />
             <SnapshotCard label="Axis B" accent="bg-primary" items={items} config={axisB} observedAt={observedAt} />
           </div>

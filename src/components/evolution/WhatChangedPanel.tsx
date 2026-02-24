@@ -73,7 +73,7 @@ export default function WhatChangedPanel({ items, axisA, axisB, observedAt }: Pr
       </h3>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-4">
         <div className="card-elevated p-4 text-center">
           <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto mb-1" />
           <p className="text-2xl font-display font-bold text-green-500">{improved.length}</p>

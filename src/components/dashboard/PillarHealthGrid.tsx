@@ -32,10 +32,8 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
       const completedOnTarget = counts['Completed – On Target'] || 0;
       const completedPercent = Math.round((completedOnTarget / total) * 100);
 
-      // Risk index for this pillar
       const riskIndex = computeNewRiskIndex(pillarItems, viewType, term, academicYear);
 
-      // Sparkline: mid & end completion for current AY
       const midApplicable = pillarItems.filter(i => getItemStatus(i, viewType, 'mid', academicYear) !== 'Not Applicable');
       const endApplicable = pillarItems.filter(i => getItemStatus(i, viewType, 'end', academicYear) !== 'Not Applicable');
       const midComp = midApplicable.length > 0
@@ -69,9 +67,10 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
           </Tooltip>
         </TooltipProvider>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+      {/* Responsive grid: 1 col mobile, 2 col tablet, 5 col desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
         {pillarData.map((pd, i) => (
-          <motion.div key={pd.pillar} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="card-elevated p-5 hover:shadow-md transition-shadow duration-300 cursor-pointer">
+          <motion.div key={pd.pillar} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }} className="card-elevated p-4 sm:p-5 hover:shadow-md transition-shadow duration-300 cursor-pointer">
             <div className="flex items-center gap-2 mb-3">
               <span className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{pd.pillar}</span>
               <span className="text-xs font-medium text-foreground truncate flex-1">{pd.label}</span>
@@ -138,7 +137,6 @@ function MiniSparkline({ from, to }: { from: number; to: number }) {
   const w = 32;
   const h = 14;
   const pad = 2;
-  const max = Math.max(from, to, 1);
   const y1 = h - pad - ((from / 100) * (h - pad * 2));
   const y2 = h - pad - ((to / 100) * (h - pad * 2));
   const color = to >= from ? '#16A34A' : '#EF4444';
