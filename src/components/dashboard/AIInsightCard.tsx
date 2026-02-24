@@ -1,10 +1,11 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, TrendingUp, AlertTriangle, Lightbulb, Loader2, RefreshCw, Zap } from 'lucide-react';
 import type { ActionItem, ViewType, Term, AcademicYear, PillarId, Status } from '@/lib/types';
 import { PILLAR_LABELS } from '@/lib/constants';
 import { getItemStatus, computeQualifierDistribution, computeRiskIndex, computeTimeProgress } from '@/lib/intelligence';
 import { useAIInsights, type InsightSummary } from '@/hooks/use-ai-insights';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
   items: ActionItem[];
@@ -31,6 +32,8 @@ const insightColors = {
 
 export default function AIInsightCard({ items, viewType, term, academicYear, observedAt, selectedPillar }: Props) {
   const { data, isLoading, error, generate } = useAIInsights();
+  const isMobile = useIsMobile();
+  const [expanded, setExpanded] = useState(false);
 
   const summary = useMemo((): InsightSummary => {
     const statusCounts: Record<string, number> = {};
@@ -76,6 +79,10 @@ export default function AIInsightCard({ items, viewType, term, academicYear, obs
     generate(summary);
   };
 
+  // On mobile, show preview with expand
+  const showFullResults = data && !isLoading && (!isMobile || expanded);
+  const showPreview = data && !isLoading && isMobile && !expanded;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -85,7 +92,7 @@ export default function AIInsightCard({ items, viewType, term, academicYear, obs
     >
       <div className="absolute inset-0 bg-primary/[0.03] pointer-events-none" />
 
-      <div className="relative p-5">
+      <div className="relative p-4 sm:p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -137,14 +144,27 @@ export default function AIInsightCard({ items, viewType, term, academicYear, obs
             </motion.div>
           )}
 
-          {/* Results */}
-          {data && !isLoading && (
+          {/* Mobile Preview */}
+          {showPreview && (
+            <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-2">
+              <p className="text-base font-display font-semibold text-foreground">{data.headline}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {data.insights[0]?.detail}
+              </p>
+              <button onClick={() => setExpanded(true)} className="text-xs text-primary font-medium">
+                Expand insights ↓
+              </button>
+            </motion.div>
+          )}
+
+          {/* Full Results */}
+          {showFullResults && (
             <motion.div key="results" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
               {/* Headline */}
               <p className="text-base font-display font-semibold text-foreground">{data.headline}</p>
 
               {/* Insight cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {data.insights.map((insight, i) => {
                   const Icon = insightIcons[insight.type] || Lightbulb;
                   const colors = insightColors[insight.type] || insightColors.opportunity;
@@ -181,6 +201,12 @@ export default function AIInsightCard({ items, viewType, term, academicYear, obs
               <p className="text-[10px] text-muted-foreground italic border-t border-border pt-2">
                 AI-generated insights — decision-support only. Based on {items.length} items, {selectedPillar === 'all' ? 'all pillars' : `Pillar ${selectedPillar}`}.
               </p>
+
+              {isMobile && expanded && (
+                <button onClick={() => setExpanded(false)} className="text-xs text-primary font-medium">
+                  Collapse ↑
+                </button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

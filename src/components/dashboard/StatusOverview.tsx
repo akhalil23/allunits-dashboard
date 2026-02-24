@@ -67,9 +67,9 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       {/* Applicability */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-6">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Item Applicability</h3>
           <TooltipProvider>
@@ -83,18 +83,18 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="w-32 h-32">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0">
             <ResponsiveContainer>
               <PieChart>
-                <Pie data={applicabilityData} innerRadius={38} outerRadius={56} dataKey="value" startAngle={90} endAngle={-270} strokeWidth={0}>
+                <Pie data={applicabilityData} innerRadius="60%" outerRadius="85%" dataKey="value" startAngle={90} endAngle={-270} strokeWidth={0}>
                   {applicabilityData.map((d, i) => <Cell key={i} fill={d.color} />)}
                 </Pie>
                 <RechartsTooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 space-y-3 min-w-0">
             <div className="flex items-center justify-between">
               <span className="text-sm text-foreground">Total Items</span>
               <span className="text-2xl font-display font-bold text-foreground">{items.length}</span>
@@ -115,7 +115,7 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
       </motion.div>
 
       {/* Progress Distribution */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-6">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Progress Distribution</h3>
           <TooltipProvider>
@@ -129,18 +129,18 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="w-32 h-32">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0">
             <ResponsiveContainer>
               <PieChart>
-                <Pie data={statusDist} innerRadius={38} outerRadius={56} dataKey="count" startAngle={90} endAngle={-270} strokeWidth={0}>
+                <Pie data={statusDist} innerRadius="60%" outerRadius="85%" dataKey="count" startAngle={90} endAngle={-270} strokeWidth={0}>
                   {statusDist.map((d, i) => <Cell key={i} fill={d.color} />)}
                 </Pie>
                 <RechartsTooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-2 min-w-0">
             {statusDist.map(d => (
               <div key={d.status} className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />

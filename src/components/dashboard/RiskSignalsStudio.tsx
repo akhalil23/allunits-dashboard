@@ -18,6 +18,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
   items: ActionItem[];
@@ -136,6 +137,8 @@ function StackedBar({
 export default function RiskSignalsStudio({ items, viewType, term, academicYear }: Props) {
   const [activeSignal, setActiveSignal] = useState<RiskSignal | null>(null);
   const [tableOpen, setTableOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [narrativeExpanded, setNarrativeExpanded] = useState(!isMobile);
 
   const applicableItems = useMemo(() => getApplicableItems(items, viewType, term, academicYear), [items, viewType, term, academicYear]);
   const dist = useMemo(() => computeRiskSignalDistribution(items, viewType, term, academicYear), [items, viewType, term, academicYear]);
@@ -162,18 +165,18 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-5">
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-4 sm:space-y-5">
       <SectionHeader />
 
       {/* Top Row: Risk Index + Narrative */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         {/* Risk Index Card */}
-        <div className="card-elevated p-6 relative overflow-hidden">
+        <div className="card-elevated p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] to-transparent pointer-events-none" />
           <div className="relative">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Index</span>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className={`text-5xl font-display font-bold ${riskIndex < 1 ? 'text-[#16A34A]' : riskIndex < 2 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
+              <span className={`text-4xl sm:text-5xl font-display font-bold ${riskIndex < 1 ? 'text-[#16A34A]' : riskIndex < 2 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
                 {riskIndex.toFixed(2)}
               </span>
               <span className="text-xs text-muted-foreground">/ 3.00</span>
@@ -188,40 +191,56 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
         </div>
 
         {/* Narrative Card */}
-        <div className="card-elevated p-6 flex flex-col justify-between">
+        <div className="card-elevated p-4 sm:p-6 flex flex-col justify-between">
           <div>
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Executive Summary</span>
-            <p className="text-sm text-foreground leading-relaxed mt-3">{narrative}</p>
+            {isMobile && !narrativeExpanded ? (
+              <div>
+                <p className="text-sm text-foreground leading-relaxed mt-3 line-clamp-3">{narrative}</p>
+                <button onClick={() => setNarrativeExpanded(true)} className="text-xs text-primary font-medium mt-1">
+                  Expand ↓
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm text-foreground leading-relaxed mt-3">{narrative}</p>
+            )}
           </div>
-          <div className="mt-4 pt-3 border-t border-border space-y-2">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">How Risk Signals Work</span>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Each action item is automatically classified into a risk signal based on its <strong className="text-foreground">execution status</strong> and <strong className="text-foreground">completion percentage</strong>. The <strong className="text-foreground">Risk Index</strong> (0–3) is a weighted average: No Risk = 0, Emerging = 1, Critical = 2, Realized = 3. Only applicable items are included; "Not Applicable" items are excluded.
-            </p>
-            <ul className="space-y-1 text-[10px] text-muted-foreground">
-              <li className="flex items-start gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#16A34A] mt-0.5 shrink-0" />
-                <span><strong className="text-foreground">No Risk (On Track)</strong> — Status is "Completed – On Target." The item has met or exceeded its goal.</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#F59E0B] mt-0.5 shrink-0" />
-                <span><strong className="text-foreground">Emerging Risk (Needs Attention)</strong> — Status is "In Progress" with some completion, or "Not Started" but showing early progress. Execution is underway but not yet secured.</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#EF4444] mt-0.5 shrink-0" />
-                <span><strong className="text-foreground">Critical Risk (Needs Close Attention)</strong> — Status is "Not Started" with 0% completion, or "In Progress" with 0% completion. No meaningful execution has occurred.</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#7F1D1D] mt-0.5 shrink-0" />
-                <span><strong className="text-foreground">Realized Risk (Needs Mitigation)</strong> — Status is "Completed – Below Target." The item finished but fell short of its goal, requiring a mitigation strategy.</span>
-              </li>
-            </ul>
-          </div>
+          {(narrativeExpanded || !isMobile) && (
+            <div className="mt-4 pt-3 border-t border-border space-y-2">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">How Risk Signals Work</span>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Each action item is automatically classified into a risk signal based on its <strong className="text-foreground">execution status</strong> and <strong className="text-foreground">completion percentage</strong>. The <strong className="text-foreground">Risk Index</strong> (0–3) is a weighted average: No Risk = 0, Emerging = 1, Critical = 2, Realized = 3. Only applicable items are included; "Not Applicable" items are excluded.
+              </p>
+              <ul className="space-y-1 text-[10px] text-muted-foreground">
+                <li className="flex items-start gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#16A34A] mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">No Risk (On Track)</strong> — Status is "Completed – On Target." The item has met or exceeded its goal.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#F59E0B] mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">Emerging Risk (Needs Attention)</strong> — Status is "In Progress" with some completion, or "Not Started" but showing early progress. Execution is underway but not yet secured.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#EF4444] mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">Critical Risk (Needs Close Attention)</strong> — Status is "Not Started" with 0% completion, or "In Progress" with 0% completion. No meaningful execution has occurred.</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#7F1D1D] mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">Realized Risk (Needs Mitigation)</strong> — Status is "Completed – Below Target." The item finished but fell short of its goal, requiring a mitigation strategy.</span>
+                </li>
+              </ul>
+              {isMobile && narrativeExpanded && (
+                <button onClick={() => setNarrativeExpanded(false)} className="text-xs text-primary font-medium mt-1">
+                  Collapse ↑
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Stacked Bar Chart */}
-      <div className="card-elevated p-6">
+      <div className="card-elevated p-4 sm:p-6">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-4">Risk Signal Distribution</span>
         <StackedBar
           dist={dist}
@@ -248,28 +267,28 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
           <CollapsibleContent>
             <div className="max-h-[420px] overflow-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow>
                     <TableHead className="text-[10px]">Action Step</TableHead>
                     <TableHead className="text-[10px] w-16">Pillar</TableHead>
                     <TableHead className="text-[10px]">Status</TableHead>
                     <TableHead className="text-[10px] w-16 text-right">%</TableHead>
                     <TableHead className="text-[10px]">Risk Signal</TableHead>
-                    <TableHead className="text-[10px] w-16">Doc</TableHead>
-                    <TableHead className="text-[10px] w-20">Source</TableHead>
+                    {!isMobile && <TableHead className="text-[10px] w-16">Doc</TableHead>}
+                    {!isMobile && <TableHead className="text-[10px] w-20">Source</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTableItems.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-6">
+                      <TableCell colSpan={isMobile ? 5 : 7} className="text-center text-xs text-muted-foreground py-6">
                         No items match the selected filter.
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredTableItems.map(item => (
                       <TableRow key={item.id}>
-                        <TableCell className="text-[11px] text-foreground max-w-[240px] truncate">{item.actionStep}</TableCell>
+                        <TableCell className="text-[11px] text-foreground max-w-[180px] sm:max-w-[240px] truncate">{item.actionStep}</TableCell>
                         <TableCell className="text-[11px] text-muted-foreground">{item.pillar}</TableCell>
                         <TableCell className="text-[11px] text-foreground">{item.status}</TableCell>
                         <TableCell className="text-[11px] text-right text-foreground">{item.completion}%</TableCell>
@@ -279,16 +298,20 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
                             <span className="text-[10px] text-foreground">{item.riskSignal.split(' (')[0]}</span>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {item.supportingDoc ? (
-                            <a href={item.supportingDoc} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          ) : (
-                            <span className="text-[10px] text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-[10px] text-muted-foreground">P{item.pillar}-R{item.sheetRow}</TableCell>
+                        {!isMobile && (
+                          <TableCell>
+                            {item.supportingDoc ? (
+                              <a href={item.supportingDoc} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        )}
+                        {!isMobile && (
+                          <TableCell className="text-[10px] text-muted-foreground">P{item.pillar}-R{item.sheetRow}</TableCell>
+                        )}
                       </TableRow>
                     ))
                   )}
