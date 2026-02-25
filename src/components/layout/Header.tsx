@@ -1,9 +1,10 @@
 import { useTheme } from '@/hooks/use-theme';
-
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { IntegrityAuditResult } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
-import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
@@ -28,6 +29,8 @@ interface HeaderProps {
 
 export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType, integrityAudit }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   
   const integrity = integrityAudit?.level ?? getDataIntegrityLevel(dataQuality);
@@ -217,6 +220,23 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </motion.button>
+
+            {/* Logout */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={() => { logout(); navigate('/login'); }}
+                    className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom"><p>Sign out</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             {/* Theme toggle */}
             <motion.button

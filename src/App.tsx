@@ -5,8 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { DashboardProvider } from "@/contexts/DashboardContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import EvolutionLab from "./pages/EvolutionLab";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,13 +21,26 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <DashboardProvider>
+          <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/evolution-lab" element={<EvolutionLab />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <DashboardProvider>
+                    <Index />
+                  </DashboardProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/evolution-lab" element={
+                <ProtectedRoute>
+                  <DashboardProvider>
+                    <EvolutionLab />
+                  </DashboardProvider>
+                </ProtectedRoute>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </DashboardProvider>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

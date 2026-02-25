@@ -2,3 +2,6 @@ project_id = "slmskfdoinjqtuagaoky"
 
 [functions.fetch-gsr-data]
 verify_jwt = false
+
+[functions.dashboard-login]
+verify_jwt = false
