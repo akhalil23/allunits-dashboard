@@ -30,7 +30,7 @@ serve(async (req) => {
     if (usernameMatch && passwordMatch) {
       // Generate a simple session token with expiry
       const sessionToken = crypto.randomUUID();
-      const expiresAt = Date.now() + 8 * 60 * 60 * 1000; // 8 hours
+      const expiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
 
       return new Response(
         JSON.stringify({ token: sessionToken, expiresAt }),
