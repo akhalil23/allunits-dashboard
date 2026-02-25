@@ -52,8 +52,8 @@ export default function Login() {
         <div className="bg-card border border-border rounded-2xl shadow-xl p-8">
           {/* Logo & Title */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-xl overflow-hidden mb-4 shadow-lg">
-              <img src={lauLogo} alt="LAU" className="w-full h-full object-cover" />
+            <div className="w-24 h-24 rounded-xl overflow-hidden mb-4 shadow-lg">
+              <img src={lauLogo} alt="LAU" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-xl font-display font-bold text-foreground">GSR Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">Sign in to continue</p>
