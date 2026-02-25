@@ -1,0 +1,51 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { username, password } = await req.json();
+
+    const validUsername = Deno.env.get('GSR_DASHBOARD_USERNAME');
+    const validPassword = Deno.env.get('GSR_DASHBOARD_PASSWORD');
+
+    if (!validUsername || !validPassword) {
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Constant-time-ish comparison
+    const usernameMatch = username === validUsername;
+    const passwordMatch = password === validPassword;
+
+    if (usernameMatch && passwordMatch) {
+      // Generate a simple session token with expiry
+      const sessionToken = crypto.randomUUID();
+      const expiresAt = Date.now() + 8 * 60 * 60 * 1000; // 8 hours
+
+      return new Response(
+        JSON.stringify({ token: sessionToken, expiresAt }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ error: 'Invalid username or password' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch {
+    return new Response(
+      JSON.stringify({ error: 'Invalid request' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
