@@ -1,6 +1,7 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { PILLAR_LABELS } from '@/lib/constants';
+import { getUnitConfig } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 import {
   LayoutDashboard, FlaskConical, ChevronRight, Menu, X,
@@ -15,11 +16,14 @@ const pillars: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { unitId } = useParams<{ unitId: string }>();
   const { selectedPillar, setSelectedPillar } = useDashboard();
-  const isEvolutionLab = location.pathname === '/evolution-lab';
+  const isEvolutionLab = location.pathname.endsWith('/evolution-lab');
   const isMobile = useIsMobile();
   const [isTablet, setIsTablet] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const unitConfig = getUnitConfig(unitId || 'GSR');
+  const unitName = unitConfig?.name || 'GSR';
 
   useEffect(() => {
     const check = () => {
@@ -31,10 +35,11 @@ export default function Sidebar() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Close drawer on route change
   useEffect(() => {
     setDrawerOpen(false);
   }, [location.pathname, selectedPillar]);
+
+  const basePath = `/unit/${unitId || 'GSR'}`;
 
   const navItems = [
     {
@@ -42,7 +47,7 @@ export default function Sidebar() {
       label: 'Dashboard',
       icon: LayoutDashboard,
       active: !isEvolutionLab && selectedPillar === 'all',
-      onClick: () => { navigate('/'); setSelectedPillar('all'); },
+      onClick: () => { navigate(basePath); setSelectedPillar('all'); },
     },
     ...pillars.map(p => ({
       id: `pillar-${p}`,
@@ -50,14 +55,14 @@ export default function Sidebar() {
       sublabel: PILLAR_LABELS[p],
       icon: null as any,
       active: !isEvolutionLab && selectedPillar === p,
-      onClick: () => { navigate('/'); setSelectedPillar(p); },
+      onClick: () => { navigate(basePath); setSelectedPillar(p); },
     })),
     {
       id: 'evolution',
       label: 'Evolution Lab',
       icon: FlaskConical,
       active: isEvolutionLab,
-      onClick: () => navigate('/evolution-lab'),
+      onClick: () => navigate(`${basePath}/evolution-lab`),
     },
   ];
 
@@ -65,7 +70,6 @@ export default function Sidebar() {
   if (isMobile) {
     return (
       <>
-        {/* Hamburger button - rendered via portal-like fixed positioning */}
         <button
           onClick={() => setDrawerOpen(true)}
           className="fixed top-3 left-3 z-50 p-2 rounded-lg bg-card border border-border shadow-md text-foreground"
@@ -74,7 +78,6 @@ export default function Sidebar() {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Overlay */}
         <AnimatePresence>
           {drawerOpen && (
             <>
@@ -96,7 +99,7 @@ export default function Sidebar() {
                   <div className="flex items-center gap-2">
                     <img src={lauLogo} alt="LAU Logo" className="h-10 w-auto object-contain" />
                     <div>
-                      <h1 className="text-white font-display font-bold text-xs tracking-wider">GSR</h1>
+                      <h1 className="text-white font-display font-bold text-xs tracking-wider">{unitName}</h1>
                       <p className="text-white/50 text-[9px] tracking-widest uppercase">Strategic Plan IV</p>
                     </div>
                   </div>
@@ -145,7 +148,7 @@ export default function Sidebar() {
                 <div className="px-4 pb-4">
                   <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10">
                     <p className="text-[10px] text-white/40 leading-tight">
-                      Graduate Studies & Research<br />
+                      {unitConfig?.fullName || 'Strategic Plan IV'}<br />
                       Lebanese American University
                     </p>
                   </div>
@@ -204,7 +207,7 @@ export default function Sidebar() {
     );
   }
 
-  // Desktop: full sidebar (unchanged)
+  // Desktop: full sidebar
   return (
     <aside className="sidebar-gradient w-64 min-h-screen flex flex-col shrink-0">
       {/* Logo */}
@@ -216,7 +219,7 @@ export default function Sidebar() {
             className="h-20 w-auto object-contain"
           />
           <div className="text-center">
-            <h1 className="text-white font-display font-bold text-sm leading-tight tracking-wider">GSR</h1>
+            <h1 className="text-white font-display font-bold text-sm leading-tight tracking-wider">{unitName}</h1>
             <p className="text-white/50 text-[10px] tracking-widest uppercase">Strategic Plan IV</p>
           </div>
         </div>
@@ -271,7 +274,7 @@ export default function Sidebar() {
       <div className="px-4 pb-4">
         <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10">
           <p className="text-[10px] text-white/40 leading-tight">
-            Graduate Studies & Research<br />
+            {unitConfig?.fullName || 'Strategic Plan IV'}<br />
             Lebanese American University
           </p>
         </div>

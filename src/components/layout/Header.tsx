@@ -1,10 +1,11 @@
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useUserRole } from '@/hooks/use-user-role';
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { IntegrityAuditResult } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
-import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet, LogOut } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet, LogOut, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
@@ -13,6 +14,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportPDF } from '@/lib/export-pdf';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getUnitConfig, UNIT_CONFIGS } from '@/lib/unit-config';
 
 
 interface HeaderProps {
@@ -31,10 +33,15 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const { unitId } = useParams<{ unitId: string }>();
+  const { data: userRole } = useUserRole();
   const isMobile = useIsMobile();
+  const unitConfig = getUnitConfig(unitId || 'GSR');
   
   const integrity = integrityAudit?.level ?? getDataIntegrityLevel(dataQuality);
   const headerRef = useRef<HTMLElement>(null);
+
+  const isAdmin = userRole?.role === 'admin';
 
   const getExportRows = useCallback(() => {
     if (!items?.length || !term || !academicYear) return null;
@@ -60,10 +67,10 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `GSR_Report_${academicYear}_${term}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${unitId || 'GSR'}_Report_${academicYear}_${term}_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [getExportRows, academicYear, term]);
+  }, [getExportRows, academicYear, term, unitId]);
 
   const handleExportPDF = useCallback(() => {
     if (!items?.length || !term || !academicYear) return;
@@ -78,7 +85,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
 
   return (
     <header ref={headerRef} className={`relative overflow-hidden ${isMobile ? 'sticky top-0 z-40' : ''}`}>
-      {/* Animated gradient background */}
+      {/* Solid LAU green background */}
       <div className="absolute inset-0 header-gradient-animated" />
 
       {/* Subtle mesh overlay */}
@@ -118,9 +125,33 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
             <div className="flex flex-col min-w-0">
-              <h1 className={`text-white font-display font-bold tracking-tight mb-0.5 ${isMobile ? 'text-base leading-tight' : 'text-2xl mb-1.5'}`}>
-                Graduate Studies & Research
-              </h1>
+              {/* Unit title with admin switcher */}
+              <div className="flex items-center gap-2">
+                <h1 className={`text-white font-display font-bold tracking-tight mb-0.5 ${isMobile ? 'text-base leading-tight' : 'text-2xl mb-1.5'}`}>
+                  {unitConfig?.fullName || 'Dashboard'}
+                </h1>
+                {isAdmin && !isMobile && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1 rounded-md bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors">
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto min-w-[240px]">
+                      {Object.values(UNIT_CONFIGS).map(uc => (
+                        <DropdownMenuItem
+                          key={uc.id}
+                          onClick={() => navigate(`/unit/${uc.id}`)}
+                          className={`cursor-pointer ${uc.id === unitId ? 'bg-accent font-medium' : ''}`}
+                        >
+                          <span className="font-medium mr-2">{uc.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">{uc.fullName}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
               {!isMobile && (
                 <motion.p
                   className="text-white/50 text-sm font-medium tracking-wide"
@@ -141,7 +172,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
-            {/* Data Integrity Badge - hide label on mobile */}
+            {/* Data Integrity Badge */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -175,7 +206,6 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
 
             {/* Export Dropdown */}
             <DropdownMenu>
