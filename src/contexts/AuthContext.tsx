@@ -1,78 +1,55 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-
-interface AuthState {
-  token: string;
-  expiresAt: number;
-}
+import { supabase } from '@/integrations/supabase/client';
+import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextValue {
+  user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<string | null>;
+  login: (email: string, password: string) => Promise<string | null>;
   logout: () => void;
 }
 
-const AUTH_KEY = 'gsr_dashboard_session';
-
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getStoredAuth(): AuthState | null {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY);
-    if (!raw) return null;
-    const parsed: AuthState = JSON.parse(raw);
-    if (Date.now() > parsed.expiresAt) {
-      localStorage.removeItem(AUTH_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    localStorage.removeItem(AUTH_KEY);
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = getStoredAuth();
-    setIsAuthenticated(!!stored);
-    setIsLoading(false);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = useCallback(async (username: string, password: string): Promise<string | null> => {
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/dashboard-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        return data.error || 'Login failed';
-      }
-
-      const authState: AuthState = { token: data.token, expiresAt: data.expiresAt };
-      localStorage.setItem(AUTH_KEY, JSON.stringify(authState));
-      setIsAuthenticated(true);
-      return null;
-    } catch {
-      return 'Unable to connect. Please try again.';
-    }
+  const login = useCallback(async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return error.message;
+    return null;
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(AUTH_KEY);
-    setIsAuthenticated(false);
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, session, isAuthenticated: !!session, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

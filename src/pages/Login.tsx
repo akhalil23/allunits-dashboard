@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/use-theme';
 import { Input } from '@/components/ui/input';
@@ -10,9 +10,10 @@ import { motion } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo.png';
 
 export default function Login() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const err = await login(username.trim(), password);
+    const err = await login(email.trim(), password);
     setLoading(false);
     if (err) setError(err);
   };
@@ -55,33 +56,39 @@ export default function Login() {
             <div className="w-24 h-24 rounded-xl overflow-hidden mb-4 shadow-lg">
               <img src={lauLogo} alt="LAU" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-xl font-display font-bold text-foreground">GSR Dashboard</h1>
+            <h1 className="text-xl font-display font-bold text-foreground">SP Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">Sign in to continue</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                placeholder="Enter username"
-                autoComplete="username"
+                id="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                autoComplete="email"
                 required
                 disabled={loading}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder="Enter your password"
                 autoComplete="current-password"
                 required
                 disabled={loading}
@@ -110,7 +117,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
-          Graduate Studies &amp; Research — Strategic Plan IV
+          Strategic Plan IV — Intelligence Dashboard
         </p>
       </motion.div>
     </div>

@@ -36,7 +36,7 @@ export default function EvolutionLab() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-            <p className="text-sm text-muted-foreground">Loading GSR data…</p>
+            <p className="text-sm text-muted-foreground">Loading data from source…</p>
           </div>
         </div>
       </DashboardLayout>

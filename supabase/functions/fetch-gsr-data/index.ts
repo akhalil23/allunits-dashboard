@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const SPREADSHEET_ID = '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk';
+const DEFAULT_SPREADSHEET_ID = '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk';
 
 // Explicit cell ranges with generous upper bounds for full row coverage
 const RANGES = [
@@ -325,6 +325,15 @@ serve(async (req) => {
   }
 
   try {
+    // Accept spreadsheetId from request body
+    let spreadsheetId = DEFAULT_SPREADSHEET_ID;
+    try {
+      if (req.method === 'POST') {
+        const body = await req.json();
+        if (body?.spreadsheetId) spreadsheetId = body.spreadsheetId;
+      }
+    } catch { /* use default */ }
+
     const serviceAccountRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
     if (!serviceAccountRaw) {
       throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY is not configured');
@@ -334,7 +343,7 @@ serve(async (req) => {
     const accessToken = await getAccessToken(serviceAccount);
 
     const rangeParams = RANGES.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchGet?${rangeParams}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangeParams}`;
 
     const sheetsResp = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
