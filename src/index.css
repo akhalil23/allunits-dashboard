@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 229 28% 11%;
 
-    --primary: 174 100% 22%;
+    --primary: 161 100% 20%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 174 14% 93%;
@@ -31,35 +31,35 @@
 
     --border: 174 10% 89%;
     --input: 174 10% 86%;
-    --ring: 174 100% 22%;
+    --ring: 161 100% 20%;
 
     --radius: 0.625rem;
 
-    /* Sidebar green gradient tokens */
-    --sidebar-background: 174 100% 22%;
+    /* Sidebar — solid LAU Green RGB(0,103,81) */
+    --sidebar-background: 161 100% 20%;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 174 100% 22%;
-    --sidebar-accent: 174 50% 25%;
+    --sidebar-primary-foreground: 161 100% 20%;
+    --sidebar-accent: 161 80% 24%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 174 40% 28%;
-    --sidebar-ring: 174 100% 36%;
-    --sidebar-muted: 174 30% 30%;
+    --sidebar-border: 161 60% 26%;
+    --sidebar-ring: 161 100% 30%;
+    --sidebar-muted: 161 50% 28%;
 
-    /* Hero header */
-    --header-from: 174 100% 22%;
-    --header-to: 174 80% 18%;
+    /* Hero header — solid LAU Green */
+    --header-from: 161 100% 20%;
+    --header-to: 161 100% 20%;
 
     /* Qualifier colors */
     --qualifier-na: 216 13% 73%;
-    --qualifier-achieved: 174 100% 22%;
+    --qualifier-achieved: 161 100% 20%;
     --qualifier-shortfall: 354 51% 46%;
     --qualifier-ontrack: 170 28% 51%;
     --qualifier-emerging: 36 78% 57%;
     --qualifier-critical: 2 62% 58%;
 
     /* Chart */
-    --chart-1: 174 100% 22%;
+    --chart-1: 161 100% 20%;
     --chart-2: 36 78% 57%;
     --chart-3: 2 62% 58%;
     --chart-4: 215 20% 65%;
@@ -142,7 +142,7 @@
 
 @layer utilities {
   .sidebar-gradient {
-    background: linear-gradient(180deg, hsl(168 58% 27%) 0%, hsl(168 58% 27%) 25%, hsl(170 50% 23%) 100%);
+    background: hsl(161 100% 20%);
   }
 
   .dark .sidebar-gradient {
@@ -150,7 +150,7 @@
   }
 
   .header-gradient {
-    background: linear-gradient(135deg, hsl(174 100% 22%) 0%, hsl(174 80% 18%) 60%, hsl(170 60% 20%) 100%);
+    background: hsl(161 100% 20%);
   }
 
   .dark .header-gradient {
@@ -158,9 +158,7 @@
   }
 
   .header-gradient-animated {
-    background: linear-gradient(135deg, hsl(178 80% 16%) 0%, hsl(174 100% 22%) 35%, hsl(170 80% 24%) 65%, hsl(174 60% 20%) 100%);
-    background-size: 200% 200%;
-    animation: header-shimmer 8s ease-in-out infinite;
+    background: hsl(161 100% 20%);
   }
 
   .dark .header-gradient-animated {
@@ -188,10 +186,10 @@
   }
 
   .glow-left {
-    box-shadow: -3px 0 12px 0 hsla(174, 100%, 36%, 0.4);
+    box-shadow: -3px 0 12px 0 hsla(161, 100%, 30%, 0.4);
   }
 
   .dark .glow-left {
-    box-shadow: -3px 0 12px 0 hsla(174, 100%, 36%, 0.25);
+    box-shadow: -3px 0 12px 0 hsla(161, 100%, 30%, 0.25);
   }
 }
