@@ -7,7 +7,7 @@ export interface UnitConfig {
 
 export const UNIT_CONFIGS: Record<string, UnitConfig> = {
   SON: { id: 'SON', name: 'SON', fullName: 'School of Nursing', spreadsheetId: '19CETyNi3jWANW2uo8kchiYjkApAZuULU_OPUAHxvbX0' },
-  SArD: { id: 'SArD', name: 'SArD', fullName: 'Student Affairs & related Division', spreadsheetId: '1RfVZl-XYzQdo6FQK70PJhyw-qnnORM6LaE8Sg_cpFbA' },
+  SArD: { id: 'SArD', name: 'SArD', fullName: 'School of Architecture and Design', spreadsheetId: '1RfVZl-XYzQdo6FQK70PJhyw-qnnORM6LaE8Sg_cpFbA' },
   SOP: { id: 'SOP', name: 'SOP', fullName: 'School of Pharmacy', spreadsheetId: '18dM2q_hWLGUQjBw9PHUjKwWh9NMDYCNFzjvMipFt9Do' },
   SOM: { id: 'SOM', name: 'SOM', fullName: 'School of Medicine', spreadsheetId: '1u32vOYd1vEcHfPkHtNJWTk_AkQLpSUOcsV28k_yePXM' },
   AKSOB: { id: 'AKSOB', name: 'AKSOB', fullName: 'Adnan Kassar School of Business', spreadsheetId: '1x2ItlwuWShCIXm40EvpKFF8wCoXWf_YRnfGExwFXoFE' },
