@@ -176,8 +176,8 @@ export default function Login() {
               <Input id="contact-name" value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Your full name" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="contact-email">Email</Label>
-              <Input id="contact-email" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="Your email address" />
+              <Label htmlFor="contact-username">Username</Label>
+              <Input id="contact-username" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="Your username" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="contact-msg">Message</Label>
