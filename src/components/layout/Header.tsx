@@ -27,9 +27,11 @@ interface HeaderProps {
   academicYear?: AcademicYear;
   viewType?: ViewType;
   integrityAudit?: IntegrityAuditResult | null;
+  sheetLastModified?: string;
+  sheetLastModifiedBy?: string;
 }
 
-export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType, integrityAudit }: HeaderProps) {
+export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType, integrityAudit, sheetLastModified, sheetLastModifiedBy }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -97,24 +99,6 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
         }}
       />
 
-      {/* Glow accent - hidden on mobile for performance */}
-      {!isMobile && (
-        <>
-          <motion.div
-            className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-10"
-            style={{ background: 'radial-gradient(circle, hsl(152 100% 50%) 0%, transparent 70%)' }}
-            animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.14, 0.08] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute -bottom-16 left-1/3 w-56 h-56 rounded-full opacity-10"
-            style={{ background: 'radial-gradient(circle, hsl(152 80% 45%) 0%, transparent 70%)' }}
-            animate={{ scale: [1.1, 1, 1.1], opacity: [0.06, 0.12, 0.06] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </>
-      )}
-
       <div className={`relative z-10 ${isMobile ? 'px-4 py-3 pl-14' : 'px-6 py-5'}`}>
         <div className="flex items-start justify-between gap-2">
           {/* Left */}
@@ -128,7 +112,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
               {/* Unit title with admin switcher */}
               <div className="flex items-center gap-2">
                 <h1 className={`text-white font-display font-bold tracking-tight mb-0.5 ${isMobile ? 'text-base leading-tight' : 'text-2xl mb-1.5'}`}>
-                  {unitConfig?.fullName || 'Dashboard'}
+                  {unitConfig ? `${unitConfig.name} — ${unitConfig.fullName}` : 'Dashboard'}
                 </h1>
                 {isAdmin && !isMobile && (
                   <DropdownMenu>
@@ -290,17 +274,27 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
           </motion.div>
         </div>
 
-        {/* Timestamp */}
+        {/* Timestamp & Snapshot Metadata */}
         {!isMobile && (
           <motion.div
-            className="mt-3 flex items-center gap-4"
+            className="mt-3 flex items-center gap-4 flex-wrap"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.4 }}
           >
             <p className="text-white/40 text-xs font-medium">
-              Last refreshed: {observedAt ? new Date(observedAt).toLocaleString() : '—'}
+              Data Retrieved: {observedAt ? new Date(observedAt).toLocaleString() : '—'}
             </p>
+            {sheetLastModified && (
+              <p className="text-white/40 text-xs font-medium">
+                Sheet Last Updated: {new Date(sheetLastModified).toLocaleString()}
+              </p>
+            )}
+            {sheetLastModifiedBy && (
+              <p className="text-white/40 text-xs font-medium">
+                Last Modified By: {sheetLastModifiedBy}
+              </p>
+            )}
             {!observedAt && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-400/15 text-red-300 border border-red-400/20">
                 ⚠ Timestamp missing — Intelligence disabled

@@ -69,6 +69,8 @@ export interface FetchResult {
   data: ActionItem[];
   observedAt: string;
   dataQuality: DataQuality;
+  sheetLastModified?: string;
+  sheetLastModifiedBy?: string;
 }
 
 export interface QualifierResult {

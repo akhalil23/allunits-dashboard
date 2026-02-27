@@ -54,7 +54,7 @@ async function createJWT(serviceAccount: any): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const claim = {
     iss: serviceAccount.client_email,
-    scope: "https://www.googleapis.com/auth/spreadsheets.readonly",
+    scope: "https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.metadata.readonly",
     aud: "https://oauth2.googleapis.com/token",
     exp: now + 3600,
     iat: now,
@@ -404,9 +404,30 @@ serve(async (req) => {
       console.warn('Missing term columns:', anomalies.missingTermColumns.slice(0, 20));
     }
 
+    // Fetch sheet metadata (last modified) via Drive API — non-blocking
+    let sheetLastModified: string | null = null;
+    let sheetLastModifiedBy: string | null = null;
+    try {
+      const driveUrl = `https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=modifiedTime,lastModifyingUser/displayName`;
+      const driveResp = await fetch(driveUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (driveResp.ok) {
+        const driveData = await driveResp.json();
+        sheetLastModified = driveData.modifiedTime || null;
+        sheetLastModifiedBy = driveData.lastModifyingUser?.displayName || null;
+      } else {
+        console.warn('Drive metadata fetch failed:', driveResp.status);
+      }
+    } catch (driveErr) {
+      console.warn('Drive metadata fetch error:', driveErr);
+    }
+
     const result = {
       data: allItems,
       observedAt,
+      sheetLastModified,
+      sheetLastModifiedBy,
       dataQuality: {
         invalidStatuses: totalInvalidStatuses,
         invalidCompletions: totalInvalidCompletions,
