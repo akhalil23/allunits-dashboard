@@ -17,7 +17,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  
 
   if (isAuthenticated) return <Navigate to="/" replace />;
 
@@ -25,17 +25,9 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    if (isSignUp) {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { error } = await supabase.auth.signUp({ email: email.trim(), password });
-      setLoading(false);
-      if (error) { setError(error.message); }
-      else { setError(''); setIsSignUp(false); alert('Account created! You can now sign in.'); }
-    } else {
-      const err = await login(email.trim(), password);
-      setLoading(false);
-      if (err) setError(err);
-    }
+    const err = await login(email.trim(), password);
+    setLoading(false);
+    if (err) setError(err);
   };
 
   return (
@@ -66,7 +58,7 @@ export default function Login() {
               <img src={lauLogo} alt="LAU" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-xl font-display font-bold text-foreground">SP Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">{isSignUp ? 'Create an account' : 'Sign in to continue'}</p>
+            <p className="text-sm text-muted-foreground mt-1">Sign in to continue</p>
           </div>
 
           {/* Form */}
@@ -115,16 +107,8 @@ export default function Login() {
               ) : (
                 <LogIn className="w-4 h-4 mr-2" />
               )}
-              {isSignUp ? 'Sign up' : 'Sign in'}
+              Sign in
             </Button>
-
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </button>
           </form>
         </div>
 
