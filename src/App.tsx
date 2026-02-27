@@ -12,6 +12,7 @@ import EvolutionLab from "./pages/EvolutionLab";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,11 @@ const App = () => (
                   <DashboardProvider>
                     <EvolutionLab />
                   </DashboardProvider>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminPanel />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
