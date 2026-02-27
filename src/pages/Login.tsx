@@ -109,6 +109,11 @@ export default function Login() {
               )}
               Sign in
             </Button>
+
+            <p className="text-xs text-center text-muted-foreground">
+              Need an account or forgot your password?{' '}
+              <span className="text-foreground font-medium">Contact your administrator.</span>
+            </p>
           </form>
         </div>
 
