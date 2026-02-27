@@ -2,11 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { FetchResult } from '@/lib/types';
-import { getUnitConfig } from '@/lib/unit-config';
 
-async function fetchUnitData(spreadsheetId: string): Promise<FetchResult> {
+async function fetchUnitData(unitId: string): Promise<FetchResult> {
   const { data, error } = await supabase.functions.invoke('fetch-gsr-data', {
-    body: { spreadsheetId },
+    body: { unitId },
   });
 
   if (error) {
@@ -23,12 +22,11 @@ async function fetchUnitData(spreadsheetId: string): Promise<FetchResult> {
 
 export function useGSRData() {
   const { unitId } = useParams<{ unitId: string }>();
-  const unitConfig = getUnitConfig(unitId || 'GSR');
-  const spreadsheetId = unitConfig?.spreadsheetId || '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk';
+  const resolvedUnitId = unitId || 'GSR';
 
   return useQuery<FetchResult>({
-    queryKey: ['gsr-data', unitId || 'GSR'],
-    queryFn: () => fetchUnitData(spreadsheetId),
+    queryKey: ['gsr-data', resolvedUnitId],
+    queryFn: () => fetchUnitData(resolvedUnitId),
     staleTime: 2 * 60 * 1000,
     retry: 2,
     refetchOnWindowFocus: false,

@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          auth_email: string
+          created_at: string | null
+          id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          auth_email: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          auth_email?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -70,6 +94,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_auth_email_by_username: {
+        Args: { _username: string }
+        Returns: string
+      }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       get_user_unit: { Args: { _user_id: string }; Returns: string }
       has_role: {

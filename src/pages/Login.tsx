@@ -35,10 +35,23 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const email = username.trim().includes('@') ? username.trim() : `${username.trim()}@lau.edu.lb`;
-    const err = await login(email, password);
+
+    const cleanUsername = username.trim().toLowerCase();
+
+    // Lookup auth_email from profiles table via security definer function
+    const { data: authEmail, error: lookupError } = await supabase.rpc('get_auth_email_by_username', {
+      _username: cleanUsername,
+    });
+
+    if (lookupError || !authEmail) {
+      setLoading(false);
+      setError('Invalid username or password');
+      return;
+    }
+
+    const err = await login(authEmail as string, password);
     setLoading(false);
-    if (err) setError(err);
+    if (err) setError('Invalid username or password');
   };
 
   const handleContactSubmit = async () => {
