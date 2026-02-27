@@ -2,11 +2,15 @@ import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/use-theme';
+import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Moon, Sun, LogIn, Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Moon, Sun, LogIn, Loader2, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import lauLogo from '@/assets/lau-logo.png';
 
 export default function Login() {
@@ -17,7 +21,13 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
+  // Contact form state
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSending, setContactSending] = useState(false);
 
   if (isAuthenticated) return <Navigate to="/" replace />;
 
@@ -28,6 +38,30 @@ export default function Login() {
     const err = await login(email.trim(), password);
     setLoading(false);
     if (err) setError(err);
+  };
+
+  const handleContactSubmit = async () => {
+    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    setContactSending(true);
+    try {
+      const { error } = await supabase.from('contact_requests').insert({
+        name: contactName.trim(),
+        email: contactEmail.trim(),
+        message: contactMessage.trim(),
+      });
+      if (error) throw error;
+      toast.success('Request sent! An administrator will get back to you.');
+      setContactOpen(false);
+      setContactName('');
+      setContactEmail('');
+      setContactMessage('');
+    } catch (err: any) {
+      toast.error('Failed to send request: ' + err.message);
+    }
+    setContactSending(false);
   };
 
   return (
@@ -110,10 +144,14 @@ export default function Login() {
               Sign in
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground">
-              Need an account or forgot your password?{' '}
-              <span className="text-foreground font-medium">Contact your administrator.</span>
-            </p>
+            <button
+              type="button"
+              onClick={() => setContactOpen(true)}
+              className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+            >
+              <MessageSquare className="w-3 h-3" />
+              Need an account or forgot your password? Contact admin
+            </button>
           </form>
         </div>
 
@@ -121,6 +159,39 @@ export default function Login() {
           Strategic Plan IV — Intelligence Dashboard
         </p>
       </motion.div>
+
+      {/* Contact Admin Dialog */}
+      <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Contact Administrator</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Submit a request for a new account or password reset. An administrator will follow up.
+          </p>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="contact-name">Name</Label>
+              <Input id="contact-name" value={contactName} onChange={e => setContactName(e.target.value)} placeholder="Your full name" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="contact-email">Email</Label>
+              <Input id="contact-email" type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} placeholder="Your email address" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="contact-msg">Message</Label>
+              <Textarea id="contact-msg" value={contactMessage} onChange={e => setContactMessage(e.target.value)} placeholder="e.g. I need access to the GSR dashboard..." rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setContactOpen(false)}>Cancel</Button>
+            <Button onClick={handleContactSubmit} disabled={contactSending}>
+              {contactSending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              Send Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
