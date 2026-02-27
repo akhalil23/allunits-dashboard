@@ -13,12 +13,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X } from 'lucide-react';
+import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserInfo {
   id: string;
-  email: string;
+  username: string | null;
   created_at: string;
   last_sign_in_at: string | null;
   role: string | null;
@@ -35,6 +35,13 @@ interface ContactRequest {
   created_at: string;
 }
 
+interface SeededAccount {
+  username: string;
+  password: string;
+  role: string;
+  unit_id: string | null;
+}
+
 export default function AdminPanel() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -49,11 +56,12 @@ export default function AdminPanel() {
 
   // Create user dialog
   const [createDialog, setCreateDialog] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newRole, setNewRole] = useState<string>('unit_user');
   const [newUnitId, setNewUnitId] = useState<string>('');
   const [creating, setCreating] = useState(false);
+  const [createdPassword, setCreatedPassword] = useState<string | null>(null);
 
   // Delete confirm
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: UserInfo | null }>({ open: false, user: null });
@@ -62,6 +70,11 @@ export default function AdminPanel() {
   // Contact requests
   const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
+
+  // Seed accounts
+  const [seeding, setSeeding] = useState(false);
+  const [seededAccounts, setSeededAccounts] = useState<SeededAccount[]>([]);
+  const [showCredentials, setShowCredentials] = useState(false);
 
   const unitIds = Object.keys(UNIT_CONFIGS);
 
@@ -140,7 +153,7 @@ export default function AdminPanel() {
     setResetting(true);
     try {
       await callAdmin({ action: 'reset_password', user_id: resetDialog.user.id, password: newPassword });
-      toast.success(`Password reset for ${resetDialog.user.email}`);
+      toast.success(`Password reset for ${resetDialog.user.username || resetDialog.user.id}`);
       setResetDialog({ open: false, user: null });
       setNewPassword('');
     } catch (err: any) {
@@ -150,23 +163,29 @@ export default function AdminPanel() {
   }
 
   async function handleCreateUser() {
-    if (!newEmail || !newUserPassword || !newRole) return;
+    if (!newUsername || !newRole) return;
     if (newRole === 'unit_user' && !newUnitId) {
       toast.error('Please select a unit for unit_user role');
       return;
     }
     setCreating(true);
     try {
-      await callAdmin({
+      const result = await callAdmin({
         action: 'create_user',
-        email: newEmail.trim(),
-        password: newUserPassword,
+        username: newUsername.trim().toLowerCase(),
+        password: newUserPassword || undefined,
         role: newRole,
         unit_id: newRole === 'unit_user' ? newUnitId : null,
       });
-      toast.success(`User ${newEmail} created`);
+      const generatedPw = result.generated_password;
+      if (generatedPw) {
+        setCreatedPassword(generatedPw);
+        toast.success(`User "${newUsername}" created. Password shown below.`);
+      } else {
+        toast.success(`User "${newUsername}" created`);
+      }
       setCreateDialog(false);
-      setNewEmail('');
+      setNewUsername('');
       setNewUserPassword('');
       setNewRole('unit_user');
       setNewUnitId('');
@@ -182,13 +201,50 @@ export default function AdminPanel() {
     setDeleting(true);
     try {
       await callAdmin({ action: 'delete_user', user_id: deleteDialog.user.id });
-      toast.success(`User ${deleteDialog.user.email} deleted`);
+      toast.success(`User ${deleteDialog.user.username || deleteDialog.user.id} deleted`);
       setDeleteDialog({ open: false, user: null });
       fetchUsers();
     } catch (err: any) {
       toast.error(err.message);
     }
     setDeleting(false);
+  }
+
+  async function handleSeedAccounts() {
+    setSeeding(true);
+    try {
+      const units = Object.entries(UNIT_CONFIGS).map(([id, cfg]) => ({
+        username: id.toLowerCase(),
+        unit_id: id,
+      }));
+      const result = await callAdmin({ action: 'seed_accounts', units });
+      const seeded = result.seeded || [];
+      setSeededAccounts(seeded);
+      if (seeded.length > 0) {
+        setShowCredentials(true);
+        toast.success(`${seeded.length} accounts seeded successfully`);
+      } else {
+        toast.info('All accounts already exist');
+      }
+      fetchUsers();
+    } catch (err: any) {
+      toast.error('Seed error: ' + err.message);
+    }
+    setSeeding(false);
+  }
+
+  function exportCredentialsCSV() {
+    if (!seededAccounts.length) return;
+    const csv = ['Username,Password,Role,Unit']
+      .concat(seededAccounts.map(a => `${a.username},${a.password},${a.role},${a.unit_id || 'ALL'}`))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sp-dashboard-credentials-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -256,6 +312,7 @@ export default function AdminPanel() {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="credentials" className="gap-1.5"><Key className="w-4 h-4" /> Credentials</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -276,7 +333,7 @@ export default function AdminPanel() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Email</TableHead>
+                          <TableHead>Username</TableHead>
                           <TableHead>Role</TableHead>
                           <TableHead>Unit</TableHead>
                           <TableHead>Last Sign In</TableHead>
@@ -286,7 +343,7 @@ export default function AdminPanel() {
                       <TableBody>
                         {users.map(u => (
                           <TableRow key={u.id}>
-                            <TableCell className="font-medium">{u.email}</TableCell>
+                            <TableCell className="font-medium">{u.username || '—'}</TableCell>
                             <TableCell>
                               {u.role ? (
                                 <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>
@@ -352,7 +409,7 @@ export default function AdminPanel() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
+                          <TableHead>Username</TableHead>
                           <TableHead>Message</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Date</TableHead>
@@ -394,6 +451,59 @@ export default function AdminPanel() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="credentials">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Initial Credentials</CardTitle>
+                <div className="flex gap-2">
+                  {seededAccounts.length > 0 && (
+                    <Button variant="outline" size="sm" onClick={exportCredentialsCSV}>
+                      <Download className="w-4 h-4 mr-1" /> Export CSV
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={handleSeedAccounts} disabled={seeding}>
+                    {seeding && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+                    Seed All Accounts
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Click "Seed All Accounts" to create the admin + 21 unit accounts with auto-generated passwords. 
+                  Existing accounts will be skipped. <strong>Record the passwords securely — they cannot be retrieved later.</strong>
+                </p>
+                {seededAccounts.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Username</TableHead>
+                          <TableHead>Password</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Unit</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {seededAccounts.map((a, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-medium">{a.username}</TableCell>
+                            <TableCell><code className="text-xs bg-muted px-2 py-1 rounded">{a.password}</code></TableCell>
+                            <TableCell><Badge variant={a.role === 'admin' ? 'default' : 'secondary'}>{a.role}</Badge></TableCell>
+                            <TableCell>{a.unit_id || 'ALL'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No credentials generated yet. Click "Seed All Accounts" to provision.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -404,7 +514,7 @@ export default function AdminPanel() {
             <DialogTitle>Reset Password</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Set a new password for <strong>{resetDialog.user?.email}</strong>
+            Set a new password for <strong>{resetDialog.user?.username || '—'}</strong>
           </p>
           <div className="space-y-2">
             <Label htmlFor="new-password">New Password</Label>
@@ -434,12 +544,13 @@ export default function AdminPanel() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Email</Label>
-              <Input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="user@example.com" />
+              <Label>Username</Label>
+              <Input value={newUsername} onChange={e => setNewUsername(e.target.value)} placeholder="e.g. gsr, admin" />
+              <p className="text-xs text-muted-foreground">Auth email will be auto-generated as username@spdashboard.lau</p>
             </div>
             <div className="space-y-2">
-              <Label>Password</Label>
-              <Input type="password" value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="Minimum 6 characters" />
+              <Label>Password (optional — auto-generated if blank)</Label>
+              <Input type="password" value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="Leave blank to auto-generate" />
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
@@ -458,7 +569,7 @@ export default function AdminPanel() {
                   <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
                   <SelectContent>
                     {unitIds.map(id => (
-                      <SelectItem key={id} value={id}>{id} — {UNIT_CONFIGS[id].name}</SelectItem>
+                      <SelectItem key={id} value={id}>{id} — {UNIT_CONFIGS[id].fullName}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -467,10 +578,28 @@ export default function AdminPanel() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialog(false)}>Cancel</Button>
-            <Button onClick={handleCreateUser} disabled={creating || !newEmail || !newUserPassword}>
+            <Button onClick={handleCreateUser} disabled={creating || !newUsername}>
               {creating && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
               Create User
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Created Password Display */}
+      <Dialog open={!!createdPassword} onOpenChange={() => setCreatedPassword(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>User Created Successfully</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Record this password securely. It cannot be retrieved later.
+          </p>
+          <div className="bg-muted p-3 rounded-lg">
+            <code className="text-sm font-mono break-all">{createdPassword}</code>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setCreatedPassword(null)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -482,7 +611,7 @@ export default function AdminPanel() {
             <DialogTitle>Delete User</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete <strong>{deleteDialog.user?.email}</strong>? This action cannot be undone.
+            Are you sure you want to delete <strong>{deleteDialog.user?.username || '—'}</strong>? This action cannot be undone.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialog({ open: false, user: null })}>Cancel</Button>
