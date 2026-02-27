@@ -17,7 +17,7 @@ export default function Login() {
   const { isAuthenticated } = useAuth();
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,8 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const err = await login(email.trim(), password);
+    const email = username.trim().includes('@') ? username.trim() : `${username.trim()}@lau.edu.lb`;
+    const err = await login(email, password);
     setLoading(false);
     if (err) setError(err);
   };
@@ -98,14 +99,14 @@ export default function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                autoComplete="email"
+                id="username"
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                autoComplete="username"
                 required
                 disabled={loading}
               />
