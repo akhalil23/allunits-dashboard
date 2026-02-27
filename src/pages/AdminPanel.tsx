@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserInfo {
@@ -23,6 +24,15 @@ interface UserInfo {
   role: string | null;
   unit_id: string | null;
   role_id: string | null;
+}
+
+interface ContactRequest {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  status: string;
+  created_at: string;
 }
 
 export default function AdminPanel() {
@@ -49,11 +59,16 @@ export default function AdminPanel() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: UserInfo | null }>({ open: false, user: null });
   const [deleting, setDeleting] = useState(false);
 
+  // Contact requests
+  const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+
   const unitIds = Object.keys(UNIT_CONFIGS);
 
   useEffect(() => {
     if (isAuthenticated && userRole?.role === 'admin') {
       fetchUsers();
+      fetchContactRequests();
     }
   }, [isAuthenticated, userRole]);
 
@@ -85,6 +100,35 @@ export default function AdminPanel() {
       toast.error('Failed to load users: ' + err.message);
     }
     setLoading(false);
+  }
+
+  async function fetchContactRequests() {
+    setContactsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('contact_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setContactRequests((data as ContactRequest[]) || []);
+    } catch (err: any) {
+      toast.error('Failed to load contact requests: ' + err.message);
+    }
+    setContactsLoading(false);
+  }
+
+  async function handleUpdateContactStatus(id: string, status: string) {
+    try {
+      const { error } = await supabase
+        .from('contact_requests')
+        .update({ status })
+        .eq('id', id);
+      if (error) throw error;
+      setContactRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+      toast.success(`Request marked as ${status}`);
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   }
 
   async function handleResetPassword() {
@@ -160,7 +204,7 @@ export default function AdminPanel() {
 
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">Total Users</CardTitle>
@@ -188,82 +232,169 @@ export default function AdminPanel() {
               <span className="text-2xl font-bold">{users.filter(u => u.role === 'unit_user').length}</span>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">Pending Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                <span className="text-2xl font-bold">{contactRequests.filter(r => r.status === 'pending').length}</span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Users Table */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Users</CardTitle>
-            <Button onClick={() => setCreateDialog(true)} size="sm">
-              <Plus className="w-4 h-4 mr-1" /> Create User
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Unit</TableHead>
-                      <TableHead>Last Sign In</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map(u => (
-                      <TableRow key={u.id}>
-                        <TableCell className="font-medium">{u.email}</TableCell>
-                        <TableCell>
-                          {u.role ? (
-                            <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>
-                              {u.role}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">No role</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {u.unit_id ? (
-                            <span className="text-sm">{UNIT_CONFIGS[u.unit_id]?.name || u.unit_id}</span>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {u.last_sign_in_at
-                            ? new Date(u.last_sign_in_at).toLocaleDateString()
-                            : 'Never'}
-                        </TableCell>
-                        <TableCell className="text-right space-x-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => { setResetDialog({ open: true, user: u }); setNewPassword(''); }}
-                          >
-                            <Key className="w-3 h-3 mr-1" /> Reset
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setDeleteDialog({ open: true, user: u })}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="users">
+          <TabsList>
+            <TabsTrigger value="users" className="gap-1.5"><Users className="w-4 h-4" /> Users</TabsTrigger>
+            <TabsTrigger value="requests" className="gap-1.5">
+              <MessageSquare className="w-4 h-4" /> Requests
+              {contactRequests.filter(r => r.status === 'pending').length > 0 && (
+                <Badge variant="destructive" className="ml-1 text-[10px] px-1.5 py-0">
+                  {contactRequests.filter(r => r.status === 'pending').length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Users</CardTitle>
+                <Button onClick={() => setCreateDialog(true)} size="sm">
+                  <Plus className="w-4 h-4 mr-1" /> Create User
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Unit</TableHead>
+                          <TableHead>Last Sign In</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users.map(u => (
+                          <TableRow key={u.id}>
+                            <TableCell className="font-medium">{u.email}</TableCell>
+                            <TableCell>
+                              {u.role ? (
+                                <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>
+                                  {u.role}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">No role</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {u.unit_id ? (
+                                <span className="text-sm">{UNIT_CONFIGS[u.unit_id]?.name || u.unit_id}</span>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {u.last_sign_in_at
+                                ? new Date(u.last_sign_in_at).toLocaleDateString()
+                                : 'Never'}
+                            </TableCell>
+                            <TableCell className="text-right space-x-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => { setResetDialog({ open: true, user: u }); setNewPassword(''); }}
+                              >
+                                <Key className="w-3 h-3 mr-1" /> Reset
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setDeleteDialog({ open: true, user: u })}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="requests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contactsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : contactRequests.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No contact requests yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Message</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {contactRequests.map(r => (
+                          <TableRow key={r.id}>
+                            <TableCell className="font-medium">{r.name}</TableCell>
+                            <TableCell>{r.email}</TableCell>
+                            <TableCell className="max-w-[200px] truncate text-sm">{r.message}</TableCell>
+                            <TableCell>
+                              <Badge variant={r.status === 'pending' ? 'destructive' : r.status === 'resolved' ? 'default' : 'secondary'}>
+                                {r.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {new Date(r.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right space-x-1">
+                              {r.status === 'pending' && (
+                                <>
+                                  <Button variant="outline" size="sm" onClick={() => handleUpdateContactStatus(r.id, 'resolved')}>
+                                    <Check className="w-3 h-3 mr-1" /> Resolve
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => handleUpdateContactStatus(r.id, 'dismissed')}>
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                </>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Reset Password Dialog */}

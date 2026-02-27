@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
