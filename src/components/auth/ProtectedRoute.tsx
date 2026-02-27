@@ -1,4 +1,4 @@
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Loader2 } from 'lucide-react';
@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { unitId } = useParams<{ unitId: string }>();
+  const location = useLocation();
   const { data: userRole, isLoading: roleLoading } = useUserRole();
 
   if (authLoading) {
@@ -39,8 +40,11 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     );
   }
 
-  // No unitId in URL → redirect to user's default unit
-  if (!unitId) {
+  // Allow /admin route for admins without redirect
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
+  // No unitId in URL → redirect to user's default unit (unless on admin route)
+  if (!unitId && !isAdminRoute) {
     if (userRole.role === 'admin') {
       return <Navigate to="/unit/GSR" replace />;
     }
