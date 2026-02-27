@@ -4,12 +4,13 @@ import { PILLAR_LABELS } from '@/lib/constants';
 import { getUnitConfig } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 import {
-  LayoutDashboard, FlaskConical, ChevronRight, Menu, X,
+  LayoutDashboard, FlaskConical, ChevronRight, Menu, X, Shield,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo.png';
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserRole } from '@/hooks/use-user-role';
 
 const pillars: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
@@ -18,7 +19,9 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { unitId } = useParams<{ unitId: string }>();
   const { selectedPillar, setSelectedPillar } = useDashboard();
+  const { data: userRole } = useUserRole();
   const isEvolutionLab = location.pathname.endsWith('/evolution-lab');
+  const isAdmin = userRole?.role === 'admin';
   const isMobile = useIsMobile();
   const [isTablet, setIsTablet] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -46,7 +49,7 @@ export default function Sidebar() {
       id: 'dashboard',
       label: 'Dashboard',
       icon: LayoutDashboard,
-      active: !isEvolutionLab && selectedPillar === 'all',
+      active: !isEvolutionLab && selectedPillar === 'all' && !location.pathname.startsWith('/admin'),
       onClick: () => { navigate(basePath); setSelectedPillar('all'); },
     },
     ...pillars.map(p => ({
@@ -64,6 +67,13 @@ export default function Sidebar() {
       active: isEvolutionLab,
       onClick: () => navigate(`${basePath}/evolution-lab`),
     },
+    ...(isAdmin ? [{
+      id: 'admin',
+      label: 'Admin Panel',
+      icon: Shield,
+      active: location.pathname.startsWith('/admin'),
+      onClick: () => navigate('/admin'),
+    }] : []),
   ];
 
   // Mobile: hamburger button + off-canvas drawer
