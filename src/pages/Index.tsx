@@ -42,7 +42,7 @@ export default function Index() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-            <p className="text-sm text-muted-foreground">Loading GSR data from source…</p>
+            <p className="text-sm text-muted-foreground">Loading dashboard data…</p>
           </div>
         </div>
       </DashboardLayout>
