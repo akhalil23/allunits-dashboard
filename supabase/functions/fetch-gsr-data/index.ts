@@ -11,18 +11,38 @@ const DEFAULT_SPREADSHEET_ID = '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk';
 
 // ... (all existing RANGES, TERM_WINDOW_KEYS, helper functions remain identical)
 
-const RANGES = [
-  "'Pillar I'!A4:G300",
-  "'Pillar I'!BX4:CY300",
-  "'Pillar II'!A4:G300",
-  "'Pillar II'!BX4:CY300",
-  "'Pillar III'!A4:G300",
-  "'Pillar III'!BX4:CY300",
-  "'Pillar IV'!A4:G400",
-  "'Pillar IV'!BX4:CY400",
-  "'Pillar V'!A4:G300",
-  "'Pillar V'!BX4:CY300",
+// Pillar search patterns - we'll match sheet names dynamically
+const PILLAR_PATTERNS = [
+  { id: 'I', patterns: ['Pillar I', 'Pillar 1', 'pillar i', 'pillar 1'], maxRow: 300 },
+  { id: 'II', patterns: ['Pillar II', 'Pillar 2', 'pillar ii', 'pillar 2'], maxRow: 300 },
+  { id: 'III', patterns: ['Pillar III', 'Pillar 3', 'pillar iii', 'pillar 3'], maxRow: 300 },
+  { id: 'IV', patterns: ['Pillar IV', 'Pillar 4', 'pillar iv', 'pillar 4'], maxRow: 400 },
+  { id: 'V', patterns: ['Pillar V', 'Pillar 5', 'pillar v', 'pillar 5'], maxRow: 300 },
 ];
+
+function buildRangesFromSheetNames(sheetNames: string[]): { ranges: string[]; pillarMap: { id: string; sheetName: string }[] } {
+  const ranges: string[] = [];
+  const pillarMap: { id: string; sheetName: string }[] = [];
+  
+  for (const pillar of PILLAR_PATTERNS) {
+    // Find matching sheet name (case-insensitive, trimmed)
+    const match = sheetNames.find(name => {
+      const lower = name.trim().toLowerCase();
+      return pillar.patterns.some(p => lower === p.toLowerCase());
+    });
+    
+    if (match) {
+      const escaped = `'${match}'`;
+      ranges.push(`${escaped}!A4:G${pillar.maxRow}`);
+      ranges.push(`${escaped}!BX4:CY${pillar.maxRow}`);
+      pillarMap.push({ id: pillar.id, sheetName: match });
+    } else {
+      console.warn(`No sheet found for Pillar ${pillar.id}. Available sheets: ${sheetNames.join(', ')}`);
+    }
+  }
+  
+  return { ranges, pillarMap };
+}
 
 const TERM_WINDOW_KEYS = [
   'mid-2025-2026',
@@ -391,6 +411,26 @@ serve(async (req) => {
     const serviceAccount = JSON.parse(serviceAccountRaw);
     const accessToken = await getAccessToken(serviceAccount);
 
+    // Step 1: Discover sheet names from spreadsheet metadata
+    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`;
+    const metaResp = await fetch(metaUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!metaResp.ok) {
+      const metaErr = await metaResp.text();
+      throw new Error(`Failed to fetch sheet metadata: ${metaResp.status} ${metaErr}`);
+    }
+    const metaData = await metaResp.json();
+    const sheetNames: string[] = (metaData.sheets || []).map((s: any) => s.properties?.title).filter(Boolean);
+    console.log(`Spreadsheet ${requestedUnitId} sheets: ${sheetNames.join(', ')}`);
+
+    // Step 2: Build ranges dynamically based on actual sheet names
+    const { ranges: RANGES, pillarMap } = buildRangesFromSheetNames(sheetNames);
+    
+    if (RANGES.length === 0) {
+      throw new Error(`No pillar sheets found in spreadsheet. Available sheets: ${sheetNames.join(', ')}`);
+    }
+
     const rangeParams = RANGES.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangeParams}`;
 
@@ -407,7 +447,6 @@ serve(async (req) => {
     const valueRanges = sheetsData.valueRanges || [];
 
     const observedAt = new Date().toISOString();
-    const pillarIds = ['I', 'II', 'III', 'IV', 'V'];
     let allItems: ActionItem[] = [];
     let totalInvalidStatuses = 0;
     let totalInvalidCompletions = 0;
@@ -419,13 +458,13 @@ serve(async (req) => {
       missingTermColumns: [],
     };
 
-    for (let p = 0; p < 5; p++) {
+    for (let p = 0; p < pillarMap.length; p++) {
       const coreRange = valueRanges[p * 2];
       const termRange = valueRanges[p * 2 + 1];
 
       if (!coreRange?.values || !termRange?.values) {
         missingBlocks++;
-        console.error(`Missing data for Pillar ${pillarIds[p]}`);
+        console.error(`Missing data for Pillar ${pillarMap[p].id} (sheet: ${pillarMap[p].sheetName})`);
         continue;
       }
 
@@ -433,7 +472,7 @@ serve(async (req) => {
       const termRows = termRange.values.slice(1);
 
       const { items, invalidStatuses, invalidCompletions } = processPillarData(
-        pillarIds[p], coreRows, termRows, anomalies
+        pillarMap[p].id, coreRows, termRows, anomalies
       );
 
       allItems = allItems.concat(items);
