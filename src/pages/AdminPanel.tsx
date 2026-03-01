@@ -44,7 +44,7 @@ interface SeededAccount {
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { data: userRole } = useUserRole();
   const [users, setUsers] = useState<UserInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -373,13 +373,15 @@ export default function AdminPanel() {
                               >
                                 <Key className="w-3 h-3 mr-1" /> Reset
                               </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => setDeleteDialog({ open: true, user: u })}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+                              {u.id !== user?.id && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => setDeleteDialog({ open: true, user: u })}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
