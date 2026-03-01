@@ -114,11 +114,11 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
                 <h1 className={`text-white font-display font-bold tracking-tight mb-0.5 ${isMobile ? 'text-base leading-tight' : 'text-2xl mb-1.5'}`}>
                   {unitConfig ? `${unitConfig.name} — ${unitConfig.fullName}` : 'Dashboard'}
                 </h1>
-                {isAdmin && !isMobile && (
+                {isAdmin && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="p-1 rounded-md bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-colors">
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className={`${isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto min-w-[240px]">
