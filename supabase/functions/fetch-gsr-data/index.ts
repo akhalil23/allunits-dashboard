@@ -7,42 +7,107 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const DEFAULT_SPREADSHEET_ID = '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk';
+// ============================================================
+// UNIT RANGE CONFIGURATION — STRICT, NO AUTO-DETECTION
+// ============================================================
 
-// ... (all existing RANGES, TERM_WINDOW_KEYS, helper functions remain identical)
+interface PillarRange {
+  id: string;        // Pillar ID: I, II, III, IV, V
+  sheetName: string; // Exact sheet name (including trailing spaces)
+  lastRow: number;   // Last row of the range
+}
 
-// Pillar search patterns - we'll match sheet names dynamically
-const PILLAR_PATTERNS = [
-  { id: 'I', patterns: ['Pillar I', 'Pillar 1', 'pillar i', 'pillar 1'], maxRow: 300 },
-  { id: 'II', patterns: ['Pillar II', 'Pillar 2', 'pillar ii', 'pillar 2'], maxRow: 300 },
-  { id: 'III', patterns: ['Pillar III', 'Pillar 3', 'pillar iii', 'pillar 3'], maxRow: 300 },
-  { id: 'IV', patterns: ['Pillar IV', 'Pillar 4', 'pillar iv', 'pillar 4'], maxRow: 400 },
-  { id: 'V', patterns: ['Pillar V', 'Pillar 5', 'pillar v', 'pillar 5'], maxRow: 300 },
+// GSR ranges
+const GSR_PILLARS: PillarRange[] = [
+  { id: 'I',   sheetName: 'Pillar I',   lastRow: 62 },
+  { id: 'II',  sheetName: 'Pillar II',  lastRow: 81 },
+  { id: 'III', sheetName: 'Pillar III', lastRow: 100 },
+  { id: 'IV',  sheetName: 'Pillar IV',  lastRow: 224 },
+  { id: 'V',   sheetName: 'Pillar V',   lastRow: 157 },
 ];
 
-function buildRangesFromSheetNames(sheetNames: string[]): { ranges: string[]; pillarMap: { id: string; sheetName: string }[] } {
-  const ranges: string[] = [];
-  const pillarMap: { id: string; sheetName: string }[] = [];
-  
-  for (const pillar of PILLAR_PATTERNS) {
-    // Find matching sheet name (case-insensitive, trimmed)
-    const match = sheetNames.find(name => {
-      const lower = name.trim().toLowerCase();
-      return pillar.patterns.some(p => lower === p.toLowerCase());
-    });
-    
-    if (match) {
-      const escaped = `'${match}'`;
-      ranges.push(`${escaped}!A4:G${pillar.maxRow}`);
-      ranges.push(`${escaped}!BX4:CY${pillar.maxRow}`);
-      pillarMap.push({ id: pillar.id, sheetName: match });
-    } else {
-      console.warn(`No sheet found for Pillar ${pillar.id}. Available sheets: ${sheetNames.join(', ')}`);
-    }
-  }
-  
-  return { ranges, pillarMap };
+// Libraries ranges (SPECIAL — DO NOT REUSE)
+const LIBRARIES_PILLARS: PillarRange[] = [
+  { id: 'I',   sheetName: 'Pillar I',   lastRow: 129 },
+  { id: 'II',  sheetName: 'Pillar II',  lastRow: 164 },
+  { id: 'III', sheetName: 'Pillar III', lastRow: 203 },
+  { id: 'IV',  sheetName: 'Pillar IV',  lastRow: 457 },
+  { id: 'V',   sheetName: 'Pillar V',   lastRow: 322 },
+];
+
+// Standard Template ranges (19 units)
+const STANDARD_PILLARS: PillarRange[] = [
+  { id: 'I',   sheetName: 'Pillar I GSR',          lastRow: 62 },
+  { id: 'II',  sheetName: 'Pillar II SAS',          lastRow: 81 },
+  { id: 'III', sheetName: 'Pillar III SOM',          lastRow: 100 },
+  { id: 'IV',  sheetName: 'Pillar IV Development',   lastRow: 224 },
+  { id: 'V',   sheetName: 'Pillar V ',               lastRow: 157 }, // trailing space required
+];
+
+// SArD exception: Pillar III ends at row 99
+const SARD_PILLARS: PillarRange[] = [
+  { id: 'I',   sheetName: 'Pillar I GSR',          lastRow: 62 },
+  { id: 'II',  sheetName: 'Pillar II SAS',          lastRow: 81 },
+  { id: 'III', sheetName: 'Pillar III SOM',          lastRow: 99 },  // SArD exception
+  { id: 'IV',  sheetName: 'Pillar IV Development',   lastRow: 224 },
+  { id: 'V',   sheetName: 'Pillar V ',               lastRow: 157 },
+];
+
+const STANDARD_UNITS = new Set([
+  'AKSOB', 'BDGA', 'CIL', 'DIRA', 'Facilities', 'Finance', 'IT',
+  'Advancement', 'PwD', 'Provost', 'SAS', 'SDEM', 'SOE', 'SOM',
+  'SON', 'SOP', 'StratCom_Alumni', 'UGRC',
+]);
+
+function getPillarConfig(unitId: string): PillarRange[] {
+  if (unitId === 'GSR') return GSR_PILLARS;
+  if (unitId === 'Libraries') return LIBRARIES_PILLARS;
+  if (unitId === 'SArD') return SARD_PILLARS;
+  if (STANDARD_UNITS.has(unitId)) return STANDARD_PILLARS;
+  throw new Error(`Unknown unit: ${unitId}. No range configuration exists.`);
 }
+
+function buildRanges(pillars: PillarRange[]): { ranges: string[]; pillarMap: PillarRange[] } {
+  const ranges: string[] = [];
+  for (const p of pillars) {
+    const escaped = `'${p.sheetName}'`;
+    ranges.push(`${escaped}!A4:G${p.lastRow}`);
+    ranges.push(`${escaped}!BX4:CY${p.lastRow}`);
+  }
+  return { ranges, pillarMap: pillars };
+}
+
+// ============================================================
+// Unit ID → Spreadsheet ID (server-side only)
+// ============================================================
+
+const UNIT_SPREADSHEETS: Record<string, string> = {
+  SON: '19CETyNi3jWANW2uo8kchiYjkApAZuULU_OPUAHxvbX0',
+  SArD: '1RfVZl-XYzQdo6FQK70PJhyw-qnnORM6LaE8Sg_cpFbA',
+  SOP: '18dM2q_hWLGUQjBw9PHUjKwWh9NMDYCNFzjvMipFt9Do',
+  SOM: '1u32vOYd1vEcHfPkHtNJWTk_AkQLpSUOcsV28k_yePXM',
+  AKSOB: '1x2ItlwuWShCIXm40EvpKFF8wCoXWf_YRnfGExwFXoFE',
+  SOE: '1wu1tdcZ_ouNasgSc5RqnDLQFemvXgIuOmUHF8-i_U14',
+  SAS: '1-VysXFHNlvL5oUYolBUQ-TasLufO4yF7xatFpaWel2E',
+  GSR: '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk',
+  DIRA: '1iAKPKguUvCYEN-Tojo91TXR-f-RXLtaeO3awt0nDCDk',
+  CIL: '1KNm1MpH-vxgpD-z-_eguZyqsZd6nvEOk_S6LZG0WsvQ',
+  Libraries: '17mx75Ejrvnb_sWkN4QyWUs2D-V7UHcrnHjR_lsTYCaY',
+  BDGA: '16N8vAsbQ0JA09bfKRZxCP7xojzFWEboj8ugZPr8RDX8',
+  SDEM: '19423B49RTOlsR1oD7A9YhVfz14w5rP-wA7-sy-x4V04',
+  IT: '1MYMfXSMFYksiMS3GUXGSoI12-2qg5V-UwMXv7XFshqw',
+  Facilities: '1FOwt5PkOPQnUX_NdmPbzPRbaan9MEeRoXiWB1i-FR0g',
+  Finance: '1SWb0okdTuFZub8XFS6tclitCv-FRaSXbcvx6kagvvu4',
+  UGRC: '1fX5EtFll-K2kFTIym1bf-SS_pbrcOwTpvAsEFdZHDuE',
+  StratCom_Alumni: '1jyGyHMJTie_iy044AuB7TBOgxBjVNXzqAd2sQMYENgk',
+  Advancement: '12xmb1qYhAGSBMkqQO-6LUrgp4uiGcdP3D0nyf3FF6Rs',
+  Provost: '1cVGQZz1GGuoyEv0kljKJY4jCqauvR6K8IM_FIfYwkqE',
+  PwD: '1TEr6TeZ_rfHewK7_Pozl3DgHyK6Y1LTfyIt-P139T58',
+};
+
+// ============================================================
+// Term window & parsing helpers (unchanged)
+// ============================================================
 
 const TERM_WINDOW_KEYS = [
   'mid-2025-2026',
@@ -319,30 +384,9 @@ function processPillarData(
   return { items, invalidStatuses: totalInvalidStatuses, invalidCompletions: totalInvalidCompletions };
 }
 
-// Unit ID to spreadsheet ID mapping for server-side validation
-const UNIT_SPREADSHEETS: Record<string, string> = {
-  SON: '19CETyNi3jWANW2uo8kchiYjkApAZuULU_OPUAHxvbX0',
-  SArD: '1RfVZl-XYzQdo6FQK70PJhyw-qnnORM6LaE8Sg_cpFbA',
-  SOP: '18dM2q_hWLGUQjBw9PHUjKwWh9NMDYCNFzjvMipFt9Do',
-  SOM: '1u32vOYd1vEcHfPkHtNJWTk_AkQLpSUOcsV28k_yePXM',
-  AKSOB: '1x2ItlwuWShCIXm40EvpKFF8wCoXWf_YRnfGExwFXoFE',
-  SOE: '1wu1tdcZ_ouNasgSc5RqnDLQFemvXgIuOmUHF8-i_U14',
-  SAS: '1-VysXFHNlvL5oUYolBUQ-TasLufO4yF7xatFpaWel2E',
-  GSR: '14Z6hsOOx4reMzE5KYIkWgVi31BAuQSOwkZnE7Qhzqvk',
-  DIRA: '1iAKPKguUvCYEN-Tojo91TXR-f-RXLtaeO3awt0nDCDk',
-  CIL: '1KNm1MpH-vxgpD-z-_eguZyqsZd6nvEOk_S6LZG0WsvQ',
-  Libraries: '17mx75Ejrvnb_sWkN4QyWUs2D-V7UHcrnHjR_lsTYCaY',
-  BDGA: '16N8vAsbQ0JA09bfKRZxCP7xojzFWEboj8ugZPr8RDX8',
-  SDEM: '19423B49RTOlsR1oD7A9YhVfz14w5rP-wA7-sy-x4V04',
-  IT: '1MYMfXSMFYksiMS3GUXGSoI12-2qg5V-UwMXv7XFshqw',
-  Facilities: '1FOwt5PkOPQnUX_NdmPbzPRbaan9MEeRoXiWB1i-FR0g',
-  Finance: '1SWb0okdTuFZub8XFS6tclitCv-FRaSXbcvx6kagvvu4',
-  UGRC: '1fX5EtFll-K2kFTIym1bf-SS_pbrcOwTpvAsEFdZHDuE',
-  StratCom_Alumni: '1jyGyHMJTie_iy044AuB7TBOgxBjVNXzqAd2sQMYENgk',
-  Advancement: '12xmb1qYhAGSBMkqQO-6LUrgp4uiGcdP3D0nyf3FF6Rs',
-  Provost: '1cVGQZz1GGuoyEv0kljKJY4jCqauvR6K8IM_FIfYwkqE',
-  PwD: '1TEr6TeZ_rfHewK7_Pozl3DgHyK6Y1LTfyIt-P139T58',
-};
+// ============================================================
+// MAIN HANDLER
+// ============================================================
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -374,24 +418,19 @@ serve(async (req) => {
       });
     }
 
-    // Get user role and unit
     const { data: userRole } = await userClient.rpc('get_user_role', { _user_id: user.id });
     const { data: userUnit } = await userClient.rpc('get_user_unit', { _user_id: user.id });
 
-    // Parse requested unit_id from body
     let requestedUnitId = 'GSR';
-    let spreadsheetId = DEFAULT_SPREADSHEET_ID;
     try {
       if (req.method === 'POST') {
         const body = await req.json();
         if (body?.unitId) requestedUnitId = body.unitId;
-        // Ignore client-provided spreadsheetId — resolve server-side
       }
     } catch { /* use default */ }
 
     // Enforce unit isolation
     if (userRole !== 'admin') {
-      // unit_user can only access their own unit
       if (userUnit && requestedUnitId !== userUnit) {
         return new Response(JSON.stringify({ error: 'Access denied: you can only access your assigned unit' }), {
           status: 403,
@@ -400,8 +439,14 @@ serve(async (req) => {
       }
     }
 
-    // Resolve spreadsheetId server-side from unit_id
-    spreadsheetId = UNIT_SPREADSHEETS[requestedUnitId] || DEFAULT_SPREADSHEET_ID;
+    // Resolve spreadsheetId server-side
+    const spreadsheetId = UNIT_SPREADSHEETS[requestedUnitId];
+    if (!spreadsheetId) {
+      return new Response(JSON.stringify({ error: `Configuration error: unknown unit "${requestedUnitId}"` }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const serviceAccountRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
     if (!serviceAccountRaw) {
@@ -411,25 +456,11 @@ serve(async (req) => {
     const serviceAccount = JSON.parse(serviceAccountRaw);
     const accessToken = await getAccessToken(serviceAccount);
 
-    // Step 1: Discover sheet names from spreadsheet metadata
-    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`;
-    const metaResp = await fetch(metaUrl, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!metaResp.ok) {
-      const metaErr = await metaResp.text();
-      throw new Error(`Failed to fetch sheet metadata: ${metaResp.status} ${metaErr}`);
-    }
-    const metaData = await metaResp.json();
-    const sheetNames: string[] = (metaData.sheets || []).map((s: any) => s.properties?.title).filter(Boolean);
-    console.log(`Spreadsheet ${requestedUnitId} sheets: ${sheetNames.join(', ')}`);
+    // Determine pillar config and build ranges — NO auto-detection
+    const pillarConfig = getPillarConfig(requestedUnitId);
+    const { ranges: RANGES, pillarMap } = buildRanges(pillarConfig);
 
-    // Step 2: Build ranges dynamically based on actual sheet names
-    const { ranges: RANGES, pillarMap } = buildRangesFromSheetNames(sheetNames);
-    
-    if (RANGES.length === 0) {
-      throw new Error(`No pillar sheets found in spreadsheet. Available sheets: ${sheetNames.join(', ')}`);
-    }
+    console.log(`Unit ${requestedUnitId}: fetching ${RANGES.length} ranges from spreadsheet`);
 
     const rangeParams = RANGES.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangeParams}`;
@@ -464,7 +495,7 @@ serve(async (req) => {
 
       if (!coreRange?.values || !termRange?.values) {
         missingBlocks++;
-        console.error(`Missing data for Pillar ${pillarMap[p].id} (sheet: ${pillarMap[p].sheetName})`);
+        console.error(`Missing data for Pillar ${pillarMap[p].id} (sheet: "${pillarMap[p].sheetName}") in unit ${requestedUnitId}`);
         continue;
       }
 
