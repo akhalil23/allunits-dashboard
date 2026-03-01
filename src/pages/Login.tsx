@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Moon, Sun, LogIn, Loader2, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import lauLogo from '@/assets/lau-logo.png';
+import lauLogo from '@/assets/lau-logo-white.png';
 
 export default function Login() {
   const { isAuthenticated } = useAuth();
