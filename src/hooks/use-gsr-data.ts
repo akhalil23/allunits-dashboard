@@ -1,15 +1,40 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/use-user-role';
 import type { FetchResult } from '@/lib/types';
 
-async function fetchUnitData(unitId: string): Promise<FetchResult> {
-  const { data, error } = await supabase.functions.invoke('fetch-gsr-data', {
+function isUnauthorizedFunctionError(error: unknown): error is FunctionsHttpError {
+  return error instanceof FunctionsHttpError && error.context?.status === 401;
+}
+
+async function invokeFetch(unitId: string) {
+  return supabase.functions.invoke('fetch-gsr-data', {
     body: { unitId },
   });
+}
+
+async function fetchUnitData(unitId: string): Promise<FetchResult> {
+  let { data, error } = await invokeFetch(unitId);
+
+  // Recover from stale/invalid session on published domains.
+  if (error && isUnauthorizedFunctionError(error)) {
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+
+    if (!refreshError && refreshed.session) {
+      const retryResult = await invokeFetch(unitId);
+      data = retryResult.data;
+      error = retryResult.error;
+    }
+  }
 
   if (error) {
+    if (isUnauthorizedFunctionError(error)) {
+      await supabase.auth.signOut();
+      throw new Error('Session expired. Please sign in again.');
+    }
+
     console.error('Edge function error:', error);
     throw new Error(error.message || 'Failed to fetch data');
   }
