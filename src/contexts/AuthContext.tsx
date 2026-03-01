@@ -19,21 +19,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    let mounted = true;
+
+    const applySession = (nextSession: Session | null) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
       setIsLoading(false);
+    };
+
+    // Keep live auth updates, but let initializeAuth validate the initial session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'INITIAL_SESSION') return;
+      applySession(nextSession);
     });
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
 
-    return () => subscription.unsubscribe();
+      if (!existingSession) {
+        applySession(null);
+        return;
+      }
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        await supabase.auth.signOut();
+        applySession(null);
+        return;
+      }
+
+      applySession({ ...existingSession, user: userData.user });
+    };
+
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<string | null> => {
