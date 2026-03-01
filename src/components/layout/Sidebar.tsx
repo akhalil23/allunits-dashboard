@@ -7,7 +7,7 @@ import {
   LayoutDashboard, FlaskConical, ChevronRight, Menu, X, Shield,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import lauLogo from '@/assets/lau-logo.png';
+import lauLogo from '@/assets/lau-logo-white.png';
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
