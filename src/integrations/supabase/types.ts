@@ -69,6 +69,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_active: boolean
           role: Database["public"]["Enums"]["app_role"]
           unit_id: string | null
           user_id: string
@@ -76,6 +77,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          is_active?: boolean
           role: Database["public"]["Enums"]["app_role"]
           unit_id?: string | null
           user_id: string
@@ -83,6 +85,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          is_active?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           unit_id?: string | null
           user_id?: string
@@ -98,6 +101,7 @@ export type Database = {
         Args: { _username: string }
         Returns: string
       }
+      get_user_is_active: { Args: { _user_id: string }; Returns: boolean }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       get_user_unit: { Args: { _user_id: string }; Returns: string }
       has_role: {
@@ -109,7 +113,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "unit_user"
+      app_role: "admin" | "unit_user" | "university_viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -237,7 +241,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "unit_user"],
+      app_role: ["admin", "unit_user", "university_viewer"],
     },
   },
 } as const

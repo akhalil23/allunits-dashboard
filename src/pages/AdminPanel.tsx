@@ -260,7 +260,7 @@ export default function AdminPanel() {
 
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">Total Users</CardTitle>
@@ -278,6 +278,14 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <span className="text-2xl font-bold">{users.filter(u => u.role === 'admin').length}</span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">University Viewers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold">{users.filter(u => u.role === 'university_viewer').length}</span>
             </CardContent>
           </Card>
           <Card>
@@ -346,8 +354,8 @@ export default function AdminPanel() {
                             <TableCell className="font-medium">{u.username || '—'}</TableCell>
                             <TableCell>
                               {u.role ? (
-                                <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>
-                                  {u.role}
+                                <Badge variant={u.role === 'admin' ? 'default' : u.role === 'university_viewer' ? 'outline' : 'secondary'}>
+                                  {u.role === 'university_viewer' ? 'university viewer' : u.role}
                                 </Badge>
                               ) : (
                                 <Badge variant="outline">No role</Badge>
@@ -560,6 +568,7 @@ export default function AdminPanel() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="university_viewer">University Viewer</SelectItem>
                   <SelectItem value="unit_user">Unit User</SelectItem>
                 </SelectContent>
               </Select>

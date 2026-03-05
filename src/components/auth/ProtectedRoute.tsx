@@ -4,8 +4,8 @@ import { useUserRole } from '@/hooks/use-user-role';
 import { Loader2 } from 'lucide-react';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { unitId } = useParams<{ unitId: string }>();
+  const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { unitCode } = useParams<{ unitCode: string }>();
   const location = useLocation();
   const { data: userRole, isLoading: roleLoading } = useUserRole();
 
@@ -19,7 +19,6 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // Still loading role
   if (roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -28,7 +27,6 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     );
   }
 
-  // No role assigned yet
   if (!userRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -40,24 +38,54 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     );
   }
 
-  // Allow /admin route for admins without redirect
+  // isActive check
+  if (!userRole.isActive) {
+    // Sign out and show disabled message
+    logout();
+    return <Navigate to="/login" replace />;
+  }
+
   const isAdminRoute = location.pathname.startsWith('/admin');
-  
-  // No unitId in URL → redirect to user's default unit (unless on admin route)
-  if (!unitId && !isAdminRoute) {
-    if (userRole.role === 'admin') {
-      return <Navigate to="/unit/GSR" replace />;
-    }
-    if (userRole.unitId) {
-      return <Navigate to={`/unit/${userRole.unitId}`} replace />;
+  const isUniversityRoute = location.pathname.startsWith('/university');
+  const isUnitsRoute = location.pathname.startsWith('/units');
+
+  // ──── Role-based redirect from root ────
+  if (location.pathname === '/') {
+    if (userRole.role === 'admin') return <Navigate to="/admin" replace />;
+    if (userRole.role === 'university_viewer') return <Navigate to="/university" replace />;
+    if (userRole.role === 'unit_user') {
+      if (userRole.unitId) return <Navigate to={`/units/${userRole.unitId}`} replace />;
+      // unit_user with no unitId — misconfigured
+      logout();
+      return <Navigate to="/login" replace />;
     }
     return <Navigate to="/login" replace />;
   }
 
-  // unit_user trying to access a different unit
-  if (userRole.role === 'unit_user' && userRole.unitId && unitId !== userRole.unitId) {
-    return <Navigate to={`/unit/${userRole.unitId}`} replace />;
+  // ──── Guard: unit_user ────
+  if (userRole.role === 'unit_user') {
+    if (!userRole.unitId) {
+      logout();
+      return <Navigate to="/login" replace />;
+    }
+    // Forbidden routes
+    if (isUniversityRoute || isAdminRoute) {
+      return <Navigate to={`/units/${userRole.unitId}`} replace />;
+    }
+    // Different unit
+    if (isUnitsRoute && unitCode && unitCode !== userRole.unitId) {
+      return <Navigate to={`/units/${userRole.unitId}`} replace />;
+    }
   }
+
+  // ──── Guard: university_viewer ────
+  if (userRole.role === 'university_viewer') {
+    if (isUnitsRoute || isAdminRoute) {
+      return <Navigate to="/university" replace />;
+    }
+  }
+
+  // ──── Guard: admin — allowed everywhere ────
 
   return <>{children}</>;
 }

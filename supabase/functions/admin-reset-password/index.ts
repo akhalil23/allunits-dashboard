@@ -129,6 +129,13 @@ Deno.serve(async (req) => {
         });
       }
 
+      if (role !== 'admin' && role !== 'unit_user' && role !== 'university_viewer') {
+        return new Response(JSON.stringify({ error: "Invalid role. Must be admin, unit_user, or university_viewer" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const cleanUsername = username.trim().toLowerCase();
       const authEmail = `${cleanUsername}@spdashboard.lau`;
       const userPassword = password || generatePassword();

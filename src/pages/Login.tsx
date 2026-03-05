@@ -29,7 +29,7 @@ export default function Login() {
   const [contactMessage, setContactMessage] = useState("");
   const [contactSending, setContactSending] = useState(false);
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to="/" replace />; // ProtectedRoute handles role-based redirect
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
