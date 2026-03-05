@@ -164,7 +164,7 @@ export default function Login() {
               className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
             >
               <MessageSquare className="w-3 h-3" />
-              Need an account or forgot your password? Contact admin
+              Need an account or forgot your password? <br /> Contact admin
             </button>
           </form>
         </div>
