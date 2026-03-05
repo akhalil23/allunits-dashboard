@@ -168,7 +168,7 @@ export default function Login() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">Strategic Plan IV — Intelligence Dashboard</p>
+        <p className="text-center text-xs text-muted-foreground mt-4">LAU Strategic Plan Dashboard</p>
       </motion.div>
 
       {/* Contact Admin Dialog */}
