@@ -282,6 +282,14 @@ export default function AdminPanel() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">University Viewers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold">{users.filter(u => u.role === 'university_viewer').length}</span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm text-muted-foreground">Unit Users</CardTitle>
             </CardHeader>
             <CardContent>
