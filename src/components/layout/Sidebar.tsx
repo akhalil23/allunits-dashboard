@@ -43,7 +43,7 @@ export default function Sidebar() {
     setDrawerOpen(false);
   }, [location.pathname, selectedPillar]);
 
-  const basePath = `/unit/${unitId || 'GSR'}`;
+  const basePath = `/units/${unitId || 'GSR'}`;
 
   const navItems = [
     {

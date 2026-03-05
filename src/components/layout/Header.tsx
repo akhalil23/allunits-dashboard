@@ -126,7 +126,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
                       {Object.values(UNIT_CONFIGS).map(uc => (
                         <DropdownMenuItem
                           key={uc.id}
-                          onClick={() => navigate(`/unit/${uc.id}`)}
+                          onClick={() => navigate(`/units/${uc.id}`)}
                           className={`cursor-pointer ${uc.id === unitId ? 'bg-accent font-medium' : ''}`}
                         >
                           <span className="font-medium mr-2">{uc.name}</span>
