@@ -35,7 +35,8 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const { unitId } = useParams<{ unitId: string }>();
+  const { unitCode } = useParams<{ unitCode: string }>();
+  const unitId = unitCode;
   const { data: userRole } = useUserRole();
   const isMobile = useIsMobile();
   const unitConfig = getUnitConfig(unitId || 'GSR');
