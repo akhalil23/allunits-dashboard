@@ -47,8 +47,8 @@ async function fetchUnitData(unitId: string): Promise<FetchResult> {
 }
 
 export function useGSRData() {
-  const { unitId } = useParams<{ unitId: string }>();
-  const resolvedUnitId = unitId || 'GSR';
+  const { unitCode } = useParams<{ unitCode: string }>();
+  const resolvedUnitId = unitCode || 'GSR';
   const { data: userRole, isLoading: roleLoading } = useUserRole();
 
   // Don't fetch if role is still loading or if unit_user is on wrong unit
