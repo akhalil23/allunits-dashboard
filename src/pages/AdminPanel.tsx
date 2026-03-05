@@ -560,6 +560,7 @@ export default function AdminPanel() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="university_viewer">University Viewer</SelectItem>
                   <SelectItem value="unit_user">Unit User</SelectItem>
                 </SelectContent>
               </Select>
