@@ -354,8 +354,8 @@ export default function AdminPanel() {
                             <TableCell className="font-medium">{u.username || '—'}</TableCell>
                             <TableCell>
                               {u.role ? (
-                                <Badge variant={u.role === 'admin' ? 'default' : 'secondary'}>
-                                  {u.role}
+                                <Badge variant={u.role === 'admin' ? 'default' : u.role === 'university_viewer' ? 'outline' : 'secondary'}>
+                                  {u.role === 'university_viewer' ? 'university viewer' : u.role}
                                 </Badge>
                               ) : (
                                 <Badge variant="outline">No role</Badge>
