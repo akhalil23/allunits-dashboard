@@ -17,7 +17,8 @@ const pillars: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { unitId } = useParams<{ unitId: string }>();
+  const { unitCode } = useParams<{ unitCode: string }>();
+  const unitId = unitCode;
   const { selectedPillar, setSelectedPillar } = useDashboard();
   const { data: userRole } = useUserRole();
   const isEvolutionLab = location.pathname.endsWith('/evolution-lab');
