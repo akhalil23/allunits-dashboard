@@ -34,11 +34,11 @@ const App = () => (
                   <></>
                 </ProtectedRoute>
               } />
-              {/* University executive dashboard — placeholder until Phase 2 */}
+              {/* University executive dashboard */}
               <Route path="/university" element={
                 <ProtectedRoute>
                   <DashboardProvider>
-                    <UniversityPlaceholder />
+                    <ExecutiveDashboard />
                   </DashboardProvider>
                 </ProtectedRoute>
               } />
