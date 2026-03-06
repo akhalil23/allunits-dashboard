@@ -82,16 +82,5 @@ function LegacyUnitRedirect() {
   return <Navigate to={path} replace />;
 }
 
-// Temporary placeholder for university dashboard (Phase 2)
-function UniversityPlaceholder() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center space-y-3">
-        <h1 className="text-xl font-display font-bold text-foreground">University Executive Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Coming soon — being migrated to this platform.</p>
-      </div>
-    </div>
-  );
-}
 
 export default App;
