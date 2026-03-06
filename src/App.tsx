@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import EvolutionLab from "./pages/EvolutionLab";
 import Login from "./pages/Login";
+import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import LogoutPage from "./pages/Logout";
 import NotFound from "./pages/NotFound";
