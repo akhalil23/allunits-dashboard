@@ -77,8 +77,14 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
 
   const handleExportPDF = useCallback(() => {
     if (!items?.length || !term || !academicYear) return;
-    exportPDF({ items, term, academicYear, viewType: viewType || 'cumulative' });
-  }, [items, term, academicYear, viewType]);
+    const unitConfig = unitId ? getUnitConfig(unitId) : undefined;
+    exportPDF({
+      items, term, academicYear,
+      viewType: viewType || 'cumulative',
+      unitName: unitConfig?.name || unitId || 'GSR',
+      unitFullName: unitConfig?.fullName || 'Graduate Studies & Research',
+    });
+  }, [items, term, academicYear, viewType, unitId]);
 
   const integrityConfig = integrity === 'Good'
     ? { bg: 'bg-emerald-400/15', text: 'text-emerald-300', border: 'border-emerald-400/25', dot: 'bg-emerald-400' }
