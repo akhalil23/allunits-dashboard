@@ -8,6 +8,7 @@ import { Info, Camera } from 'lucide-react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 
 const PILLAR_LABELS: Record<PillarId, string> = { I: 'Pillar I', II: 'Pillar II', III: 'Pillar III', IV: 'Pillar IV', V: 'Pillar V' };
@@ -86,7 +87,7 @@ export default function DeliveryTrajectory({ aggregation }: Props) {
               const color = getRiskBandColor(m.riskIndex);
               return (
                 <div key={m.unitId} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors">
-                  <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{m.unitId} — {m.unitName}</span>
+                  <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(m.unitId)}</span>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-muted-foreground">RI</span>

@@ -34,3 +34,15 @@ export const UNIT_IDS = Object.keys(UNIT_CONFIGS);
 export function getUnitConfig(unitId: string): UnitConfig | undefined {
   return UNIT_CONFIGS[unitId];
 }
+
+/** Returns "DisplayName — Full Name" e.g. "SoAS — School of Arts & Sciences" */
+export function getUnitDisplayLabel(unitId: string): string {
+  const config = UNIT_CONFIGS[unitId];
+  if (!config) return unitId;
+  return `${config.name} — ${config.fullName}`;
+}
+
+/** Returns just the short display name e.g. "SoAS" instead of raw ID "SAS" */
+export function getUnitDisplayName(unitId: string): string {
+  return UNIT_CONFIGS[unitId]?.name || unitId;
+}

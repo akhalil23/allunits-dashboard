@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } 
 import { BarChart3, Target } from 'lucide-react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
 import type { PillarId } from '@/lib/types';
 
@@ -116,7 +117,7 @@ function UnitRankingCard({ title, subtitle, icon: Icon, units, metricKey }: { ti
           return (
             <div key={unit.unitId} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors">
               <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
-              <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{unit.unitId} — {unit.unitName}</span>
+              <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(unit.unitId)}</span>
               <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden shrink-0"><div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} /></div>
               <span className="text-xs font-bold w-12 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>{isRisk ? value.toFixed(2) : `${value}%`}</span>
             </div>

@@ -10,6 +10,7 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUnitByPillar, getRiskBandColor, RISK_BAND_COLORS, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 
 const PILLAR_LABELS: Record<PillarId, string> = { I: 'Pillar I', II: 'Pillar II', III: 'Pillar III', IV: 'Pillar IV', V: 'Pillar V' };
@@ -78,7 +79,7 @@ export default function UnitComparison({ aggregation }: Props) {
                 return (
                   <tr key={unit.unitId} className={`border-b border-border/30 hover:bg-muted/30 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}>
                     <td className="py-2 px-2 text-muted-foreground font-medium">{idx + 1}</td>
-                    <td className="py-2 px-2 font-medium text-foreground truncate max-w-[200px]">{unit.unitId} — {unit.unitName}</td>
+                    <td className="py-2 px-2 font-medium text-foreground truncate max-w-[200px]">{getUnitDisplayLabel(unit.unitId)}</td>
                     <td className="py-2 px-2 text-right"><span className="font-bold" style={{ color: riColor }}>{unit.riskIndex.toFixed(2)}</span></td>
                     <td className="py-2 px-2 text-right font-medium text-foreground">{unit.completionPct}%</td>
                     <td className="py-2 px-2 text-right font-medium text-foreground">{unit.onTrackPct}%</td>
@@ -108,7 +109,7 @@ export default function UnitComparison({ aggregation }: Props) {
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completion % by Unit</span>
         <div className="h-64 mt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={sortedUnits.map(u => ({ name: u.unitId, completion: u.completionPct, riskIndex: u.riskIndex }))} barSize={16}>
+            <BarChart data={sortedUnits.map(u => ({ name: getUnitDisplayName(u.unitId), completion: u.completionPct, riskIndex: u.riskIndex }))} barSize={16}>
               <XAxis dataKey="name" tick={{ fontSize: 9 }} interval={0} angle={-45} textAnchor="end" height={60} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
               <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number) => [`${v}%`, 'Completion']} />
@@ -171,13 +172,13 @@ function SideBySide({ unitA, unitB, heatCells, universityAvg }: { unitA: UnitAgg
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-4 sm:p-6">
-      <div className="flex items-center gap-2 mb-4"><GitCompareArrows className="w-4 h-4 text-primary" /><span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{unitA.unitId} vs {unitB.unitId}</span></div>
+      <div className="flex items-center gap-2 mb-4"><GitCompareArrows className="w-4 h-4 text-primary" /><span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{getUnitDisplayName(unitA.unitId)} vs {getUnitDisplayName(unitB.unitId)}</span></div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-1">
           <div className="grid grid-cols-[1fr_80px_80px] gap-1 mb-2">
             <span className="text-[10px] text-muted-foreground font-medium">Metric</span>
-            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{unitA.unitId}</span>
-            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{unitB.unitId}</span>
+            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{getUnitDisplayName(unitA.unitId)}</span>
+            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{getUnitDisplayName(unitB.unitId)}</span>
           </div>
           {metrics.map(m => (
             <div key={m.label} className="grid grid-cols-[1fr_80px_80px] gap-1 py-1.5 border-b border-border/30">
@@ -200,14 +201,14 @@ function SideBySide({ unitA, unitB, heatCells, universityAvg }: { unitA: UnitAgg
               <PolarGrid stroke="hsl(var(--border))" />
               <PolarAngleAxis dataKey="pillar" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
               <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8 }} />
-              <Radar name={unitA.unitName} dataKey={unitA.unitId} stroke={RISK_BAND_COLORS.green} fill={RISK_BAND_COLORS.green} fillOpacity={0.15} strokeWidth={2} />
-              <Radar name={unitB.unitName} dataKey={unitB.unitId} stroke={RISK_BAND_COLORS.amber} fill={RISK_BAND_COLORS.amber} fillOpacity={0.15} strokeWidth={2} />
+              <Radar name={getUnitDisplayName(unitA.unitId)} dataKey={unitA.unitId} stroke={RISK_BAND_COLORS.green} fill={RISK_BAND_COLORS.green} fillOpacity={0.15} strokeWidth={2} />
+              <Radar name={getUnitDisplayName(unitB.unitId)} dataKey={unitB.unitId} stroke={RISK_BAND_COLORS.amber} fill={RISK_BAND_COLORS.amber} fillOpacity={0.15} strokeWidth={2} />
               <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number) => `${v}%`} />
             </RadarChart>
           </ResponsiveContainer>
           <div className="flex items-center justify-center gap-4 mt-2">
-            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.green }} />{unitA.unitName}</span>
-            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.amber }} />{unitB.unitName}</span>
+            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.green }} />{getUnitDisplayName(unitA.unitId)}</span>
+            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.amber }} />{getUnitDisplayName(unitB.unitId)}</span>
           </div>
         </div>
       </div>

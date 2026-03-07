@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } 
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { getRiskBandColor, RISK_BAND_COLORS } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_ORDER, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import { UNIT_CONFIGS } from '@/lib/unit-config';
 
 interface Props {
@@ -188,7 +189,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
               return (
                 <div key={unit.unitId} className="p-3 rounded-xl border border-border bg-muted/30 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-foreground">#{idx + 1} {unit.unitId} — {unit.unitName}</span>
+                    <span className="text-xs font-bold text-foreground">#{idx + 1} {getUnitDisplayLabel(unit.unitId)}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{
                       color: unitColor, backgroundColor: `${unitColor}15`, border: `1px solid ${unitColor}30`,
                     }}>{unit.riskIndex.toFixed(2)}</span>

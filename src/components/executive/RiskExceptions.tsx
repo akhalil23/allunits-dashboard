@@ -13,6 +13,7 @@ import {
   type UniversityAggregation, type UnitPillarCell, type ExceptionFlag, type PillarAggregation,
 } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS, RISK_SIGNAL_ORDER } from '@/lib/risk-signals';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 
 const PILLAR_LABELS: Record<PillarId, string> = { I: 'Pillar I', II: 'Pillar II', III: 'Pillar III', IV: 'Pillar IV', V: 'Pillar V' };
@@ -68,7 +69,7 @@ function StrategicFlags({ flags }: { flags: ExceptionFlag[] }) {
                 <tr key={`${flag.unitId}-${flag.sheetRow}`} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="py-2 px-2 text-muted-foreground font-medium">{idx + 1}</td>
                   <td className="py-2 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} /><span className="text-xs font-medium" style={{ color }}>{flag.riskSignal.includes('Realized') ? 'Realized' : 'Critical'}</span></span></td>
-                  <td className="py-2 px-2 font-medium text-foreground truncate max-w-[120px]">{flag.unitId} — {flag.unitName}</td>
+                  <td className="py-2 px-2 font-medium text-foreground truncate max-w-[120px]">{getUnitDisplayLabel(flag.unitId)}</td>
                   <td className="py-2 px-2 text-muted-foreground">{flag.pillar}</td>
                   <td className="py-2 px-2 text-muted-foreground truncate max-w-[200px] hidden sm:table-cell">{flag.actionStep}</td>
                   <td className="py-2 px-2 text-muted-foreground truncate max-w-[120px]">{flag.status}</td>
@@ -137,7 +138,7 @@ function UnitPillarHeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: 
           <tbody>
             {loadedUnits.map(unit => (
               <tr key={unit.unitId} className="border-b border-border/30">
-                <td className="py-1.5 px-2 font-medium text-foreground truncate max-w-[160px] sticky left-0 bg-card z-10">{unit.unitId} — {unit.unitName}</td>
+                <td className="py-1.5 px-2 font-medium text-foreground truncate max-w-[160px] sticky left-0 bg-card z-10">{getUnitDisplayLabel(unit.unitId)}</td>
                 {pillars.map(pillar => {
                   const cell = getCell(unit.unitId, pillar);
                   if (!cell || cell.applicableItems === 0) return (<td key={pillar} className="text-center py-1.5 px-2"><span className="text-[10px] text-muted-foreground/50">—</span></td>);

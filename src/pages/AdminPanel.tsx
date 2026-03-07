@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/use-user-role';
-import { UNIT_CONFIGS } from '@/lib/unit-config';
+import { UNIT_CONFIGS, getUnitDisplayLabel } from '@/lib/unit-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -413,7 +413,7 @@ export default function AdminPanel() {
                             </TableCell>
                             <TableCell>
                               {u.unit_id ? (
-                                <span className="text-sm">{UNIT_CONFIGS[u.unit_id]?.name || u.unit_id}</span>
+                                <span className="text-sm">{getUnitDisplayLabel(u.unit_id)}</span>
                               ) : (
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
@@ -643,7 +643,7 @@ export default function AdminPanel() {
                   <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
                   <SelectContent>
                     {unitIds.map(id => (
-                      <SelectItem key={id} value={id}>{id} — {UNIT_CONFIGS[id].fullName}</SelectItem>
+                      <SelectItem key={id} value={id}>{getUnitDisplayLabel(id)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -685,7 +685,7 @@ export default function AdminPanel() {
                   <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
                   <SelectContent>
                     {unitIds.map(id => (
-                      <SelectItem key={id} value={id}>{id} — {UNIT_CONFIGS[id].fullName}</SelectItem>
+                      <SelectItem key={id} value={id}>{getUnitDisplayLabel(id)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
