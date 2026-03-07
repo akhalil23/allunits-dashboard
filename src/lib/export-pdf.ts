@@ -89,7 +89,7 @@ function buildProgressBar(label: string, value: number, color: string): string {
     </div>`;
 }
 
-export function exportPDF({ items, term, academicYear, viewType }: ExportPDFOptions) {
+export function exportPDF({ items, term, academicYear, viewType, unitName, unitFullName }: ExportPDFOptions) {
   const twk = getTermWindowKey(term, academicYear);
   const vt = viewType || 'cumulative';
   const termLabel = term === 'mid' ? 'Mid-Year' : 'End-of-Year';
