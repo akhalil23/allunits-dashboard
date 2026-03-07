@@ -10,18 +10,18 @@ import { aggregateUniversity, type UniversityAggregation } from '@/lib/universit
 import ExecutiveSidebar, { type ExecutiveTab } from '@/components/executive/ExecutiveSidebar';
 import ExecutiveHeader from '@/components/executive/ExecutiveHeader';
 import PresidentSnapshot from '@/components/executive/PresidentSnapshot';
-import RiskExceptions from '@/components/executive/RiskExceptions';
-import PriorityImpact from '@/components/executive/PriorityImpact';
-import DeliveryTrajectory from '@/components/executive/DeliveryTrajectory';
+import StrategicRiskPriority from '@/components/executive/StrategicRiskPriority';
 import BudgetIntelligence from '@/components/executive/BudgetIntelligence';
 import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
+import StrategicTrendsPanel from '@/components/executive/StrategicTrendsPanel';
 import FilterBar from '@/components/dashboard/FilterBar';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
+  const [trendsOpen, setTrendsOpen] = useState(false);
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
   const queryClient = useQueryClient();
@@ -68,6 +68,14 @@ export default function ExecutiveDashboard() {
 
   const observedAt = unitResults?.filter(u => u.result).map(u => u.result!.observedAt).sort()[0];
 
+  const TAB_TITLES: Record<ExecutiveTab, string> = {
+    'snapshot': 'Executive Snapshot',
+    'risk-priority': 'Strategic Risk & Priority',
+    'budget': 'Budget Intelligence',
+    'comparison': 'Unit Comparison',
+    'ai-insights': 'AI Executive Insights',
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <ExecutiveSidebar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -78,19 +86,14 @@ export default function ExecutiveDashboard() {
           onRefresh={handleRefresh}
           isRefreshing={isRefetching}
           observedAt={observedAt}
+          onOpenTrends={() => setTrendsOpen(true)}
         />
         {activeTab !== 'budget' && <FilterBar />}
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-[1600px]">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">
-                {activeTab === 'snapshot' && 'Executive Snapshot'}
-                {activeTab === 'risk' && 'Risk & Exceptions'}
-                {activeTab === 'priority' && 'Priority & Impact'}
-                {activeTab === 'trajectory' && 'Delivery & Trajectory'}
-                {activeTab === 'budget' && 'Budget Intelligence'}
-                {activeTab === 'comparison' && 'Unit Comparison'}
-                {activeTab === 'ai-insights' && 'AI Executive Insights'}
+                {TAB_TITLES[activeTab]}
               </h2>
               {activeTab !== 'budget' && (
                 <span className="text-xs text-muted-foreground">
@@ -100,15 +103,19 @@ export default function ExecutiveDashboard() {
             </div>
 
             {activeTab === 'snapshot' && <PresidentSnapshot aggregation={aggregation} />}
-            {activeTab === 'risk' && <RiskExceptions aggregation={aggregation} />}
-            {activeTab === 'priority' && <PriorityImpact aggregation={aggregation} />}
-            {activeTab === 'trajectory' && <DeliveryTrajectory aggregation={aggregation} />}
+            {activeTab === 'risk-priority' && <StrategicRiskPriority aggregation={aggregation} />}
             {activeTab === 'budget' && <BudgetIntelligence aggregation={aggregation} />}
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
           </div>
         </main>
       </div>
+
+      <StrategicTrendsPanel
+        open={trendsOpen}
+        onClose={() => setTrendsOpen(false)}
+        aggregation={aggregation}
+      />
     </div>
   );
 }

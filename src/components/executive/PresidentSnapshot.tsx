@@ -1,54 +1,356 @@
 /**
- * Tab 1 — Executive Snapshot
+ * Tab 1 — Executive Snapshot (Redesigned)
+ * Strategic command view: KPIs, highlights, bubble quadrant, pillar map, bars, donut.
  */
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, AlertTriangle, CheckCircle2, Users } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import {
+  CheckCircle2, AlertTriangle, TrendingUp, TrendingDown, DollarSign,
+  ShieldAlert, BarChart3, Lightbulb, Info,
+} from 'lucide-react';
+import {
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
+  ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie, Cell as PieCell,
+  BarChart, Bar, Legend,
+} from 'recharts';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { getRiskBandColor, RISK_BAND_COLORS } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_ORDER, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
-import { getUnitDisplayLabel } from '@/lib/unit-config';
-import { UNIT_CONFIGS } from '@/lib/unit-config';
+import { useDashboard } from '@/contexts/DashboardContext';
+import { useUniversityData } from '@/hooks/use-university-data';
+import { aggregateByPillar } from '@/lib/university-aggregation';
+import { PILLAR_LABELS, MOCK_BUDGET, getPillarBudget } from '@/lib/budget-data';
+import type { PillarId } from '@/lib/types';
 
 interface Props {
   aggregation: UniversityAggregation;
 }
 
-function RiskGauge({ value }: { value: number }) {
-  const pct = Math.min(100, Math.max(0, (value / 3) * 100));
-  const color = getRiskBandColor(value);
+function InfoTip({ text }: { text: string }) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Info className="w-3 h-3 text-muted-foreground/60 cursor-help inline ml-1" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs"><p>{text}</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+export default function PresidentSnapshot({ aggregation }: Props) {
+  const { viewType, term, academicYear } = useDashboard();
+  const { data: unitResults } = useUniversityData();
+  const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
+
+  const budgetUtilization = useMemo(() => {
+    const pillars: PillarId[] = ['I','II','III','IV','V'];
+    let totalCommitted = 0, totalAll = 0;
+    pillars.forEach(p => {
+      const b = getPillarBudget(p, 'total');
+      totalCommitted += b.committed;
+      totalAll += b.committed + b.available;
+    });
+    return totalAll > 0 ? parseFloat(((totalCommitted / totalAll) * 100).toFixed(1)) : 0;
+  }, []);
+
+  // Pillar data with budget
+  const pillarData = useMemo(() => {
+    return pillarAgg.map(p => {
+      const b = getPillarBudget(p.pillar, 'total');
+      const util = (b.committed + b.available) > 0 ? (b.committed / (b.committed + b.available)) * 100 : 0;
+      return {
+        pillar: p.pillar,
+        label: PILLAR_LABELS[p.pillar],
+        completion: p.completionPct,
+        riskIndex: p.riskIndex,
+        budgetUtil: parseFloat(util.toFixed(1)),
+        applicable: p.applicableItems,
+      };
+    });
+  }, [pillarAgg]);
+
+  // Executive highlights
+  const highlights = useMemo(() => {
+    const items: { title: string; insight: string; icon: React.ElementType; color: string }[] = [];
+    
+    const highCompPillars = pillarData.filter(p => p.completion >= 40);
+    if (highCompPillars.length > 0) {
+      items.push({
+        title: 'Execution Progress',
+        insight: `${highCompPillars.length} pillar${highCompPillars.length > 1 ? 's' : ''} show${highCompPillars.length === 1 ? 's' : ''} completion above 40%, indicating strong execution momentum.`,
+        icon: TrendingUp,
+        color: '#16A34A',
+      });
+    }
+
+    const worstPillar = [...pillarData].sort((a, b) => b.riskIndex - a.riskIndex)[0];
+    if (worstPillar) {
+      items.push({
+        title: 'Risk Concentration',
+        insight: `Risk concentration remains highest in ${worstPillar.label} with RI = ${worstPillar.riskIndex.toFixed(2)}.`,
+        icon: ShieldAlert,
+        color: getRiskBandColor(worstPillar.riskIndex),
+      });
+    }
+
+    items.push({
+      title: 'Budget Position',
+      insight: `Budget utilization reached ${budgetUtilization}% with ${pillarData.filter(p => p.budgetUtil > 80).length > 0 ? 'pressure in some pillars' : 'balanced allocation across pillars'}.`,
+      icon: DollarSign,
+      color: budgetUtilization >= 80 ? '#EF4444' : '#3B82F6',
+    });
+
+    const onTrackUnits = aggregation.unitAggregations.filter(u => u.riskIndex <= 0.75).length;
+    if (onTrackUnits > 0) {
+      items.push({
+        title: 'Low-Risk Units',
+        insight: `${onTrackUnits} unit${onTrackUnits > 1 ? 's' : ''} maintain${onTrackUnits === 1 ? 's' : ''} a Risk Index below 0.75, reflecting strong delivery alignment.`,
+        icon: CheckCircle2,
+        color: '#16A34A',
+      });
+    }
+
+    return items.slice(0, 5);
+  }, [pillarData, budgetUtilization, aggregation]);
+
+  const riskColor = getRiskBandColor(aggregation.riskIndex);
+  const donutData = aggregation.riskDistribution.filter(d => d.count > 0);
 
   return (
-    <div className="relative h-3 rounded-full bg-muted overflow-hidden mt-3">
-      <div className="absolute inset-0 flex">
-        <div className="flex-1" style={{ background: `${RISK_BAND_COLORS.green}33` }} />
-        <div className="flex-1" style={{ background: `${RISK_BAND_COLORS.amber}33` }} />
-        <div className="flex-1" style={{ background: `${RISK_BAND_COLORS.orange}33` }} />
-        <div className="flex-1" style={{ background: `${RISK_BAND_COLORS.red}33` }} />
-      </div>
-      <motion.div
-        className="absolute top-0 h-full w-1 rounded-full"
-        style={{ backgroundColor: color }}
-        initial={{ left: '0%' }}
-        animate={{ left: `${pct}%` }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-      />
+    <div className="space-y-8">
+      {/* Section 1: Strategic KPI Banner */}
+      <section>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          <KPICard label="Completion" value={`${aggregation.completionPct}%`} icon={CheckCircle2} color="hsl(var(--primary))" tooltip="Percentage of applicable items that are completed (on target + below target)." />
+          <KPICard label="On Track" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} color="#16A34A" tooltip="Percentage of applicable items completed on target." />
+          <KPICard label="Below Target" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} color="#B23A48" tooltip="Percentage of applicable items completed below target expectations." />
+          <KPICard label="RI (Risk Index)" value={aggregation.riskIndex.toFixed(2)} icon={ShieldAlert} color={riskColor} tooltip="Risk Index (RI) represents the weighted structural risk exposure across initiatives. Scale: 0 (no risk) to 3 (maximum risk)." />
+          <KPICard label="Budget Utilization" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} tooltip="Percentage of total allocated budget that has been committed." />
+        </div>
+      </section>
+
+      {/* Section 2: Executive Highlights */}
+      <section>
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+          <Lightbulb className="w-3.5 h-3.5" /> Executive Highlights
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {highlights.map((h, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="card-elevated p-4 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-1 h-full rounded-r" style={{ backgroundColor: h.color }} />
+              <div className="flex items-start gap-3 pl-2">
+                <div className="p-1.5 rounded-lg bg-muted/50 mt-0.5">
+                  <h.icon className="w-3.5 h-3.5" style={{ color: h.color }} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground">{h.title}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{h.insight}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 3: Strategic Performance Matrix (Bubble Quadrant) */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Strategic Performance Matrix</span>
+            <InfoTip text="Bubble chart combining delivery (Y), budget (X), and risk (color). Bubble size reflects the number of applicable initiatives." />
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
+          <div className="h-72 sm:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Completion %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <ReferenceLine x={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <ReTooltip
+                  content={({ payload }) => {
+                    if (!payload?.[0]) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
+                        <p className="font-semibold text-foreground">{d.label}</p>
+                        <p className="text-muted-foreground">Completion: <span className="text-foreground font-medium">{d.y}%</span></p>
+                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.ri) }}>{d.ri.toFixed(2)}</span></p>
+                        <p className="text-muted-foreground">Budget Util: <span className="text-foreground font-medium">{d.x}%</span></p>
+                        <p className="text-muted-foreground">Applicable: <span className="text-foreground font-medium">{d.applicable}</span></p>
+                      </div>
+                    );
+                  }}
+                />
+                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.completion, ri: p.riskIndex, label: p.label, applicable: p.applicable, z: Math.max(200, p.applicable * 15) }))}>
+                  {pillarData.map((p, i) => (
+                    <Cell key={i} fill={getRiskBandColor(p.riskIndex)} fillOpacity={0.7} r={Math.max(8, Math.min(20, p.applicable / 3))} />
+                  ))}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+            {[
+              { label: 'High Delivery / High Budget', desc: 'Strong Execution', pos: 'top-right' },
+              { label: 'High Delivery / Low Budget', desc: 'Efficient Execution', pos: 'top-left' },
+              { label: 'Low Delivery / High Budget', desc: 'Execution Risk', pos: 'bottom-right' },
+              { label: 'Low Delivery / Low Budget', desc: 'Underperforming', pos: 'bottom-left' },
+            ].map(q => (
+              <div key={q.pos} className="text-center p-2 rounded-lg bg-muted/30 border border-border/50">
+                <p className="text-[10px] font-semibold text-foreground">{q.desc}</p>
+                <p className="text-[9px] text-muted-foreground">{q.label}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Section 4: Strategic Pillar Map (Risk vs Budget) */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-elevated p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Strategic Quadrant</span>
+            <InfoTip text="Maps each pillar by budget utilization (X) and risk exposure (Y). Quadrants indicate strategic positioning." />
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs Risk Index — identifying financial pressure zones.</p>
+          <div className="h-64 sm:h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 10, right: 30, bottom: 25, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'RI (Risk Index)', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <ReferenceLine x={60} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <ReferenceLine y={1.5} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <ReTooltip
+                  content={({ payload }) => {
+                    if (!payload?.[0]) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
+                        <p className="font-semibold text-foreground">{d.label}</p>
+                        <p className="text-muted-foreground">Budget Util: <span className="text-foreground font-medium">{d.x}%</span></p>
+                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.y) }}>{d.y.toFixed(2)}</span></p>
+                      </div>
+                    );
+                  }}
+                />
+                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.riskIndex, label: p.label }))}>
+                  {pillarData.map((p, i) => {
+                    const q = p.budgetUtil >= 60 && p.riskIndex >= 1.5 ? '#EF4444' : p.budgetUtil < 60 && p.riskIndex >= 1.5 ? '#F97316' : p.budgetUtil >= 60 && p.riskIndex < 1.5 ? '#16A34A' : '#3B82F6';
+                    return <Cell key={i} fill={q} r={9} />;
+                  })}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+            {[
+              { label: 'Low Risk / High Budget', desc: 'Efficient Deployment', color: '#16A34A' },
+              { label: 'High Risk / Low Budget', desc: 'Underfunded Risk', color: '#F97316' },
+              { label: 'High Risk / High Budget', desc: 'Financial Pressure', color: '#EF4444' },
+              { label: 'Low Risk / Low Budget', desc: 'Stable', color: '#3B82F6' },
+            ].map(q => (
+              <div key={q.desc} className="text-center p-2 rounded-lg border border-border/50" style={{ backgroundColor: `${q.color}08` }}>
+                <p className="text-[10px] font-semibold" style={{ color: q.color }}>{q.desc}</p>
+                <p className="text-[9px] text-muted-foreground">{q.label}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Section 5: Pillar Performance Comparison Bars */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
+          </div>
+          <div className="space-y-4">
+            {pillarData.map(p => (
+              <div key={p.pillar} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">{p.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{p.applicable} items</span>
+                </div>
+                <div className="space-y-1.5">
+                  <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" />
+                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => v.toFixed(2)} />
+                  <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Section 6: Risk Signal Distribution */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-elevated p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Signal Distribution</span>
+            <InfoTip text="Distribution of all applicable items by risk signal category. No Risk = completed on target; Emerging = in progress; Critical = not started/delayed; Realized = completed below target." />
+          </div>
+          <div className="flex items-center gap-6 mt-4">
+            <div className="w-36 h-36 sm:w-44 sm:h-44 shrink-0">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={donutData} innerRadius="60%" outerRadius="85%" dataKey="count" startAngle={90} endAngle={-270} strokeWidth={0}>
+                    {donutData.map((d, i) => (<Cell key={i} fill={d.color} />))}
+                  </Pie>
+                  <ReTooltip formatter={(value: number, name: string) => [`${value} items`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-2.5 min-w-0">
+              {RISK_SIGNAL_ORDER.map(signal => {
+                const item = aggregation.riskDistribution.find(d => d.signal === signal);
+                return (
+                  <div key={signal} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: RISK_SIGNAL_COLORS[signal] }} />
+                    <span className="text-xs text-foreground flex-1 truncate">{signal.split(' (')[0]}</span>
+                    <span className="text-xs font-bold text-foreground">{item?.count || 0}</span>
+                    <span className="text-xs text-muted-foreground w-12 text-right">{item?.percent || 0}%</span>
+                  </div>
+                );
+              })}
+              <div className="pt-2 mt-2 border-t border-border flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Total Applicable</span>
+                <span className="text-xs font-bold text-foreground">{aggregation.applicableItems}</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
     </div>
   );
 }
 
-function MetricCard({ label, value, subtitle, icon: Icon, color }: {
-  label: string; value: string; subtitle?: string; icon: React.ElementType; color: string;
+function KPICard({ label, value, icon: Icon, color, tooltip }: {
+  label: string; value: string; icon: React.ElementType; color: string; tooltip: string;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-5 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
-          <p className="text-2xl sm:text-3xl font-display font-bold mt-1" style={{ color }}>{value}</p>
-          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center">
+            {label}
+            <InfoTip text={tooltip} />
+          </p>
+          <p className="text-xl sm:text-2xl font-display font-bold mt-1" style={{ color }}>{value}</p>
         </div>
         <div className="p-2 rounded-lg bg-muted/50">
           <Icon className="w-4 h-4 text-muted-foreground" />
@@ -58,159 +360,18 @@ function MetricCard({ label, value, subtitle, icon: Icon, color }: {
   );
 }
 
-export default function PresidentSnapshot({ aggregation }: Props) {
-  const {
-    completionPct, onTrackPct, belowTargetPct,
-    riskIndex, riskDistribution, applicableItems,
-    totalItems, naCount, loadedUnits, totalUnits, failedUnits,
-    topRiskiestUnits,
-  } = aggregation;
-
-  const riskColor = getRiskBandColor(riskIndex);
-  const donutData = riskDistribution.filter(d => d.count > 0);
-
+function BarRow({ label, value, max, suffix, color, format }: {
+  label: string; value: number; max: number; suffix: string; color: string; format?: (v: number) => string;
+}) {
+  const pct = Math.min(100, (value / max) * 100);
+  const display = format ? format(value) : `${value}${suffix}`;
   return (
-    <div className="space-y-6">
-      <p className="text-xs text-muted-foreground italic px-1">
-        Risk signals are derived exclusively from execution status and do not incorporate time progression.
-      </p>
-
-      {(failedUnits.length > 0 || loadedUnits < totalUnits) && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-3 border-amber-500/30 bg-amber-500/5">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-            <span className="text-xs font-medium text-foreground">Coverage: {loadedUnits}/{totalUnits} units loaded</span>
-          </div>
-          {failedUnits.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-1 ml-6">
-              Missing: {failedUnits.map(id => UNIT_CONFIGS[id]?.name || id).join(', ')}
-            </p>
-          )}
-        </motion.div>
-      )}
-
-      <p className="text-xs text-muted-foreground px-1">
-        High-level execution metrics across all loaded units. Completion includes both on-target and below-target items.
-      </p>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <MetricCard label="Completion" value={`${completionPct}%`} subtitle={`${aggregation.cotCount + aggregation.cbtCount} of ${applicableItems} applicable`} icon={CheckCircle2} color="hsl(var(--primary))" />
-        <MetricCard label="On Track" value={`${onTrackPct}%`} subtitle={`${aggregation.cotCount} items on target`} icon={CheckCircle2} color="#16A34A" />
-        <MetricCard label="Below Target" value={`${belowTargetPct}%`} subtitle={`${aggregation.cbtCount} items below target`} icon={AlertTriangle} color="#B23A48" />
-        <MetricCard label="Coverage" value={`${loadedUnits}/${totalUnits}`} subtitle={`${totalItems} total items across units`} icon={Users} color="hsl(var(--primary))" />
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-muted-foreground w-16 shrink-0">{label}</span>
+      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-        {/* Risk Index Card */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-4 sm:p-6 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] to-transparent pointer-events-none" />
-          <div className="relative">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">University Risk Index</span>
-            <p className="text-xs text-muted-foreground mt-1">Weighted severity index across all applicable items. Lower is better.</p>
-            <div className="mt-2 p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1">
-              <p className="text-[11px] text-muted-foreground">The Risk Index is a weighted indicator that summarizes overall risk exposure.</p>
-              <p className="text-[11px] text-muted-foreground">Weights: <span className="font-medium text-foreground">No Risk = 0</span>, <span className="font-medium text-foreground">Emerging = 1</span>, <span className="font-medium text-foreground">Critical = 2</span>, <span className="font-medium text-foreground">Realized = 3</span></p>
-              <p className="text-[11px] text-muted-foreground font-mono">RI = (0×NoRisk + 1×Emerging + 2×Critical + 3×Realized) / Applicable</p>
-              <p className="text-[10px] text-muted-foreground/70 italic">Range: 0 (no structural risk) to 3 (maximum structural risk exposure).</p>
-            </div>
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-4xl sm:text-5xl font-display font-bold" style={{ color: riskColor }}>{riskIndex.toFixed(2)}</span>
-              <span className="text-xs text-muted-foreground">/ 3.00</span>
-            </div>
-            <RiskGauge value={riskIndex} />
-            <div className="flex items-center justify-between mt-3">
-              <span className="text-xs text-muted-foreground">0 (low) → 3 (high)</span>
-              <span className="text-xs text-muted-foreground">{applicableItems} applicable items</span>
-            </div>
-            <div className="flex gap-2 mt-3 flex-wrap">
-              {(['green', 'amber', 'orange', 'red'] as const).map(band => (
-                <span key={band} className="text-[10px] px-2 py-0.5 rounded-full border" style={{
-                  borderColor: `${RISK_BAND_COLORS[band]}40`,
-                  color: RISK_BAND_COLORS[band],
-                  backgroundColor: `${RISK_BAND_COLORS[band]}10`,
-                }}>
-                  {band === 'green' ? '0–0.75' : band === 'amber' ? '0.76–1.50' : band === 'orange' ? '1.51–2.25' : '2.26–3.00'}
-                </span>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Risk Distribution Donut */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-4 sm:p-6">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Distribution</span>
-          <p className="text-xs text-muted-foreground mt-1">Breakdown of all applicable items by risk signal category.</p>
-          <div className="mt-2 p-3 rounded-lg bg-muted/30 border border-border/50 space-y-1.5">
-            <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">No Risk (On Track)</span> — The initiative has been completed on target.</p>
-            <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">Emerging Risk</span> — The initiative is in progress but shows signals that require monitoring.</p>
-            <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">Critical Risk</span> — The initiative has not started or is significantly delayed.</p>
-            <p className="text-[11px] text-muted-foreground"><span className="font-semibold text-foreground">Realized Risk</span> — The initiative has been completed but below target.</p>
-          </div>
-          <div className="flex items-center gap-4 sm:gap-6 mt-4">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 shrink-0">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={donutData} innerRadius="60%" outerRadius="85%" dataKey="count" startAngle={90} endAngle={-270} strokeWidth={0}>
-                    {donutData.map((d, i) => (<Cell key={i} fill={d.color} />))}
-                  </Pie>
-                  <RechartsTooltip formatter={(value: number, name: string) => [`${value} items`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex-1 space-y-2 min-w-0">
-              {RISK_SIGNAL_ORDER.map(signal => {
-                const item = riskDistribution.find(d => d.signal === signal);
-                return (
-                  <div key={signal} className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: RISK_SIGNAL_COLORS[signal] }} />
-                    <span className="text-xs text-foreground flex-1 truncate">{signal.split(' (')[0]}</span>
-                    <span className="text-xs font-semibold text-foreground">{item?.count || 0}</span>
-                    <span className="text-xs text-muted-foreground w-10 text-right">{item?.percent || 0}%</span>
-                  </div>
-                );
-              })}
-              <div className="pt-2 mt-2 border-t border-border flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Not Applicable</span>
-                <span className="text-xs font-semibold text-muted-foreground">{naCount}</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {topRiskiestUnits.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card-elevated p-4 sm:p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ShieldAlert className="w-4 h-4 text-destructive" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Top 3 Highest Risk Units</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {topRiskiestUnits.map((unit, idx) => {
-              const unitColor = getRiskBandColor(unit.riskIndex);
-              return (
-                <div key={unit.unitId} className="p-3 rounded-xl border border-border bg-muted/30 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-foreground">#{idx + 1} {getUnitDisplayLabel(unit.unitId)}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{
-                      color: unitColor, backgroundColor: `${unitColor}15`, border: `1px solid ${unitColor}30`,
-                    }}>{unit.riskIndex.toFixed(2)}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs"><span className="text-muted-foreground">Completion</span><span className="text-foreground font-medium">{unit.completionPct}%</span></div>
-                    <div className="flex justify-between text-xs"><span className="text-muted-foreground">Applicable</span><span className="text-foreground font-medium">{unit.applicableItems}</span></div>
-                    <div className="flex justify-between text-xs"><span className="text-muted-foreground">Critical + Realized</span><span className="text-foreground font-medium">{unit.riskCounts.critical + unit.riskCounts.realized}</span></div>
-                  </div>
-                  <div className="h-2 rounded-full overflow-hidden flex">
-                    {unit.riskCounts.noRisk > 0 && <div style={{ width: `${(unit.riskCounts.noRisk / unit.applicableItems) * 100}%`, backgroundColor: RISK_SIGNAL_COLORS['No Risk (On Track)'] }} />}
-                    {unit.riskCounts.emerging > 0 && <div style={{ width: `${(unit.riskCounts.emerging / unit.applicableItems) * 100}%`, backgroundColor: RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)'] }} />}
-                    {unit.riskCounts.critical > 0 && <div style={{ width: `${(unit.riskCounts.critical / unit.applicableItems) * 100}%`, backgroundColor: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'] }} />}
-                    {unit.riskCounts.realized > 0 && <div style={{ width: `${(unit.riskCounts.realized / unit.applicableItems) * 100}%`, backgroundColor: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'] }} />}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
+      <span className="text-[11px] font-bold w-10 text-right" style={{ color }}>{display}</span>
     </div>
   );
 }
