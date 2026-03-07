@@ -293,6 +293,49 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "update_user") {
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { role: newRole, unit_id: newUnitId, is_active: newIsActive } = body;
+
+      // Update user_roles
+      const updates: Record<string, unknown> = {};
+      if (newRole !== undefined) {
+        if (newRole !== 'admin' && newRole !== 'unit_user' && newRole !== 'university_viewer') {
+          return new Response(JSON.stringify({ error: "Invalid role" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        updates.role = newRole;
+      }
+      if (newUnitId !== undefined) updates.unit_id = newUnitId || null;
+      if (newIsActive !== undefined) updates.is_active = newIsActive;
+
+      if (Object.keys(updates).length > 0) {
+        const { error: updateError } = await adminClient
+          .from("user_roles")
+          .update(updates)
+          .eq("user_id", user_id);
+
+        if (updateError) {
+          return new Response(JSON.stringify({ error: updateError.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
