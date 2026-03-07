@@ -23,7 +23,7 @@ export const UNIT_CONFIGS: Record<string, UnitConfig> = {
   Facilities: { id: 'Facilities', name: 'Facilities', fullName: 'Facilities', spreadsheetId: '1FOwt5PkOPQnUX_NdmPbzPRbaan9MEeRoXiWB1i-FR0g' },
   Finance: { id: 'Finance', name: 'Finance', fullName: 'Finance', spreadsheetId: '1SWb0okdTuFZub8XFS6tclitCv-FRaSXbcvx6kagvvu4' },
   UGRC: { id: 'UGRC', name: 'UGRC', fullName: 'University Graduate and Research Council', spreadsheetId: '1fX5EtFll-K2kFTIym1bf-SS_pbrcOwTpvAsEFdZHDuE' },
-  StratCom_Alumni: { id: 'StratCom_Alumni', name: 'StratCom & Alumni', fullName: 'Strategic Communications & Alumni Relations', spreadsheetId: '1jyGyHMJTie_iy044AuB7TBOgxBjVNXzqAd2sQMYENgk' },
+  StratCom_Alumni: { id: 'StratCom_Alumni', name: 'CAR', fullName: 'Communications and Alumni Relations', spreadsheetId: '1jyGyHMJTie_iy044AuB7TBOgxBjVNXzqAd2sQMYENgk' },
   Advancement: { id: 'Advancement', name: 'Advancement', fullName: 'Advancement', spreadsheetId: '12xmb1qYhAGSBMkqQO-6LUrgp4uiGcdP3D0nyf3FF6Rs' },
   Provost: { id: 'Provost', name: 'Provost', fullName: 'Office of the Provost', spreadsheetId: '1cVGQZz1GGuoyEv0kljKJY4jCqauvR6K8IM_FIfYwkqE' },
   PwD: { id: 'PwD', name: 'PwD', fullName: 'Persons with Disabilities Committee', spreadsheetId: '1TEr6TeZ_rfHewK7_Pozl3DgHyK6Y1LTfyIt-P139T58' },

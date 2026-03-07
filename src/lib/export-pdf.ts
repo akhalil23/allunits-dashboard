@@ -239,7 +239,7 @@ export function exportPDF({ items, term, academicYear, viewType, unitName, unitF
   <tbody>${rows.join('')}</tbody>
 </table>
 
-<div class="footer">GSR Strategic Plan IV — Auto-generated report • ${new Date().toLocaleString()}</div>
+<div class="footer">${displayName} Strategic Plan IV — Auto-generated report • ${new Date().toLocaleString()}</div>
 </body></html>`;
 
   const printWindow = window.open('', '_blank');
