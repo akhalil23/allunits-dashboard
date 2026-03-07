@@ -172,7 +172,7 @@ function SideBySide({ unitA, unitB, heatCells, universityAvg }: { unitA: UnitAgg
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-4 sm:p-6">
-      <div className="flex items-center gap-2 mb-4"><GitCompareArrows className="w-4 h-4 text-primary" /><span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{unitA.unitId} vs {unitB.unitId}</span></div>
+      <div className="flex items-center gap-2 mb-4"><GitCompareArrows className="w-4 h-4 text-primary" /><span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{getUnitDisplayName(unitA.unitId)} vs {getUnitDisplayName(unitB.unitId)}</span></div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-1">
           <div className="grid grid-cols-[1fr_80px_80px] gap-1 mb-2">
