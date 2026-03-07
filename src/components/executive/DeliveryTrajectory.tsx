@@ -8,6 +8,7 @@ import { Info, Camera } from 'lucide-react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 
 const PILLAR_LABELS: Record<PillarId, string> = { I: 'Pillar I', II: 'Pillar II', III: 'Pillar III', IV: 'Pillar IV', V: 'Pillar V' };

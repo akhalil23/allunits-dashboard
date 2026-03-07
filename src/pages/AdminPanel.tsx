@@ -685,7 +685,7 @@ export default function AdminPanel() {
                   <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
                   <SelectContent>
                     {unitIds.map(id => (
-                      <SelectItem key={id} value={id}>{id} — {UNIT_CONFIGS[id].fullName}</SelectItem>
+                      <SelectItem key={id} value={id}>{getUnitDisplayLabel(id)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

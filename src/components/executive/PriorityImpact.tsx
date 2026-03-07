@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } 
 import { BarChart3, Target } from 'lucide-react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
 import type { PillarId } from '@/lib/types';
 

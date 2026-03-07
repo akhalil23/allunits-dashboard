@@ -8,6 +8,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } 
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { getRiskBandColor, RISK_BAND_COLORS } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_ORDER, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import { UNIT_CONFIGS } from '@/lib/unit-config';
 
 interface Props {

@@ -13,6 +13,7 @@ import {
   type UniversityAggregation, type UnitPillarCell, type ExceptionFlag, type PillarAggregation,
 } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS, RISK_SIGNAL_ORDER } from '@/lib/risk-signals';
+import { getUnitDisplayLabel } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 
 const PILLAR_LABELS: Record<PillarId, string> = { I: 'Pillar I', II: 'Pillar II', III: 'Pillar III', IV: 'Pillar IV', V: 'Pillar V' };
