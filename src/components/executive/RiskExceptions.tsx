@@ -68,7 +68,7 @@ function StrategicFlags({ flags }: { flags: ExceptionFlag[] }) {
                 <tr key={`${flag.unitId}-${flag.sheetRow}`} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="py-2 px-2 text-muted-foreground font-medium">{idx + 1}</td>
                   <td className="py-2 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} /><span className="text-xs font-medium" style={{ color }}>{flag.riskSignal.includes('Realized') ? 'Realized' : 'Critical'}</span></span></td>
-                  <td className="py-2 px-2 font-medium text-foreground truncate max-w-[120px]">{flag.unitId} — {flag.unitName}</td>
+                  <td className="py-2 px-2 font-medium text-foreground truncate max-w-[120px]">{getUnitDisplayLabel(flag.unitId)}</td>
                   <td className="py-2 px-2 text-muted-foreground">{flag.pillar}</td>
                   <td className="py-2 px-2 text-muted-foreground truncate max-w-[200px] hidden sm:table-cell">{flag.actionStep}</td>
                   <td className="py-2 px-2 text-muted-foreground truncate max-w-[120px]">{flag.status}</td>
