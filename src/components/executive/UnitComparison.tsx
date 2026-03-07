@@ -177,8 +177,8 @@ function SideBySide({ unitA, unitB, heatCells, universityAvg }: { unitA: UnitAgg
         <div className="space-y-1">
           <div className="grid grid-cols-[1fr_80px_80px] gap-1 mb-2">
             <span className="text-[10px] text-muted-foreground font-medium">Metric</span>
-            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{unitA.unitId}</span>
-            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{unitB.unitId}</span>
+            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{getUnitDisplayName(unitA.unitId)}</span>
+            <span className="text-[10px] text-muted-foreground font-medium text-center truncate">{getUnitDisplayName(unitB.unitId)}</span>
           </div>
           {metrics.map(m => (
             <div key={m.label} className="grid grid-cols-[1fr_80px_80px] gap-1 py-1.5 border-b border-border/30">

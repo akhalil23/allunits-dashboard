@@ -137,7 +137,7 @@ function UnitPillarHeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: 
           <tbody>
             {loadedUnits.map(unit => (
               <tr key={unit.unitId} className="border-b border-border/30">
-                <td className="py-1.5 px-2 font-medium text-foreground truncate max-w-[160px] sticky left-0 bg-card z-10">{unit.unitId} — {unit.unitName}</td>
+                <td className="py-1.5 px-2 font-medium text-foreground truncate max-w-[160px] sticky left-0 bg-card z-10">{getUnitDisplayLabel(unit.unitId)}</td>
                 {pillars.map(pillar => {
                   const cell = getCell(unit.unitId, pillar);
                   if (!cell || cell.applicableItems === 0) return (<td key={pillar} className="text-center py-1.5 px-2"><span className="text-[10px] text-muted-foreground/50">—</span></td>);
