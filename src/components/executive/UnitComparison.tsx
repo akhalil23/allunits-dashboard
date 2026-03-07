@@ -207,8 +207,8 @@ function SideBySide({ unitA, unitB, heatCells, universityAvg }: { unitA: UnitAgg
             </RadarChart>
           </ResponsiveContainer>
           <div className="flex items-center justify-center gap-4 mt-2">
-            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.green }} />{unitA.unitName}</span>
-            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.amber }} />{unitB.unitName}</span>
+            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.green }} />{getUnitDisplayName(unitA.unitId)}</span>
+            <span className="flex items-center gap-1.5 text-[10px]"><span className="w-3 h-0.5 rounded" style={{ backgroundColor: RISK_BAND_COLORS.amber }} />{getUnitDisplayName(unitB.unitId)}</span>
           </div>
         </div>
       </div>
