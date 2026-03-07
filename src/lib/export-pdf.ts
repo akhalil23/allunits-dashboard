@@ -7,6 +7,8 @@ interface ExportPDFOptions {
   term: Term;
   academicYear: AcademicYear;
   viewType: ViewType;
+  unitName?: string;
+  unitFullName?: string;
 }
 
 function getStatusAndCompletion(item: ActionItem, twk: ReturnType<typeof getTermWindowKey>, vt: ViewType) {
