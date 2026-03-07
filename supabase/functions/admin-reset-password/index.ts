@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
           role: userRole?.role || null,
           unit_id: userRole?.unit_id || null,
           role_id: userRole?.id || null,
+          is_active: userRole?.is_active ?? true,
         };
       });
 
