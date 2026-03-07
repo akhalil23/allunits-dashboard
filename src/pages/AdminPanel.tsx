@@ -413,7 +413,7 @@ export default function AdminPanel() {
                             </TableCell>
                             <TableCell>
                               {u.unit_id ? (
-                                <span className="text-sm">{UNIT_CONFIGS[u.unit_id]?.name || u.unit_id}</span>
+                                <span className="text-sm">{getUnitDisplayLabel(u.unit_id)}</span>
                               ) : (
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
