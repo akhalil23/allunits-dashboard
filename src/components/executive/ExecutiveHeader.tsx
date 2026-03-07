@@ -1,10 +1,11 @@
 /**
  * Executive Header — University Command Center.
+ * Includes "Explore Strategic Trends" button.
  */
 
 import { useTheme } from '@/hooks/use-theme';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, RefreshCw, LogOut } from 'lucide-react';
+import { Moon, Sun, RefreshCw, LogOut, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -15,9 +16,10 @@ interface ExecutiveHeaderProps {
   onRefresh: () => void;
   isRefreshing?: boolean;
   observedAt?: string;
+  onOpenTrends?: () => void;
 }
 
-export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, isRefreshing, observedAt }: ExecutiveHeaderProps) {
+export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, isRefreshing, observedAt, onOpenTrends }: ExecutiveHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -64,6 +66,19 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
+            {/* Explore Strategic Trends Button */}
+            {onOpenTrends && !isMobile && (
+              <motion.button
+                onClick={onOpenTrends}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.12] text-white/90 hover:bg-white/20 hover:text-white transition-colors duration-200 border border-white/10 text-[11px] font-semibold"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>Explore Strategic Trends</span>
+              </motion.button>
+            )}
+
             {/* Coverage Badge */}
             <motion.div
               className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full border backdrop-blur-sm text-[11px] font-semibold ${

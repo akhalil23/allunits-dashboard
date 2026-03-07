@@ -1,10 +1,11 @@
 /**
  * Executive Sidebar — University Command Center navigation.
+ * 5 tabs: Snapshot, Risk & Priority, Budget, Comparison, AI Insights
  */
 
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, ShieldAlert, Target, TrendingUp, DollarSign,
+  LayoutDashboard, ShieldAlert, DollarSign,
   GitCompare, Brain, ChevronRight, Menu, X, Shield, LogOut,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +14,7 @@ import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
 
-export type ExecutiveTab = 'snapshot' | 'risk' | 'priority' | 'trajectory' | 'budget' | 'comparison' | 'ai-insights';
+export type ExecutiveTab = 'snapshot' | 'risk-priority' | 'budget' | 'comparison' | 'ai-insights';
 
 interface Props {
   activeTab: ExecutiveTab;
@@ -22,9 +23,7 @@ interface Props {
 
 const tabs: { id: ExecutiveTab; label: string; icon: React.ElementType }[] = [
   { id: 'snapshot', label: 'Executive Snapshot', icon: LayoutDashboard },
-  { id: 'risk', label: 'Risk & Exceptions', icon: ShieldAlert },
-  { id: 'priority', label: 'Priority & Impact', icon: Target },
-  { id: 'trajectory', label: 'Delivery & Trajectory', icon: TrendingUp },
+  { id: 'risk-priority', label: 'Strategic Risk & Priority', icon: ShieldAlert },
   { id: 'budget', label: 'Budget Intelligence', icon: DollarSign },
   { id: 'comparison', label: 'Unit Comparison', icon: GitCompare },
   { id: 'ai-insights', label: 'AI Executive Insights', icon: Brain },
