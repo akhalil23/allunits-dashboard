@@ -201,8 +201,8 @@ function SideBySide({ unitA, unitB, heatCells, universityAvg }: { unitA: UnitAgg
               <PolarGrid stroke="hsl(var(--border))" />
               <PolarAngleAxis dataKey="pillar" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
               <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8 }} />
-              <Radar name={unitA.unitName} dataKey={unitA.unitId} stroke={RISK_BAND_COLORS.green} fill={RISK_BAND_COLORS.green} fillOpacity={0.15} strokeWidth={2} />
-              <Radar name={unitB.unitName} dataKey={unitB.unitId} stroke={RISK_BAND_COLORS.amber} fill={RISK_BAND_COLORS.amber} fillOpacity={0.15} strokeWidth={2} />
+              <Radar name={getUnitDisplayName(unitA.unitId)} dataKey={unitA.unitId} stroke={RISK_BAND_COLORS.green} fill={RISK_BAND_COLORS.green} fillOpacity={0.15} strokeWidth={2} />
+              <Radar name={getUnitDisplayName(unitB.unitId)} dataKey={unitB.unitId} stroke={RISK_BAND_COLORS.amber} fill={RISK_BAND_COLORS.amber} fillOpacity={0.15} strokeWidth={2} />
               <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number) => `${v}%`} />
             </RadarChart>
           </ResponsiveContainer>
