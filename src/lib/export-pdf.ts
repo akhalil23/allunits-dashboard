@@ -7,6 +7,8 @@ interface ExportPDFOptions {
   term: Term;
   academicYear: AcademicYear;
   viewType: ViewType;
+  unitName?: string;
+  unitFullName?: string;
 }
 
 function getStatusAndCompletion(item: ActionItem, twk: ReturnType<typeof getTermWindowKey>, vt: ViewType) {
@@ -87,7 +89,7 @@ function buildProgressBar(label: string, value: number, color: string): string {
     </div>`;
 }
 
-export function exportPDF({ items, term, academicYear, viewType }: ExportPDFOptions) {
+export function exportPDF({ items, term, academicYear, viewType, unitName, unitFullName }: ExportPDFOptions) {
   const twk = getTermWindowKey(term, academicYear);
   const vt = viewType || 'cumulative';
   const termLabel = term === 'mid' ? 'Mid-Year' : 'End-of-Year';
@@ -160,10 +162,13 @@ export function exportPDF({ items, term, academicYear, viewType }: ExportPDFOpti
     ? Math.round(applicableAll.reduce((s, i) => s + getStatusAndCompletion(i, twk, vt).completion, 0) / applicableAll.length)
     : 0;
 
+  const displayName = unitName || 'GSR';
+  const displayFullName = unitFullName || 'Graduate Studies & Research';
+
   const html = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>GSR Report</title>
+<title>${displayName} Report</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #1a1a2e; padding: 40px; max-width: 1100px; margin: 0 auto; }
@@ -193,8 +198,8 @@ export function exportPDF({ items, term, academicYear, viewType }: ExportPDFOpti
 
 <div class="header">
   <div class="header-left">
-    <h1>GSR — Strategic Plan IV Report</h1>
-    <p>Graduate Studies & Research Intelligence Dashboard</p>
+    <h1>${displayName} — Strategic Plan IV Report</h1>
+    <p>${displayFullName} Intelligence Dashboard</p>
   </div>
   <div class="header-right">
     <div class="big">${overallCompletion}%</div>
@@ -234,7 +239,7 @@ export function exportPDF({ items, term, academicYear, viewType }: ExportPDFOpti
   <tbody>${rows.join('')}</tbody>
 </table>
 
-<div class="footer">GSR Strategic Plan IV — Auto-generated report • ${new Date().toLocaleString()}</div>
+<div class="footer">${displayName} Strategic Plan IV — Auto-generated report • ${new Date().toLocaleString()}</div>
 </body></html>`;
 
   const printWindow = window.open('', '_blank');
