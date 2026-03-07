@@ -109,7 +109,7 @@ export default function UnitComparison({ aggregation }: Props) {
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completion % by Unit</span>
         <div className="h-64 mt-4">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={sortedUnits.map(u => ({ name: u.unitId, completion: u.completionPct, riskIndex: u.riskIndex }))} barSize={16}>
+            <BarChart data={sortedUnits.map(u => ({ name: getUnitDisplayName(u.unitId), completion: u.completionPct, riskIndex: u.riskIndex }))} barSize={16}>
               <XAxis dataKey="name" tick={{ fontSize: 9 }} interval={0} angle={-45} textAnchor="end" height={60} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
               <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number) => [`${v}%`, 'Completion']} />
