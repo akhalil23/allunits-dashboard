@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X, Download } from 'lucide-react';
+import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X, Download, LogOut, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserInfo {
@@ -24,6 +25,7 @@ interface UserInfo {
   role: string | null;
   unit_id: string | null;
   role_id: string | null;
+  is_active: boolean;
 }
 
 interface ContactRequest {
@@ -44,7 +46,7 @@ interface SeededAccount {
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const { data: userRole } = useUserRole();
   const [users, setUsers] = useState<UserInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,13 @@ export default function AdminPanel() {
   // Delete confirm
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: UserInfo | null }>({ open: false, user: null });
   const [deleting, setDeleting] = useState(false);
+
+  // Edit user dialog
+  const [editDialog, setEditDialog] = useState<{ open: boolean; user: UserInfo | null }>({ open: false, user: null });
+  const [editRole, setEditRole] = useState('');
+  const [editUnitId, setEditUnitId] = useState('');
+  const [editIsActive, setEditIsActive] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Contact requests
   const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
@@ -210,6 +219,37 @@ export default function AdminPanel() {
     setDeleting(false);
   }
 
+  function openEditDialog(u: UserInfo) {
+    setEditRole(u.role || 'unit_user');
+    setEditUnitId(u.unit_id || '');
+    setEditIsActive(u.is_active);
+    setEditDialog({ open: true, user: u });
+  }
+
+  async function handleSaveEdit() {
+    if (!editDialog.user) return;
+    if (editRole === 'unit_user' && !editUnitId) {
+      toast.error('Please select a unit for unit_user role');
+      return;
+    }
+    setSaving(true);
+    try {
+      await callAdmin({
+        action: 'update_user',
+        user_id: editDialog.user.id,
+        role: editRole,
+        unit_id: editRole === 'unit_user' ? editUnitId : null,
+        is_active: editIsActive,
+      });
+      toast.success(`User "${editDialog.user.username}" updated`);
+      setEditDialog({ open: false, user: null });
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setSaving(false);
+  }
+
   async function handleSeedAccounts() {
     setSeeding(true);
     try {
@@ -255,7 +295,16 @@ export default function AdminPanel() {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <Shield className="w-6 h-6" />
-        <h1 className="text-lg font-bold">Admin Panel — User Management</h1>
+        <h1 className="text-lg font-bold flex-1">Admin Panel — User Management</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={async () => { await logout(); navigate('/login'); }}
+          className="text-primary-foreground hover:bg-primary/80"
+          title="Sign out"
+        >
+          <LogOut className="w-5 h-5" />
+        </Button>
       </div>
 
       <div className="max-w-5xl mx-auto p-6 space-y-6">
@@ -344,13 +393,14 @@ export default function AdminPanel() {
                           <TableHead>Username</TableHead>
                           <TableHead>Role</TableHead>
                           <TableHead>Unit</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead>Last Sign In</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {users.map(u => (
-                          <TableRow key={u.id}>
+                          <TableRow key={u.id} className={!u.is_active ? 'opacity-50' : ''}>
                             <TableCell className="font-medium">{u.username || '—'}</TableCell>
                             <TableCell>
                               {u.role ? (
@@ -368,12 +418,25 @@ export default function AdminPanel() {
                                 <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </TableCell>
+                            <TableCell>
+                              <Badge variant={u.is_active ? 'default' : 'destructive'} className="text-[10px]">
+                                {u.is_active ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {u.last_sign_in_at
                                 ? new Date(u.last_sign_in_at).toLocaleDateString()
                                 : 'Never'}
                             </TableCell>
                             <TableCell className="text-right space-x-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditDialog(u)}
+                                title="Edit user"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -592,6 +655,55 @@ export default function AdminPanel() {
             <Button onClick={handleCreateUser} disabled={creating || !newUsername}>
               {creating && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
               Create User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialog.open} onOpenChange={open => setEditDialog({ open, user: open ? editDialog.user : null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User — {editDialog.user?.username || '—'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={editRole} onValueChange={setEditRole}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="university_viewer">University Viewer</SelectItem>
+                  <SelectItem value="unit_user">Unit User</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {editRole === 'unit_user' && (
+              <div className="space-y-2">
+                <Label>Unit</Label>
+                <Select value={editUnitId} onValueChange={setEditUnitId}>
+                  <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
+                  <SelectContent>
+                    {unitIds.map(id => (
+                      <SelectItem key={id} value={id}>{id} — {UNIT_CONFIGS[id].fullName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Account Active</Label>
+                <p className="text-xs text-muted-foreground">Inactive users are signed out and cannot log in</p>
+              </div>
+              <Switch checked={editIsActive} onCheckedChange={setEditIsActive} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialog({ open: false, user: null })}>Cancel</Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
