@@ -10,6 +10,7 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUnitByPillar, getRiskBandColor, RISK_BAND_COLORS, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 
 const PILLAR_LABELS: Record<PillarId, string> = { I: 'Pillar I', II: 'Pillar II', III: 'Pillar III', IV: 'Pillar IV', V: 'Pillar V' };
