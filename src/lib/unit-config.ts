@@ -13,7 +13,7 @@ export const UNIT_CONFIGS: Record<string, UnitConfig> = {
   SOM: { id: 'SOM', name: 'SOM', fullName: 'School of Medicine', spreadsheetId: '1u32vOYd1vEcHfPkHtNJWTk_AkQLpSUOcsV28k_yePXM' },
   AKSOB: { id: 'AKSOB', name: 'AKSOB', fullName: 'Adnan Kassar School of Business', spreadsheetId: '1x2ItlwuWShCIXm40EvpKFF8wCoXWf_YRnfGExwFXoFE' },
   SOE: { id: 'SOE', name: 'SOE', fullName: 'School of Engineering', spreadsheetId: '1wu1tdcZ_ouNasgSc5RqnDLQFemvXgIuOmUHF8-i_U14' },
-  SAS: { id: 'SAS', name: 'SAS', fullName: 'School of Arts & Sciences', spreadsheetId: '1-VysXFHNlvL5oUYolBUQ-TasLufO4yF7xatFpaWel2E' },
+  SAS: { id: 'SAS', name: 'SoAS', fullName: 'School of Arts & Sciences', spreadsheetId: '1-VysXFHNlvL5oUYolBUQ-TasLufO4yF7xatFpaWel2E' },
   DIRA: { id: 'DIRA', name: 'DIRA', fullName: 'Department of Institutional Research and Assessment', spreadsheetId: '1iAKPKguUvCYEN-Tojo91TXR-f-RXLtaeO3awt0nDCDk' },
   CIL: { id: 'CIL', name: 'CIL', fullName: 'Center for Innovation & Learning', spreadsheetId: '1KNm1MpH-vxgpD-z-_eguZyqsZd6nvEOk_S6LZG0WsvQ' },
   Libraries: { id: 'Libraries', name: 'Libraries', fullName: 'Libraries', spreadsheetId: '17mx75Ejrvnb_sWkN4QyWUs2D-V7UHcrnHjR_lsTYCaY' },
