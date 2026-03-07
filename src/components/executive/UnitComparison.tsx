@@ -79,7 +79,7 @@ export default function UnitComparison({ aggregation }: Props) {
                 return (
                   <tr key={unit.unitId} className={`border-b border-border/30 hover:bg-muted/30 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}>
                     <td className="py-2 px-2 text-muted-foreground font-medium">{idx + 1}</td>
-                    <td className="py-2 px-2 font-medium text-foreground truncate max-w-[200px]">{unit.unitId} — {unit.unitName}</td>
+                    <td className="py-2 px-2 font-medium text-foreground truncate max-w-[200px]">{getUnitDisplayLabel(unit.unitId)}</td>
                     <td className="py-2 px-2 text-right"><span className="font-bold" style={{ color: riColor }}>{unit.riskIndex.toFixed(2)}</span></td>
                     <td className="py-2 px-2 text-right font-medium text-foreground">{unit.completionPct}%</td>
                     <td className="py-2 px-2 text-right font-medium text-foreground">{unit.onTrackPct}%</td>
