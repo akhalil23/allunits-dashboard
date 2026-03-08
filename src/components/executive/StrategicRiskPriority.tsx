@@ -320,8 +320,8 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="rounded-md py-1 px-1 mx-auto w-16 cursor-default" style={{ backgroundColor: `${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` }}>
-                              <span className="text-xs font-bold" style={{ color: opacity > 0.5 ? '#fff' : color }}>RI {cell.riskIndex.toFixed(2)}</span>
+                            <div className="rounded-md py-1 px-1 mx-auto w-16 cursor-default" style={{ backgroundColor: color }}>
+                              <span className="text-xs font-bold text-white">RI {cell.riskIndex.toFixed(2)}</span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs space-y-1">
