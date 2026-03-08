@@ -242,7 +242,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                     const isHighBudget = r.utilization >= 0.50;
                     const isHighComp = comp >= 50;
                     const color = isHighBudget && isHighComp ? '#16A34A' : !isHighBudget && isHighComp ? '#3B82F6' : isHighBudget && !isHighComp ? '#EF4444' : '#F59E0B';
-                    return <Cell key={i} fill={color} fillOpacity={0.7} r={Math.max(8, 12)} />;
+                    return <Cell key={i} fill={color} fillOpacity={0.7} r={12} />;
                   })}
                 </Scatter>
               </ScatterChart>

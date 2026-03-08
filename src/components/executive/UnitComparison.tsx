@@ -159,9 +159,8 @@ function CompareKPI({ label, subtitle, a, b, unitA, unitB, betterA, betterB, col
     >
       <div className="h-1 w-full bg-gradient-to-r from-primary/60 to-primary/20" />
       <div className="p-5 sm:p-6">
-        <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight flex items-center gap-0.5">
+        <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
           {label}
-          {tooltip && <InfoTip text={tooltip} />}
         </p>
         {subtitle && <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>}
         <div className="flex items-end justify-between gap-2 mt-4">

@@ -268,9 +268,9 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      {/* Section 6: Risk Signal Distribution */}
+      {/* Section 5: Risk Signal Distribution */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk Signal Distribution</span>
             <InfoTip text="Distribution of all applicable items by risk signal category." />
