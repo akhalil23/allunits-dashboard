@@ -24,6 +24,8 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { data: userRole } = useUserRole();
+  const isAdmin = userRole?.role === 'admin';
 
   return (
     <header className={`relative overflow-hidden ${isMobile ? 'sticky top-0 z-40' : ''}`}>
