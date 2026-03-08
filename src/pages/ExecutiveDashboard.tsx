@@ -73,7 +73,6 @@ export default function ExecutiveDashboard() {
     'snapshot': 'Executive Snapshot',
     'risk-priority': 'Strategic Risk & Priority',
     'budget': 'Budget Intelligence',
-    'tracker': 'Strategic Snapshot Tracker',
     'comparison': 'Unit Comparison',
     'ai-insights': 'AI Executive Insights',
     'guide': 'Dashboard Guide',
