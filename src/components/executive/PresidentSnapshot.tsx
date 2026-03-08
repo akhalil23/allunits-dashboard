@@ -386,18 +386,43 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
   label: string; value: string; icon: React.ElementType; color: string; tooltip: string;
 }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
-      <div className="relative flex items-start justify-between">
-        <div>
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
-            {label}
-            <InfoTip text={tooltip} />
-          </p>
-          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5" style={{ color }}>{value}</p>
-        </div>
-        <div className="p-2.5 rounded-xl bg-muted/50">
-          <Icon className="w-5 h-5 text-muted-foreground" />
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+      className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+    >
+      {/* Top accent bar */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
+      
+      {/* Subtle radial glow */}
+      <div
+        className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none transition-opacity duration-300 group-hover:opacity-[0.12]"
+        style={{ backgroundColor: color }}
+      />
+      
+      <div className="relative p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight flex items-center gap-0.5">
+              {label.split(' — ')[0]}
+              <InfoTip text={tooltip} />
+            </p>
+            {label.includes(' — ') && (
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">
+                {label.split(' — ')[1]}
+              </p>
+            )}
+            <p className="text-3xl sm:text-4xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>
+              {value}
+            </p>
+          </div>
+          <div
+            className="p-2.5 rounded-xl shrink-0 transition-colors duration-200"
+            style={{ backgroundColor: `${color}14` }}
+          >
+            <Icon className="w-5 h-5" style={{ color }} />
+          </div>
         </div>
       </div>
     </motion.div>
