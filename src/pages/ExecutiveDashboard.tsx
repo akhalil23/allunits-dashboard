@@ -107,7 +107,6 @@ export default function ExecutiveDashboard() {
             {activeTab === 'snapshot' && <PresidentSnapshot aggregation={aggregation} />}
             {activeTab === 'risk-priority' && <StrategicRiskPriority aggregation={aggregation} />}
             {activeTab === 'budget' && <BudgetIntelligence aggregation={aggregation} />}
-            {activeTab === 'tracker' && <SnapshotTracker aggregation={aggregation} />}
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
             {activeTab === 'guide' && <DashboardGuide />}
