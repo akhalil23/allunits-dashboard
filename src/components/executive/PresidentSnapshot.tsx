@@ -249,14 +249,12 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 className="space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-sm font-semibold text-foreground cursor-help">{p.shortLabel}</span>
-                      </TooltipTrigger>
-                      <TooltipContent><p className="text-xs">{p.fullLabel}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-sm font-semibold text-foreground cursor-help">{p.shortLabel}</span>
+                    </TooltipTrigger>
+                    <TooltipContent><p className="text-xs">{p.fullLabel}</p></TooltipContent>
+                  </Tooltip>
                   <span className="text-xs text-muted-foreground">{p.applicable} applicable items</span>
                 </div>
                 <div className="space-y-2">
