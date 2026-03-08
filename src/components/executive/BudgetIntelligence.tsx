@@ -163,8 +163,10 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             ))}
           </div>
         </motion.div>
+      </section>
 
-        {/* Section 4: Allocation Distribution Donut */}
+      {/* Section 4: Allocation Distribution Donut */}
+      <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Allocation Distribution</span>
           <div className="flex items-center gap-5 mt-4">
@@ -196,7 +198,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             </div>
           </div>
         </motion.div>
-      </div>
+      </section>
 
       {/* Section 5: Budget Efficiency Scatter */}
       <section>
