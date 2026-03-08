@@ -118,15 +118,22 @@ export default function UnitComparison({ aggregation }: Props) {
               </div>
               <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-border">
                 {[
-                  { label: 'No Risk', color: RISK_SIGNAL_COLORS['No Risk (On Track)'] },
-                  { label: 'Emerging', color: RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)'] },
-                  { label: 'Critical', color: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'] },
-                  { label: 'Realized', color: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'] },
+                  { label: 'No Risk', color: RISK_SIGNAL_COLORS['No Risk (On Track)'], tip: 'Strategic actions currently showing no risk indicators.' },
+                  { label: 'Emerging', color: RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)'], tip: 'Actions showing early warning signals that may affect delivery.' },
+                  { label: 'Critical', color: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'], tip: 'Actions with severe risk signals requiring immediate intervention.' },
+                  { label: 'Realized', color: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'], tip: 'Actions where the identified risk event has already occurred.' },
                 ].map(s => (
-                  <span key={s.label} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                    {s.label}
-                  </span>
+                  <TooltipProvider key={s.label}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-help">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                          {s.label}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs"><p>{s.tip}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
             </motion.div>
