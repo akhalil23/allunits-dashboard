@@ -408,8 +408,8 @@ function PillarLegend() {
   );
 }
 
-function KPICard({ label, value, icon: Icon, color, tooltip }: {
-  label: string; value: string; icon: React.ElementType; color: string; tooltip: string;
+function KPICard({ label, value, icon: Icon, color }: {
+  label: string; value: string; icon: React.ElementType; color: string;
 }) {
   return (
     <motion.div
