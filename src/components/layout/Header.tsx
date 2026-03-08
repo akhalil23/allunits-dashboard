@@ -181,39 +181,37 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             )}
 
             {/* Data Integrity Badge */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full border backdrop-blur-sm text-[11px] font-semibold ${integrityConfig.bg} ${integrityConfig.text} ${integrityConfig.border}`}
-                    whileHover={{ scale: 1.03 }}
-                  >
-                    <span className="relative flex h-2 w-2">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${integrityConfig.dot} opacity-50`} />
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${integrityConfig.dot}`} />
-                    </span>
-                    <Shield className="w-3 h-3" />
-                    <span className="hidden sm:inline">Data: {integrity}</span>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
-                  {integrityAudit ? (
-                    <div className="space-y-1">
-                      <p><strong>{integrityAudit.applicableItems}</strong> applicable / <strong>{integrityAudit.totalItems}</strong> total items</p>
-                      {integrityAudit.diagnosticMessages.length > 0 ? (
-                        <ul className="list-disc list-inside space-y-0.5">
-                          {integrityAudit.diagnosticMessages.map((m, i) => <li key={i}>{m}</li>)}
-                        </ul>
-                      ) : (
-                        <p>All integrity checks passed.</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p>Data integrity: {integrity}</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full border backdrop-blur-sm text-[11px] font-semibold ${integrityConfig.bg} ${integrityConfig.text} ${integrityConfig.border}`}
+                  whileHover={{ scale: 1.03 }}
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${integrityConfig.dot} opacity-50`} />
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${integrityConfig.dot}`} />
+                  </span>
+                  <Shield className="w-3 h-3" />
+                  <span className="hidden sm:inline">Data: {integrity}</span>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
+                {integrityAudit ? (
+                  <div className="space-y-1">
+                    <p><strong>{integrityAudit.applicableItems}</strong> applicable / <strong>{integrityAudit.totalItems}</strong> total items</p>
+                    {integrityAudit.diagnosticMessages.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {integrityAudit.diagnosticMessages.map((m, i) => <li key={i}>{m}</li>)}
+                      </ul>
+                    ) : (
+                      <p>All integrity checks passed.</p>
+                    )}
+                  </div>
+                ) : (
+                  <p>Data integrity: {integrity}</p>
+                )}
+              </TooltipContent>
+            </Tooltip>
 
             {/* Export Dropdown */}
             <DropdownMenu>
