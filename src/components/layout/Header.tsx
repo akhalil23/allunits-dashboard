@@ -5,7 +5,7 @@ import { useUserRole } from '@/hooks/use-user-role';
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { IntegrityAuditResult } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
-import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet, LogOut, ChevronDown } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet, LogOut, ChevronDown, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
