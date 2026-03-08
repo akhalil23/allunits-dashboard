@@ -288,9 +288,8 @@ function BudgetKPICard({ label, subtitle, value, icon: Icon, color, showBar, bar
       <div className="relative p-5 sm:p-6">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight flex items-center gap-0.5">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
               {label}
-              <InfoTip text={tooltip} />
             </p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
             <p className="text-3xl sm:text-4xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>{value}</p>
