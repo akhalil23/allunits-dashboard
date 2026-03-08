@@ -78,10 +78,10 @@ export default function BudgetIntelligence({ aggregation }: Props) {
       {/* Section 1: Budget Overview KPIs */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} icon={DollarSign} color="hsl(var(--primary))" tooltip="Budget Allocation: Total budget allocated across all pillars for the selected scope." />
-          <BudgetKPICard label="Committed" subtitle="Funds in Use" value={formatCurrency(totals.committed)} icon={DollarSign} color="hsl(var(--primary))" tooltip="Committed: Total funds committed to active initiatives across all pillars." />
-          <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} icon={DollarSign} color="hsl(var(--primary))" tooltip="Available: Remaining uncommitted budget across all pillars." />
-          <BudgetKPICard label="Budget Utilization" subtitle="Used" value={`${(totals.utilization * 100).toFixed(1)}%`} icon={DollarSign} color={utilColor} tooltip="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." showBar barPct={totals.utilization * 100} barColor={utilColor} />
+          <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} icon={DollarSign} color="hsl(var(--primary))" />
+          <BudgetKPICard label="Committed" subtitle="Funds in Use" value={formatCurrency(totals.committed)} icon={DollarSign} color="hsl(var(--primary))" />
+          <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} icon={DollarSign} color="hsl(var(--primary))" />
+          <BudgetKPICard label="Budget Utilization" subtitle="Used" value={`${(totals.utilization * 100).toFixed(1)}%`} icon={DollarSign} color={utilColor} showBar barPct={totals.utilization * 100} barColor={utilColor} />
         </div>
       </section>
 
@@ -270,8 +270,8 @@ export default function BudgetIntelligence({ aggregation }: Props) {
   );
 }
 
-function BudgetKPICard({ label, subtitle, value, icon: Icon, color, tooltip, showBar, barPct, barColor }: {
-  label: string; subtitle: string; value: string; icon: React.ElementType; color: string; tooltip: string; showBar?: boolean; barPct?: number; barColor?: string;
+function BudgetKPICard({ label, subtitle, value, icon: Icon, color, showBar, barPct, barColor }: {
+  label: string; subtitle: string; value: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string;
 }) {
   return (
     <motion.div
@@ -288,9 +288,8 @@ function BudgetKPICard({ label, subtitle, value, icon: Icon, color, tooltip, sho
       <div className="relative p-5 sm:p-6">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight flex items-center gap-0.5">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
               {label}
-              <InfoTip text={tooltip} />
             </p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
             <p className="text-3xl sm:text-4xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>{value}</p>
