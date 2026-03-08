@@ -22,6 +22,7 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar } from '@/lib/university-aggregation';
 import { PILLAR_LABELS, MOCK_BUDGET, getPillarBudget } from '@/lib/budget-data';
+import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
 
 interface Props {
@@ -36,6 +37,19 @@ function InfoTip({ text }: { text: string }) {
           <Info className="w-3 h-3 text-muted-foreground/60 cursor-help inline ml-1" />
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs text-xs"><p>{text}</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function PillarTooltipLabel({ pillar }: { pillar: PillarId }) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help">{PILLAR_SHORT[pillar]}</span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs"><p>{PILLAR_FULL[pillar]}</p></TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
@@ -65,6 +79,8 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       return {
         pillar: p.pillar,
         label: PILLAR_LABELS[p.pillar],
+        shortLabel: PILLAR_SHORT[p.pillar],
+        fullLabel: PILLAR_FULL[p.pillar],
         completion: p.completionPct,
         riskIndex: p.riskIndex,
         budgetUtil: parseFloat(util.toFixed(1)),
@@ -91,7 +107,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
     if (worstPillar) {
       items.push({
         title: 'Risk Concentration',
-        insight: `Risk concentration remains highest in ${worstPillar.label} with RI = ${worstPillar.riskIndex.toFixed(2)}.`,
+        insight: `Risk concentration remains highest in ${worstPillar.shortLabel} with RI ${worstPillar.riskIndex.toFixed(2)}.`,
         icon: ShieldAlert,
         color: getRiskBandColor(worstPillar.riskIndex),
       });
@@ -122,14 +138,17 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
   return (
     <div className="space-y-8">
+      {/* Pillar Legend */}
+      <PillarLegend />
+
       {/* Section 1: Strategic KPI Banner */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          <KPICard label="Completion" value={`${aggregation.completionPct}%`} icon={CheckCircle2} color="hsl(var(--primary))" tooltip="Percentage of applicable items that are completed (on target + below target)." />
-          <KPICard label="On Track" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} color="#16A34A" tooltip="Percentage of applicable items completed on target." />
-          <KPICard label="Below Target" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} color="#B23A48" tooltip="Percentage of applicable items completed below target expectations." />
-          <KPICard label="RI (Risk Index)" value={aggregation.riskIndex.toFixed(2)} icon={ShieldAlert} color={riskColor} tooltip="Risk Index (RI) represents the weighted structural risk exposure across initiatives. Scale: 0 (no risk) to 3 (maximum risk)." />
-          <KPICard label="Budget Utilization" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} tooltip="Percentage of total allocated budget that has been committed." />
+          <KPICard label="Completion" value={`${aggregation.completionPct}%`} icon={CheckCircle2} color="hsl(var(--primary))" tooltip="Completion: Percentage of applicable items that are completed (on target + below target)." />
+          <KPICard label="On Track" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} color="#16A34A" tooltip="On-Track: Percentage of applicable items completed on target." />
+          <KPICard label="Below Target" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} color="#B23A48" tooltip="Below Target: Percentage of applicable items completed below target expectations." />
+          <KPICard label="RI (Risk Index)" value={aggregation.riskIndex.toFixed(2)} icon={ShieldAlert} color={riskColor} tooltip="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk. Scale: 0 (no risk) to 3 (maximum risk)." />
+          <KPICard label="Budget Utilization" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} tooltip="Budget Utilization: Percentage of total allocated budget that has been committed." />
         </div>
       </section>
 
@@ -184,16 +203,16 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                     const d = payload[0].payload;
                     return (
                       <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
-                        <p className="font-semibold text-foreground">{d.label}</p>
+                        <p className="font-semibold text-foreground">{d.fullLabel}</p>
                         <p className="text-muted-foreground">Completion: <span className="text-foreground font-medium">{d.y}%</span></p>
                         <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.ri) }}>{d.ri.toFixed(2)}</span></p>
-                        <p className="text-muted-foreground">Budget Util: <span className="text-foreground font-medium">{d.x}%</span></p>
-                        <p className="text-muted-foreground">Applicable: <span className="text-foreground font-medium">{d.applicable}</span></p>
+                        <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
+                        <p className="text-muted-foreground">Applicable Items: <span className="text-foreground font-medium">{d.applicable}</span></p>
                       </div>
                     );
                   }}
                 />
-                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.completion, ri: p.riskIndex, label: p.label, applicable: p.applicable, z: Math.max(200, p.applicable * 15) }))}>
+                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.completion, ri: p.riskIndex, label: p.label, shortLabel: p.shortLabel, fullLabel: p.fullLabel, applicable: p.applicable, z: Math.max(200, p.applicable * 15) }))}>
                   {pillarData.map((p, i) => (
                     <Cell key={i} fill={getRiskBandColor(p.riskIndex)} fillOpacity={0.7} r={Math.max(8, Math.min(20, p.applicable / 3))} />
                   ))}
@@ -224,7 +243,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Strategic Quadrant</span>
             <InfoTip text="Maps each pillar by budget utilization (X) and risk exposure (Y). Quadrants indicate strategic positioning." />
           </div>
-          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs Risk Index — identifying financial pressure zones.</p>
+          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs RI (Risk Index) — identifying financial pressure zones.</p>
           <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 10, right: 30, bottom: 25, left: 10 }}>
@@ -239,14 +258,14 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                     const d = payload[0].payload;
                     return (
                       <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
-                        <p className="font-semibold text-foreground">{d.label}</p>
-                        <p className="text-muted-foreground">Budget Util: <span className="text-foreground font-medium">{d.x}%</span></p>
+                        <p className="font-semibold text-foreground">{d.fullLabel}</p>
+                        <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
                         <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.y) }}>{d.y.toFixed(2)}</span></p>
                       </div>
                     );
                   }}
                 />
-                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.riskIndex, label: p.label }))}>
+                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.riskIndex, label: p.label, fullLabel: p.fullLabel }))}>
                   {pillarData.map((p, i) => {
                     const q = p.budgetUtil >= 60 && p.riskIndex >= 1.5 ? '#EF4444' : p.budgetUtil < 60 && p.riskIndex >= 1.5 ? '#F97316' : p.budgetUtil >= 60 && p.riskIndex < 1.5 ? '#16A34A' : '#3B82F6';
                     return <Cell key={i} fill={q} r={9} />;
@@ -282,8 +301,15 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             {pillarData.map(p => (
               <div key={p.pillar} className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-foreground">{p.label}</span>
-                  <span className="text-[10px] text-muted-foreground">{p.applicable} items</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs font-semibold text-foreground cursor-help">{p.shortLabel}</span>
+                      </TooltipTrigger>
+                      <TooltipContent><p className="text-xs">{p.fullLabel}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span className="text-[10px] text-muted-foreground">{p.applicable} applicable items</span>
                 </div>
                 <div className="space-y-1.5">
                   <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" />
@@ -335,6 +361,26 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         </motion.div>
       </section>
     </div>
+  );
+}
+
+/** Pillar Legend component accessible from Executive Snapshot */
+function PillarLegend() {
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Info className="w-3.5 h-3.5 text-primary" />
+        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Strategic Plan IV — Pillar Reference</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        {(['I','II','III','IV','V'] as PillarId[]).map(p => (
+          <div key={p} className="flex items-start gap-2 text-[11px]">
+            <span className="font-bold text-primary shrink-0">{PILLAR_LABELS[p]}</span>
+            <span className="text-muted-foreground">{PILLAR_FULL[p].replace(`Pillar ${p} — `, '')}</span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 

@@ -6,12 +6,14 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Info, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer } from 'recharts';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
 import { getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS, getPillarBudget } from '@/lib/budget-data';
+import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
 
 interface Props {
@@ -60,7 +62,9 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
   // Momentum indicators per pillar
   const momentum = useMemo(() => {
     return pillarAgg.map(p => ({
-      pillar: PILLAR_LABELS[p.pillar],
+      pillar: p.pillar,
+      label: PILLAR_SHORT[p.pillar],
+      fullLabel: PILLAR_FULL[p.pillar],
       completion: p.completionPct,
       riskIndex: p.riskIndex,
       // Mock deltas (in real app, compare with previous snapshot)
@@ -104,7 +108,7 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
             <div className="px-6 py-4 space-y-4 border-b border-border">
               <ControlGroup label="Indicator">
                 <Pill active={indicator === 'completion'} onClick={() => setIndicator('completion')}>Completion</Pill>
-                <Pill active={indicator === 'riskIndex'} onClick={() => setIndicator('riskIndex')}>Risk Index</Pill>
+                <Pill active={indicator === 'riskIndex'} onClick={() => setIndicator('riskIndex')}>RI (Risk Index)</Pill>
                 <Pill active={indicator === 'budgetUtilization'} onClick={() => setIndicator('budgetUtilization')}>Budget Utilization</Pill>
               </ControlGroup>
               <ControlGroup label="Level">
@@ -128,7 +132,7 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
                 </span>
                 {currentValue !== null && currentValue !== undefined && (
                   <p className="text-2xl font-display font-bold mt-1" style={{ color: indicator === 'riskIndex' ? getRiskBandColor(currentValue) : 'hsl(var(--primary))' }}>
-                    {indicator === 'riskIndex' ? currentValue.toFixed(2) : `${currentValue}%`}
+                    {indicator === 'riskIndex' ? `RI ${currentValue.toFixed(2)}` : `${currentValue}%`}
                   </p>
                 )}
                 <div className="h-48 mt-3">
@@ -153,10 +157,17 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
                 <div className="space-y-2">
                   {momentum.map(m => (
                     <div key={m.pillar} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30">
-                      <span className="text-xs font-semibold text-foreground w-16">{m.pillar}</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs font-semibold text-foreground w-36 truncate cursor-help">{m.label}</span>
+                          </TooltipTrigger>
+                          <TooltipContent><p className="text-xs">{m.fullLabel}</p></TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <div className="flex-1 flex items-center gap-4">
                         <div className="flex items-center gap-1">
-                          <span className="text-[10px] text-muted-foreground">Comp</span>
+                          <span className="text-[10px] text-muted-foreground">Completion</span>
                           <DeltaArrow value={m.completionDelta} suffix="%" />
                         </div>
                         <div className="flex items-center gap-1">

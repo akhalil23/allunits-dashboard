@@ -14,6 +14,8 @@ import StrategicRiskPriority from '@/components/executive/StrategicRiskPriority'
 import BudgetIntelligence from '@/components/executive/BudgetIntelligence';
 import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
+import SnapshotTracker from '@/components/executive/SnapshotTracker';
+import DashboardGuide from '@/components/executive/DashboardGuide';
 import StrategicTrendsPanel from '@/components/executive/StrategicTrendsPanel';
 import FilterBar from '@/components/dashboard/FilterBar';
 import { useDashboard } from '@/contexts/DashboardContext';
@@ -72,8 +74,10 @@ export default function ExecutiveDashboard() {
     'snapshot': 'Executive Snapshot',
     'risk-priority': 'Strategic Risk & Priority',
     'budget': 'Budget Intelligence',
+    'tracker': 'Strategic Snapshot Tracker',
     'comparison': 'Unit Comparison',
     'ai-insights': 'AI Executive Insights',
+    'guide': 'Dashboard Guide',
   };
 
   return (
@@ -88,14 +92,14 @@ export default function ExecutiveDashboard() {
           observedAt={observedAt}
           onOpenTrends={() => setTrendsOpen(true)}
         />
-        {activeTab !== 'budget' && <FilterBar />}
+        {activeTab !== 'budget' && activeTab !== 'guide' && <FilterBar />}
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">
                 {TAB_TITLES[activeTab]}
               </h2>
-              {activeTab !== 'budget' && (
+              {activeTab !== 'budget' && activeTab !== 'guide' && (
                 <span className="text-xs text-muted-foreground">
                   {viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly'} • AY {academicYear} • {term === 'mid' ? 'Mid-Year' : 'End-of-Year'}
                 </span>
@@ -105,8 +109,10 @@ export default function ExecutiveDashboard() {
             {activeTab === 'snapshot' && <PresidentSnapshot aggregation={aggregation} />}
             {activeTab === 'risk-priority' && <StrategicRiskPriority aggregation={aggregation} />}
             {activeTab === 'budget' && <BudgetIntelligence aggregation={aggregation} />}
+            {activeTab === 'tracker' && <SnapshotTracker aggregation={aggregation} />}
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
+            {activeTab === 'guide' && <DashboardGuide />}
           </div>
         </main>
       </div>

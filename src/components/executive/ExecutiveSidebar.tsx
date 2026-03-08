@@ -1,12 +1,12 @@
 /**
  * Executive Sidebar — University Command Center navigation.
- * 5 tabs: Snapshot, Risk & Priority, Budget, Comparison, AI Insights
+ * 7 tabs: Snapshot, Risk & Priority, Budget, Snapshot Tracker, Comparison, AI Insights, Guide
  */
 
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShieldAlert, DollarSign,
-  GitCompare, Brain, ChevronRight, Menu, X, Shield, LogOut,
+  GitCompare, Brain, ChevronRight, Menu, X, Shield, LogOut, Camera, BookOpen,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo-white.png';
@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
 
-export type ExecutiveTab = 'snapshot' | 'risk-priority' | 'budget' | 'comparison' | 'ai-insights';
+export type ExecutiveTab = 'snapshot' | 'risk-priority' | 'budget' | 'tracker' | 'comparison' | 'ai-insights' | 'guide';
 
 interface Props {
   activeTab: ExecutiveTab;
@@ -25,8 +25,10 @@ const tabs: { id: ExecutiveTab; label: string; icon: React.ElementType }[] = [
   { id: 'snapshot', label: 'Executive Snapshot', icon: LayoutDashboard },
   { id: 'risk-priority', label: 'Strategic Risk & Priority', icon: ShieldAlert },
   { id: 'budget', label: 'Budget Intelligence', icon: DollarSign },
+  { id: 'tracker', label: 'Snapshot Tracker', icon: Camera },
   { id: 'comparison', label: 'Unit Comparison', icon: GitCompare },
   { id: 'ai-insights', label: 'AI Executive Insights', icon: Brain },
+  { id: 'guide', label: 'Dashboard Guide', icon: BookOpen },
 ];
 
 export default function ExecutiveSidebar({ activeTab, onTabChange }: Props) {

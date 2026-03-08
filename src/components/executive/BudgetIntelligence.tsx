@@ -16,6 +16,7 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
 import { PILLAR_LABELS, MOCK_BUDGET, getPillarBudget, formatCurrency, type BudgetScope, type PillarBudgetRow } from '@/lib/budget-data';
+import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
@@ -78,21 +79,21 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
       {hasPressure && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-3 border-destructive/30 bg-destructive/5">
-          <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive shrink-0" /><span className="text-xs font-medium text-foreground">Budget Pressure Detected — Utilization ≥ 80% and RI ≥ 1.51</span></div>
+          <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive shrink-0" /><span className="text-xs font-medium text-foreground">Budget Pressure Detected — Budget Utilization ≥ 80% and RI ≥ 1.51</span></div>
         </motion.div>
       )}
 
       {/* Section 1: Budget Overview KPIs */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <KPICard label="Allocation" value={formatCurrency(totals.allocation)} icon={DollarSign} tooltip="Total budget allocated across all pillars." />
-          <KPICard label="Committed" value={formatCurrency(totals.committed)} icon={DollarSign} tooltip="Total funds committed to active initiatives." />
-          <KPICard label="Available" value={formatCurrency(totals.available)} icon={DollarSign} tooltip="Remaining uncommitted budget." />
+          <KPICard label="Allocation" value={formatCurrency(totals.allocation)} icon={DollarSign} tooltip="Budget Allocation: Total budget allocated across all pillars." />
+          <KPICard label="Committed" value={formatCurrency(totals.committed)} icon={DollarSign} tooltip="Committed: Total funds committed to active initiatives." />
+          <KPICard label="Available" value={formatCurrency(totals.available)} icon={DollarSign} tooltip="Available: Remaining uncommitted budget." />
           <div className="card-elevated p-4 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
             <div className="relative">
               <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center">
-                Utilization <InfoTip text="Percentage of total budget (committed + available) that has been committed." />
+                Budget Utilization <InfoTip text="Budget Utilization: Percentage of total budget (committed + available) that has been committed." />
               </p>
               <p className="text-xl sm:text-2xl font-display font-bold mt-1" style={{ color: totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A' }}>
                 {(totals.utilization * 100).toFixed(1)}%
@@ -111,10 +112,10 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           <div className="flex items-center gap-2 mb-4"><BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Budget Composition by Pillar</span></div>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={allRows.map(r => ({ name: r.label, committed: r.committed, remaining: r.available }))} layout="vertical" margin={{ left: 60, right: 20 }}>
+              <BarChart data={allRows.map(r => ({ name: r.label, committed: r.committed, remaining: r.available }))} layout="vertical" margin={{ left: 50, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" tickFormatter={v => `$${(v / 1_000_000).toFixed(1)}M`} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} width={55} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} width={40} />
                 <ReTooltip formatter={(v: number) => `$${(v / 1_000_000).toFixed(2)}M`} contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
                 <Bar dataKey="committed" stackId="a" fill="hsl(var(--primary))" name="Committed" />
                 <Bar dataKey="remaining" stackId="a" fill="#94A3B8" name="Remaining" radius={[0,4,4,0]} />
@@ -135,7 +136,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 10, right: 15, bottom: 25, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'RI', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <ReferenceLine x={80} stroke="hsl(var(--border))" strokeDasharray="4 4" />
                 <ReferenceLine y={1.51} stroke="hsl(var(--border))" strokeDasharray="4 4" />
@@ -144,13 +145,13 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                   const d = payload[0].payload;
                   return (
                     <div className="bg-card border border-border rounded-lg p-2.5 shadow-lg text-xs space-y-0.5">
-                      <p className="font-semibold text-foreground">{d.name}</p>
-                      <p>Utilization: {d.x}%</p>
+                      <p className="font-semibold text-foreground">{d.fullName}</p>
+                      <p>Budget Utilization: {d.x}%</p>
                       <p>RI: <span style={{ color: getRiskBandColor(d.y) }}>{d.y.toFixed(2)}</span></p>
                     </div>
                   );
                 }} />
-                <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: r.riskIndex, name: r.label }))}>
+                <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: r.riskIndex, name: r.label, fullName: PILLAR_FULL[r.pillar] }))}>
                   {allRows.map((r, i) => {
                     const q = r.utilization >= 0.80 && r.riskIndex >= 1.51 ? '#EF4444' : r.utilization < 0.80 && r.riskIndex >= 1.51 ? '#F97316' : r.utilization >= 0.80 ? '#16A34A' : '#3B82F6';
                     return <Cell key={i} fill={q} r={9} />;
@@ -168,7 +169,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             <div className="w-36 h-36 shrink-0">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={allRows.map(r => ({ name: r.label, value: r.allocation, pillar: r.pillar }))} innerRadius="55%" outerRadius="85%" dataKey="value" startAngle={90} endAngle={-270} strokeWidth={0}>
+                  <Pie data={allRows.map(r => ({ name: PILLAR_SHORT[r.pillar], value: r.allocation, pillar: r.pillar, fullName: PILLAR_FULL[r.pillar] }))} innerRadius="55%" outerRadius="85%" dataKey="value" startAngle={90} endAngle={-270} strokeWidth={0}>
                     {allRows.map((r, i) => <Cell key={i} fill={PILLAR_DONUT_COLORS[r.pillar]} />)}
                   </Pie>
                   <ReTooltip formatter={(v: number, n: string) => [formatCurrency(v), n]} />
@@ -177,11 +178,18 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             </div>
             <div className="flex-1 space-y-2 min-w-0">
               {allRows.map(r => (
-                <div key={r.pillar} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_DONUT_COLORS[r.pillar] }} />
-                  <span className="text-[11px] text-foreground flex-1">{r.label}</span>
-                  <span className="text-[11px] font-bold text-foreground">{formatCurrency(r.allocation)}</span>
-                </div>
+                <TooltipProvider key={r.pillar}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2 cursor-help">
+                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_DONUT_COLORS[r.pillar] }} />
+                        <span className="text-[11px] text-foreground flex-1">{PILLAR_SHORT[r.pillar]}</span>
+                        <span className="text-[11px] font-bold text-foreground">{formatCurrency(r.allocation)}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent><p className="text-xs">{PILLAR_FULL[r.pillar]}</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ))}
             </div>
           </div>
@@ -206,15 +214,15 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                   const d = payload[0].payload;
                   return (
                     <div className="bg-card border border-border rounded-lg p-2.5 shadow-lg text-xs space-y-0.5">
-                      <p className="font-semibold text-foreground">{d.name}</p>
-                      <p>Budget Util: {d.x}%</p>
+                      <p className="font-semibold text-foreground">{d.fullName}</p>
+                      <p>Budget Utilization: {d.x}%</p>
                       <p>Completion: {d.y}%</p>
                     </div>
                   );
                 }} />
                 <Scatter data={allRows.map(r => {
                   const comp = pillarAgg.find(pa => pa.pillar === r.pillar)?.completionPct ?? 0;
-                  return { x: parseFloat((r.utilization*100).toFixed(1)), y: comp, name: r.label };
+                  return { x: parseFloat((r.utilization*100).toFixed(1)), y: comp, name: r.label, fullName: PILLAR_FULL[r.pillar] };
                 })}>
                   {allRows.map((_, i) => <Cell key={i} fill="hsl(var(--primary))" r={9} />)}
                 </Scatter>
