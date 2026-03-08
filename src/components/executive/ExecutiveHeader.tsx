@@ -67,15 +67,15 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
             {/* Strategic Snapshot Tracker Button */}
-            {onOpenSnapshotTracker && !isMobile && (
+            {onOpenSnapshotTracker && (
               <motion.button
                 onClick={onOpenSnapshotTracker}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.12] text-white/90 hover:bg-white/20 hover:text-white transition-colors duration-200 border border-white/10 text-[11px] font-semibold"
+                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full bg-white/[0.12] text-white/90 hover:bg-white/20 hover:text-white transition-colors duration-200 border border-white/10 text-[11px] font-semibold"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
                 <Camera className="w-3.5 h-3.5" />
-                <span>Strategic Snapshot Tracker</span>
+                <span className="hidden sm:inline">Strategic Snapshot Tracker</span>
               </motion.button>
             )}
 
