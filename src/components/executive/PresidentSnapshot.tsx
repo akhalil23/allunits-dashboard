@@ -299,21 +299,21 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex-1 space-y-2.5 min-w-0">
+            <div className="flex-1 space-y-3 min-w-0">
               {RISK_SIGNAL_ORDER.map(signal => {
                 const item = aggregation.riskDistribution.find(d => d.signal === signal);
                 return (
-                  <div key={signal} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: RISK_SIGNAL_COLORS[signal] }} />
-                    <span className="text-xs text-foreground flex-1 truncate">{signal.split(' (')[0]}</span>
-                    <span className="text-xs font-bold text-foreground">{item?.count || 0}</span>
-                    <span className="text-xs text-muted-foreground w-12 text-right">{item?.percent || 0}%</span>
+                  <div key={signal} className="flex items-center gap-2.5">
+                    <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: RISK_SIGNAL_COLORS[signal] }} />
+                    <span className="text-sm text-foreground flex-1 truncate">{signal.split(' (')[0]}</span>
+                    <span className="text-sm font-bold text-foreground">{item?.count || 0}</span>
+                    <span className="text-sm text-muted-foreground w-14 text-right">{item?.percent || 0}%</span>
                   </div>
                 );
               })}
-              <div className="pt-2 mt-2 border-t border-border flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Total Applicable</span>
-                <span className="text-xs font-bold text-foreground">{aggregation.applicableItems}</span>
+              <div className="pt-3 mt-3 border-t border-border flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Total Applicable</span>
+                <span className="text-sm font-bold text-foreground">{aggregation.applicableItems}</span>
               </div>
             </div>
           </div>
