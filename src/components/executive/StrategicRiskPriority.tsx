@@ -42,21 +42,27 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
     <div className="space-y-8">
       {/* Section 1: Strategic Risk Overview */}
       <section>
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <ShieldAlert className="w-3.5 h-3.5" /> Strategic Risk Overview
+        <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4" /> Strategic Risk Overview
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Risk Index by Pillar */}
-          <div className="card-elevated p-4 sm:p-5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
               RI by Pillar <InfoTip text="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk." />
             </span>
-            <div className="space-y-2.5 mt-4">
-              {pillarAgg.map(p => {
+            <div className="space-y-3 mt-4">
+              {pillarAgg.map((p, idx) => {
                 const color = getRiskBandColor(p.riskIndex);
                 const pct = Math.min(100, (p.riskIndex / 3) * 100);
                 return (
-                  <div key={p.pillar} className="flex items-center gap-2">
+                  <motion.div
+                    key={p.pillar}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + idx * 0.05 }}
+                    className="flex items-center gap-2.5"
+                  >
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -65,19 +71,25 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                         <TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                    <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ delay: 0.2 + idx * 0.05, duration: 0.6, ease: 'easeOut' }}
+                        style={{ backgroundColor: color }}
+                      />
                     </div>
-                    <span className="text-xs font-bold w-10 text-right" style={{ color }}>RI {p.riskIndex.toFixed(2)}</span>
-                  </div>
+                    <span className="text-xs font-bold w-12 text-right" style={{ color }}>RI {p.riskIndex.toFixed(2)}</span>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
 
           {/* Risk Distribution Stacked */}
-          <div className="card-elevated p-4 sm:p-5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
               Risk Signal Distribution by Pillar <InfoTip text="Distribution of risk signals across pillars. No Risk: actions with no risk indicators. Emerging: early warning signals. Critical: severe risk requiring intervention. Realized: risk event already occurred." />
             </span>
             <div className="h-48 mt-3">
@@ -87,7 +99,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                   return { name: PILLAR_LABELS[p.pillar], noRisk: p.riskCounts.noRisk, emerging: p.riskCounts.emerging, critical: p.riskCounts.critical, realized: p.riskCounts.realized, total };
                 })} layout="vertical" barSize={18}>
                   <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 11 }} />
                   <ReTooltip
                     contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
                     formatter={(v: number, n: string, props: any) => {
@@ -105,22 +117,21 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            {/* Legend with totals */}
             <RiskSignalLegend pillarAgg={pillarAgg} />
-          </div>
+          </motion.div>
 
           {/* Completion Status Distribution Donut */}
-          <div className="card-elevated p-4 sm:p-5">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
             <CompletionDonut aggregation={aggregation} />
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Section 2: Strategic Priority Signals */}
       <section>
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Target className="w-3.5 h-3.5" /> Strategic Priority Signals
+        <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+          <Target className="w-4 h-4" /> Strategic Priority Signals
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <RankingBars title="Units Ranked by RI (Risk Index)" subtitle="Highest risk first" units={unitsByRisk} metricKey="riskIndex" />
@@ -169,16 +180,16 @@ function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1.5 cursor-help">
                 <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-[10px] text-muted-foreground">{item.label}</span>
-                <span className="text-[10px] font-bold text-foreground">{totals[item.key]}</span>
-                <span className="text-[10px] text-muted-foreground">({pct(totals[item.key])}%)</span>
+                <span className="text-xs text-muted-foreground">{item.label}</span>
+                <span className="text-xs font-bold text-foreground">{totals[item.key]}</span>
+                <span className="text-xs text-muted-foreground">({pct(totals[item.key])}%)</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
           </Tooltip>
         </TooltipProvider>
       ))}
-      <span className="text-[10px] text-muted-foreground ml-auto">Total: {grand} items</span>
+      <span className="text-xs text-muted-foreground ml-auto">Total: {grand} items</span>
     </div>
   );
 }
@@ -193,8 +204,8 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
   ].filter(d => d.value > 0);
 
   return (
-    <div className="flex items-center gap-4 mt-3">
-      <div className="w-28 h-28 shrink-0">
+    <div className="flex items-center gap-5 mt-4">
+      <div className="w-32 h-32 shrink-0">
         <ResponsiveContainer>
           <PieChart>
             <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" nameKey="name" startAngle={90} endAngle={-270} strokeWidth={0}>
@@ -213,12 +224,12 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex-1 space-y-1.5 min-w-0">
+      <div className="flex-1 space-y-2 min-w-0">
         {data.map(d => (
-          <div key={d.name} className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-[11px] text-foreground flex-1">{d.name}</span>
-            <span className="text-[11px] font-bold text-foreground">{d.value}</span>
+          <div key={d.name} className="flex items-center gap-2.5">
+            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+            <span className="text-xs text-foreground flex-1">{d.name}</span>
+            <span className="text-xs font-bold text-foreground">{d.value}</span>
           </div>
         ))}
       </div>
@@ -228,9 +239,9 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
 
 function RankingBars({ title, subtitle, units, metricKey }: { title: string; subtitle: string; units: UnitAggregation[]; metricKey: 'riskIndex' | 'completionPct' }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-5">
-      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
-      <p className="text-[10px] text-muted-foreground mb-3">{subtitle}</p>
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+      <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+      <p className="text-xs text-muted-foreground mb-4 mt-0.5">{subtitle}</p>
       <div className="space-y-1.5 max-h-[360px] overflow-y-auto">
         {units.map((unit, idx) => {
           const value = unit[metricKey];
@@ -239,16 +250,28 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
           const maxVal = isRisk ? 3 : 100;
           const pct = Math.min(100, (value / maxVal) * 100);
           return (
-            <div key={unit.unitId} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/30 transition-colors">
-              <span className="text-[10px] text-muted-foreground w-4 text-right shrink-0">{idx + 1}</span>
-              <span className="text-[11px] font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayName(unit.unitId)}</span>
-              <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden shrink-0">
-                <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} />
+            <motion.div
+              key={unit.unitId}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 + idx * 0.02 }}
+              className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors"
+            >
+              <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
+              <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayName(unit.unitId)}</span>
+              <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ delay: 0.1 + idx * 0.02, duration: 0.5, ease: 'easeOut' }}
+                  style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }}
+                />
               </div>
-              <span className="text-[11px] font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
+              <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
                 {isRisk ? `RI ${value.toFixed(2)}` : `${value}%`}
               </span>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -261,18 +284,18 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
   const getCell = (unitId: string, pillar: PillarId) => heatCells.find(c => c.unitId === unitId && c.pillar === pillar);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Unit × Pillar Risk Heatmap</span>
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+      <div className="flex items-center gap-2 mb-5">
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Unit × Pillar Risk Heatmap</span>
         <InfoTip text="Interactive heatmap showing Risk Index per unit and pillar intersection. Hover for details." />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr>
-              <th className="text-left py-2 px-2 font-medium text-muted-foreground border-b border-border sticky left-0 bg-card z-10 min-w-[140px]">Unit</th>
+              <th className="text-left py-2.5 px-2 font-medium text-muted-foreground border-b border-border sticky left-0 bg-card z-10 min-w-[140px]">Unit</th>
               {pillars.map(p => (
-                <th key={p} className="text-center py-2 px-2 font-medium text-muted-foreground border-b border-border w-20">
+                <th key={p} className="text-center py-2.5 px-2 font-medium text-muted-foreground border-b border-border w-20">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger>
@@ -286,18 +309,18 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
           <tbody>
             {loadedUnits.map(unit => (
               <tr key={unit.unitId} className="border-b border-border/30">
-                <td className="py-1.5 px-2 font-medium text-foreground truncate max-w-[160px] sticky left-0 bg-card z-10">{getUnitDisplayLabel(unit.unitId)}</td>
+                <td className="py-2 px-2 font-medium text-foreground truncate max-w-[160px] sticky left-0 bg-card z-10 text-xs">{getUnitDisplayLabel(unit.unitId)}</td>
                 {pillars.map(pillar => {
                   const cell = getCell(unit.unitId, pillar);
-                  if (!cell || cell.applicableItems === 0) return (<td key={pillar} className="text-center py-1.5 px-2"><span className="text-[10px] text-muted-foreground/50">—</span></td>);
+                  if (!cell || cell.applicableItems === 0) return (<td key={pillar} className="text-center py-2 px-2"><span className="text-xs text-muted-foreground/50">—</span></td>);
                   const color = getRiskBandColor(cell.riskIndex);
                   const opacity = Math.max(0.15, Math.min(0.85, cell.riskIndex / 3));
                   return (
-                    <td key={pillar} className="text-center py-1.5 px-1">
+                    <td key={pillar} className="text-center py-2 px-1">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="rounded-md py-1 px-1 mx-auto w-14 cursor-default" style={{ backgroundColor: `${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` }}>
+                            <div className="rounded-md py-1 px-1 mx-auto w-16 cursor-default" style={{ backgroundColor: `${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` }}>
                               <span className="text-xs font-bold" style={{ color }}>RI {cell.riskIndex.toFixed(2)}</span>
                             </div>
                           </TooltipTrigger>
@@ -320,7 +343,7 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
       <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
         <span className="text-xs text-muted-foreground">Risk Band:</span>
         {(['green','amber','orange','red'] as const).map(band => (
-          <span key={band} className="text-[10px] px-2 py-0.5 rounded-full" style={{ borderColor: `${RISK_BAND_COLORS[band]}40`, color: RISK_BAND_COLORS[band], backgroundColor: `${RISK_BAND_COLORS[band]}10`, border: `1px solid ${RISK_BAND_COLORS[band]}40` }}>
+          <span key={band} className="text-xs px-2.5 py-0.5 rounded-full" style={{ borderColor: `${RISK_BAND_COLORS[band]}40`, color: RISK_BAND_COLORS[band], backgroundColor: `${RISK_BAND_COLORS[band]}10`, border: `1px solid ${RISK_BAND_COLORS[band]}40` }}>
             {band === 'green' ? '0–0.75' : band === 'amber' ? '0.76–1.50' : band === 'orange' ? '1.51–2.25' : '2.26–3.00'}
           </span>
         ))}
@@ -334,7 +357,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
 
   if (flags.length === 0) {
     return (
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-6 text-center">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm p-8 text-center">
         <ShieldAlert className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">No critical or realized risk items detected.</p>
       </motion.div>
@@ -342,11 +365,11 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-6">
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-4">
         <ShieldAlert className="w-4 h-4 text-destructive" />
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Strategic Exceptions</span>
-        <span className="text-[10px] text-muted-foreground ml-auto">{flags.length} item{flags.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Strategic Exceptions</span>
+        <span className="text-xs text-muted-foreground ml-auto">{flags.length} item{flags.length !== 1 ? 's' : ''}</span>
       </div>
       <p className="text-xs text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
       <div className="space-y-1">
@@ -360,10 +383,10 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
                 onClick={() => setExpandedIdx(isExpanded ? null : idx)}
                 className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left"
               >
-                {isExpanded ? <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>{severity}</span>
+                {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>{severity}</span>
                 <span className="text-xs font-medium text-foreground truncate flex-1">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
-                <span className="text-[10px] text-muted-foreground shrink-0">Completion: {flag.completion}%</span>
+                <span className="text-xs text-muted-foreground shrink-0">Completion: {flag.completion}%</span>
                 <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskBandColor(flag.riskWeight) }}>RI {flag.riskWeight.toFixed(1)}</span>
               </button>
               <AnimatePresence>
@@ -374,13 +397,13 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="ml-8 mr-3 mb-2 p-3 rounded-lg bg-muted/20 border border-border/50 space-y-1.5">
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Strategic Action:</span> {flag.actionStep}</p>
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Unit:</span> {getUnitDisplayLabel(flag.unitId)}</p>
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Execution Status:</span> {flag.status}</p>
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Pillar:</span> {PILLAR_FULL[flag.pillar]}</p>
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Risk Signal:</span> {flag.riskSignal}</p>
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Completion:</span> {flag.completion}%</p>
+                    <div className="ml-8 mr-3 mb-2 p-3.5 rounded-xl bg-muted/20 border border-border/50 space-y-1.5">
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Strategic Action:</span> {flag.actionStep}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Unit:</span> {getUnitDisplayLabel(flag.unitId)}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Execution Status:</span> {flag.status}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Pillar:</span> {PILLAR_FULL[flag.pillar]}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Risk Signal:</span> {flag.riskSignal}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Completion:</span> {flag.completion}%</p>
                     </div>
                   </motion.div>
                 )}

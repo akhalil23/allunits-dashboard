@@ -54,6 +54,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
   }, [allRows]);
 
   const hasPressure = allRows.some(r => r.budgetPressure);
+  const utilColor = totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A';
 
   return (
     <div className="space-y-8">
@@ -69,7 +70,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
       </div>
 
       {hasPressure && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-3 border-destructive/30 bg-destructive/5">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
           <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive shrink-0" /><span className="text-xs font-medium text-foreground">Budget Pressure Detected — Budget Utilization ≥ 80% and RI ≥ 1.51</span></div>
         </motion.div>
       )}
@@ -77,35 +78,22 @@ export default function BudgetIntelligence({ aggregation }: Props) {
       {/* Section 1: Budget Overview KPIs */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <KPICard label="Allocation — Total Planned" value={formatCurrency(totals.allocation)} icon={DollarSign} tooltip="Budget Allocation: Total budget allocated across all pillars for the selected scope." />
-          <KPICard label="Committed — Funds in Use" value={formatCurrency(totals.committed)} icon={DollarSign} tooltip="Committed: Total funds committed to active initiatives across all pillars." />
-          <KPICard label="Available — Remaining" value={formatCurrency(totals.available)} icon={DollarSign} tooltip="Available: Remaining uncommitted budget across all pillars." />
-          <div className="card-elevated p-4 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
-            <div className="relative">
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
-                Budget Utilization — Used <InfoTip text="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." />
-              </p>
-              <p className="text-xl sm:text-2xl font-display font-bold mt-1" style={{ color: totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A' }}>
-                {(totals.utilization * 100).toFixed(1)}%
-              </p>
-              <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
-                <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, totals.utilization * 100)}%`, backgroundColor: totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A' }} />
-              </div>
-            </div>
-          </div>
+          <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} icon={DollarSign} color="hsl(var(--primary))" tooltip="Budget Allocation: Total budget allocated across all pillars for the selected scope." />
+          <BudgetKPICard label="Committed" subtitle="Funds in Use" value={formatCurrency(totals.committed)} icon={DollarSign} color="hsl(var(--primary))" tooltip="Committed: Total funds committed to active initiatives across all pillars." />
+          <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} icon={DollarSign} color="hsl(var(--primary))" tooltip="Available: Remaining uncommitted budget across all pillars." />
+          <BudgetKPICard label="Budget Utilization" subtitle="Used" value={`${(totals.utilization * 100).toFixed(1)}%`} icon={DollarSign} color={utilColor} tooltip="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." showBar barPct={totals.utilization * 100} barColor={utilColor} />
         </div>
       </section>
 
       {/* Section 2: Budget Composition */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4"><BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Budget Composition by Pillar</span></div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4"><BarChart3 className="w-4 h-4 text-muted-foreground" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Budget Composition by Pillar</span></div>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={allRows.map(r => ({ name: r.label, committed: r.committed, remaining: r.available }))} layout="vertical" margin={{ left: 50, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" tickFormatter={v => `$${(v / 1_000_000).toFixed(1)}M`} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                <XAxis type="number" tickFormatter={v => `$${(v / 1_000_000).toFixed(1)}M`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} width={40} />
                 <ReTooltip formatter={(v: number) => `$${(v / 1_000_000).toFixed(2)}M`} contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
                 <Bar dataKey="committed" stackId="a" fill="hsl(var(--primary))" name="Committed" />
@@ -118,10 +106,10 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Section 3: Risk vs Budget Alignment Quadrant */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Target className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Alignment</span>
+            <Target className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Alignment</span>
           </div>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -154,8 +142,8 @@ export default function BudgetIntelligence({ aggregation }: Props) {
         </motion.div>
 
         {/* Section 4: Allocation Distribution Donut */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-5 sm:p-6">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Allocation Distribution</span>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Allocation Distribution</span>
           <div className="flex items-center gap-5 mt-4">
             <div className="w-36 h-36 shrink-0">
               <ResponsiveContainer>
@@ -167,15 +155,15 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex-1 space-y-2 min-w-0">
+            <div className="flex-1 space-y-2.5 min-w-0">
               {allRows.map(r => (
                 <TooltipProvider key={r.pillar}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2 cursor-help">
+                      <div className="flex items-center gap-2.5 cursor-help">
                         <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_DONUT_COLORS[r.pillar] }} />
-                        <span className="text-[11px] text-foreground flex-1">{PILLAR_SHORT[r.pillar]}</span>
-                        <span className="text-[11px] font-bold text-foreground">{formatCurrency(r.allocation)}</span>
+                        <span className="text-xs text-foreground flex-1">{PILLAR_SHORT[r.pillar]}</span>
+                        <span className="text-xs font-bold text-foreground">{formatCurrency(r.allocation)}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent><p className="text-xs">{PILLAR_FULL[r.pillar]}</p></TooltipContent>
@@ -189,9 +177,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
       {/* Section 5: Budget Efficiency Scatter */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Budget Efficiency</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Budget Efficiency</span>
             <InfoTip text="Scatter chart mapping budget utilization against completion rate for each pillar. Ideal position is top-right." />
           </div>
           <div className="h-64">
@@ -226,19 +214,47 @@ export default function BudgetIntelligence({ aggregation }: Props) {
   );
 }
 
-function KPICard({ label, value, icon: Icon, tooltip }: { label: string; value: string; icon: React.ElementType; tooltip: string }) {
+function BudgetKPICard({ label, subtitle, value, icon: Icon, color, tooltip, showBar, barPct, barColor }: {
+  label: string; subtitle: string; value: string; icon: React.ElementType; color: string; tooltip: string; showBar?: boolean; barPct?: number; barColor?: string;
+}) {
   return (
-    <div className="card-elevated p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
-      <div className="relative flex items-start justify-between">
-        <div>
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
-            {label}<InfoTip text={tooltip} />
-          </p>
-          <p className="text-xl sm:text-2xl font-display font-bold text-foreground mt-1">{value}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+      className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+    >
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
+      <div
+        className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none transition-opacity duration-300 group-hover:opacity-[0.12]"
+        style={{ backgroundColor: color }}
+      />
+      <div className="relative p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight flex items-center gap-0.5">
+              {label}
+              <InfoTip text={tooltip} />
+            </p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
+            <p className="text-3xl sm:text-4xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>{value}</p>
+            {showBar && barPct !== undefined && barColor && (
+              <div className="h-2 rounded-full bg-muted overflow-hidden mt-3">
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, barPct)}%` }}
+                  transition={{ delay: 0.3, duration: 0.6, ease: 'easeOut' }}
+                  style={{ backgroundColor: barColor }}
+                />
+              </div>
+            )}
+          </div>
+          <div className="p-2.5 rounded-xl shrink-0 transition-colors duration-200" style={{ backgroundColor: `${color}14` }}>
+            <Icon className="w-5 h-5" style={{ color }} />
+          </div>
         </div>
-        <div className="p-2 rounded-lg bg-muted/50"><Icon className="w-4 h-4 text-muted-foreground" /></div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -15,10 +15,10 @@ export default function DashboardGuide() {
     <div className="space-y-8">
       {/* Section A: Dashboard Overview */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Dashboard Overview</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dashboard Overview</span>
           </div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
@@ -32,7 +32,7 @@ export default function DashboardGuide() {
           </div>
 
           {/* Visual Flow */}
-          <div className="mt-6 p-4 rounded-lg bg-muted/30 border border-border/50">
+          <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Data Flow</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <FlowNode label="21 Units" sublabel="Report progress" />
@@ -47,10 +47,10 @@ export default function DashboardGuide() {
 
       {/* Section B: Key Metrics Explained */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Info className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Key Metrics Explained</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Key Metrics Explained</span>
           </div>
           <div className="space-y-4">
             <MetricExplainer
@@ -95,10 +95,10 @@ export default function DashboardGuide() {
 
       {/* Section C: How to Read Each Tab */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <LayoutDashboard className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">How to Read Each Tab</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">How to Read Each Tab</span>
           </div>
           <div className="space-y-3">
             <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="High-level overview of strategic performance across pillars. Start here for a quick situational understanding of completion, risk, and budget. The Strategic Plan IV — Pillar Reference legend maps pillar abbreviations (PI–PV) to their official titles." />
@@ -113,19 +113,19 @@ export default function DashboardGuide() {
 
       {/* Section D: Export & Reporting */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <FileDown className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Export & Reporting</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Export & Reporting</span>
           </div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
               The header includes a <span className="font-semibold text-foreground">PDF/CSV export dropdown</span> (download icon) that generates
               presentation-ready reports reflecting the current filter state.
             </p>
-            <div className="p-3 rounded-lg bg-muted/20 border border-border/30 space-y-2">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 space-y-2">
               <p className="text-xs font-semibold text-foreground">PDF Export</p>
-              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>A4 landscape layout optimized for board presentations</li>
                 <li>Includes inline SVG visualizations — status donut charts and pillar completion bars</li>
                 <li>Dynamically reflects the selected Academic Year, Term, and View Type</li>
@@ -133,9 +133,9 @@ export default function DashboardGuide() {
                 <li>Branded with LAU logo and official teal-green color palette</li>
               </ul>
             </div>
-            <div className="p-3 rounded-lg bg-muted/20 border border-border/30 space-y-2">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 space-y-2">
               <p className="text-xs font-semibold text-foreground">CSV Export</p>
-              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Raw data export for custom analysis in Excel or Google Sheets</li>
                 <li>Includes all strategic action items with their status and risk signals</li>
               </ul>
@@ -146,10 +146,10 @@ export default function DashboardGuide() {
 
       {/* Section E: Dark Mode */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Moon className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Dark Mode</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dark Mode</span>
           </div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
@@ -165,10 +165,10 @@ export default function DashboardGuide() {
 
       {/* Section F: FAQ */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <HelpCircle className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Frequently Asked Questions</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Frequently Asked Questions</span>
           </div>
           <div className="space-y-1">
             <FAQItem
@@ -205,10 +205,10 @@ export default function DashboardGuide() {
 
       {/* Section G: Reading Tips */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-4 h-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reading Tips for Executives</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Reading Tips for Executives</span>
           </div>
           <div className="space-y-4">
             <TipStep step={1} title="Start with Executive Snapshot" description="Get an instant overview of university-wide performance. Review the KPI banner and the Strategic Performance Matrix." />
@@ -226,9 +226,9 @@ export default function DashboardGuide() {
 
 function FlowNode({ label, sublabel }: { label: string; sublabel: string }) {
   return (
-    <div className="text-center px-4 py-2.5 rounded-lg bg-primary/5 border border-primary/20">
+    <div className="text-center px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/20">
       <p className="text-xs font-semibold text-foreground">{label}</p>
-      <p className="text-[9px] text-muted-foreground">{sublabel}</p>
+      <p className="text-[10px] text-muted-foreground">{sublabel}</p>
     </div>
   );
 }
@@ -238,7 +238,7 @@ function MetricExplainer({ title, definition, calculation, interpretation }: {
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-border/50 rounded-lg overflow-hidden">
+    <div className="border border-border/50 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-colors"
@@ -263,11 +263,11 @@ function MetricExplainer({ title, definition, calculation, interpretation }: {
 
 function TabGuide({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/20 border border-border/30">
+    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-muted/20 border border-border/30">
       <div className="p-1.5 rounded-lg bg-primary/10 mt-0.5"><Icon className="w-3.5 h-3.5 text-primary" /></div>
       <div>
-        <p className="text-xs font-semibold text-foreground">{title}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
       </div>
     </div>
   );
@@ -279,9 +279,9 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     <div className="border-b border-border/30 last:border-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-3 text-left hover:bg-muted/20 px-2 rounded transition-colors"
+        className="w-full flex items-center justify-between py-3 text-left hover:bg-muted/20 px-2 rounded-lg transition-colors"
       >
-        <span className="text-xs font-semibold text-foreground">{question}</span>
+        <span className="text-sm font-semibold text-foreground">{question}</span>
         {open ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
       </button>
       <AnimatePresence>
@@ -298,12 +298,12 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 function TipStep({ step, title, description }: { step: number; title: string; description: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-        <span className="text-[10px] font-bold text-primary">{step}</span>
+      <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+        <span className="text-xs font-bold text-primary">{step}</span>
       </div>
       <div>
-        <p className="text-xs font-semibold text-foreground">{title}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
       </div>
     </div>
   );
