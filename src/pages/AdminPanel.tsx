@@ -292,9 +292,6 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-primary text-primary-foreground px-6 py-4 flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-primary-foreground hover:bg-primary/80">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
         <Shield className="w-6 h-6" />
         <h1 className="text-lg font-bold flex-1">Admin Panel — User Management</h1>
 
