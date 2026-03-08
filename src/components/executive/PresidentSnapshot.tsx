@@ -346,8 +346,8 @@ function PillarLegend() {
             <Info className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-foreground tracking-wide">Strategic Plan IV — Pillar Reference</h3>
-            <p className="text-[10px] text-muted-foreground mt-0.5">5 strategic pillars guiding university-wide execution</p>
+            <h3 className="text-xs sm:text-sm font-semibold text-foreground tracking-wide">Strategic Plan IV — Pillar Reference</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">5 strategic pillars guiding university-wide execution</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
