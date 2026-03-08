@@ -86,7 +86,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
       {/* Section 1: Budget Overview KPIs */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <KPICard label="Allocation" value={formatCurrency(totals.allocation)} icon={DollarSign} tooltip="Budget Allocation: Total budget allocated across all pillars." />
+          <KPICard label="Allocation — Total Planned" value={formatCurrency(totals.allocation)} icon={DollarSign} tooltip="Budget Allocation: Total budget allocated across all pillars for the selected scope." />
           <KPICard label="Committed" value={formatCurrency(totals.committed)} icon={DollarSign} tooltip="Committed: Total funds committed to active initiatives." />
           <KPICard label="Available" value={formatCurrency(totals.available)} icon={DollarSign} tooltip="Available: Remaining uncommitted budget." />
           <div className="card-elevated p-4 relative overflow-hidden">
