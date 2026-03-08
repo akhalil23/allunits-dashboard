@@ -326,11 +326,11 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 /** Pillar Legend component accessible from Executive Snapshot */
 function PillarLegend() {
   const pillarColors: Record<string, string> = {
-    I: 'hsl(var(--primary))',
-    II: '#3B82F6',
-    III: '#8B5CF6',
-    IV: '#F59E0B',
-    V: '#EF4444',
+    I: '#0E7490',
+    II: '#6D28D9',
+    III: '#DB2777',
+    IV: '#0369A1',
+    V: '#7C3AED',
   };
 
   return (
