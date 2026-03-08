@@ -97,7 +97,7 @@ export default function ExecutiveDashboard() {
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         {activeTab !== 'budget' && activeTab !== 'guide' && <FilterBar />}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">
