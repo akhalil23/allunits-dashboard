@@ -90,10 +90,22 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
             </span>
             <div className="h-48 mt-3">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={pillarAgg.map(p => ({ name: PILLAR_LABELS[p.pillar], noRisk: p.riskCounts.noRisk, emerging: p.riskCounts.emerging, critical: p.riskCounts.critical, realized: p.riskCounts.realized }))} layout="vertical" barSize={18}>
+                <BarChart data={pillarAgg.map(p => {
+                  const total = p.riskCounts.noRisk + p.riskCounts.emerging + p.riskCounts.critical + p.riskCounts.realized;
+                  return { name: PILLAR_LABELS[p.pillar], noRisk: p.riskCounts.noRisk, emerging: p.riskCounts.emerging, critical: p.riskCounts.critical, realized: p.riskCounts.realized, total };
+                })} layout="vertical" barSize={18}>
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 10 }} />
-                  <ReTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number, n: string) => { const m: Record<string,string> = { noRisk:'No Risk', emerging:'Emerging', critical:'Critical', realized:'Realized' }; return [v, m[n]||n]; }} />
+                  <ReTooltip
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
+                    formatter={(v: number, n: string, props: any) => {
+                      const labelMap: Record<string,string> = { noRisk:'No Risk', emerging:'Emerging', critical:'Critical', realized:'Realized' };
+                      const total = props.payload?.total || 1;
+                      const pct = ((v / total) * 100).toFixed(1);
+                      return [`${v} items (${pct}%)`, labelMap[n] || n];
+                    }}
+                    labelFormatter={(label: string) => `${label} — Risk Signals`}
+                  />
                   <Bar dataKey="noRisk" stackId="a" fill={RISK_SIGNAL_COLORS['No Risk (On Track)']} />
                   <Bar dataKey="emerging" stackId="a" fill={RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)']} />
                   <Bar dataKey="critical" stackId="a" fill={RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)']} />
@@ -101,6 +113,8 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            {/* Legend with totals */}
+            <RiskSignalLegend pillarAgg={pillarAgg} />
           </div>
 
           {/* Completion Status Distribution Donut */}
