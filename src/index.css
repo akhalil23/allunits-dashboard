@@ -70,51 +70,57 @@
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --background-alt: 217 33% 14%;
-    --foreground: 210 40% 96%;
+    --background: 222 47% 9%;
+    --background-alt: 217 33% 12%;
+    --foreground: 210 40% 98%;
 
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 96%;
+    --card: 217 33% 14%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 217 33% 14%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 174 100% 28%;
+    --primary: 161 100% 32%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 25% 22%;
+    --secondary: 215 25% 20%;
     --secondary-foreground: 210 40% 96%;
 
-    --muted: 215 25% 22%;
-    --muted-foreground: 215 16% 65%;
+    --muted: 215 20% 18%;
+    --muted-foreground: 215 16% 62%;
 
-    --accent: 215 25% 22%;
+    --accent: 215 25% 20%;
     --accent-foreground: 210 40% 96%;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 96%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 215 25% 27%;
-    --input: 215 25% 27%;
-    --ring: 174 100% 28%;
+    --border: 215 20% 22%;
+    --input: 215 20% 22%;
+    --ring: 161 100% 32%;
 
-    --sidebar-background: 222 47% 8%;
+    --sidebar-background: 222 47% 7%;
     --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 174 100% 36%;
+    --sidebar-primary: 161 100% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 40% 14%;
+    --sidebar-accent: 222 40% 13%;
     --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 222 30% 18%;
-    --sidebar-ring: 174 100% 36%;
-    --sidebar-muted: 222 30% 22%;
+    --sidebar-border: 222 30% 16%;
+    --sidebar-ring: 161 100% 36%;
+    --sidebar-muted: 222 30% 20%;
 
-    --header-from: 222 47% 8%;
-    --header-to: 174 72% 16%;
+    --header-from: 222 47% 7%;
+    --header-to: 174 72% 14%;
 
-    --qualifier-achieved: 174 100% 28%;
+    --qualifier-achieved: 161 100% 32%;
 
-    --surface-header: 217 33% 14%;
+    --chart-1: 161 100% 36%;
+    --chart-2: 36 78% 60%;
+    --chart-3: 0 70% 55%;
+    --chart-4: 215 30% 60%;
+    --chart-5: 354 51% 52%;
+
+    --surface-header: 217 33% 12%;
   }
 }
 
