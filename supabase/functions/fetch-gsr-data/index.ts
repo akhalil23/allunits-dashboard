@@ -495,17 +495,23 @@ serve(async (req) => {
     };
 
     for (let p = 0; p < pillarMap.length; p++) {
-      const coreRange = valueRanges[p * 2];
-      const termRange = valueRanges[p * 2 + 1];
+      const fullRange = valueRanges[p];
 
-      if (!coreRange?.values || !termRange?.values) {
+      if (!fullRange?.values) {
         missingBlocks++;
         console.error(`Missing data for Pillar ${pillarMap[p].id} (sheet: "${pillarMap[p].sheetName}") in unit ${requestedUnitId}`);
         continue;
       }
 
-      const coreRows = coreRange.values.slice(1);
-      const termRows = termRange.values.slice(1);
+      // Split full rows into core (cols 0-6) and term (cols 75+) data
+      const fullRows = fullRange.values.slice(1); // skip header row
+      const coreRows = fullRows.map((row: any[]) => row.slice(0, 7));
+      const termRows = fullRows.map((row: any[]) => {
+        if (row.length > TERM_START_COL) {
+          return row.slice(TERM_START_COL, TERM_START_COL + TERM_TOTAL_COLS);
+        }
+        return []; // Sheet doesn't have enough columns — treat term data as empty
+      });
 
       const { items, invalidStatuses, invalidCompletions } = processPillarData(
         pillarMap[p].id, coreRows, termRows, anomalies
