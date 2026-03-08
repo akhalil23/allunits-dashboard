@@ -339,7 +339,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Strategic Exceptions</span>
         <span className="text-[10px] text-muted-foreground ml-auto">{flags.length} item{flags.length !== 1 ? 's' : ''}</span>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
+      <p className="text-xs text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
       <div className="space-y-1">
         {flags.map((flag, idx) => {
           const color = RISK_SIGNAL_COLORS[flag.riskSignal];

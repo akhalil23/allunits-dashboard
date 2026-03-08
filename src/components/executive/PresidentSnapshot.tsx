@@ -331,7 +331,7 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative flex items-start justify-between">
         <div>
-          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
             {label}
             <InfoTip text={tooltip} />
           </p>

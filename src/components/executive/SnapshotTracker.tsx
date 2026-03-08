@@ -174,7 +174,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
             <Camera className="w-4 h-4 text-primary" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Reporting Snapshot</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mb-4">
+          <p className="text-xs text-muted-foreground mb-4">
             Reporting Cycle: <span className="font-semibold text-foreground">{reportingCycle}</span> •
             Captured at: <span className="font-semibold text-foreground">{new Date().toLocaleString()}</span>
           </p>
