@@ -41,7 +41,7 @@ export default function ExecutiveSidebar({ activeTab, onTabChange }: Props) {
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
-      setIsTablet(w >= 769 && w < 1280);
+      setIsTablet(w >= 768 && w < 1280);
     };
     check();
     window.addEventListener('resize', check);
