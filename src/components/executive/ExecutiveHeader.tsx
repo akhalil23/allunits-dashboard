@@ -16,7 +16,7 @@ interface ExecutiveHeaderProps {
   onRefresh: () => void;
   isRefreshing?: boolean;
   observedAt?: string;
-  onOpenTrends?: () => void;
+  onOpenSnapshotTracker?: () => void;
 }
 
 export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, isRefreshing, observedAt, onOpenTrends }: ExecutiveHeaderProps) {
