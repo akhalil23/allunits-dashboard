@@ -11,7 +11,7 @@ import {
   ResponsiveContainer, Cell, BarChart, Bar, ReferenceLine, ReferenceArea,
   PieChart, Pie, Cell as PieCell,
 } from 'recharts';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
