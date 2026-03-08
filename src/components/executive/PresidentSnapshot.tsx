@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
-  ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie, Cell as PieCell,
+  ResponsiveContainer, Cell, ReferenceLine, ReferenceArea, PieChart, Pie, Cell as PieCell,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
@@ -182,6 +182,11 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                {/* Quadrant zone shading */}
+                <ReferenceArea x1={50} x2={100} y1={50} y2={100} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={50} y1={50} y2={100} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={50} x2={100} y1={0} y2={50} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={50} y1={0} y2={50} fill="rgba(245,158,11,0.06)" fillOpacity={1} />
                 <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Completion %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <ReferenceLine x={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
