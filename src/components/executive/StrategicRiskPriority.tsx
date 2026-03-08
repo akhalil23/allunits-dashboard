@@ -111,7 +111,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
 
           {/* Completion Status Distribution Donut */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
             <CompletionDonut aggregation={aggregation} />
           </div>
         </div>
