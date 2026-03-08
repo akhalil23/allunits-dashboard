@@ -60,9 +60,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     <div className="space-y-8">
       <p className="text-xs text-muted-foreground italic px-1">Budget context: 2-Year Strategic Plan (2025–2027). All figures represent planned allocations and commitments.</p>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted-foreground font-medium">Budget Scope</span>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           {([['2025-2026','2025–2026'],['2026-2027','2026–2027'],['total','Total (2025–2027 Plan)']] as [BudgetScope,string][]).map(([val,lbl]) => (
             <button key={val} onClick={() => setBudgetScope(val)} className={`filter-pill ${budgetScope === val ? 'filter-pill-active' : ''}`}>{lbl}</button>
           ))}
@@ -169,7 +169,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Allocation Distribution</span>
-          <div className="flex items-center gap-5 mt-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mt-4">
             <div className="w-36 h-36 shrink-0">
               <ResponsiveContainer>
                 <PieChart>

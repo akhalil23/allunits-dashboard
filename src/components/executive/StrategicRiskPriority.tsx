@@ -200,7 +200,7 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
   ].filter(d => d.value > 0);
 
   return (
-    <div className="flex items-center gap-5 mt-4">
+    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mt-4">
       <div className="w-32 h-32 shrink-0">
         <ResponsiveContainer>
           <PieChart>
@@ -352,7 +352,7 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
           </tbody>
         </table>
       </div>
-      <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 pt-3 border-t border-border">
         <span className="text-xs text-muted-foreground">Risk Band:</span>
         {(['green','amber','orange','red'] as const).map(band => (
           <span key={band} className="text-xs px-2.5 py-0.5 rounded-full" style={{ borderColor: `${RISK_BAND_COLORS[band]}40`, color: RISK_BAND_COLORS[band], backgroundColor: `${RISK_BAND_COLORS[band]}10`, border: `1px solid ${RISK_BAND_COLORS[band]}40` }}>
@@ -397,14 +397,14 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
           const badgeBorder = isRealized ? '#7F1D1D' : 'hsl(var(--destructive))';
           return (
             <div key={`${flag.unitId}-${flag.sheetRow}-${idx}`}>
-              <button
+               <button
                 onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-                className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left"
+                className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left flex-wrap sm:flex-nowrap"
               >
                 {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color: 'hsl(var(--destructive-foreground))', backgroundColor: badgeBackground, border: `1px solid ${badgeBorder}` }}>{severity}</span>
-                <span className="text-xs font-medium text-foreground truncate flex-1">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
-                <span className="text-xs text-muted-foreground shrink-0">Completion: {flag.completion}%</span>
+                <span className="text-xs font-medium text-foreground truncate flex-1 min-w-0">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
+                <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">Completion: {flag.completion}%</span>
                 <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskBandColor(flag.riskWeight) }}>RI {flag.riskWeight.toFixed(1)}</span>
               </button>
               <AnimatePresence>

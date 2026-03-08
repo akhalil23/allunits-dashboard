@@ -278,7 +278,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
            <p className="text-xs sm:text-sm text-muted-foreground mb-4">
              <strong>No Risk:</strong> Actions showing no risk indicators. <strong>Emerging:</strong> Early warning signals. <strong>Critical:</strong> Severe risk requiring intervention. <strong>Realized:</strong> Risk event has already occurred.
           </p>
-          <div className="flex items-center gap-6 mt-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mt-4">
             <div className="w-36 h-36 sm:w-44 sm:h-44 shrink-0">
               <ResponsiveContainer>
                 <PieChart>
