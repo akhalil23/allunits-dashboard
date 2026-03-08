@@ -77,7 +77,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
 
           {/* Risk Distribution Stacked */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Risk Signal Distribution by Pillar <InfoTip text="Distribution of risk signals across pillars. No Risk: actions with no risk indicators. Emerging: early warning signals. Critical: severe risk requiring intervention. Realized: risk event already occurred." />
             </span>
             <div className="h-48 mt-3">
