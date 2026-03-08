@@ -29,8 +29,9 @@ export interface PillarBudgetRow {
   budgetPressure: boolean;
 }
 
+/** Short labels for charts (backward-compatible import) */
 export const PILLAR_LABELS: Record<PillarId, string> = {
-  I: 'Pillar I', II: 'Pillar II', III: 'Pillar III', IV: 'Pillar IV', V: 'Pillar V',
+  I: 'PI', II: 'PII', III: 'PIII', IV: 'PIV', V: 'PV',
 };
 
 export function getPillarBudget(pillar: PillarId, scope: BudgetScope) {
