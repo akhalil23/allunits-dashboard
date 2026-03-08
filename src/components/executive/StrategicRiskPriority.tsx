@@ -220,7 +220,7 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
 function RankingBars({ title, subtitle, units, metricKey }: { title: string; subtitle: string; units: UnitAggregation[]; metricKey: 'riskIndex' | 'completionPct' }) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-5">
-      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
       <p className="text-[10px] text-muted-foreground mb-3">{subtitle}</p>
       <div className="space-y-1.5 max-h-[360px] overflow-y-auto">
         {units.map((unit, idx) => {
