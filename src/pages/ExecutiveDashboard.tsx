@@ -3,7 +3,7 @@
  * Tab-based executive dashboard aggregating all 21 units.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUniversity, type UniversityAggregation } from '@/lib/university-aggregation';
