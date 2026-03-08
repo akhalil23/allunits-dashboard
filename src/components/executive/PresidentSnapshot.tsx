@@ -177,7 +177,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Strategic Performance Matrix</span>
             <InfoTip text="Bubble chart combining delivery (Y), budget (X), and risk (color). Bubble size reflects the number of applicable initiatives." />
           </div>
-          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
+          <p className="text-xs text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
           <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
