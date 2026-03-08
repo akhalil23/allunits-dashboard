@@ -410,12 +410,12 @@ function BarRow({ label, value, max, suffix, color, format }: {
   const pct = Math.min(100, (value / max) * 100);
   const display = format ? format(value) : `${value}${suffix}`;
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-[10px] text-muted-foreground w-16 shrink-0">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+    <div className="flex items-center gap-2.5">
+      <span className="text-xs text-muted-foreground w-20 shrink-0">{label}</span>
+      <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[11px] font-bold w-10 text-right" style={{ color }}>{display}</span>
+      <span className="text-xs font-bold w-14 text-right" style={{ color }}>{display}</span>
     </div>
   );
 }
