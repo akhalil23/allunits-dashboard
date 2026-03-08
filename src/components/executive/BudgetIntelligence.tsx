@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, AlertTriangle, Target, BarChart3 } from 'lucide-react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
-  ResponsiveContainer, Cell, BarChart, Bar, ReferenceLine,
+  ResponsiveContainer, Cell, BarChart, Bar, ReferenceLine, ReferenceArea,
   PieChart, Pie, Cell as PieCell,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
