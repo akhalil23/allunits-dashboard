@@ -397,14 +397,14 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
           const badgeBorder = isRealized ? '#7F1D1D' : 'hsl(var(--destructive))';
           return (
             <div key={`${flag.unitId}-${flag.sheetRow}-${idx}`}>
-              <button
+               <button
                 onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-                className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left"
+                className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left flex-wrap sm:flex-nowrap"
               >
                 {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color: 'hsl(var(--destructive-foreground))', backgroundColor: badgeBackground, border: `1px solid ${badgeBorder}` }}>{severity}</span>
-                <span className="text-xs font-medium text-foreground truncate flex-1">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
-                <span className="text-xs text-muted-foreground shrink-0">Completion: {flag.completion}%</span>
+                <span className="text-xs font-medium text-foreground truncate flex-1 min-w-0">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
+                <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">Completion: {flag.completion}%</span>
                 <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskBandColor(flag.riskWeight) }}>RI {flag.riskWeight.toFixed(1)}</span>
               </button>
               <AnimatePresence>

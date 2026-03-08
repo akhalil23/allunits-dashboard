@@ -60,9 +60,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     <div className="space-y-8">
       <p className="text-xs text-muted-foreground italic px-1">Budget context: 2-Year Strategic Plan (2025–2027). All figures represent planned allocations and commitments.</p>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted-foreground font-medium">Budget Scope</span>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
           {([['2025-2026','2025–2026'],['2026-2027','2026–2027'],['total','Total (2025–2027 Plan)']] as [BudgetScope,string][]).map(([val,lbl]) => (
             <button key={val} onClick={() => setBudgetScope(val)} className={`filter-pill ${budgetScope === val ? 'filter-pill-active' : ''}`}>{lbl}</button>
           ))}
