@@ -45,7 +45,7 @@ export default function ExecutiveDashboard() {
   if (isLoading) {
     return (
       <div className="flex h-screen overflow-hidden bg-background">
-        <ExecutiveSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <ExecutiveSidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
