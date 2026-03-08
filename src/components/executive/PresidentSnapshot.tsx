@@ -32,14 +32,12 @@ interface Props {
 
 function PillarTooltipLabel({ pillar }: { pillar: PillarId }) {
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="cursor-help">{PILLAR_SHORT[pillar]}</span>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs"><p>{PILLAR_FULL[pillar]}</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="cursor-help">{PILLAR_SHORT[pillar]}</span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-xs"><p>{PILLAR_FULL[pillar]}</p></TooltipContent>
+    </Tooltip>
   );
 }
 
