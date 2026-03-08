@@ -313,10 +313,19 @@ function PillarLegend() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {(['I','II','III','IV','V'] as PillarId[]).map(p => (
-          <div key={p} className="flex items-start gap-2 text-[11px] rounded-md px-1.5 py-1">
-            <span className="font-bold text-primary shrink-0">{PILLAR_LABELS[p]}</span>
-            <span className="text-muted-foreground">{PILLAR_FULL[p].replace(`Pillar ${p} — `, '')}</span>
-          </div>
+          <TooltipProvider key={p}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-start gap-2 text-[11px] rounded-md px-1.5 py-1 cursor-help hover:bg-muted/40 transition-colors">
+                  <span className="font-bold text-primary shrink-0">{PILLAR_LABELS[p]}</span>
+                  <span className="text-muted-foreground">{PILLAR_FULL[p].replace(`Pillar ${p} — `, '')}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs">
+                <p>{PILLAR_FULL[p]}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ))}
       </div>
     </motion.div>
