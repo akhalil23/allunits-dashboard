@@ -6,7 +6,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  CheckCircle2, AlertTriangle, TrendingUp, TrendingDown, DollarSign,
+  CheckCircle2, AlertTriangle, TrendingUp, DollarSign,
   ShieldAlert, BarChart3, Lightbulb, Info,
 } from 'lucide-react';
 import {
@@ -21,7 +21,7 @@ import { RISK_SIGNAL_ORDER, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar } from '@/lib/university-aggregation';
-import { PILLAR_LABELS, MOCK_BUDGET, getPillarBudget } from '@/lib/budget-data';
+import { PILLAR_LABELS, getPillarBudget } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
 
@@ -170,7 +170,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
       {/* Section 3: Strategic Performance Matrix (Bubble Quadrant) */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Strategic Performance Matrix</span>
             <InfoTip text="Bubble chart combining delivery (Y), budget (X), and risk (color). Bubble size reflects the number of applicable initiatives." />
@@ -232,9 +232,9 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       </section>
 
 
-      {/* Section 5: Pillar Performance Comparison Bars */}
+      {/* Section 4: Pillar Performance Comparison Bars */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-5">
             <BarChart3 className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
@@ -268,9 +268,9 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      {/* Section 6: Risk Signal Distribution */}
+      {/* Section 5: Risk Signal Distribution */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk Signal Distribution</span>
             <InfoTip text="Distribution of all applicable items by risk signal category." />
