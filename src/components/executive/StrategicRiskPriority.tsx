@@ -398,9 +398,11 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
       <p className="text-xs text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
       <div className="space-y-1">
         {visible.map((flag, idx) => {
-          const color = RISK_SIGNAL_COLORS[flag.riskSignal];
           const isExpanded = expandedIdx === idx;
-          const severity = flag.riskSignal.includes('Realized') ? 'Realized' : 'Critical';
+          const isRealized = flag.riskSignal.includes('Realized');
+          const severity = isRealized ? 'Realized' : 'Critical';
+          const badgeBackground = isRealized ? 'hsl(var(--destructive))' : 'hsl(var(--destructive) / 0.82)';
+          const badgeBorder = isRealized ? 'hsl(var(--destructive))' : 'hsl(var(--destructive) / 0.92)';
           return (
             <div key={`${flag.unitId}-${flag.sheetRow}-${idx}`}>
               <button
@@ -408,7 +410,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
                 className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left"
               >
                 {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>{severity}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color: 'hsl(var(--destructive-foreground))', backgroundColor: badgeBackground, border: `1px solid ${badgeBorder}` }}>{severity}</span>
                 <span className="text-xs font-medium text-foreground truncate flex-1">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
                 <span className="text-xs text-muted-foreground shrink-0">Completion: {flag.completion}%</span>
                 <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskBandColor(flag.riskWeight) }}>RI {flag.riskWeight.toFixed(1)}</span>
