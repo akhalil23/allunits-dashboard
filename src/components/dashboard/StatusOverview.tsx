@@ -72,16 +72,14 @@ export default function StatusOverview({ items, viewType, term, academicYear }: 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Item Applicability</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
-                <p>Shows how many action items are <strong>applicable</strong> vs <strong>not applicable</strong> for the selected filters. Only applicable items are used in progress calculations.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+              <p>Shows how many action items are <strong>applicable</strong> vs <strong>not applicable</strong> for the selected filters. Only applicable items are used in progress calculations.</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="w-24 h-24 sm:w-32 sm:h-32 shrink-0">
