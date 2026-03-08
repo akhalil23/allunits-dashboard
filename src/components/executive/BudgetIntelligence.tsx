@@ -285,14 +285,16 @@ function BudgetKPICard({ label, subtitle, value, icon: Icon, color, showBar, bar
         className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none transition-opacity duration-300 group-hover:opacity-[0.12]"
         style={{ backgroundColor: color }}
       />
-      <div className="relative p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
-              {label}
-            </p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
-            <p className="text-xl sm:text-2xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>{value}</p>
+      <div className="relative p-5 sm:p-6 flex flex-col h-full">
+        <div className="flex items-start justify-between gap-2 flex-1">
+          <div className="flex-1 min-w-0 flex flex-col">
+            <div className="h-[32px] sm:h-[36px] flex flex-col justify-start">
+              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
+                {label}
+              </p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
+            </div>
+            <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight" style={{ color }}>{value}</p>
             {showBar && barPct !== undefined && barColor && (
               <div className="h-2 rounded-full bg-muted overflow-hidden mt-3">
                 <motion.div
