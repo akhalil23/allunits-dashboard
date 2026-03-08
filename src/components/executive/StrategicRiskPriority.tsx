@@ -352,7 +352,7 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
           </tbody>
         </table>
       </div>
-      <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 pt-3 border-t border-border">
         <span className="text-xs text-muted-foreground">Risk Band:</span>
         {(['green','amber','orange','red'] as const).map(band => (
           <span key={band} className="text-xs px-2.5 py-0.5 rounded-full" style={{ borderColor: `${RISK_BAND_COLORS[band]}40`, color: RISK_BAND_COLORS[band], backgroundColor: `${RISK_BAND_COLORS[band]}10`, border: `1px solid ${RISK_BAND_COLORS[band]}40` }}>
