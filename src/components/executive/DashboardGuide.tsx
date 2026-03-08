@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
   LayoutDashboard, ShieldAlert, Target, DollarSign, GitCompare, Brain, Camera,
-  HelpCircle, Lightbulb,
+  HelpCircle, Lightbulb, FileDown, Moon, Sun,
 } from 'lucide-react';
 
 export default function DashboardGuide() {
@@ -101,19 +101,71 @@ export default function DashboardGuide() {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">How to Read Each Tab</span>
           </div>
           <div className="space-y-3">
-            <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="High-level overview of strategic performance across pillars. Start here for a quick situational understanding of completion, risk, and budget." />
+            <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="High-level overview of strategic performance across pillars. Start here for a quick situational understanding of completion, risk, and budget. The Strategic Plan IV — Pillar Reference legend maps pillar abbreviations (PI–PV) to their official titles." />
             <TabGuide icon={ShieldAlert} title="Strategic Risk & Priority" description="Identifies initiatives with elevated risk signals. Use the heatmap to see which units and pillars need attention. Review strategic exceptions for critical items." />
             <TabGuide icon={DollarSign} title="Budget Intelligence" description="Displays financial allocation and utilization across pillars. Identifies budget pressure zones where high utilization meets high risk." />
-            <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles. Track trajectory of strategic execution over time with trend charts." />
+            <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles. Each snapshot is uniquely labeled with timestamp. Trend charts use sequential labels (S1, S2, S3…) on the x-axis — hover over data points to see the full reporting cycle and capture time." />
             <TabGuide icon={GitCompare} title="Unit Comparison" description="Allows side-by-side comparison of two units across all performance dimensions including pillar-level radar charts." />
             <TabGuide icon={Brain} title="AI Executive Insights" description="AI-generated strategic interpretation of aggregated metrics. Provides narrative analysis of strengths, risks, and opportunities." />
           </div>
         </motion.div>
       </section>
 
-      {/* Section D: FAQ */}
+      {/* Section D: Export & Reporting */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="card-elevated p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <FileDown className="w-4 h-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Export & Reporting</span>
+          </div>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              The header includes a <span className="font-semibold text-foreground">PDF/CSV export dropdown</span> (download icon) that generates
+              presentation-ready reports reflecting the current filter state.
+            </p>
+            <div className="p-3 rounded-lg bg-muted/20 border border-border/30 space-y-2">
+              <p className="text-xs font-semibold text-foreground">PDF Export</p>
+              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                <li>A4 landscape layout optimized for board presentations</li>
+                <li>Includes inline SVG visualizations — status donut charts and pillar completion bars</li>
+                <li>Dynamically reflects the selected Academic Year, Term, and View Type</li>
+                <li>Unit-specific titles (e.g., "HR — Human Resources") for unit dashboards</li>
+                <li>Branded with LAU logo and official teal-green color palette</li>
+              </ul>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/20 border border-border/30 space-y-2">
+              <p className="text-xs font-semibold text-foreground">CSV Export</p>
+              <ul className="text-[11px] text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Raw data export for custom analysis in Excel or Google Sheets</li>
+                <li>Includes all strategic action items with their status and risk signals</li>
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Section E: Dark Mode */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="card-elevated p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Moon className="w-4 h-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Dark Mode</span>
+          </div>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              Toggle between <span className="font-semibold text-foreground">Light</span> and <span className="font-semibold text-foreground">Dark</span> modes
+              using the sun/moon icon in the header. Your preference is saved automatically.
+            </p>
+            <p>
+              Dark mode is optimized for low-light environments with enhanced card contrast, brighter text, and adjusted chart colors for readability.
+            </p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Section F: FAQ */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="card-elevated p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <HelpCircle className="w-4 h-4 text-primary" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Frequently Asked Questions</span>
@@ -137,13 +189,21 @@ export default function DashboardGuide() {
             />
             <FAQItem
               question="What is a strategic snapshot?"
-              answer="A snapshot captures the current state of all university-level metrics at a point in time. By comparing snapshots across reporting cycles, leadership can observe the trajectory of strategic execution and identify trends."
+              answer="A snapshot captures the current state of all university-level metrics at a point in time. By comparing snapshots across reporting cycles, leadership can observe the trajectory of strategic execution and identify trends. Each snapshot is uniquely labeled with a timestamp to distinguish multiple captures within the same cycle."
+            />
+            <FAQItem
+              question="How do I export a report?"
+              answer="Click the download icon in the header to open the export dropdown. Select PDF for a presentation-ready A4 landscape report with charts and branding, or CSV for raw data. Both formats reflect the currently selected filters (Academic Year, Term, View Type)."
+            />
+            <FAQItem
+              question="Does dark mode affect exported reports?"
+              answer="No. PDF and CSV exports always use the standard light-mode branding with the official LAU teal-green palette, regardless of your display theme preference."
             />
           </div>
         </motion.div>
       </section>
 
-      {/* Section E: Reading Tips */}
+      {/* Section G: Reading Tips */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-elevated p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -156,6 +216,7 @@ export default function DashboardGuide() {
             <TipStep step={3} title="Review Budget Intelligence" description="Analyze financial pressure signals. Look for pillars where high budget utilization coincides with high risk index." />
             <TipStep step={4} title="Track Progress with Snapshots" description="Capture snapshots regularly and use the trajectory charts to understand whether strategic execution is improving over time." />
             <TipStep step={5} title="Compare Units" description="Use Unit Comparison to analyze structural differences. The radar chart reveals pillar-level strengths and weaknesses between units." />
+            <TipStep step={6} title="Export for Board Meetings" description="Generate a PDF report before presentations. The exported report includes branded visualizations and reflects your current filter selections." />
           </div>
         </motion.div>
       </section>
