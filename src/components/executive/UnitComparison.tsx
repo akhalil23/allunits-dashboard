@@ -9,8 +9,9 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip as RechartsTooltip,
 } from 'recharts';
-import { GitCompareArrows, Info } from 'lucide-react';
+import { GitCompareArrows } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUnitByPillar, getRiskBandColor, RISK_BAND_COLORS, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
@@ -22,16 +23,6 @@ import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
 
-function InfoTip({ text }: { text: string }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild><Info className="w-3 h-3 text-muted-foreground/60 cursor-help inline ml-1" /></TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs"><p>{text}</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 export default function UnitComparison({ aggregation }: Props) {
   const { viewType, academicYear, term } = useDashboard();

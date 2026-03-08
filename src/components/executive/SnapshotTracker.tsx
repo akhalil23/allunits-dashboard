@@ -6,7 +6,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Camera, Clock, TrendingUp, TrendingDown, Minus, Info, CheckCircle2,
+  Camera, Clock, TrendingUp, TrendingDown, Minus, CheckCircle2,
   AlertTriangle, ShieldAlert, DollarSign, Loader2,
 } from 'lucide-react';
 import {
@@ -14,6 +14,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
@@ -27,16 +28,6 @@ import { toast } from 'sonner';
 
 interface Props { aggregation: UniversityAggregation; }
 
-function InfoTip({ text }: { text: string }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild><Info className="w-3 h-3 text-muted-foreground/60 cursor-help inline ml-1" /></TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs"><p>{text}</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 export default function SnapshotTracker({ aggregation }: Props) {
   const { viewType, term, academicYear } = useDashboard();
@@ -183,7 +174,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
             <Camera className="w-4 h-4 text-primary" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Reporting Snapshot</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mb-4">
+          <p className="text-xs text-muted-foreground mb-4">
             Reporting Cycle: <span className="font-semibold text-foreground">{reportingCycle}</span> •
             Captured at: <span className="font-semibold text-foreground">{new Date().toLocaleString()}</span>
           </p>
@@ -352,7 +343,7 @@ function MetricCard({ label, value, icon: Icon, color, tooltip }: {
     <div className="card-elevated p-3 sm:p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative">
-        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center">
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
           {label}<InfoTip text={tooltip} />
         </p>
         <p className="text-lg sm:text-xl font-display font-bold mt-1" style={{ color: color || 'hsl(var(--primary))' }}>{value}</p>

@@ -9,8 +9,9 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts';
-import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight, Info } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import {
@@ -26,16 +27,6 @@ import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
 
-function InfoTip({ text }: { text: string }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild><Info className="w-3 h-3 text-muted-foreground/60 cursor-help inline ml-1" /></TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs"><p>{text}</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 export default function StrategicRiskPriority({ aggregation }: Props) {
   const { viewType, academicYear, term } = useDashboard();
@@ -57,7 +48,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Risk Index by Pillar */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               RI by Pillar <InfoTip text="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk." />
             </span>
             <div className="space-y-2.5 mt-4">
@@ -86,7 +77,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
 
           {/* Risk Distribution Stacked */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Risk Signal Distribution by Pillar <InfoTip text="Distribution of risk signals across pillars. No Risk: actions with no risk indicators. Emerging: early warning signals. Critical: severe risk requiring intervention. Realized: risk event already occurred." />
             </span>
             <div className="h-48 mt-3">
@@ -120,7 +111,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
 
           {/* Completion Status Distribution Donut */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
             <CompletionDonut aggregation={aggregation} />
           </div>
         </div>
@@ -229,7 +220,7 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
 function RankingBars({ title, subtitle, units, metricKey }: { title: string; subtitle: string; units: UnitAggregation[]; metricKey: 'riskIndex' | 'completionPct' }) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-5">
-      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
       <p className="text-[10px] text-muted-foreground mb-3">{subtitle}</p>
       <div className="space-y-1.5 max-h-[360px] overflow-y-auto">
         {units.map((unit, idx) => {
@@ -348,7 +339,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Strategic Exceptions</span>
         <span className="text-[10px] text-muted-foreground ml-auto">{flags.length} item{flags.length !== 1 ? 's' : ''}</span>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
+      <p className="text-xs text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
       <div className="space-y-1">
         {flags.map((flag, idx) => {
           const color = RISK_SIGNAL_COLORS[flag.riskSignal];

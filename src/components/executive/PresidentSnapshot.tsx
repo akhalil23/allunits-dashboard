@@ -12,9 +12,9 @@ import {
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie, Cell as PieCell,
-  BarChart, Bar, Legend,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoTip } from '@/components/ui/info-tip';
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { getRiskBandColor, RISK_BAND_COLORS } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_ORDER, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
@@ -29,18 +29,6 @@ interface Props {
   aggregation: UniversityAggregation;
 }
 
-function InfoTip({ text }: { text: string }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Info className="w-3 h-3 text-muted-foreground/60 cursor-help inline ml-1" />
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs"><p>{text}</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 function PillarTooltipLabel({ pillar }: { pillar: PillarId }) {
   return (
@@ -150,12 +138,13 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           <KPICard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={riskColor} tooltip="Risk Index (RI) represents the aggregated severity of risk signals across applicable strategic actions. Lower values indicate lower structural risk. Scale: 0 (no risk) to 3 (maximum risk)." />
           <KPICard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} tooltip="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." />
         </div>
+        <p className="text-[11px] text-muted-foreground italic mt-2 px-1">Budget context: Based on 2-Year Strategic Plan (2025–2027) planned allocations.</p>
       </section>
 
       {/* Section 2: Executive Highlights */}
       <section>
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Lightbulb className="w-3.5 h-3.5" /> Executive Highlights
+          <Lightbulb className="w-3.5 h-3.5" /> Executive highlights
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {highlights.map((h, i) => (
@@ -173,7 +162,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-foreground">{h.title}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{h.insight}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{h.insight}</p>
                 </div>
               </div>
             </motion.div>
@@ -188,7 +177,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Strategic Performance Matrix</span>
             <InfoTip text="Bubble chart combining delivery (Y), budget (X), and risk (color). Bubble size reflects the number of applicable initiatives." />
           </div>
-          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
+          <p className="text-xs text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
           <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
@@ -236,59 +225,6 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      {/* Section 4: Strategic Pillar Map (Risk vs Budget) */}
-      <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-elevated p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Strategic Quadrant</span>
-            <InfoTip text="Maps each pillar by budget utilization (X) and risk exposure (Y). Quadrants indicate strategic positioning." />
-          </div>
-          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs RI (Risk Index) — identifying financial pressure zones.</p>
-          <div className="h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 30, bottom: 25, left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'RI (Risk Index)', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <ReferenceLine x={60} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReferenceLine y={1.5} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReTooltip
-                  content={({ payload }) => {
-                    if (!payload?.[0]) return null;
-                    const d = payload[0].payload;
-                    return (
-                      <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
-                        <p className="font-semibold text-foreground">{d.fullLabel}</p>
-                        <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
-                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.y) }}>{d.y.toFixed(2)}</span></p>
-                      </div>
-                    );
-                  }}
-                />
-                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.riskIndex, label: p.label, fullLabel: p.fullLabel }))}>
-                  {pillarData.map((p, i) => {
-                    const q = p.budgetUtil >= 60 && p.riskIndex >= 1.5 ? '#EF4444' : p.budgetUtil < 60 && p.riskIndex >= 1.5 ? '#F97316' : p.budgetUtil >= 60 && p.riskIndex < 1.5 ? '#16A34A' : '#3B82F6';
-                    return <Cell key={i} fill={q} r={9} />;
-                  })}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
-            {[
-              { label: 'Low Risk / High Budget', desc: 'Efficient Deployment', color: '#16A34A' },
-              { label: 'High Risk / Low Budget', desc: 'Underfunded Risk', color: '#F97316' },
-              { label: 'High Risk / High Budget', desc: 'Financial Pressure', color: '#EF4444' },
-              { label: 'Low Risk / Low Budget', desc: 'Stable', color: '#3B82F6' },
-            ].map(q => (
-              <div key={q.desc} className="text-center p-2 rounded-lg border border-border/50" style={{ backgroundColor: `${q.color}08` }}>
-                <p className="text-[10px] font-semibold" style={{ color: q.color }}>{q.desc}</p>
-                <p className="text-[9px] text-muted-foreground">{q.label}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
 
       {/* Section 5: Pillar Performance Comparison Bars */}
       <section>
@@ -329,8 +265,8 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Signal Distribution</span>
             <InfoTip text="Distribution of all applicable items by risk signal category." />
           </div>
-          <p className="text-[11px] text-muted-foreground mb-3">
-            <strong>No Risk:</strong> Actions showing no risk indicators. <strong>Emerging:</strong> Early warning signals. <strong>Critical:</strong> Severe risk requiring intervention. <strong>Realized:</strong> Risk event has already occurred.
+           <p className="text-xs text-muted-foreground mb-3">
+             <strong>No Risk:</strong> Actions showing no risk indicators. <strong>Emerging:</strong> Early warning signals. <strong>Critical:</strong> Severe risk requiring intervention. <strong>Realized:</strong> Risk event has already occurred.
           </p>
           <div className="flex items-center gap-6 mt-4">
             <div className="w-36 h-36 sm:w-44 sm:h-44 shrink-0">
@@ -395,7 +331,7 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative flex items-start justify-between">
         <div>
-          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
             {label}
             <InfoTip text={tooltip} />
           </p>
