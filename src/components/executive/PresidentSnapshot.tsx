@@ -242,8 +242,14 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
           </div>
           <div className="space-y-5">
-            {pillarData.map(p => (
-              <div key={p.pillar} className="space-y-2">
+            {pillarData.map((p, idx) => (
+              <motion.div
+                key={p.pillar}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 + idx * 0.07, duration: 0.4, ease: 'easeOut' }}
+                className="space-y-2"
+              >
                 <div className="flex items-center justify-between">
                   <TooltipProvider>
                     <Tooltip>
@@ -256,11 +262,11 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                   <span className="text-xs text-muted-foreground">{p.applicable} applicable items</span>
                 </div>
                 <div className="space-y-2">
-                  <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" />
-                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} />
-                  <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} />
+                  <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" delay={0.3 + idx * 0.07} />
+                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} delay={0.35 + idx * 0.07} />
+                  <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} delay={0.4 + idx * 0.07} />
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -429,8 +435,8 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
   );
 }
 
-function BarRow({ label, value, max, suffix, color, format }: {
-  label: string; value: number; max: number; suffix: string; color: string; format?: (v: number) => string;
+function BarRow({ label, value, max, suffix, color, format, delay = 0 }: {
+  label: string; value: number; max: number; suffix: string; color: string; format?: (v: number) => string; delay?: number;
 }) {
   const pct = Math.min(100, (value / max) * 100);
   const display = format ? format(value) : `${value}${suffix}`;
@@ -438,9 +444,23 @@ function BarRow({ label, value, max, suffix, color, format }: {
     <div className="flex items-center gap-2.5">
       <span className="text-xs text-muted-foreground w-20 shrink-0">{label}</span>
       <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+        <motion.div
+          className="h-full rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ delay, duration: 0.6, ease: 'easeOut' }}
+          style={{ backgroundColor: color }}
+        />
       </div>
-      <span className="text-xs font-bold w-14 text-right" style={{ color }}>{display}</span>
+      <motion.span
+        className="text-xs font-bold w-14 text-right"
+        style={{ color }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: delay + 0.3 }}
+      >
+        {display}
+      </motion.span>
     </div>
   );
 }
