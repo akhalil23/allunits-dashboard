@@ -70,8 +70,8 @@
   }
 
   .dark {
-    --background: 220 10% 22%;
-    --background-alt: 218 10% 24%;
+    --background: 220 8% 26%;
+    --background-alt: 218 8% 28%;
     --foreground: 210 40% 98%;
 
     --card: 218 10% 26%;
