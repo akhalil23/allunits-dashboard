@@ -162,7 +162,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-foreground">{h.title}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{h.insight}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{h.insight}</p>
                 </div>
               </div>
             </motion.div>
