@@ -373,7 +373,11 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
 }
 
 function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
+  const INITIAL_COUNT = 10;
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? flags : flags.slice(0, INITIAL_COUNT);
+  const hasMore = flags.length > INITIAL_COUNT;
 
   if (flags.length === 0) {
     return (
@@ -393,12 +397,12 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
       </div>
       <p className="text-xs text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
       <div className="space-y-1">
-        {flags.map((flag, idx) => {
+        {visible.map((flag, idx) => {
           const color = RISK_SIGNAL_COLORS[flag.riskSignal];
           const isExpanded = expandedIdx === idx;
           const severity = flag.riskSignal.includes('Realized') ? 'Realized' : 'Critical';
           return (
-            <div key={`${flag.unitId}-${flag.sheetRow}`}>
+            <div key={`${flag.unitId}-${flag.sheetRow}-${idx}`}>
               <button
                 onClick={() => setExpandedIdx(isExpanded ? null : idx)}
                 className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left"
@@ -432,6 +436,18 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
           );
         })}
       </div>
+      {hasMore && (
+        <button
+          onClick={() => { setShowAll(!showAll); setExpandedIdx(null); }}
+          className="mt-3 pt-3 border-t border-border w-full flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          {showAll ? (
+            <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></>
+          ) : (
+            <>Show All {flags.length} Exceptions <ChevronDown className="w-3.5 h-3.5" /></>
+          )}
+        </button>
+      )}
     </motion.div>
   );
 }
