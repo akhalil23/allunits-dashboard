@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, AlertTriangle, Target, BarChart3 } from 'lucide-react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
-  ResponsiveContainer, Cell, BarChart, Bar, ReferenceLine,
+  ResponsiveContainer, Cell, BarChart, Bar, ReferenceLine, ReferenceArea,
   PieChart, Pie, Cell as PieCell,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -104,44 +104,69 @@ export default function BudgetIntelligence({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Section 3: Risk vs Budget Alignment Quadrant */}
+      {/* Section 3: Risk vs Budget Alignment */}
+      <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-1">
             <Target className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Alignment</span>
+            <InfoTip text="Quadrant chart mapping budget utilization (X) against Risk Index (Y). High utilization + high RI = budget pressure zone." />
           </div>
-          <div className="h-56">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Risk Index — colored by quadrant position.</p>
+          <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 15, bottom: 25, left: 10 }}>
+              <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                {/* Quadrant zone shading */}
+                <ReferenceArea x1={80} x2={100} y1={1.51} y2={3} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={80} y1={1.51} y2={3} fill="rgba(249,115,22,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={80} x2={100} y1={0} y2={1.51} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={80} y1={0} y2={1.51} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
                 <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'RI', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Risk Index', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <ReferenceLine x={80} stroke="hsl(var(--border))" strokeDasharray="4 4" />
                 <ReferenceLine y={1.51} stroke="hsl(var(--border))" strokeDasharray="4 4" />
                 <ReTooltip content={({ payload }) => {
                   if (!payload?.[0]) return null;
                   const d = payload[0].payload;
                   return (
-                    <div className="bg-card border border-border rounded-lg p-2.5 shadow-lg text-xs space-y-0.5">
+                    <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                       <p className="font-semibold text-foreground">{d.fullName}</p>
-                      <p>Budget Utilization: {d.x}%</p>
-                      <p>RI: <span style={{ color: getRiskBandColor(d.y) }}>{d.y.toFixed(2)}</span></p>
+                      <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
+                      <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.y) }}>RI {d.y.toFixed(2)}</span></p>
                     </div>
                   );
                 }} />
                 <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: r.riskIndex, name: r.label, fullName: PILLAR_FULL[r.pillar] }))}>
                   {allRows.map((r, i) => {
                     const q = r.utilization >= 0.80 && r.riskIndex >= 1.51 ? '#EF4444' : r.utilization < 0.80 && r.riskIndex >= 1.51 ? '#F97316' : r.utilization >= 0.80 ? '#16A34A' : '#3B82F6';
-                    return <Cell key={i} fill={q} r={9} />;
+                    return <Cell key={i} fill={q} fillOpacity={0.7} r={Math.max(8, 12)} />;
                   })}
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
           </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
+            {[
+              { label: 'High Budget / High Risk', desc: 'Budget Pressure', pos: 'top-right', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
+              { label: 'Low Budget / High Risk', desc: 'Underfunded Risk', pos: 'top-left', color: '#F97316', bg: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.25)' },
+              { label: 'High Budget / Low Risk', desc: 'Healthy Spend', pos: 'bottom-right', color: '#16A34A', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)' },
+              { label: 'Low Budget / Low Risk', desc: 'Balanced', pos: 'bottom-left', color: '#3B82F6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)' },
+            ].map(q => (
+              <div key={q.pos} className="text-center p-3 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
+                <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: q.color }} />
+                  <p className="text-xs font-semibold" style={{ color: q.color }}>{q.desc}</p>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground">{q.label}</p>
+              </div>
+            ))}
+          </div>
         </motion.div>
+      </section>
 
-        {/* Section 4: Allocation Distribution Donut */}
+      {/* Section 4: Allocation Distribution Donut */}
+      <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Allocation Distribution</span>
           <div className="flex items-center gap-5 mt-4">
@@ -173,40 +198,73 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             </div>
           </div>
         </motion.div>
-      </div>
+      </section>
 
       {/* Section 5: Budget Efficiency Scatter */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Budget Efficiency</span>
-            <InfoTip text="Scatter chart mapping budget utilization against completion rate for each pillar. Ideal position is top-right." />
+            <InfoTip text="Scatter chart mapping budget utilization against completion rate for each pillar. Ideal position is top-right (high completion, high utilization)." />
           </div>
-          <div className="h-64">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Completion — colored by quadrant position.</p>
+          <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 15, bottom: 25, left: 10 }}>
+              <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                {/* Quadrant zone shading */}
+                <ReferenceArea x1={50} x2={100} y1={50} y2={100} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={50} y1={50} y2={100} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={50} x2={100} y1={0} y2={50} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={50} y1={0} y2={50} fill="rgba(245,158,11,0.06)" fillOpacity={1} />
                 <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Completion %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <ReferenceLine x={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
                 <ReTooltip content={({ payload }) => {
                   if (!payload?.[0]) return null;
                   const d = payload[0].payload;
                   return (
-                    <div className="bg-card border border-border rounded-lg p-2.5 shadow-lg text-xs space-y-0.5">
+                    <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                       <p className="font-semibold text-foreground">{d.fullName}</p>
-                      <p>Budget Utilization: {d.x}%</p>
-                      <p>Completion: {d.y}%</p>
+                      <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
+                      <p className="text-muted-foreground">Completion: <span className="text-foreground font-medium">{d.y}%</span></p>
                     </div>
                   );
                 }} />
                 <Scatter data={allRows.map(r => {
                   const comp = pillarAgg.find(pa => pa.pillar === r.pillar)?.completionPct ?? 0;
-                  return { x: parseFloat((r.utilization*100).toFixed(1)), y: comp, name: r.label, fullName: PILLAR_FULL[r.pillar] };
+                  const isHighBudget = r.utilization >= 0.50;
+                  const isHighComp = comp >= 50;
+                  const color = isHighBudget && isHighComp ? '#16A34A' : !isHighBudget && isHighComp ? '#3B82F6' : isHighBudget && !isHighComp ? '#EF4444' : '#F59E0B';
+                  return { x: parseFloat((r.utilization*100).toFixed(1)), y: comp, name: r.label, fullName: PILLAR_FULL[r.pillar], qColor: color };
                 })}>
-                  {allRows.map((_, i) => <Cell key={i} fill="hsl(var(--primary))" r={9} />)}
+                  {allRows.map((r, i) => {
+                    const comp = pillarAgg.find(pa => pa.pillar === r.pillar)?.completionPct ?? 0;
+                    const isHighBudget = r.utilization >= 0.50;
+                    const isHighComp = comp >= 50;
+                    const color = isHighBudget && isHighComp ? '#16A34A' : !isHighBudget && isHighComp ? '#3B82F6' : isHighBudget && !isHighComp ? '#EF4444' : '#F59E0B';
+                    return <Cell key={i} fill={color} fillOpacity={0.7} r={Math.max(8, 12)} />;
+                  })}
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
+            {[
+              { label: 'High Budget / High Completion', desc: 'Strong Efficiency', pos: 'top-right', color: '#16A34A', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)' },
+              { label: 'Low Budget / High Completion', desc: 'Lean Execution', pos: 'top-left', color: '#3B82F6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)' },
+              { label: 'High Budget / Low Completion', desc: 'Spending Risk', pos: 'bottom-right', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
+              { label: 'Low Budget / Low Completion', desc: 'Underperforming', pos: 'bottom-left', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)' },
+            ].map(q => (
+              <div key={q.pos} className="text-center p-3 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
+                <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: q.color }} />
+                  <p className="text-xs font-semibold" style={{ color: q.color }}>{q.desc}</p>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground">{q.label}</p>
+              </div>
+            ))}
           </div>
         </motion.div>
       </section>
