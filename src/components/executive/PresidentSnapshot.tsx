@@ -225,59 +225,6 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      {/* Section 4: Strategic Pillar Map (Risk vs Budget) */}
-      <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-elevated p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Strategic Quadrant</span>
-            <InfoTip text="Maps each pillar by budget utilization (X) and risk exposure (Y). Quadrants indicate strategic positioning." />
-          </div>
-          <p className="text-[11px] text-muted-foreground mb-4">Budget Utilization vs RI (Risk Index) — identifying financial pressure zones.</p>
-          <div className="h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 30, bottom: 25, left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'RI (Risk Index)', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <ReferenceLine x={60} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReferenceLine y={1.5} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReTooltip
-                  content={({ payload }) => {
-                    if (!payload?.[0]) return null;
-                    const d = payload[0].payload;
-                    return (
-                      <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
-                        <p className="font-semibold text-foreground">{d.fullLabel}</p>
-                        <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
-                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.y) }}>{d.y.toFixed(2)}</span></p>
-                      </div>
-                    );
-                  }}
-                />
-                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.riskIndex, label: p.label, fullLabel: p.fullLabel }))}>
-                  {pillarData.map((p, i) => {
-                    const q = p.budgetUtil >= 60 && p.riskIndex >= 1.5 ? '#EF4444' : p.budgetUtil < 60 && p.riskIndex >= 1.5 ? '#F97316' : p.budgetUtil >= 60 && p.riskIndex < 1.5 ? '#16A34A' : '#3B82F6';
-                    return <Cell key={i} fill={q} r={9} />;
-                  })}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
-            {[
-              { label: 'Low Risk / High Budget', desc: 'Efficient Deployment', color: '#16A34A' },
-              { label: 'High Risk / Low Budget', desc: 'Underfunded Risk', color: '#F97316' },
-              { label: 'High Risk / High Budget', desc: 'Financial Pressure', color: '#EF4444' },
-              { label: 'Low Risk / Low Budget', desc: 'Stable', color: '#3B82F6' },
-            ].map(q => (
-              <div key={q.desc} className="text-center p-2 rounded-lg border border-border/50" style={{ backgroundColor: `${q.color}08` }}>
-                <p className="text-[10px] font-semibold" style={{ color: q.color }}>{q.desc}</p>
-                <p className="text-[9px] text-muted-foreground">{q.label}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
 
       {/* Section 5: Pillar Performance Comparison Bars */}
       <section>
