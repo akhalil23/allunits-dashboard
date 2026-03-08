@@ -261,7 +261,7 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
                 className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors"
               >
                 <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
-                <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayName(unit.unitId)}</span>
+                <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(unit.unitId)}</span>
                 <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
                   <motion.div
                     className="h-full rounded-full"
