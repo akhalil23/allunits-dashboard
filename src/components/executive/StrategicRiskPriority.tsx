@@ -312,12 +312,10 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
               <th className="text-left py-2.5 px-2 font-medium text-muted-foreground border-b border-border sticky left-0 bg-card z-10 min-w-[140px]">Unit</th>
               {pillars.map(p => (
                 <th key={p} className="text-center py-2.5 px-2 font-medium text-muted-foreground border-b border-border w-20">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger>
-                      <TooltipContent><p className="text-xs">{PILLAR_FULL[p]}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger>
+                    <TooltipContent><p className="text-xs">{PILLAR_FULL[p]}</p></TooltipContent>
+                  </Tooltip>
                 </th>
               ))}
             </tr>
