@@ -77,7 +77,7 @@ function buildRanges(pillars: PillarRange[]): { ranges: string[]; pillarMap: Pil
   const ranges: string[] = [];
   for (const p of pillars) {
     const escaped = `'${p.sheetName}'`;
-    ranges.push(`${escaped}!A4:${p.lastRow}`);
+    ranges.push(`${escaped}!${4}:${p.lastRow}`);
   }
   return { ranges, pillarMap: pillars };
 }
