@@ -173,19 +173,17 @@ function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border">
       {items.map(item => (
-        <TooltipProvider key={item.key}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 cursor-help">
-                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-muted-foreground">{item.label}</span>
-                <span className="text-xs font-bold text-foreground">{totals[item.key]}</span>
-                <span className="text-xs text-muted-foreground">({pct(totals[item.key])}%)</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip key={item.key}>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1.5 cursor-help">
+              <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-xs text-muted-foreground">{item.label}</span>
+              <span className="text-xs font-bold text-foreground">{totals[item.key]}</span>
+              <span className="text-xs text-muted-foreground">({pct(totals[item.key])}%)</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
+        </Tooltip>
       ))}
       <span className="text-xs text-muted-foreground ml-auto">Total: {grand} items</span>
     </div>
