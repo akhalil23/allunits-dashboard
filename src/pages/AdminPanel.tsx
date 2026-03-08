@@ -6,6 +6,7 @@ import { useUserRole } from '@/hooks/use-user-role';
 import { UNIT_CONFIGS, getUnitDisplayLabel } from '@/lib/unit-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X, Download, LogOut, Pencil } from 'lucide-react';
+import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X, Download, LogOut, Pencil, ExternalLink, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserInfo {
@@ -296,6 +297,33 @@ export default function AdminPanel() {
         </Button>
         <Shield className="w-6 h-6" />
         <h1 className="text-lg font-bold flex-1">Admin Panel — User Management</h1>
+
+        {/* Quick-nav dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="text-primary-foreground hover:bg-primary/80 gap-2 text-sm">
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="hidden sm:inline">View Dashboards</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64 max-h-[70vh] overflow-y-auto">
+            <DropdownMenuLabel>Executive</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => navigate('/university')} className="cursor-pointer">
+              <LayoutDashboard className="w-4 h-4 mr-2 text-primary" />
+              University Command Center
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Unit Dashboards</DropdownMenuLabel>
+            {Object.entries(UNIT_CONFIGS).map(([id, cfg]) => (
+              <DropdownMenuItem key={id} onClick={() => navigate(`/units/${id}`)} className="cursor-pointer">
+                <span className="font-mono text-xs text-muted-foreground w-16 shrink-0">{cfg.name}</span>
+                <span className="truncate">{cfg.fullName}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button
           variant="ghost"
           size="icon"
