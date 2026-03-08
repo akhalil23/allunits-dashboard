@@ -284,14 +284,12 @@ export default function SnapshotTracker({ aggregation }: Props) {
             <div className="space-y-2">
               {pillarMomentum.map(m => (
                 <div key={m.pillar} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/30">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs font-semibold text-foreground w-40 truncate cursor-help">{PILLAR_SHORT[m.pillar]}</span>
-                      </TooltipTrigger>
-                      <TooltipContent><p className="text-xs">{PILLAR_FULL[m.pillar]}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-xs font-semibold text-foreground w-40 truncate cursor-help">{PILLAR_SHORT[m.pillar]}</span>
+                    </TooltipTrigger>
+                    <TooltipContent><p className="text-xs">{PILLAR_FULL[m.pillar]}</p></TooltipContent>
+                  </Tooltip>
                   <div className="flex-1 flex items-center gap-6">
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-muted-foreground">Completion</span>
