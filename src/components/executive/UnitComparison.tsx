@@ -1,6 +1,6 @@
 /**
  * Tab 4 — Unit Comparison (Redesigned)
- * Unit selector, KPI cards, risk signal comparison, radar chart.
+ * Unit selector showing ALL 21 units, KPI cards, risk signal comparison, radar chart.
  */
 
 import { useState, useMemo } from 'react';
@@ -15,8 +15,9 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUnitByPillar, getRiskBandColor, RISK_BAND_COLORS, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
-import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
+import { getUnitDisplayLabel, getUnitDisplayName, UNIT_IDS } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
+import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
@@ -40,9 +41,13 @@ export default function UnitComparison({ aggregation }: Props) {
 
   const heatCells = useMemo(() => unitResults ? aggregateUnitByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
 
-  const availableUnits = useMemo(() =>
-    [...aggregation.unitAggregations].filter(u => u.applicableItems > 0).sort((a, b) => a.unitName.localeCompare(b.unitName)),
-    [aggregation]
+  // Show ALL 21 units sorted by display name — no filtering by applicableItems
+  const allUnits = useMemo(() =>
+    UNIT_IDS.map(id => ({
+      unitId: id,
+      label: getUnitDisplayLabel(id),
+    })).sort((a, b) => a.label.localeCompare(b.label)),
+    []
   );
 
   const unitA = unitAId ? aggregation.unitAggregations.find(u => u.unitId === unitAId) : null;
@@ -56,6 +61,7 @@ export default function UnitComparison({ aggregation }: Props) {
           <div className="flex items-center gap-2 mb-4">
             <GitCompareArrows className="w-4 h-4 text-primary" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Select Units to Compare</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">{allUnits.length} units available</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -66,8 +72,8 @@ export default function UnitComparison({ aggregation }: Props) {
                 className="w-full px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="">Select a unit…</option>
-                {availableUnits.map(u => (
-                  <option key={u.unitId} value={u.unitId} disabled={u.unitId === unitBId}>{getUnitDisplayLabel(u.unitId)}</option>
+                {allUnits.map(u => (
+                  <option key={u.unitId} value={u.unitId} disabled={u.unitId === unitBId}>{u.label}</option>
                 ))}
               </select>
             </div>
@@ -79,8 +85,8 @@ export default function UnitComparison({ aggregation }: Props) {
                 className="w-full px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="">Select a unit…</option>
-                {availableUnits.map(u => (
-                  <option key={u.unitId} value={u.unitId} disabled={u.unitId === unitAId}>{getUnitDisplayLabel(u.unitId)}</option>
+                {allUnits.map(u => (
+                  <option key={u.unitId} value={u.unitId} disabled={u.unitId === unitAId}>{u.label}</option>
                 ))}
               </select>
             </div>
@@ -94,9 +100,9 @@ export default function UnitComparison({ aggregation }: Props) {
           <section>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <CompareKPI label="Completion" a={`${unitA.completionPct}%`} b={`${unitB.completionPct}%`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.completionPct > unitB.completionPct} betterB={unitB.completionPct > unitA.completionPct} />
-              <CompareKPI label="RI (Risk Index)" a={unitA.riskIndex.toFixed(2)} b={unitB.riskIndex.toFixed(2)} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.riskIndex < unitB.riskIndex} betterB={unitB.riskIndex < unitA.riskIndex} colorA={getRiskBandColor(unitA.riskIndex)} colorB={getRiskBandColor(unitB.riskIndex)} />
+              <CompareKPI label="RI (Risk Index)" a={`RI ${unitA.riskIndex.toFixed(2)}`} b={`RI ${unitB.riskIndex.toFixed(2)}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.riskIndex < unitB.riskIndex} betterB={unitB.riskIndex < unitA.riskIndex} colorA={getRiskBandColor(unitA.riskIndex)} colorB={getRiskBandColor(unitB.riskIndex)} />
               <CompareKPI label="Budget Util" a="—" b="—" unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} />
-              <CompareKPI label="Applicable" a={`${unitA.applicableItems}`} b={`${unitB.applicableItems}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} />
+              <CompareKPI label="Applicable Items" a={`${unitA.applicableItems}`} b={`${unitB.applicableItems}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} />
             </div>
           </section>
 
@@ -175,7 +181,7 @@ function RiskSignalBar({ label, unit }: { label: string; unit: UnitAggregation; 
     <div>
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-xs font-medium text-foreground">{label}</span>
-        <span className="text-[10px] text-muted-foreground">{unit.applicableItems} items</span>
+        <span className="text-[10px] text-muted-foreground">{unit.applicableItems} applicable items</span>
       </div>
       <div className="h-4 rounded-full overflow-hidden flex">
         {unit.riskCounts.noRisk > 0 && <div style={{ width: `${(unit.riskCounts.noRisk / denom) * 100}%`, backgroundColor: RISK_SIGNAL_COLORS['No Risk (On Track)'] }} />}
@@ -198,7 +204,7 @@ function RadarComparison({ unitA, unitB, heatCells }: { unitA: UnitAggregation; 
   const radarData = pillars.map(p => {
     const cellA = heatCells.find(c => c.unitId === unitA.unitId && c.pillar === p);
     const cellB = heatCells.find(c => c.unitId === unitB.unitId && c.pillar === p);
-    return { pillar: PILLAR_LABELS[p], [unitA.unitId]: cellA?.completionPct ?? 0, [unitB.unitId]: cellB?.completionPct ?? 0 };
+    return { pillar: PILLAR_LABELS[p], fullName: PILLAR_FULL[p], [unitA.unitId]: cellA?.completionPct ?? 0, [unitB.unitId]: cellB?.completionPct ?? 0 };
   });
 
   return (
@@ -211,7 +217,7 @@ function RadarComparison({ unitA, unitB, heatCells }: { unitA: UnitAggregation; 
             <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 8 }} />
             <Radar name={getUnitDisplayName(unitA.unitId)} dataKey={unitA.unitId} stroke={RISK_BAND_COLORS.green} fill={RISK_BAND_COLORS.green} fillOpacity={0.15} strokeWidth={2} />
             <Radar name={getUnitDisplayName(unitB.unitId)} dataKey={unitB.unitId} stroke={RISK_BAND_COLORS.amber} fill={RISK_BAND_COLORS.amber} fillOpacity={0.15} strokeWidth={2} />
-            <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number) => `${v}%`} />
+            <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number) => `Completion: ${v}%`} />
           </RadarChart>
         </ResponsiveContainer>
       </div>

@@ -20,6 +20,7 @@ import {
 import { RISK_SIGNAL_COLORS, RISK_SIGNAL_ORDER } from '@/lib/risk-signals';
 import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
+import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
@@ -39,7 +40,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults } = useUniversityData();
 
-  const flags = useMemo(() => unitResults ? getExceptionFlags(unitResults, viewType, term, academicYear, 20) : [], [unitResults, viewType, term, academicYear]);
+  const flags = useMemo(() => unitResults ? getExceptionFlags(unitResults, viewType, term, academicYear, 30) : [], [unitResults, viewType, term, academicYear]);
   const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
   const heatCells = useMemo(() => unitResults ? aggregateUnitByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
   const unitsByRisk = useMemo(() => [...aggregation.unitAggregations].filter(u => u.applicableItems > 0).sort((a, b) => b.riskIndex - a.riskIndex), [aggregation]);
@@ -56,7 +57,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
           {/* Risk Index by Pillar */}
           <div className="card-elevated p-4 sm:p-5">
             <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-              RI by Pillar <InfoTip text="Risk Index (RI) per strategic pillar. Weighted from risk signal counts." />
+              RI by Pillar <InfoTip text="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk." />
             </span>
             <div className="space-y-2.5 mt-4">
               {pillarAgg.map(p => {
@@ -64,11 +65,18 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                 const pct = Math.min(100, (p.riskIndex / 3) * 100);
                 return (
                   <div key={p.pillar} className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground w-14">{PILLAR_LABELS[p.pillar]}</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-xs font-semibold text-foreground w-14 cursor-help">{PILLAR_LABELS[p.pillar]}</span>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                       <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
                     </div>
-                    <span className="text-xs font-bold w-10 text-right" style={{ color }}>{p.riskIndex.toFixed(2)}</span>
+                    <span className="text-xs font-bold w-10 text-right" style={{ color }}>RI {p.riskIndex.toFixed(2)}</span>
                   </div>
                 );
               })}
@@ -82,7 +90,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={pillarAgg.map(p => ({ name: PILLAR_LABELS[p.pillar], noRisk: p.riskCounts.noRisk, emerging: p.riskCounts.emerging, critical: p.riskCounts.critical, realized: p.riskCounts.realized }))} layout="vertical" barSize={18}>
                   <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" width={55} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 10 }} />
                   <ReTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number, n: string) => { const m: Record<string,string> = { noRisk:'No Risk', emerging:'Emerging', critical:'Critical', realized:'Realized' }; return [v, m[n]||n]; }} />
                   <Bar dataKey="noRisk" stackId="a" fill={RISK_SIGNAL_COLORS['No Risk (On Track)']} />
                   <Bar dataKey="emerging" stackId="a" fill={RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)']} />
@@ -107,7 +115,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
           <Target className="w-3.5 h-3.5" /> Strategic Priority Signals
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RankingBars title="Units Ranked by Risk Index" subtitle="Highest risk first" units={unitsByRisk} metricKey="riskIndex" />
+          <RankingBars title="Units Ranked by RI (Risk Index)" subtitle="Highest risk first" units={unitsByRisk} metricKey="riskIndex" />
           <RankingBars title="Units Ranked by Completion" subtitle="Lowest completion first" units={unitsByCompletion} metricKey="completionPct" />
         </div>
       </section>
@@ -181,7 +189,9 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
               <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden shrink-0">
                 <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} />
               </div>
-              <span className="text-[11px] font-bold w-12 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>{isRisk ? value.toFixed(2) : `${value}%`}</span>
+              <span className="text-[11px] font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
+                {isRisk ? `RI ${value.toFixed(2)}` : `${value}%`}
+              </span>
             </div>
           );
         })}
@@ -205,7 +215,16 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
           <thead>
             <tr>
               <th className="text-left py-2 px-2 font-medium text-muted-foreground border-b border-border sticky left-0 bg-card z-10 min-w-[140px]">Unit</th>
-              {pillars.map(p => (<th key={p} className="text-center py-2 px-2 font-medium text-muted-foreground border-b border-border w-20">{PILLAR_LABELS[p]}</th>))}
+              {pillars.map(p => (
+                <th key={p} className="text-center py-2 px-2 font-medium text-muted-foreground border-b border-border w-20">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger>
+                      <TooltipContent><p className="text-xs">{PILLAR_FULL[p]}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -223,14 +242,14 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="rounded-md py-1 px-1 mx-auto w-14 cursor-default" style={{ backgroundColor: `${color}${Math.round(opacity * 255).toString(16).padStart(2, '0')}` }}>
-                              <span className="text-xs font-bold" style={{ color }}>{cell.riskIndex.toFixed(2)}</span>
+                              <span className="text-xs font-bold" style={{ color }}>RI {cell.riskIndex.toFixed(2)}</span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="text-xs space-y-1">
-                            <p className="font-semibold">{getUnitDisplayLabel(unit.unitId)} — {PILLAR_LABELS[pillar]}</p>
+                            <p className="font-semibold">{getUnitDisplayLabel(unit.unitId)} — {PILLAR_FULL[pillar]}</p>
                             <p>RI: <span className="font-bold" style={{ color }}>{cell.riskIndex.toFixed(2)}</span></p>
                             <p>Completion: {cell.completionPct}%</p>
-                            <p>Applicable: {cell.applicableItems}</p>
+                            <p>Applicable Items: {cell.applicableItems}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -287,9 +306,9 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
               >
                 {isExpanded ? <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}>{severity}</span>
-                <span className="text-xs font-medium text-foreground truncate flex-1">{getUnitDisplayName(flag.unitId)}</span>
-                <span className="text-[10px] text-muted-foreground shrink-0">{PILLAR_LABELS[flag.pillar]}</span>
-                <span className="text-xs font-bold text-foreground shrink-0">{flag.completion}%</span>
+                <span className="text-xs font-medium text-foreground truncate flex-1">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
+                <span className="text-[10px] text-muted-foreground shrink-0">Completion: {flag.completion}%</span>
+                <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskBandColor(flag.riskWeight) }}>RI {flag.riskWeight.toFixed(1)}</span>
               </button>
               <AnimatePresence>
                 {isExpanded && (
@@ -300,10 +319,12 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
                     className="overflow-hidden"
                   >
                     <div className="ml-8 mr-3 mb-2 p-3 rounded-lg bg-muted/20 border border-border/50 space-y-1.5">
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Action Step:</span> {flag.actionStep}</p>
+                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Strategic Action:</span> {flag.actionStep}</p>
                       <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Unit:</span> {getUnitDisplayLabel(flag.unitId)}</p>
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Status:</span> {flag.status}</p>
-                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Pillar:</span> {PILLAR_LABELS[flag.pillar]}</p>
+                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Execution Status:</span> {flag.status}</p>
+                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Pillar:</span> {PILLAR_FULL[flag.pillar]}</p>
+                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Risk Signal:</span> {flag.riskSignal}</p>
+                      <p className="text-[11px] text-muted-foreground"><span className="font-medium text-foreground">Completion:</span> {flag.completion}%</p>
                     </div>
                   </motion.div>
                 )}
