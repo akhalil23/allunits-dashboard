@@ -14,16 +14,15 @@ import StrategicRiskPriority from '@/components/executive/StrategicRiskPriority'
 import BudgetIntelligence from '@/components/executive/BudgetIntelligence';
 import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
-import SnapshotTracker from '@/components/executive/SnapshotTracker';
 import DashboardGuide from '@/components/executive/DashboardGuide';
-import StrategicTrendsPanel from '@/components/executive/StrategicTrendsPanel';
+import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
 import FilterBar from '@/components/dashboard/FilterBar';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
-  const [trendsOpen, setTrendsOpen] = useState(false);
+  const [trackerOpen, setTrackerOpen] = useState(false);
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
   const queryClient = useQueryClient();
@@ -74,7 +73,6 @@ export default function ExecutiveDashboard() {
     'snapshot': 'Executive Snapshot',
     'risk-priority': 'Strategic Risk & Priority',
     'budget': 'Budget Intelligence',
-    'tracker': 'Strategic Snapshot Tracker',
     'comparison': 'Unit Comparison',
     'ai-insights': 'AI Executive Insights',
     'guide': 'Dashboard Guide',
@@ -90,7 +88,7 @@ export default function ExecutiveDashboard() {
           onRefresh={handleRefresh}
           isRefreshing={isRefetching}
           observedAt={observedAt}
-          onOpenTrends={() => setTrendsOpen(true)}
+          onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         {activeTab !== 'budget' && activeTab !== 'guide' && <FilterBar />}
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -109,7 +107,6 @@ export default function ExecutiveDashboard() {
             {activeTab === 'snapshot' && <PresidentSnapshot aggregation={aggregation} />}
             {activeTab === 'risk-priority' && <StrategicRiskPriority aggregation={aggregation} />}
             {activeTab === 'budget' && <BudgetIntelligence aggregation={aggregation} />}
-            {activeTab === 'tracker' && <SnapshotTracker aggregation={aggregation} />}
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
             {activeTab === 'guide' && <DashboardGuide />}
@@ -117,9 +114,9 @@ export default function ExecutiveDashboard() {
         </main>
       </div>
 
-      <StrategicTrendsPanel
-        open={trendsOpen}
-        onClose={() => setTrendsOpen(false)}
+      <SnapshotTrackerPanel
+        open={trackerOpen}
+        onClose={() => setTrackerOpen(false)}
         aggregation={aggregation}
       />
     </div>
