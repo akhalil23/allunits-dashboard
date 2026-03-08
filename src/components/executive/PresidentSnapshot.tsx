@@ -427,18 +427,20 @@ function KPICard({ label, value, icon: Icon, color }: {
         style={{ backgroundColor: color }}
       />
       
-      <div className="relative p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
-              {label.split(' — ')[0]}
-            </p>
-            {label.includes(' — ') && (
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">
-                {label.split(' — ')[1]}
+      <div className="relative p-5 sm:p-6 flex flex-col h-full">
+        <div className="flex items-start justify-between gap-2 flex-1">
+          <div className="flex-1 min-w-0 flex flex-col">
+            <div className="h-[32px] sm:h-[36px] flex flex-col justify-start">
+              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
+                {label.split(' — ')[0]}
               </p>
-            )}
-            <p className="text-xl sm:text-2xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>
+              {label.includes(' — ') && (
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">
+                  {label.split(' — ')[1]}
+                </p>
+              )}
+            </div>
+            <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight" style={{ color }}>
               {value}
             </p>
           </div>
