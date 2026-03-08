@@ -182,18 +182,16 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             </div>
             <div className="flex-1 space-y-2.5 min-w-0">
               {allRows.map(r => (
-                <TooltipProvider key={r.pillar}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2.5 cursor-help">
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_DONUT_COLORS[r.pillar] }} />
-                        <span className="text-xs text-foreground flex-1">{PILLAR_SHORT[r.pillar]}</span>
-                        <span className="text-xs font-bold text-foreground">{formatCurrency(r.allocation)}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent><p className="text-xs">{PILLAR_FULL[r.pillar]}</p></TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip key={r.pillar}>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2.5 cursor-help">
+                      <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_DONUT_COLORS[r.pillar] }} />
+                      <span className="text-xs text-foreground flex-1">{PILLAR_SHORT[r.pillar]}</span>
+                      <span className="text-xs font-bold text-foreground">{formatCurrency(r.allocation)}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">{PILLAR_FULL[r.pillar]}</p></TooltipContent>
+                </Tooltip>
               ))}
             </div>
           </div>
