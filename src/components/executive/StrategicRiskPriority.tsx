@@ -238,43 +238,63 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
 }
 
 function RankingBars({ title, subtitle, units, metricKey }: { title: string; subtitle: string; units: UnitAggregation[]; metricKey: 'riskIndex' | 'completionPct' }) {
+  const INITIAL_COUNT = 10;
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? units : units.slice(0, INITIAL_COUNT);
+  const hasMore = units.length > INITIAL_COUNT;
+
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
       <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
       <p className="text-xs text-muted-foreground mb-4 mt-0.5">{subtitle}</p>
-      <div className="space-y-1.5 max-h-[360px] overflow-y-auto">
-        {units.map((unit, idx) => {
-          const value = unit[metricKey];
-          const isRisk = metricKey === 'riskIndex';
-          const color = isRisk ? getRiskBandColor(value) : 'hsl(var(--primary))';
-          const maxVal = isRisk ? 3 : 100;
-          const pct = Math.min(100, (value / maxVal) * 100);
-          return (
-            <motion.div
-              key={unit.unitId}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.05 + idx * 0.02 }}
-              className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors"
-            >
-              <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
-              <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayName(unit.unitId)}</span>
-              <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
-                <motion.div
-                  className="h-full rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ delay: 0.1 + idx * 0.02, duration: 0.5, ease: 'easeOut' }}
-                  style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }}
-                />
-              </div>
-              <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
-                {isRisk ? `RI ${value.toFixed(2)}` : `${value}%`}
-              </span>
-            </motion.div>
-          );
-        })}
+      <div className="space-y-1.5">
+        <AnimatePresence initial={false}>
+          {visible.map((unit, idx) => {
+            const value = unit[metricKey];
+            const isRisk = metricKey === 'riskIndex';
+            const color = isRisk ? getRiskBandColor(value) : 'hsl(var(--primary))';
+            const maxVal = isRisk ? 3 : 100;
+            const pct = Math.min(100, (value / maxVal) * 100);
+            return (
+              <motion.div
+                key={unit.unitId}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ delay: 0.05 + idx * 0.02 }}
+                className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors"
+              >
+                <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
+                <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayName(unit.unitId)}</span>
+                <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
+                  <motion.div
+                    className="h-full rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ delay: 0.1 + idx * 0.02, duration: 0.5, ease: 'easeOut' }}
+                    style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }}
+                  />
+                </div>
+                <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
+                  {isRisk ? `RI ${value.toFixed(2)}` : `${value}%`}
+                </span>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="mt-3 pt-3 border-t border-border w-full flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          {showAll ? (
+            <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></>
+          ) : (
+            <>Show All {units.length} Units <ChevronDown className="w-3.5 h-3.5" /></>
+          )}
+        </button>
+      )}
     </motion.div>
   );
 }
