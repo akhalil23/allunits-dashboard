@@ -152,12 +152,15 @@ export default function UnitComparison({ aggregation }: Props) {
   );
 }
 
-function CompareKPI({ label, a, b, unitA, unitB, betterA, betterB, colorA, colorB }: {
-  label: string; a: string; b: string; unitA: string; unitB: string; betterA?: boolean; betterB?: boolean; colorA?: string; colorB?: string;
+function CompareKPI({ label, a, b, unitA, unitB, betterA, betterB, colorA, colorB, tooltip }: {
+  label: string; a: string; b: string; unitA: string; unitB: string; betterA?: boolean; betterB?: boolean; colorA?: string; colorB?: string; tooltip?: string;
 }) {
   return (
     <div className="card-elevated p-4">
-      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-3">{label}</p>
+      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center">
+        {label}
+        {tooltip && <InfoTip text={tooltip} />}
+      </p>
       <div className="flex items-end justify-between gap-2">
         <div className="text-center flex-1">
           <p className="text-lg font-display font-bold" style={{ color: colorA || (betterA ? '#16A34A' : undefined) }}>{a}</p>
