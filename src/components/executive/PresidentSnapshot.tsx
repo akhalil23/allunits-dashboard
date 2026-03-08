@@ -242,8 +242,14 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
           </div>
           <div className="space-y-5">
-            {pillarData.map(p => (
-              <div key={p.pillar} className="space-y-2">
+            {pillarData.map((p, idx) => (
+              <motion.div
+                key={p.pillar}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 + idx * 0.07, duration: 0.4, ease: 'easeOut' }}
+                className="space-y-2"
+              >
                 <div className="flex items-center justify-between">
                   <TooltipProvider>
                     <Tooltip>
@@ -256,11 +262,11 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                   <span className="text-xs text-muted-foreground">{p.applicable} applicable items</span>
                 </div>
                 <div className="space-y-2">
-                  <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" />
-                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} />
-                  <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} />
+                  <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" delay={0.3 + idx * 0.07} />
+                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} delay={0.35 + idx * 0.07} />
+                  <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} delay={0.4 + idx * 0.07} />
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
