@@ -5,7 +5,7 @@
 
 import { useTheme } from '@/hooks/use-theme';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, RefreshCw, LogOut, TrendingUp } from 'lucide-react';
+import { Moon, Sun, RefreshCw, LogOut, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
