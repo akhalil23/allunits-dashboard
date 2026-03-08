@@ -84,10 +84,10 @@
     --primary-foreground: 0 0% 100%;
 
     --secondary: 215 8% 34%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary-foreground: 0 0% 98%;
 
     --muted: 215 6% 32%;
-    --muted-foreground: 215 10% 56%;
+    --muted-foreground: 215 6% 75%;
 
     --accent: 215 8% 34%;
     --accent-foreground: 210 40% 96%;
