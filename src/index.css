@@ -191,6 +191,11 @@
     @apply bg-card rounded-xl border border-border shadow-sm;
   }
 
+  .dark .card-elevated {
+    box-shadow: 0 1px 3px 0 hsla(0, 0%, 0%, 0.3), 0 1px 2px -1px hsla(0, 0%, 0%, 0.3);
+    border-color: hsla(215, 20%, 28%, 0.6);
+  }
+
   .glow-left {
     box-shadow: -3px 0 12px 0 hsla(161, 100%, 30%, 0.4);
   }
