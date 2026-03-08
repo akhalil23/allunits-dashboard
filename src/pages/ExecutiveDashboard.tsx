@@ -88,7 +88,7 @@ export default function ExecutiveDashboard() {
           onRefresh={handleRefresh}
           isRefreshing={isRefetching}
           observedAt={observedAt}
-          onOpenTrends={() => setTrendsOpen(true)}
+          onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         {activeTab !== 'budget' && activeTab !== 'guide' && <FilterBar />}
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
