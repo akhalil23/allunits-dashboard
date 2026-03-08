@@ -211,13 +211,16 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
             {[
-              { label: 'High Delivery / High Budget', desc: 'Strong Execution', pos: 'top-right' },
-              { label: 'High Delivery / Low Budget', desc: 'Efficient Execution', pos: 'top-left' },
-              { label: 'Low Delivery / High Budget', desc: 'Execution Risk', pos: 'bottom-right' },
-              { label: 'Low Delivery / Low Budget', desc: 'Underperforming', pos: 'bottom-left' },
+              { label: 'High Delivery / High Budget', desc: 'Strong Execution', pos: 'top-right', color: '#16A34A', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)' },
+              { label: 'High Delivery / Low Budget', desc: 'Efficient Execution', pos: 'top-left', color: '#3B82F6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)' },
+              { label: 'Low Delivery / High Budget', desc: 'Execution Risk', pos: 'bottom-right', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
+              { label: 'Low Delivery / Low Budget', desc: 'Underperforming', pos: 'bottom-left', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)' },
             ].map(q => (
-              <div key={q.pos} className="text-center p-2 rounded-lg bg-muted/30 border border-border/50">
-                <p className="text-[10px] font-semibold text-foreground">{q.desc}</p>
+              <div key={q.pos} className="text-center p-2.5 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
+                <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: q.color }} />
+                  <p className="text-[11px] font-semibold" style={{ color: q.color }}>{q.desc}</p>
+                </div>
                 <p className="text-[9px] text-muted-foreground">{q.label}</p>
               </div>
             ))}
