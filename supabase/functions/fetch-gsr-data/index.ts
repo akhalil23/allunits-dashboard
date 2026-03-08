@@ -72,12 +72,20 @@ const TERM_START_COL = 75; // Column BX (0-indexed)
 const TERM_TOTAL_COLS = 28; // 4 windows × 7 fields
 
 function buildRanges(pillars: PillarRange[]): { ranges: string[]; pillarMap: PillarRange[] } {
-  // Fetch one full-row range per pillar instead of two separate column ranges.
-  // This avoids 400 errors when a sheet has fewer columns than expected (e.g. < 76).
   const ranges: string[] = [];
   for (const p of pillars) {
     const escaped = `'${p.sheetName}'`;
-    ranges.push(`${escaped}!A4:${p.lastRow}`);
+    ranges.push(`${escaped}!A4:G${p.lastRow}`);
+    ranges.push(`${escaped}!BX4:CY${p.lastRow}`);
+  }
+  return { ranges, pillarMap: pillars };
+}
+
+function buildCoreOnlyRanges(pillars: PillarRange[]): { ranges: string[]; pillarMap: PillarRange[] } {
+  const ranges: string[] = [];
+  for (const p of pillars) {
+    const escaped = `'${p.sheetName}'`;
+    ranges.push(`${escaped}!A4:G${p.lastRow}`);
   }
   return { ranges, pillarMap: pillars };
 }
@@ -470,13 +478,30 @@ serve(async (req) => {
     const rangeParams = RANGES.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangeParams}`;
 
-    const sheetsResp = await fetch(url, {
+    let sheetsResp = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
+    // If BX:CY range exceeds grid limits, retry with core-only ranges
+    let coreOnly = false;
     if (!sheetsResp.ok) {
       const errText = await sheetsResp.text();
-      throw new Error(`Google Sheets API error: ${sheetsResp.status} ${errText}`);
+      if (sheetsResp.status === 400 && errText.includes('exceeds grid limits')) {
+        console.warn(`Unit ${requestedUnitId}: BX:CY exceeds grid limits, retrying with core-only ranges`);
+        const { ranges: coreRanges } = buildCoreOnlyRanges(pillarConfig);
+        const coreParams = coreRanges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
+        const coreUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${coreParams}`;
+        sheetsResp = await fetch(coreUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!sheetsResp.ok) {
+          const coreErrText = await sheetsResp.text();
+          throw new Error(`Google Sheets API error: ${sheetsResp.status} ${coreErrText}`);
+        }
+        coreOnly = true;
+      } else {
+        throw new Error(`Google Sheets API error: ${sheetsResp.status} ${errText}`);
+      }
     }
 
     const sheetsData = await sheetsResp.json();
@@ -495,31 +520,41 @@ serve(async (req) => {
     };
 
     for (let p = 0; p < pillarMap.length; p++) {
-      const fullRange = valueRanges[p];
-
-      if (!fullRange?.values) {
-        missingBlocks++;
-        console.error(`Missing data for Pillar ${pillarMap[p].id} (sheet: "${pillarMap[p].sheetName}") in unit ${requestedUnitId}`);
-        continue;
-      }
-
-      // Split full rows into core (cols 0-6) and term (cols 75+) data
-      const fullRows = fullRange.values.slice(1); // skip header row
-      const coreRows = fullRows.map((row: any[]) => row.slice(0, 7));
-      const termRows = fullRows.map((row: any[]) => {
-        if (row.length > TERM_START_COL) {
-          return row.slice(TERM_START_COL, TERM_START_COL + TERM_TOTAL_COLS);
+      if (coreOnly) {
+        // Core-only mode: one range per pillar, no term data
+        const coreRange = valueRanges[p];
+        if (!coreRange?.values) {
+          missingBlocks++;
+          console.error(`Missing data for Pillar ${pillarMap[p].id} in unit ${requestedUnitId}`);
+          continue;
         }
-        return []; // Sheet doesn't have enough columns — treat term data as empty
-      });
-
-      const { items, invalidStatuses, invalidCompletions } = processPillarData(
-        pillarMap[p].id, coreRows, termRows, anomalies
-      );
-
-      allItems = allItems.concat(items);
-      totalInvalidStatuses += invalidStatuses;
-      totalInvalidCompletions += invalidCompletions;
+        const coreRows = coreRange.values.slice(1);
+        const termRows = coreRows.map(() => [] as any[]);
+        const { items, invalidStatuses, invalidCompletions } = processPillarData(
+          pillarMap[p].id, coreRows, termRows, anomalies
+        );
+        allItems = allItems.concat(items);
+        totalInvalidStatuses += invalidStatuses;
+        totalInvalidCompletions += invalidCompletions;
+      } else {
+        // Normal mode: two ranges per pillar (core + term)
+        const coreRange = valueRanges[p * 2];
+        const termRange = valueRanges[p * 2 + 1];
+        if (!coreRange?.values || !termRange?.values) {
+          missingBlocks++;
+          console.error(`Missing data for Pillar ${pillarMap[p].id} in unit ${requestedUnitId}`);
+          continue;
+        }
+        const coreRows = coreRange.values.slice(1);
+        const termRows = termRange.values.slice(1);
+        const { items, invalidStatuses, invalidCompletions } = processPillarData(
+          pillarMap[p].id, coreRows, termRows, anomalies
+        );
+        allItems = allItems.concat(items);
+        totalInvalidStatuses += invalidStatuses;
+        totalInvalidCompletions += invalidCompletions;
+      }
+    }
     }
 
     if (anomalies.unexpectedStatuses.length > 0) {
