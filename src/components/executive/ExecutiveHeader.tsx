@@ -66,16 +66,16 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
-            {/* Explore Strategic Trends Button */}
-            {onOpenTrends && !isMobile && (
+            {/* Strategic Snapshot Tracker Button */}
+            {onOpenSnapshotTracker && !isMobile && (
               <motion.button
-                onClick={onOpenTrends}
+                onClick={onOpenSnapshotTracker}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.12] text-white/90 hover:bg-white/20 hover:text-white transition-colors duration-200 border border-white/10 text-[11px] font-semibold"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Explore Strategic Trends</span>
+                <Camera className="w-3.5 h-3.5" />
+                <span>Strategic Snapshot Tracker</span>
               </motion.button>
             )}
 

@@ -114,9 +114,9 @@ export default function ExecutiveDashboard() {
         </main>
       </div>
 
-      <StrategicTrendsPanel
-        open={trendsOpen}
-        onClose={() => setTrendsOpen(false)}
+      <SnapshotTrackerPanel
+        open={trackerOpen}
+        onClose={() => setTrackerOpen(false)}
         aggregation={aggregation}
       />
     </div>

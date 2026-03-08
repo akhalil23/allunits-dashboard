@@ -25,7 +25,6 @@ const tabs: { id: ExecutiveTab; label: string; icon: React.ElementType }[] = [
   { id: 'snapshot', label: 'Executive Snapshot', icon: LayoutDashboard },
   { id: 'risk-priority', label: 'Strategic Risk & Priority', icon: ShieldAlert },
   { id: 'budget', label: 'Budget Intelligence', icon: DollarSign },
-  { id: 'tracker', label: 'Snapshot Tracker', icon: Camera },
   { id: 'comparison', label: 'Unit Comparison', icon: GitCompare },
   { id: 'ai-insights', label: 'AI Executive Insights', icon: Brain },
   { id: 'guide', label: 'Dashboard Guide', icon: BookOpen },
