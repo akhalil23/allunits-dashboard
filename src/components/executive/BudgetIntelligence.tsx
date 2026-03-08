@@ -104,8 +104,8 @@ export default function BudgetIntelligence({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Section 3: Risk vs Budget Alignment Quadrant */}
+      {/* Section 3: Risk vs Budget Alignment */}
+      <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
             <Target className="w-4 h-4 text-muted-foreground" />
