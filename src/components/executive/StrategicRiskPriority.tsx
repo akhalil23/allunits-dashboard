@@ -35,8 +35,8 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   const flags = useMemo(() => unitResults ? getExceptionFlags(unitResults, viewType, term, academicYear, 30) : [], [unitResults, viewType, term, academicYear]);
   const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
   const heatCells = useMemo(() => unitResults ? aggregateUnitByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
-  const unitsByRisk = useMemo(() => [...aggregation.unitAggregations].filter(u => u.applicableItems > 0).sort((a, b) => b.riskIndex - a.riskIndex), [aggregation]);
-  const unitsByCompletion = useMemo(() => [...aggregation.unitAggregations].filter(u => u.applicableItems > 0).sort((a, b) => a.completionPct - b.completionPct), [aggregation]);
+  const unitsByRisk = useMemo(() => [...aggregation.unitAggregations].sort((a, b) => b.riskIndex - a.riskIndex), [aggregation]);
+  const unitsByCompletion = useMemo(() => [...aggregation.unitAggregations].sort((a, b) => a.completionPct - b.completionPct), [aggregation]);
 
   return (
     <div className="space-y-8">
