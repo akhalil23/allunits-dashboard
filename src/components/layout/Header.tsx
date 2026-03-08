@@ -5,7 +5,7 @@ import { useUserRole } from '@/hooks/use-user-role';
 import { getDataIntegrityLevel } from '@/lib/intelligence';
 import type { IntegrityAuditResult } from '@/lib/intelligence';
 import type { DataQuality } from '@/lib/types';
-import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet, LogOut, ChevronDown } from 'lucide-react';
+import { Moon, Sun, RefreshCw, Shield, Download, FileText, FileSpreadsheet, LogOut, ChevronDown, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
@@ -163,6 +163,25 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
+            {/* Back to Admin */}
+            {isAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.button
+                      onClick={() => navigate('/admin')}
+                      className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p>Back to Admin Panel</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
             {/* Data Integrity Badge */}
             <TooltipProvider>
               <Tooltip>
