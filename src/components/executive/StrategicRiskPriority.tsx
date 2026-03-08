@@ -48,7 +48,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Risk Index by Pillar */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               RI by Pillar <InfoTip text="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk." />
             </span>
             <div className="space-y-2.5 mt-4">
