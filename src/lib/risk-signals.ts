@@ -15,7 +15,7 @@ export const RISK_SIGNAL_COLORS: Record<RiskSignal, string> = {
   'No Risk (On Track)': '#16A34A',
   'Emerging Risk (Needs Attention)': '#F59E0B',
   'Critical Risk (Needs Close Attention)': '#EF4444',
-  'Realized Risk (Needs Mitigation Strategy)': '#7F1D1D',
+  'Realized Risk (Needs Mitigation Strategy)': '#DC2626',
   'Not Applicable': '#9CA3AF',
 };
 
