@@ -401,8 +401,8 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
           const isExpanded = expandedIdx === idx;
           const isRealized = flag.riskSignal.includes('Realized');
           const severity = isRealized ? 'Realized' : 'Critical';
-          const badgeBackground = isRealized ? 'hsl(var(--destructive))' : 'hsl(var(--destructive) / 0.82)';
-          const badgeBorder = isRealized ? 'hsl(var(--destructive))' : 'hsl(var(--destructive) / 0.92)';
+          const badgeBackground = isRealized ? '#7F1D1D' : 'hsl(var(--destructive))';
+          const badgeBorder = isRealized ? '#7F1D1D' : 'hsl(var(--destructive))';
           return (
             <div key={`${flag.unitId}-${flag.sheetRow}-${idx}`}>
               <button
