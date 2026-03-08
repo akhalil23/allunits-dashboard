@@ -22,7 +22,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
-  const [trendsOpen, setTrendsOpen] = useState(false);
+  const [trackerOpen, setTrackerOpen] = useState(false);
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
   const queryClient = useQueryClient();
