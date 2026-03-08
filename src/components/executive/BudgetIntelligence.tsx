@@ -83,7 +83,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           <div className="card-elevated p-4 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
             <div className="relative">
-              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
                 Budget Utilization — Used <InfoTip text="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." />
               </p>
               <p className="text-xl sm:text-2xl font-display font-bold mt-1" style={{ color: totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A' }}>
