@@ -153,6 +153,45 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   );
 }
 
+function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
+  const totals = pillarAgg.reduce((acc, p) => ({
+    noRisk: acc.noRisk + p.riskCounts.noRisk,
+    emerging: acc.emerging + p.riskCounts.emerging,
+    critical: acc.critical + p.riskCounts.critical,
+    realized: acc.realized + p.riskCounts.realized,
+  }), { noRisk: 0, emerging: 0, critical: 0, realized: 0 });
+  const grand = totals.noRisk + totals.emerging + totals.critical + totals.realized;
+  const pct = (v: number) => grand > 0 ? ((v / grand) * 100).toFixed(1) : '0.0';
+
+  const items = [
+    { key: 'noRisk' as const, label: 'No Risk', color: RISK_SIGNAL_COLORS['No Risk (On Track)'], tip: RISK_SIGNAL_TOOLTIPS.noRisk },
+    { key: 'emerging' as const, label: 'Emerging', color: RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)'], tip: RISK_SIGNAL_TOOLTIPS.emerging },
+    { key: 'critical' as const, label: 'Critical', color: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'], tip: RISK_SIGNAL_TOOLTIPS.critical },
+    { key: 'realized' as const, label: 'Realized', color: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'], tip: RISK_SIGNAL_TOOLTIPS.realized },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border">
+      {items.map(item => (
+        <TooltipProvider key={item.key}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 cursor-help">
+                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
+                <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                <span className="text-[10px] font-bold text-foreground">{totals[item.key]}</span>
+                <span className="text-[10px] text-muted-foreground">({pct(totals[item.key])}%)</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
+      <span className="text-[10px] text-muted-foreground ml-auto">Total: {grand} items</span>
+    </div>
+  );
+}
+
 function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }) {
   const STATUS_COLORS: Record<string, string> = { 'On Target': '#16A34A', 'Below Target': '#7F1D1D', 'In Progress': '#F59E0B', 'Not Started': '#EF4444' };
   const data = [
