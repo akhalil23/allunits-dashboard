@@ -67,12 +67,17 @@ function getPillarConfig(unitId: string): PillarRange[] {
   throw new Error(`Unknown unit: ${unitId}. No range configuration exists.`);
 }
 
+// Term data columns: BX=col75 (0-indexed), 4 windows × 7 cols = 28 cols → BX:CY (cols 75-102)
+const TERM_START_COL = 75; // Column BX (0-indexed)
+const TERM_TOTAL_COLS = 28; // 4 windows × 7 fields
+
 function buildRanges(pillars: PillarRange[]): { ranges: string[]; pillarMap: PillarRange[] } {
+  // Fetch one full-row range per pillar instead of two separate column ranges.
+  // This avoids 400 errors when a sheet has fewer columns than expected (e.g. < 76).
   const ranges: string[] = [];
   for (const p of pillars) {
     const escaped = `'${p.sheetName}'`;
-    ranges.push(`${escaped}!A4:G${p.lastRow}`);
-    ranges.push(`${escaped}!BX4:CY${p.lastRow}`);
+    ranges.push(`${escaped}!A4:${p.lastRow}`);
   }
   return { ranges, pillarMap: pillars };
 }
