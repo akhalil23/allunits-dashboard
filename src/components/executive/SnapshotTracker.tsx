@@ -180,11 +180,11 @@ export default function SnapshotTracker({ aggregation }: Props) {
           </p>
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
-            <MetricCard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} tooltip="Percentage of applicable strategic actions marked as completed relative to the total strategic actions for the selected pillar or unit." />
-            <MetricCard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={getRiskBandColor(aggregation.riskIndex)} tooltip="Risk Index (RI) represents the aggregated severity of risk signals across applicable strategic actions. Lower values indicate lower structural risk." />
-            <MetricCard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} tooltip="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." />
-            <MetricCard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} tooltip="Percentage of strategic actions currently progressing according to the planned schedule." />
-            <MetricCard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} tooltip="Percentage of actions performing below expected progress levels." />
+            <MetricCard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} />
+            <MetricCard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={getRiskBandColor(aggregation.riskIndex)} />
+            <MetricCard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} />
+            <MetricCard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} />
+            <MetricCard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} />
           </div>
 
           <div className="flex items-center gap-4">
@@ -334,17 +334,16 @@ export default function SnapshotTracker({ aggregation }: Props) {
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color, tooltip }: {
-  label: string; value: string; icon: React.ElementType; color?: string; tooltip: string;
+function MetricCard({ label, value, icon: Icon, color }: {
+  label: string; value: string; icon: React.ElementType; color?: string;
 }) {
   return (
     <div className="card-elevated p-3 sm:p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative flex flex-col">
         <div className="min-h-[36px] sm:min-h-[40px] flex flex-col justify-start mb-1.5">
-          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center leading-tight">
+          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider leading-tight">
             {label.split(' — ')[0]}
-            <InfoTip text={tooltip} />
           </p>
           {label.includes(' — ') && (
             <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 mt-0.5 font-medium">{label.split(' — ')[1]}</p>
