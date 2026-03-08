@@ -331,49 +331,75 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
 /** Pillar Legend component accessible from Executive Snapshot */
 function PillarLegend() {
-  const pillarColors: Record<string, string> = {
-    I: '#0E7490',
-    II: '#6D28D9',
-    III: '#DB2777',
-    IV: '#0369A1',
-    V: '#7C3AED',
-  };
+  const romanNumerals = ['I', 'II', 'III', 'IV', 'V'] as PillarId[];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] p-5 sm:p-6"
+      className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-5 sm:p-6"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.03] rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+      {/* Decorative corner pattern */}
+      <div className="absolute top-0 right-0 w-24 h-24 opacity-[0.03] pointer-events-none">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          {[20, 40, 60, 80].map(r => (
+            <circle key={r} cx="100" cy="0" r={r} fill="none" stroke="currentColor" strokeWidth="1" className="text-foreground" />
+          ))}
+        </svg>
+      </div>
+
       <div className="relative">
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="p-1.5 rounded-lg bg-primary/10">
-            <Info className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-2.5 mb-5">
+          <div className="p-1.5 rounded-lg bg-muted">
+            <Info className="w-4 h-4 text-muted-foreground" />
           </div>
           <div>
             <h3 className="text-xs sm:text-sm font-semibold text-foreground tracking-wide">Strategic Plan IV — Pillar Reference</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">5 strategic pillars guiding university-wide execution</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-          {(['I','II','III','IV','V'] as PillarId[]).map((p, i) => (
+
+        <div className="flex flex-col sm:flex-row gap-0 sm:gap-0">
+          {romanNumerals.map((p, i) => (
             <TooltipProvider key={p}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="group relative rounded-lg border border-border/60 bg-card/80 backdrop-blur-sm px-3 py-2.5 cursor-help hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+                    transition={{ delay: i * 0.06 }}
+                    className="group flex-1 cursor-help relative"
                   >
-                    <div className="absolute top-0 left-0 w-full h-0.5 rounded-t-lg" style={{ backgroundColor: pillarColors[p] }} />
-                    <span className="text-xs font-bold block mb-0.5" style={{ color: pillarColors[p] }}>
-                      {PILLAR_LABELS[p]}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
-                      {PILLAR_FULL[p].replace(`Pillar ${p} — `, '')}
-                    </span>
+                    {/* Horizontal layout: connected steps */}
+                    <div className="flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 px-3 py-3 sm:py-0">
+                      {/* Number badge */}
+                      <div className="flex flex-col items-center sm:mb-2.5">
+                        <div className="w-9 h-9 rounded-full border-2 border-border bg-muted/50 flex items-center justify-center group-hover:bg-foreground group-hover:border-foreground transition-colors duration-200">
+                          <span className="text-xs font-bold text-foreground group-hover:text-background transition-colors duration-200">
+                            {p}
+                          </span>
+                        </div>
+                        {/* Connector line (hidden on last + mobile) */}
+                        {i < 4 && <div className="hidden sm:block w-px h-0 sm:h-0" />}
+                      </div>
+                      {/* Text */}
+                      <div className="flex-1 sm:text-center">
+                        <span className="text-[11px] font-semibold text-foreground block leading-tight">
+                          {PILLAR_SHORT[p]}
+                        </span>
+                        <span className="text-[10px] sm:text-[10px] text-muted-foreground leading-snug line-clamp-2 mt-0.5 block">
+                          {PILLAR_FULL[p].replace(`Pillar ${p} — `, '')}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Horizontal connector between steps (desktop only) */}
+                    {i < 4 && (
+                      <div className="hidden sm:block absolute top-[18px] -right-[1px] w-[2px] h-[2px]">
+                        <div className="absolute top-1/2 left-1/2 -translate-y-1/2 w-6 h-px bg-border" />
+                      </div>
+                    )}
+                    {/* Divider for mobile */}
+                    {i < 4 && <div className="sm:hidden border-b border-border/40 mx-3" />}
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-xs text-xs">
