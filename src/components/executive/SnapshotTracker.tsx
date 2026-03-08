@@ -155,13 +155,23 @@ export default function SnapshotTracker({ aggregation }: Props) {
 
   // Trend data from all snapshots
   const trendData = useMemo(() => {
-    return snapshots.map((s: any) => ({
-      label: s.reporting_cycle,
-      completion: Number(s.completion_pct),
-      riskIndex: Number(s.risk_index),
-      budgetUtil: Number(s.budget_utilization),
-      date: new Date(s.created_at).toLocaleDateString(),
-    }));
+    // Count occurrences per reporting_cycle to add unique suffixes
+    const cycleCounts: Record<string, number> = {};
+    return snapshots.map((s: any) => {
+      const cycle = s.reporting_cycle;
+      cycleCounts[cycle] = (cycleCounts[cycle] || 0) + 1;
+      const count = cycleCounts[cycle];
+      const dt = new Date(s.created_at);
+      const timeStr = dt.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return {
+        label: `${cycle} (${timeStr})`,
+        shortLabel: `S${Object.values(cycleCounts).reduce((a, b) => a + b, 0)}`,
+        completion: Number(s.completion_pct),
+        riskIndex: Number(s.risk_index),
+        budgetUtil: Number(s.budget_utilization),
+        date: dt.toLocaleDateString(),
+      };
+    });
   }, [snapshots]);
 
   return (
