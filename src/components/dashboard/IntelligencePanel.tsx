@@ -4,7 +4,7 @@ import { QUALIFIER_COLORS } from '@/lib/constants';
 import { computeQualifierDistribution, computeRiskIndex, computeTimeProgress, getApplicableItems } from '@/lib/intelligence';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingUp, ShieldAlert, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
   items: ActionItem[];
