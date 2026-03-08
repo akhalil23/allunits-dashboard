@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
 import { getTermWindowKey } from '@/lib/types';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportPDF } from '@/lib/export-pdf';
 import { useIsMobile } from '@/hooks/use-mobile';
