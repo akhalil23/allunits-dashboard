@@ -215,25 +215,23 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
 
             {/* Export Dropdown */}
             <DropdownMenu>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <motion.button
-                        disabled={!items?.length}
-                        className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Download className="w-4 h-4" />
-                      </motion.button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Export report</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <motion.button
+                      disabled={!items?.length}
+                      className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Download className="w-4 h-4" />
+                    </motion.button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Export report</p>
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align="end" className="min-w-[160px]">
                 <DropdownMenuItem onClick={handleExportCSV} className="gap-2 cursor-pointer">
                   <FileSpreadsheet className="w-4 h-4" />
