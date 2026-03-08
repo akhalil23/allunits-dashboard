@@ -22,16 +22,6 @@ import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
 
-function InfoTip({ text }: { text: string }) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild><Info className="w-3 h-3 text-muted-foreground/60 cursor-help inline ml-1" /></TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs"><p>{text}</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 const PILLAR_DONUT_COLORS: Record<PillarId, string> = {
   I: '#6366F1', II: '#F59E0B', III: '#10B981', IV: '#F97316', V: '#8B5CF6',
