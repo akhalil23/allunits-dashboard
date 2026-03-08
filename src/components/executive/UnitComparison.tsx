@@ -165,7 +165,7 @@ function CompareKPI({ label, subtitle, a, b, unitA, unitB, betterA, betterB, col
         {subtitle && <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>}
         <div className="flex items-end justify-between gap-2 mt-4">
           <div className="text-center flex-1">
-            <p className="text-2xl sm:text-3xl font-display font-extrabold" style={{ color: colorA || (betterA ? '#16A34A' : undefined) }}>{a}</p>
+            <p className="text-xl sm:text-2xl font-display font-extrabold" style={{ color: colorA || (betterA ? '#16A34A' : undefined) }}>{a}</p>
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">{unitA}</p>
             {betterA && <span className="text-[10px] text-green-500 font-semibold">✓ better</span>}
           </div>
