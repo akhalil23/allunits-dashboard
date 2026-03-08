@@ -407,11 +407,12 @@ function TrendChart({ title, dataKey, data, domain, color, suffix }: {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
+            <XAxis dataKey="shortLabel" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
             <YAxis domain={domain} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
             <ReTooltip
               contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
               formatter={(v: number) => [`${v}${suffix}`, title]}
+              labelFormatter={(label: string, payload: any[]) => payload?.[0]?.payload?.label || label}
             />
             <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={{ r: 4, fill: color }} />
           </LineChart>
