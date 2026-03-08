@@ -155,13 +155,23 @@ export default function SnapshotTracker({ aggregation }: Props) {
 
   // Trend data from all snapshots
   const trendData = useMemo(() => {
-    return snapshots.map((s: any) => ({
-      label: s.reporting_cycle,
-      completion: Number(s.completion_pct),
-      riskIndex: Number(s.risk_index),
-      budgetUtil: Number(s.budget_utilization),
-      date: new Date(s.created_at).toLocaleDateString(),
-    }));
+    // Count occurrences per reporting_cycle to add unique suffixes
+    const cycleCounts: Record<string, number> = {};
+    return snapshots.map((s: any) => {
+      const cycle = s.reporting_cycle;
+      cycleCounts[cycle] = (cycleCounts[cycle] || 0) + 1;
+      const count = cycleCounts[cycle];
+      const dt = new Date(s.created_at);
+      const timeStr = dt.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return {
+        label: `${cycle} (${timeStr})`,
+        shortLabel: `S${Object.values(cycleCounts).reduce((a, b) => a + b, 0)}`,
+        completion: Number(s.completion_pct),
+        riskIndex: Number(s.risk_index),
+        budgetUtil: Number(s.budget_utilization),
+        date: dt.toLocaleDateString(),
+      };
+    });
   }, [snapshots]);
 
   return (
@@ -230,11 +240,11 @@ export default function SnapshotTracker({ aggregation }: Props) {
                     className={`flex flex-col items-center min-w-[100px] group ${selectedSnapshotIdx === idx ? '' : ''}`}
                   >
                     <div className={`w-4 h-4 rounded-full border-2 transition-all ${selectedSnapshotIdx === idx ? 'bg-primary border-primary scale-125' : 'bg-card border-primary/50 group-hover:border-primary'}`} />
-                    <span className={`text-[10px] mt-2 font-medium transition-colors ${selectedSnapshotIdx === idx ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <span className={`text-[10px] mt-2 font-medium transition-colors text-center ${selectedSnapshotIdx === idx ? 'text-primary' : 'text-muted-foreground'}`}>
                       {snap.reporting_cycle}
                     </span>
-                    <span className="text-[9px] text-muted-foreground/60">
-                      {new Date(snap.created_at).toLocaleDateString()}
+                    <span className="text-[9px] text-muted-foreground/60 text-center">
+                      {new Date(snap.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </button>
                 ))}
@@ -397,11 +407,12 @@ function TrendChart({ title, dataKey, data, domain, color, suffix }: {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
+            <XAxis dataKey="shortLabel" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
             <YAxis domain={domain} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
             <ReTooltip
               contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
               formatter={(v: number) => [`${v}${suffix}`, title]}
+              labelFormatter={(label: string, payload: any[]) => payload?.[0]?.payload?.label || label}
             />
             <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={{ r: 4, fill: color }} />
           </LineChart>
