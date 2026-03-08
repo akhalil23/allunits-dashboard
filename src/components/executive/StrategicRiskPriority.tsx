@@ -21,6 +21,7 @@ import { RISK_SIGNAL_COLORS, RISK_SIGNAL_ORDER } from '@/lib/risk-signals';
 import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
+import { RISK_SIGNAL_TOOLTIPS } from '@/lib/metric-definitions';
 import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
