@@ -348,7 +348,7 @@ function MetricCard({ label, value, icon: Icon, color, tooltip }: {
         {label.includes(' — ') && (
           <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 mt-0.5 font-medium">{label.split(' — ')[1]}</p>
         )}
-        <p className="text-lg sm:text-xl font-display font-bold mt-1" style={{ color: color || 'hsl(var(--primary))' }}>{value}</p>
+        <p className="text-base sm:text-lg font-display font-bold mt-1" style={{ color: color || 'hsl(var(--primary))' }}>{value}</p>
       </div>
     </div>
   );
