@@ -73,22 +73,20 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
               <span className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{pd.pillar}</span>
               <span className="text-xs font-medium text-foreground truncate flex-1">{pd.label}</span>
               {/* Risk Index Badge */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white shrink-0"
-                      style={{ backgroundColor: riskColor(pd.riskIndex) }}
-                    >
-                      {pd.riskIndex.toFixed(1)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    <p>Risk Index: {pd.riskIndex.toFixed(2)} / 3.00</p>
-                    <p className="text-muted-foreground">{pd.applicable} applicable items</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white shrink-0"
+                    style={{ backgroundColor: riskColor(pd.riskIndex) }}
+                  >
+                    {pd.riskIndex.toFixed(1)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Risk Index: {pd.riskIndex.toFixed(2)} / 3.00</p>
+                  <p className="text-muted-foreground">{pd.applicable} applicable items</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             {/* Status bar */}
             <div className="h-2 rounded-full bg-muted overflow-hidden mb-3 flex">
