@@ -6,6 +6,21 @@
  * All computations use APPLICABLE_ITEMS denominator.
  */
 
+/** Largest-remainder (Hamilton) rounding: floors all values then distributes remainder to largest fractional parts. */
+function largestRemainderRound(counts: number[], total: number, target: number): number[] {
+  if (total <= 0) return counts.map(() => 0);
+  const exact = counts.map(c => (c / total) * target);
+  const floored = exact.map(Math.floor);
+  let remainder = target - floored.reduce((a, b) => a + b, 0);
+  const indices = exact.map((e, i) => ({ i, frac: e - floored[i] })).sort((a, b) => b.frac - a.frac);
+  for (const { i } of indices) {
+    if (remainder <= 0) break;
+    floored[i]++;
+    remainder--;
+  }
+  return floored;
+}
+
 import type { ActionItem, ViewType, Term, AcademicYear, PillarId } from './types';
 import type { FetchResult } from './types';
 import { getItemStatus, getItemCompletion, getApplicableItems } from './intelligence';
