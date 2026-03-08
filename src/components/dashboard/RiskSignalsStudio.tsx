@@ -81,32 +81,30 @@ function StackedBar({
       </div>
       <div className="h-10 rounded-lg overflow-hidden flex cursor-pointer">
         {segments.map(seg => (
-          <TooltipProvider key={seg.signal}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div
-                  className="h-full flex items-center justify-center transition-opacity"
-                  style={{
-                    backgroundColor: seg.color,
-                    width: `${seg.percent}%`,
-                    opacity: activeSignal && activeSignal !== seg.signal ? 0.4 : 1,
-                  }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${seg.percent}%` }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
-                  onClick={() => onSegmentClick(activeSignal === seg.signal ? null : seg.signal)}
-                >
-                  {seg.percent >= 12 && (
-                    <span className="text-[10px] font-bold text-white drop-shadow-sm">{seg.percent}%</span>
-                  )}
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                <p className="font-semibold">{seg.signal}</p>
-                <p>{seg.count} item(s) — {seg.percent}%</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip key={seg.signal}>
+            <TooltipTrigger asChild>
+              <motion.div
+                className="h-full flex items-center justify-center transition-opacity"
+                style={{
+                  backgroundColor: seg.color,
+                  width: `${seg.percent}%`,
+                  opacity: activeSignal && activeSignal !== seg.signal ? 0.4 : 1,
+                }}
+                initial={{ width: 0 }}
+                animate={{ width: `${seg.percent}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                onClick={() => onSegmentClick(activeSignal === seg.signal ? null : seg.signal)}
+              >
+                {seg.percent >= 12 && (
+                  <span className="text-[10px] font-bold text-white drop-shadow-sm">{seg.percent}%</span>
+                )}
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              <p className="font-semibold">{seg.signal}</p>
+              <p>{seg.count} item(s) — {seg.percent}%</p>
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
       {/* Legend */}
