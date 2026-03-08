@@ -3,7 +3,7 @@
  * Tab-based executive dashboard aggregating all 21 units.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUniversity, type UniversityAggregation } from '@/lib/university-aggregation';
@@ -22,6 +22,12 @@ import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
+  const mainRef = useRef<HTMLElement>(null);
+
+  const handleTabChange = useCallback((tab: ExecutiveTab) => {
+    setActiveTab(tab);
+    mainRef.current?.scrollTo({ top: 0 });
+  }, []);
   const [trackerOpen, setTrackerOpen] = useState(false);
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
@@ -39,7 +45,7 @@ export default function ExecutiveDashboard() {
   if (isLoading) {
     return (
       <div className="flex h-screen overflow-hidden bg-background">
-        <ExecutiveSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <ExecutiveSidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
@@ -54,7 +60,7 @@ export default function ExecutiveDashboard() {
   if (isError || !aggregation) {
     return (
       <div className="flex h-screen overflow-hidden bg-background">
-        <ExecutiveSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <ExecutiveSidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3 max-w-md px-4">
             <AlertCircle className="w-8 h-8 text-destructive mx-auto" />
@@ -80,7 +86,7 @@ export default function ExecutiveDashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <ExecutiveSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <ExecutiveSidebar activeTab={activeTab} onTabChange={handleTabChange} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <ExecutiveHeader
           loadedUnits={aggregation.loadedUnits}
@@ -91,7 +97,7 @@ export default function ExecutiveDashboard() {
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         {activeTab !== 'budget' && activeTab !== 'guide' && <FilterBar />}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">
