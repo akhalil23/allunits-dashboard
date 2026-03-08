@@ -200,7 +200,7 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
   ].filter(d => d.value > 0);
 
   return (
-    <div className="flex items-center gap-5 mt-4">
+    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mt-4">
       <div className="w-32 h-32 shrink-0">
         <ResponsiveContainer>
           <PieChart>
