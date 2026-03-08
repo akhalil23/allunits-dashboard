@@ -6,7 +6,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Camera, Clock, TrendingUp, TrendingDown, Minus, Info, CheckCircle2,
+  Camera, Clock, TrendingUp, TrendingDown, Minus, CheckCircle2,
   AlertTriangle, ShieldAlert, DollarSign, Loader2,
 } from 'lucide-react';
 import {
