@@ -19,7 +19,7 @@ interface ExecutiveHeaderProps {
   onOpenSnapshotTracker?: () => void;
 }
 
-export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, isRefreshing, observedAt, onOpenTrends }: ExecutiveHeaderProps) {
+export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, isRefreshing, observedAt, onOpenSnapshotTracker }: ExecutiveHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
