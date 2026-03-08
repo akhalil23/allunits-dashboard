@@ -144,7 +144,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       {/* Section 2: Executive Highlights */}
       <section>
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Lightbulb className="w-3.5 h-3.5" /> Executive Highlights
+          <Lightbulb className="w-3.5 h-3.5" /> Executive highlights
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {highlights.map((h, i) => (
