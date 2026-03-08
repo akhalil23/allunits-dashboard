@@ -144,11 +144,11 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       {/* Section 1: Strategic KPI Banner */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          <KPICard label="Completion" value={`${aggregation.completionPct}%`} icon={CheckCircle2} color="hsl(var(--primary))" tooltip="Completion: Percentage of applicable items that are completed (on target + below target)." />
-          <KPICard label="On Track" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} color="#16A34A" tooltip="On-Track: Percentage of applicable items completed on target." />
-          <KPICard label="Below Target" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} color="#B23A48" tooltip="Below Target: Percentage of applicable items completed below target expectations." />
-          <KPICard label="RI (Risk Index)" value={aggregation.riskIndex.toFixed(2)} icon={ShieldAlert} color={riskColor} tooltip="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk. Scale: 0 (no risk) to 3 (maximum risk)." />
-          <KPICard label="Budget Utilization" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} tooltip="Budget Utilization: Percentage of total allocated budget that has been committed." />
+          <KPICard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} color="hsl(var(--primary))" tooltip="Percentage of applicable strategic actions marked as completed relative to the total strategic actions for the selected pillar or unit." />
+          <KPICard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} color="#16A34A" tooltip="Percentage of strategic actions currently progressing according to the planned schedule." />
+          <KPICard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} color="#B23A48" tooltip="Percentage of actions performing below expected progress levels." />
+          <KPICard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={riskColor} tooltip="Risk Index (RI) represents the aggregated severity of risk signals across applicable strategic actions. Lower values indicate lower structural risk. Scale: 0 (no risk) to 3 (maximum risk)." />
+          <KPICard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} tooltip="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." />
         </div>
       </section>
 
@@ -313,7 +313,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 </div>
                 <div className="space-y-1.5">
                   <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" />
-                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => v.toFixed(2)} />
+                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} />
                   <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} />
                 </div>
               </div>
@@ -327,8 +327,11 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-elevated p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Signal Distribution</span>
-            <InfoTip text="Distribution of all applicable items by risk signal category. No Risk = completed on target; Emerging = in progress; Critical = not started/delayed; Realized = completed below target." />
+            <InfoTip text="Distribution of all applicable items by risk signal category." />
           </div>
+          <p className="text-[11px] text-muted-foreground mb-3">
+            <strong>No Risk:</strong> Actions showing no risk indicators. <strong>Emerging:</strong> Early warning signals. <strong>Critical:</strong> Severe risk requiring intervention. <strong>Realized:</strong> Risk event has already occurred.
+          </p>
           <div className="flex items-center gap-6 mt-4">
             <div className="w-36 h-36 sm:w-44 sm:h-44 shrink-0">
               <ResponsiveContainer>

@@ -179,11 +179,11 @@ export default function SnapshotTracker({ aggregation }: Props) {
           </p>
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
-            <MetricCard label="Completion" value={`${aggregation.completionPct}%`} icon={CheckCircle2} tooltip="Percentage of applicable items completed." />
-            <MetricCard label="RI (Risk Index)" value={aggregation.riskIndex.toFixed(2)} icon={ShieldAlert} color={getRiskBandColor(aggregation.riskIndex)} tooltip="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk." />
-            <MetricCard label="Budget Utilization" value={`${budgetUtilization}%`} icon={DollarSign} tooltip="Percentage of total allocated budget committed." />
-            <MetricCard label="On-Track" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} tooltip="Percentage of applicable items completed on target." />
-            <MetricCard label="Below Target" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} tooltip="Percentage of applicable items completed below target." />
+            <MetricCard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} tooltip="Percentage of applicable strategic actions marked as completed relative to the total strategic actions for the selected pillar or unit." />
+            <MetricCard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={getRiskBandColor(aggregation.riskIndex)} tooltip="Risk Index (RI) represents the aggregated severity of risk signals across applicable strategic actions. Lower values indicate lower structural risk." />
+            <MetricCard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} tooltip="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." />
+            <MetricCard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} tooltip="Percentage of strategic actions currently progressing according to the planned schedule." />
+            <MetricCard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} tooltip="Percentage of actions performing below expected progress levels." />
           </div>
 
           <div className="flex items-center gap-4">
@@ -249,7 +249,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
                   <p className="text-xs font-semibold text-foreground mb-2">{(snapshots[selectedSnapshotIdx] as any).reporting_cycle}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                     <div><span className="text-muted-foreground">Completion:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).completion_pct)}%</span></div>
-                    <div><span className="text-muted-foreground">RI:</span> <span className="font-bold" style={{ color: getRiskBandColor(Number((snapshots[selectedSnapshotIdx] as any).risk_index)) }}>{Number((snapshots[selectedSnapshotIdx] as any).risk_index).toFixed(2)}</span></div>
+                    <div><span className="text-muted-foreground">RI:</span> <span className="font-bold" style={{ color: getRiskBandColor(Number((snapshots[selectedSnapshotIdx] as any).risk_index)) }}>RI {Number((snapshots[selectedSnapshotIdx] as any).risk_index).toFixed(2)}</span></div>
                     <div><span className="text-muted-foreground">Budget Util:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).budget_utilization)}%</span></div>
                     <div><span className="text-muted-foreground">On-Track:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).on_track_pct)}%</span></div>
                     <div><span className="text-muted-foreground">Below Target:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).below_target_pct)}%</span></div>

@@ -99,10 +99,10 @@ export default function UnitComparison({ aggregation }: Props) {
           {/* Section 2: Comparison KPI Cards */}
           <section>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <CompareKPI label="Completion" a={`${unitA.completionPct}%`} b={`${unitB.completionPct}%`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.completionPct > unitB.completionPct} betterB={unitB.completionPct > unitA.completionPct} />
-              <CompareKPI label="RI (Risk Index)" a={`RI ${unitA.riskIndex.toFixed(2)}`} b={`RI ${unitB.riskIndex.toFixed(2)}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.riskIndex < unitB.riskIndex} betterB={unitB.riskIndex < unitA.riskIndex} colorA={getRiskBandColor(unitA.riskIndex)} colorB={getRiskBandColor(unitB.riskIndex)} />
-              <CompareKPI label="Budget Util" a="—" b="—" unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} />
-              <CompareKPI label="Applicable Items" a={`${unitA.applicableItems}`} b={`${unitB.applicableItems}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} />
+              <CompareKPI label="Completion — Actions Completed (%)" a={`${unitA.completionPct}%`} b={`${unitB.completionPct}%`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.completionPct > unitB.completionPct} betterB={unitB.completionPct > unitA.completionPct} tooltip="Percentage of applicable strategic actions marked as completed." />
+              <CompareKPI label="RI (Risk Index)" a={`RI ${unitA.riskIndex.toFixed(2)}`} b={`RI ${unitB.riskIndex.toFixed(2)}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.riskIndex < unitB.riskIndex} betterB={unitB.riskIndex < unitA.riskIndex} colorA={getRiskBandColor(unitA.riskIndex)} colorB={getRiskBandColor(unitB.riskIndex)} tooltip="Risk Index (RI) represents the aggregated severity of risk signals. Lower values indicate lower structural risk." />
+              <CompareKPI label="Budget Utilization — Used (%)" a="—" b="—" unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} tooltip="Percentage of the allocated budget that has already been utilized." />
+              <CompareKPI label="Applicable Items" a={`${unitA.applicableItems}`} b={`${unitB.applicableItems}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} tooltip="Total number of strategic action items applicable under current filters." />
             </div>
           </section>
 
@@ -118,15 +118,22 @@ export default function UnitComparison({ aggregation }: Props) {
               </div>
               <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-border">
                 {[
-                  { label: 'No Risk', color: RISK_SIGNAL_COLORS['No Risk (On Track)'] },
-                  { label: 'Emerging', color: RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)'] },
-                  { label: 'Critical', color: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'] },
-                  { label: 'Realized', color: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'] },
+                  { label: 'No Risk', color: RISK_SIGNAL_COLORS['No Risk (On Track)'], tip: 'Strategic actions currently showing no risk indicators.' },
+                  { label: 'Emerging', color: RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)'], tip: 'Actions showing early warning signals that may affect delivery.' },
+                  { label: 'Critical', color: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'], tip: 'Actions with severe risk signals requiring immediate intervention.' },
+                  { label: 'Realized', color: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'], tip: 'Actions where the identified risk event has already occurred.' },
                 ].map(s => (
-                  <span key={s.label} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                    {s.label}
-                  </span>
+                  <TooltipProvider key={s.label}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-help">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                          {s.label}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs"><p>{s.tip}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
             </motion.div>
@@ -152,12 +159,15 @@ export default function UnitComparison({ aggregation }: Props) {
   );
 }
 
-function CompareKPI({ label, a, b, unitA, unitB, betterA, betterB, colorA, colorB }: {
-  label: string; a: string; b: string; unitA: string; unitB: string; betterA?: boolean; betterB?: boolean; colorA?: string; colorB?: string;
+function CompareKPI({ label, a, b, unitA, unitB, betterA, betterB, colorA, colorB, tooltip }: {
+  label: string; a: string; b: string; unitA: string; unitB: string; betterA?: boolean; betterB?: boolean; colorA?: string; colorB?: string; tooltip?: string;
 }) {
   return (
     <div className="card-elevated p-4">
-      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-3">{label}</p>
+      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center">
+        {label}
+        {tooltip && <InfoTip text={tooltip} />}
+      </p>
       <div className="flex items-end justify-between gap-2">
         <div className="text-center flex-1">
           <p className="text-lg font-display font-bold" style={{ color: colorA || (betterA ? '#16A34A' : undefined) }}>{a}</p>

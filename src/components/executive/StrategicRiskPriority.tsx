@@ -85,7 +85,9 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
 
           {/* Risk Distribution Stacked */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Risk Distribution by Pillar</span>
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              Risk Signal Distribution by Pillar <InfoTip text="Distribution of risk signals across pillars. No Risk: actions with no risk indicators. Emerging: early warning signals. Critical: severe risk requiring intervention. Realized: risk event already occurred." />
+            </span>
             <div className="h-48 mt-3">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={pillarAgg.map(p => ({ name: PILLAR_LABELS[p.pillar], noRisk: p.riskCounts.noRisk, emerging: p.riskCounts.emerging, critical: p.riskCounts.critical, realized: p.riskCounts.realized }))} layout="vertical" barSize={18}>
@@ -103,7 +105,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
 
           {/* Completion Status Distribution Donut */}
           <div className="card-elevated p-4 sm:p-5">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Completion Status</span>
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
             <CompletionDonut aggregation={aggregation} />
           </div>
         </div>
