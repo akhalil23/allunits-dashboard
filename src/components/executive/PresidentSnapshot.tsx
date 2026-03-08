@@ -6,7 +6,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  CheckCircle2, AlertTriangle, TrendingUp, TrendingDown, DollarSign,
+  CheckCircle2, AlertTriangle, DollarSign,
   ShieldAlert, BarChart3, Lightbulb, Info,
 } from 'lucide-react';
 import {
