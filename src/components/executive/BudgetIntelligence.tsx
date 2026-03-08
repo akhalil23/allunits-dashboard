@@ -292,7 +292,7 @@ function BudgetKPICard({ label, subtitle, value, icon: Icon, color, showBar, bar
               {label}
             </p>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
-            <p className="text-3xl sm:text-4xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>{value}</p>
+            <p className="text-2xl sm:text-3xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>{value}</p>
             {showBar && barPct !== undefined && barColor && (
               <div className="h-2 rounded-full bg-muted overflow-hidden mt-3">
                 <motion.div
