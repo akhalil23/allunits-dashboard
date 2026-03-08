@@ -270,8 +270,8 @@ export default function BudgetIntelligence({ aggregation }: Props) {
   );
 }
 
-function BudgetKPICard({ label, subtitle, value, icon: Icon, color, tooltip, showBar, barPct, barColor }: {
-  label: string; subtitle: string; value: string; icon: React.ElementType; color: string; tooltip: string; showBar?: boolean; barPct?: number; barColor?: string;
+function BudgetKPICard({ label, subtitle, value, icon: Icon, color, showBar, barPct, barColor }: {
+  label: string; subtitle: string; value: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string;
 }) {
   return (
     <motion.div
