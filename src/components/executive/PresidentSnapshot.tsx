@@ -438,7 +438,7 @@ function KPICard({ label, value, icon: Icon, color }: {
                 {label.split(' — ')[1]}
               </p>
             )}
-            <p className="text-3xl sm:text-4xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>
+            <p className="text-2xl sm:text-3xl font-display font-extrabold mt-3 tracking-tight" style={{ color }}>
               {value}
             </p>
           </div>

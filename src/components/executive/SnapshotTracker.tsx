@@ -341,9 +341,13 @@ function MetricCard({ label, value, icon: Icon, color, tooltip }: {
     <div className="card-elevated p-3 sm:p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative">
-        <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center">
-          {label}<InfoTip text={tooltip} />
+        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center leading-tight">
+          {label.split(' — ')[0]}
+          <InfoTip text={tooltip} />
         </p>
+        {label.includes(' — ') && (
+          <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 mt-0.5 font-medium">{label.split(' — ')[1]}</p>
+        )}
         <p className="text-lg sm:text-xl font-display font-bold mt-1" style={{ color: color || 'hsl(var(--primary))' }}>{value}</p>
       </div>
     </div>
