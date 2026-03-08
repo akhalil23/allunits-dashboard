@@ -240,11 +240,11 @@ export default function SnapshotTracker({ aggregation }: Props) {
                     className={`flex flex-col items-center min-w-[100px] group ${selectedSnapshotIdx === idx ? '' : ''}`}
                   >
                     <div className={`w-4 h-4 rounded-full border-2 transition-all ${selectedSnapshotIdx === idx ? 'bg-primary border-primary scale-125' : 'bg-card border-primary/50 group-hover:border-primary'}`} />
-                    <span className={`text-[10px] mt-2 font-medium transition-colors ${selectedSnapshotIdx === idx ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <span className={`text-[10px] mt-2 font-medium transition-colors text-center ${selectedSnapshotIdx === idx ? 'text-primary' : 'text-muted-foreground'}`}>
                       {snap.reporting_cycle}
                     </span>
-                    <span className="text-[9px] text-muted-foreground/60">
-                      {new Date(snap.created_at).toLocaleDateString()}
+                    <span className="text-[9px] text-muted-foreground/60 text-center">
+                      {new Date(snap.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </button>
                 ))}
