@@ -56,16 +56,14 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
     <div>
       <div className="flex items-center gap-2 mb-4 px-1">
         <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pillar Performance Overview</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
-              <p>Each pillar shows the percentage of action items that are <strong>On Target</strong>, the risk index (0–3), and a mid→end completion trend. Items marked "Not Applicable" are excluded.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+            <p>Each pillar shows the percentage of action items that are <strong>On Target</strong>, the risk index (0–3), and a mid→end completion trend. Items marked "Not Applicable" are excluded.</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
       {/* Responsive grid: 1 col mobile, 2 col tablet, 5 col desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
