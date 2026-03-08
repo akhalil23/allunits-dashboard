@@ -334,17 +334,16 @@ export default function SnapshotTracker({ aggregation }: Props) {
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color, tooltip }: {
-  label: string; value: string; icon: React.ElementType; color?: string; tooltip: string;
+function MetricCard({ label, value, icon: Icon, color }: {
+  label: string; value: string; icon: React.ElementType; color?: string;
 }) {
   return (
     <div className="card-elevated p-3 sm:p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative flex flex-col">
         <div className="min-h-[36px] sm:min-h-[40px] flex flex-col justify-start mb-1.5">
-          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center leading-tight">
+          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider leading-tight">
             {label.split(' — ')[0]}
-            <InfoTip text={tooltip} />
           </p>
           {label.includes(' — ') && (
             <p className="text-[9px] sm:text-[10px] text-muted-foreground/70 mt-0.5 font-medium">{label.split(' — ')[1]}</p>
