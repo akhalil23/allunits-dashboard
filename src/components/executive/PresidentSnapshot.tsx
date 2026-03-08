@@ -232,9 +232,9 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       </section>
 
 
-      {/* Section 5: Pillar Performance Comparison Bars */}
+      {/* Section 4: Pillar Performance Comparison Bars */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-5">
             <BarChart3 className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
