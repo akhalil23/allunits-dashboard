@@ -280,10 +280,22 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <div className="w-36 h-36 sm:w-44 sm:h-44 shrink-0">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={donutData} innerRadius="60%" outerRadius="85%" dataKey="count" startAngle={90} endAngle={-270} strokeWidth={0}>
+                  <Pie data={donutData} innerRadius="60%" outerRadius="85%" dataKey="count" nameKey="signal" startAngle={90} endAngle={-270} strokeWidth={0}>
                     {donutData.map((d, i) => (<Cell key={i} fill={d.color} />))}
                   </Pie>
-                  <ReTooltip formatter={(value: number, name: string) => [`${value} items`, name]} />
+                  <ReTooltip
+                    content={({ payload }) => {
+                      if (!payload?.[0]) return null;
+                      const d = payload[0].payload;
+                      const label = d.signal.split(' (')[0];
+                      return (
+                        <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs space-y-0.5">
+                          <p className="font-semibold text-foreground">{label}</p>
+                          <p className="text-muted-foreground">{d.count} items ({d.percent}%)</p>
+                        </div>
+                      );
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
