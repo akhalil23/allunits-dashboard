@@ -230,21 +230,25 @@ export function aggregateUniversity(
   const denom = applicableItems || 1;
   const riskIndex = computeRiskIndexFromCounts(totalRiskCounts);
 
-  const riskDistribution = RISK_SIGNAL_ORDER.map(signal => {
-    let count = 0;
+  // Largest-remainder rounding so percentages always sum to exactly 100%
+  const rawCounts = RISK_SIGNAL_ORDER.map(signal => {
     switch (signal) {
-      case 'No Risk (On Track)': count = totalRiskCounts.noRisk; break;
-      case 'Emerging Risk (Needs Attention)': count = totalRiskCounts.emerging; break;
-      case 'Critical Risk (Needs Close Attention)': count = totalRiskCounts.critical; break;
-      case 'Realized Risk (Needs Mitigation Strategy)': count = totalRiskCounts.realized; break;
+      case 'No Risk (On Track)': return totalRiskCounts.noRisk;
+      case 'Emerging Risk (Needs Attention)': return totalRiskCounts.emerging;
+      case 'Critical Risk (Needs Close Attention)': return totalRiskCounts.critical;
+      case 'Realized Risk (Needs Mitigation Strategy)': return totalRiskCounts.realized;
+      default: return 0;
     }
-    return {
-      signal,
-      count,
-      percent: applicableItems > 0 ? Math.round((count / applicableItems) * 100) : 0,
-      color: RISK_SIGNAL_COLORS[signal],
-    };
   });
+
+  const roundedPcts = largestRemainderRound(rawCounts, applicableItems, 100);
+
+  const riskDistribution = RISK_SIGNAL_ORDER.map((signal, i) => ({
+    signal,
+    count: rawCounts[i],
+    percent: roundedPcts[i],
+    color: RISK_SIGNAL_COLORS[signal],
+  }));
 
   const topRiskiestUnits = [...unitAggregations]
     .filter(u => u.applicableItems > 0)
