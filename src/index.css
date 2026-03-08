@@ -99,15 +99,15 @@
     --input: 215 6% 36%;
     --ring: 161 100% 32%;
 
-    --sidebar-background: 220 12% 18%;
+    --sidebar-background: 220 10% 20%;
     --sidebar-foreground: 210 40% 96%;
     --sidebar-primary: 161 100% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 10% 24%;
+    --sidebar-accent: 220 8% 26%;
     --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 220 10% 26%;
+    --sidebar-border: 220 8% 30%;
     --sidebar-ring: 161 100% 36%;
-    --sidebar-muted: 220 10% 28%;
+    --sidebar-muted: 220 8% 30%;
 
     --header-from: 220 12% 18%;
     --header-to: 174 30% 22%;
