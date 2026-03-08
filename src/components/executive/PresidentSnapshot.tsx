@@ -143,8 +143,8 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
       {/* Section 2: Executive Highlights */}
       <section>
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Lightbulb className="w-3.5 h-3.5" /> Executive highlights
+        <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+          <Lightbulb className="w-4 h-4" /> Executive highlights
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {highlights.map((h, i) => (
@@ -153,16 +153,16 @@ export default function PresidentSnapshot({ aggregation }: Props) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="card-elevated p-4 relative overflow-hidden"
+              className="card-elevated p-4 sm:p-5 relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full rounded-r" style={{ backgroundColor: h.color }} />
               <div className="flex items-start gap-3 pl-2">
-                <div className="p-1.5 rounded-lg bg-muted/50 mt-0.5">
-                  <h.icon className="w-3.5 h-3.5" style={{ color: h.color }} />
+                <div className="p-2 rounded-lg bg-muted/50 mt-0.5">
+                  <h.icon className="w-4 h-4" style={{ color: h.color }} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-foreground">{h.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{h.insight}</p>
+                  <p className="text-sm font-semibold text-foreground">{h.title}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">{h.insight}</p>
                 </div>
               </div>
             </motion.div>
