@@ -21,6 +21,7 @@ import { RISK_SIGNAL_COLORS, RISK_SIGNAL_ORDER } from '@/lib/risk-signals';
 import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
+import { RISK_SIGNAL_TOOLTIPS } from '@/lib/metric-definitions';
 import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
@@ -90,10 +91,22 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
             </span>
             <div className="h-48 mt-3">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={pillarAgg.map(p => ({ name: PILLAR_LABELS[p.pillar], noRisk: p.riskCounts.noRisk, emerging: p.riskCounts.emerging, critical: p.riskCounts.critical, realized: p.riskCounts.realized }))} layout="vertical" barSize={18}>
+                <BarChart data={pillarAgg.map(p => {
+                  const total = p.riskCounts.noRisk + p.riskCounts.emerging + p.riskCounts.critical + p.riskCounts.realized;
+                  return { name: PILLAR_LABELS[p.pillar], noRisk: p.riskCounts.noRisk, emerging: p.riskCounts.emerging, critical: p.riskCounts.critical, realized: p.riskCounts.realized, total };
+                })} layout="vertical" barSize={18}>
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 10 }} />
-                  <ReTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number, n: string) => { const m: Record<string,string> = { noRisk:'No Risk', emerging:'Emerging', critical:'Critical', realized:'Realized' }; return [v, m[n]||n]; }} />
+                  <ReTooltip
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
+                    formatter={(v: number, n: string, props: any) => {
+                      const labelMap: Record<string,string> = { noRisk:'No Risk', emerging:'Emerging', critical:'Critical', realized:'Realized' };
+                      const total = props.payload?.total || 1;
+                      const pct = ((v / total) * 100).toFixed(1);
+                      return [`${v} items (${pct}%)`, labelMap[n] || n];
+                    }}
+                    labelFormatter={(label: string) => `${label} — Risk Signals`}
+                  />
                   <Bar dataKey="noRisk" stackId="a" fill={RISK_SIGNAL_COLORS['No Risk (On Track)']} />
                   <Bar dataKey="emerging" stackId="a" fill={RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)']} />
                   <Bar dataKey="critical" stackId="a" fill={RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)']} />
@@ -101,6 +114,8 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            {/* Legend with totals */}
+            <RiskSignalLegend pillarAgg={pillarAgg} />
           </div>
 
           {/* Completion Status Distribution Donut */}
@@ -134,6 +149,45 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       <section>
         <ExceptionsTable flags={flags} />
       </section>
+    </div>
+  );
+}
+
+function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
+  const totals = pillarAgg.reduce((acc, p) => ({
+    noRisk: acc.noRisk + p.riskCounts.noRisk,
+    emerging: acc.emerging + p.riskCounts.emerging,
+    critical: acc.critical + p.riskCounts.critical,
+    realized: acc.realized + p.riskCounts.realized,
+  }), { noRisk: 0, emerging: 0, critical: 0, realized: 0 });
+  const grand = totals.noRisk + totals.emerging + totals.critical + totals.realized;
+  const pct = (v: number) => grand > 0 ? ((v / grand) * 100).toFixed(1) : '0.0';
+
+  const items = [
+    { key: 'noRisk' as const, label: 'No Risk', color: RISK_SIGNAL_COLORS['No Risk (On Track)'], tip: RISK_SIGNAL_TOOLTIPS.noRisk },
+    { key: 'emerging' as const, label: 'Emerging', color: RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)'], tip: RISK_SIGNAL_TOOLTIPS.emerging },
+    { key: 'critical' as const, label: 'Critical', color: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'], tip: RISK_SIGNAL_TOOLTIPS.critical },
+    { key: 'realized' as const, label: 'Realized', color: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'], tip: RISK_SIGNAL_TOOLTIPS.realized },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border">
+      {items.map(item => (
+        <TooltipProvider key={item.key}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 cursor-help">
+                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
+                <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                <span className="text-[10px] font-bold text-foreground">{totals[item.key]}</span>
+                <span className="text-[10px] text-muted-foreground">({pct(totals[item.key])}%)</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
+      <span className="text-[10px] text-muted-foreground ml-auto">Total: {grand} items</span>
     </div>
   );
 }
