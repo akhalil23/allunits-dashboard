@@ -5,10 +5,11 @@
 
 import { useTheme } from '@/hooks/use-theme';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, RefreshCw, LogOut, Camera } from 'lucide-react';
+import { Moon, Sun, RefreshCw, LogOut, Camera, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserRole } from '@/hooks/use-user-role';
 
 interface ExecutiveHeaderProps {
   loadedUnits: number;
@@ -23,6 +24,8 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { data: userRole } = useUserRole();
+  const isAdmin = userRole?.role === 'admin';
 
   return (
     <header className={`relative overflow-hidden ${isMobile ? 'sticky top-0 z-40' : ''}`}>
@@ -66,6 +69,25 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >
+            {/* Back to Admin */}
+            {isAdmin && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.button
+                      onClick={() => navigate('/admin')}
+                      className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p>Back to Admin Panel</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
             {/* Strategic Snapshot Tracker Button */}
             {onOpenSnapshotTracker && (
               <motion.button
