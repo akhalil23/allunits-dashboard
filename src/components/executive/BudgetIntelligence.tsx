@@ -5,13 +5,14 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, AlertTriangle, Target, BarChart3, Info } from 'lucide-react';
+import { DollarSign, AlertTriangle, Target, BarChart3 } from 'lucide-react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, BarChart, Bar, ReferenceLine,
   PieChart, Pie, Cell as PieCell,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
