@@ -14,9 +14,8 @@ import StrategicRiskPriority from '@/components/executive/StrategicRiskPriority'
 import BudgetIntelligence from '@/components/executive/BudgetIntelligence';
 import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
-import SnapshotTracker from '@/components/executive/SnapshotTracker';
 import DashboardGuide from '@/components/executive/DashboardGuide';
-import StrategicTrendsPanel from '@/components/executive/StrategicTrendsPanel';
+import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
 import FilterBar from '@/components/dashboard/FilterBar';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { Loader2, AlertCircle } from 'lucide-react';
