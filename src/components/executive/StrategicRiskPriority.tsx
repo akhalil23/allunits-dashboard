@@ -63,14 +63,12 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                     transition={{ delay: 0.1 + idx * 0.05 }}
                     className="flex items-center gap-2.5"
                   >
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-xs font-semibold text-foreground w-14 cursor-help">{PILLAR_LABELS[p.pillar]}</span>
-                        </TooltipTrigger>
-                        <TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs font-semibold text-foreground w-14 cursor-help">{PILLAR_LABELS[p.pillar]}</span>
+                      </TooltipTrigger>
+                      <TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent>
+                    </Tooltip>
                     <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
                       <motion.div
                         className="h-full rounded-full"
