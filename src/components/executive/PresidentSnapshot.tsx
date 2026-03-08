@@ -138,13 +138,13 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           <KPICard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={riskColor} tooltip="Risk Index (RI) represents the aggregated severity of risk signals across applicable strategic actions. Lower values indicate lower structural risk. Scale: 0 (no risk) to 3 (maximum risk)." />
           <KPICard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} tooltip="Percentage of the allocated budget that has already been utilized during the selected reporting cycle." />
         </div>
-        <p className="text-[11px] text-muted-foreground italic mt-2 px-1">Budget context: Based on 2-Year Strategic Plan (2025–2027) planned allocations.</p>
+        <p className="text-xs text-muted-foreground italic mt-2.5 px-1">Budget context: Based on 2-Year Strategic Plan (2025–2027) planned allocations.</p>
       </section>
 
       {/* Section 2: Executive Highlights */}
       <section>
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Lightbulb className="w-3.5 h-3.5" /> Executive highlights
+        <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+          <Lightbulb className="w-4 h-4" /> Executive highlights
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {highlights.map((h, i) => (
@@ -153,16 +153,16 @@ export default function PresidentSnapshot({ aggregation }: Props) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="card-elevated p-4 relative overflow-hidden"
+              className="card-elevated p-4 sm:p-5 relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full rounded-r" style={{ backgroundColor: h.color }} />
               <div className="flex items-start gap-3 pl-2">
-                <div className="p-1.5 rounded-lg bg-muted/50 mt-0.5">
-                  <h.icon className="w-3.5 h-3.5" style={{ color: h.color }} />
+                <div className="p-2 rounded-lg bg-muted/50 mt-0.5">
+                  <h.icon className="w-4 h-4" style={{ color: h.color }} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-foreground">{h.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{h.insight}</p>
+                  <p className="text-sm font-semibold text-foreground">{h.title}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">{h.insight}</p>
                 </div>
               </div>
             </motion.div>
@@ -174,10 +174,10 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Strategic Performance Matrix</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Strategic Performance Matrix</span>
             <InfoTip text="Bubble chart combining delivery (Y), budget (X), and risk (color). Bubble size reflects the number of applicable initiatives." />
           </div>
-          <p className="text-xs text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
           <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
@@ -214,19 +214,19 @@ export default function PresidentSnapshot({ aggregation }: Props) {
               </ScatterChart>
             </ResponsiveContainer>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
             {[
               { label: 'High Delivery / High Budget', desc: 'Strong Execution', pos: 'top-right', color: '#16A34A', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)' },
               { label: 'High Delivery / Low Budget', desc: 'Efficient Execution', pos: 'top-left', color: '#3B82F6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)' },
               { label: 'Low Delivery / High Budget', desc: 'Execution Risk', pos: 'bottom-right', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
               { label: 'Low Delivery / Low Budget', desc: 'Underperforming', pos: 'bottom-left', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)' },
             ].map(q => (
-              <div key={q.pos} className="text-center p-2.5 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
+              <div key={q.pos} className="text-center p-3 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
                 <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: q.color }} />
-                  <p className="text-[11px] font-semibold" style={{ color: q.color }}>{q.desc}</p>
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: q.color }} />
+                  <p className="text-xs font-semibold" style={{ color: q.color }}>{q.desc}</p>
                 </div>
-                <p className="text-[9px] text-muted-foreground">{q.label}</p>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground">{q.label}</p>
               </div>
             ))}
           </div>
@@ -237,25 +237,25 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       {/* Section 5: Pillar Performance Comparison Bars */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
+          <div className="flex items-center gap-2 mb-5">
+            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             {pillarData.map(p => (
               <div key={p.pillar} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="text-xs font-semibold text-foreground cursor-help">{p.shortLabel}</span>
+                        <span className="text-sm font-semibold text-foreground cursor-help">{p.shortLabel}</span>
                       </TooltipTrigger>
                       <TooltipContent><p className="text-xs">{p.fullLabel}</p></TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <span className="text-[10px] text-muted-foreground">{p.applicable} applicable items</span>
+                  <span className="text-xs text-muted-foreground">{p.applicable} applicable items</span>
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" />
                   <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} />
                   <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} />
@@ -270,10 +270,10 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-elevated p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Signal Distribution</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk Signal Distribution</span>
             <InfoTip text="Distribution of all applicable items by risk signal category." />
           </div>
-           <p className="text-xs text-muted-foreground mb-3">
+           <p className="text-xs sm:text-sm text-muted-foreground mb-4">
              <strong>No Risk:</strong> Actions showing no risk indicators. <strong>Emerging:</strong> Early warning signals. <strong>Critical:</strong> Severe risk requiring intervention. <strong>Realized:</strong> Risk event has already occurred.
           </p>
           <div className="flex items-center gap-6 mt-4">
@@ -299,21 +299,21 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex-1 space-y-2.5 min-w-0">
+            <div className="flex-1 space-y-3 min-w-0">
               {RISK_SIGNAL_ORDER.map(signal => {
                 const item = aggregation.riskDistribution.find(d => d.signal === signal);
                 return (
-                  <div key={signal} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: RISK_SIGNAL_COLORS[signal] }} />
-                    <span className="text-xs text-foreground flex-1 truncate">{signal.split(' (')[0]}</span>
-                    <span className="text-xs font-bold text-foreground">{item?.count || 0}</span>
-                    <span className="text-xs text-muted-foreground w-12 text-right">{item?.percent || 0}%</span>
+                  <div key={signal} className="flex items-center gap-2.5">
+                    <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: RISK_SIGNAL_COLORS[signal] }} />
+                    <span className="text-sm text-foreground flex-1 truncate">{signal.split(' (')[0]}</span>
+                    <span className="text-sm font-bold text-foreground">{item?.count || 0}</span>
+                    <span className="text-sm text-muted-foreground w-14 text-right">{item?.percent || 0}%</span>
                   </div>
                 );
               })}
-              <div className="pt-2 mt-2 border-t border-border flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Total Applicable</span>
-                <span className="text-xs font-bold text-foreground">{aggregation.applicableItems}</span>
+              <div className="pt-3 mt-3 border-t border-border flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Total Applicable</span>
+                <span className="text-sm font-bold text-foreground">{aggregation.applicableItems}</span>
               </div>
             </div>
           </div>
@@ -386,7 +386,7 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
   label: string; value: string; icon: React.ElementType; color: string; tooltip: string;
 }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-5 relative overflow-hidden">
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative flex items-start justify-between">
         <div>
@@ -394,10 +394,10 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
             {label}
             <InfoTip text={tooltip} />
           </p>
-          <p className="text-xl sm:text-2xl font-display font-bold mt-1" style={{ color }}>{value}</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5" style={{ color }}>{value}</p>
         </div>
-        <div className="p-2 rounded-lg bg-muted/50">
-          <Icon className="w-4 h-4 text-muted-foreground" />
+        <div className="p-2.5 rounded-xl bg-muted/50">
+          <Icon className="w-5 h-5 text-muted-foreground" />
         </div>
       </div>
     </motion.div>
@@ -410,12 +410,12 @@ function BarRow({ label, value, max, suffix, color, format }: {
   const pct = Math.min(100, (value / max) * 100);
   const display = format ? format(value) : `${value}${suffix}`;
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-[10px] text-muted-foreground w-16 shrink-0">{label}</span>
-      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+    <div className="flex items-center gap-2.5">
+      <span className="text-xs text-muted-foreground w-20 shrink-0">{label}</span>
+      <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[11px] font-bold w-10 text-right" style={{ color }}>{display}</span>
+      <span className="text-xs font-bold w-14 text-right" style={{ color }}>{display}</span>
     </div>
   );
 }
