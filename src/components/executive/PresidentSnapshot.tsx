@@ -237,25 +237,25 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       {/* Section 5: Pillar Performance Comparison Bars */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-elevated p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
+          <div className="flex items-center gap-2 mb-5">
+            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Pillar Performance Comparison</span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             {pillarData.map(p => (
               <div key={p.pillar} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="text-xs font-semibold text-foreground cursor-help">{p.shortLabel}</span>
+                        <span className="text-sm font-semibold text-foreground cursor-help">{p.shortLabel}</span>
                       </TooltipTrigger>
                       <TooltipContent><p className="text-xs">{p.fullLabel}</p></TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <span className="text-[10px] text-muted-foreground">{p.applicable} applicable items</span>
+                  <span className="text-xs text-muted-foreground">{p.applicable} applicable items</span>
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" />
                   <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} />
                   <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} />
