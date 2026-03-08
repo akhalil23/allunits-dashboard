@@ -6,7 +6,7 @@ import { STATUS_COLORS } from '@/lib/constants';
 import { getItemStatus, getItemCompletion, getApplicableItems, computeInProgressAvgCompletion } from '@/lib/intelligence';
 import { motion } from 'framer-motion';
 import { Info, TrendingUp } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
   items: ActionItem[];
