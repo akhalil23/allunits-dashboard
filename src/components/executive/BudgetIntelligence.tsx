@@ -118,7 +118,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} width={40} />
                 <ReTooltip formatter={(v: number) => `$${(v / 1_000_000).toFixed(2)}M`} contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
                 <Bar dataKey="committed" stackId="a" fill="hsl(var(--primary))" name="Committed" />
-                <Bar dataKey="remaining" stackId="a" fill="#94A3B8" name="Remaining" radius={[0,4,4,0]} />
+                <Bar dataKey="remaining" stackId="a" fill="hsl(var(--muted-foreground))" fillOpacity={0.4} name="Remaining" radius={[0,4,4,0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
