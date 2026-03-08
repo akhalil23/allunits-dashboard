@@ -197,10 +197,19 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
       <div className="w-28 h-28 shrink-0">
         <ResponsiveContainer>
           <PieChart>
-            <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" startAngle={90} endAngle={-270} strokeWidth={0}>
+            <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" nameKey="name" startAngle={90} endAngle={-270} strokeWidth={0}>
               {data.map((d, i) => <Cell key={i} fill={d.color} />)}
             </Pie>
-            <ReTooltip formatter={(v: number, n: string) => [`${v} items`, n]} />
+            <ReTooltip content={({ payload }) => {
+              if (!payload?.[0]) return null;
+              const d = payload[0].payload;
+              return (
+                <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs space-y-0.5">
+                  <p className="font-semibold text-foreground">{d.name}</p>
+                  <p className="text-muted-foreground">{d.value} items</p>
+                </div>
+              );
+            }} />
           </PieChart>
         </ResponsiveContainer>
       </div>
