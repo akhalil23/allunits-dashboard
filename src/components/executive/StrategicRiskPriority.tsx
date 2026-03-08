@@ -10,7 +10,7 @@ import {
   PieChart, Pie, Cell,
 } from 'recharts';
 import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
@@ -63,14 +63,12 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                     transition={{ delay: 0.1 + idx * 0.05 }}
                     className="flex items-center gap-2.5"
                   >
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-xs font-semibold text-foreground w-14 cursor-help">{PILLAR_LABELS[p.pillar]}</span>
-                        </TooltipTrigger>
-                        <TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs font-semibold text-foreground w-14 cursor-help">{PILLAR_LABELS[p.pillar]}</span>
+                      </TooltipTrigger>
+                      <TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent>
+                    </Tooltip>
                     <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
                       <motion.div
                         className="h-full rounded-full"
@@ -175,19 +173,17 @@ function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border">
       {items.map(item => (
-        <TooltipProvider key={item.key}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 cursor-help">
-                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-muted-foreground">{item.label}</span>
-                <span className="text-xs font-bold text-foreground">{totals[item.key]}</span>
-                <span className="text-xs text-muted-foreground">({pct(totals[item.key])}%)</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip key={item.key}>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1.5 cursor-help">
+              <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-xs text-muted-foreground">{item.label}</span>
+              <span className="text-xs font-bold text-foreground">{totals[item.key]}</span>
+              <span className="text-xs text-muted-foreground">({pct(totals[item.key])}%)</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
+        </Tooltip>
       ))}
       <span className="text-xs text-muted-foreground ml-auto">Total: {grand} items</span>
     </div>
@@ -316,12 +312,10 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
               <th className="text-left py-2.5 px-2 font-medium text-muted-foreground border-b border-border sticky left-0 bg-card z-10 min-w-[140px]">Unit</th>
               {pillars.map(p => (
                 <th key={p} className="text-center py-2.5 px-2 font-medium text-muted-foreground border-b border-border w-20">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger>
-                      <TooltipContent><p className="text-xs">{PILLAR_FULL[p]}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger>
+                    <TooltipContent><p className="text-xs">{PILLAR_FULL[p]}</p></TooltipContent>
+                  </Tooltip>
                 </th>
               ))}
             </tr>
@@ -337,21 +331,19 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
                   const opacity = Math.max(0.15, Math.min(0.85, cell.riskIndex / 3));
                   return (
                     <td key={pillar} className="text-center py-2 px-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="rounded-md py-1 px-1 mx-auto w-16 cursor-default" style={{ backgroundColor: color }}>
-                              <span className="text-xs font-bold text-white">RI {cell.riskIndex.toFixed(2)}</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs space-y-1">
-                            <p className="font-semibold">{getUnitDisplayLabel(unit.unitId)} — {PILLAR_FULL[pillar]}</p>
-                            <p>RI: <span className="font-bold" style={{ color }}>{cell.riskIndex.toFixed(2)}</span></p>
-                            <p>Completion: {cell.completionPct}%</p>
-                            <p>Applicable Items: {cell.applicableItems}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="rounded-md py-1 px-1 mx-auto w-16 cursor-default" style={{ backgroundColor: color }}>
+                            <span className="text-xs font-bold text-white">RI {cell.riskIndex.toFixed(2)}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs space-y-1">
+                          <p className="font-semibold">{getUnitDisplayLabel(unit.unitId)} — {PILLAR_FULL[pillar]}</p>
+                          <p>RI: <span className="font-bold" style={{ color }}>{cell.riskIndex.toFixed(2)}</span></p>
+                          <p>Completion: {cell.completionPct}%</p>
+                          <p>Applicable Items: {cell.applicableItems}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </td>
                   );
                 })}

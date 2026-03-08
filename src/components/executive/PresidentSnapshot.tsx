@@ -13,7 +13,7 @@ import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, ReferenceLine, ReferenceArea, PieChart, Pie, Cell as PieCell,
 } from 'recharts';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { getRiskBandColor, RISK_BAND_COLORS } from '@/lib/university-aggregation';
@@ -32,14 +32,12 @@ interface Props {
 
 function PillarTooltipLabel({ pillar }: { pillar: PillarId }) {
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="cursor-help">{PILLAR_SHORT[pillar]}</span>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs text-xs"><p>{PILLAR_FULL[pillar]}</p></TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="cursor-help">{PILLAR_SHORT[pillar]}</span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs text-xs"><p>{PILLAR_FULL[pillar]}</p></TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -251,14 +249,12 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 className="space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-sm font-semibold text-foreground cursor-help">{p.shortLabel}</span>
-                      </TooltipTrigger>
-                      <TooltipContent><p className="text-xs">{p.fullLabel}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-sm font-semibold text-foreground cursor-help">{p.shortLabel}</span>
+                    </TooltipTrigger>
+                    <TooltipContent><p className="text-xs">{p.fullLabel}</p></TooltipContent>
+                  </Tooltip>
                   <span className="text-xs text-muted-foreground">{p.applicable} applicable items</span>
                 </div>
                 <div className="space-y-2">
@@ -361,8 +357,7 @@ function PillarLegend() {
 
         <div className="flex flex-col sm:flex-row gap-0 sm:gap-0">
           {romanNumerals.map((p, i) => (
-            <TooltipProvider key={p}>
-              <Tooltip>
+            <Tooltip key={p}>
                 <TooltipTrigger asChild>
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
@@ -406,7 +401,6 @@ function PillarLegend() {
                   <p>{PILLAR_FULL[p]}</p>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
           ))}
         </div>
       </div>

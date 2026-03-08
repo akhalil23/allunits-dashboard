@@ -7,7 +7,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Info, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer } from 'recharts';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
@@ -157,14 +157,12 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
                 <div className="space-y-2">
                   {momentum.map(m => (
                     <div key={m.pillar} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-xs font-semibold text-foreground w-36 truncate cursor-help">{m.label}</span>
-                          </TooltipTrigger>
-                          <TooltipContent><p className="text-xs">{m.fullLabel}</p></TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-xs font-semibold text-foreground w-36 truncate cursor-help">{m.label}</span>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="text-xs">{m.fullLabel}</p></TooltipContent>
+                      </Tooltip>
                       <div className="flex-1 flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <span className="text-[10px] text-muted-foreground">Completion</span>

@@ -10,7 +10,7 @@ import {
   ResponsiveContainer, Tooltip as RechartsTooltip,
 } from 'recharts';
 import { GitCompareArrows } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
@@ -113,17 +113,15 @@ export default function UnitComparison({ aggregation }: Props) {
                   { label: 'Critical', color: RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)'], tip: 'Actions with severe risk signals requiring immediate intervention.' },
                   { label: 'Realized', color: RISK_SIGNAL_COLORS['Realized Risk (Needs Mitigation Strategy)'], tip: 'Actions where the identified risk event has already occurred.' },
                 ].map(s => (
-                  <TooltipProvider key={s.label}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                          {s.label}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-xs text-xs"><p>{s.tip}</p></TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip key={s.label}>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                        {s.label}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs text-xs"><p>{s.tip}</p></TooltipContent>
+                  </Tooltip>
                 ))}
               </div>
             </motion.div>

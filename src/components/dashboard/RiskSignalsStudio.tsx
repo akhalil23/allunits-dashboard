@@ -15,7 +15,7 @@ import {
   type RiskSignal,
   type RiskSignalDistItem,
 } from '@/lib/risk-signals';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -81,32 +81,30 @@ function StackedBar({
       </div>
       <div className="h-10 rounded-lg overflow-hidden flex cursor-pointer">
         {segments.map(seg => (
-          <TooltipProvider key={seg.signal}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div
-                  className="h-full flex items-center justify-center transition-opacity"
-                  style={{
-                    backgroundColor: seg.color,
-                    width: `${seg.percent}%`,
-                    opacity: activeSignal && activeSignal !== seg.signal ? 0.4 : 1,
-                  }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${seg.percent}%` }}
-                  transition={{ duration: 0.6, ease: 'easeOut' }}
-                  onClick={() => onSegmentClick(activeSignal === seg.signal ? null : seg.signal)}
-                >
-                  {seg.percent >= 12 && (
-                    <span className="text-[10px] font-bold text-white drop-shadow-sm">{seg.percent}%</span>
-                  )}
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                <p className="font-semibold">{seg.signal}</p>
-                <p>{seg.count} item(s) — {seg.percent}%</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip key={seg.signal}>
+            <TooltipTrigger asChild>
+              <motion.div
+                className="h-full flex items-center justify-center transition-opacity"
+                style={{
+                  backgroundColor: seg.color,
+                  width: `${seg.percent}%`,
+                  opacity: activeSignal && activeSignal !== seg.signal ? 0.4 : 1,
+                }}
+                initial={{ width: 0 }}
+                animate={{ width: `${seg.percent}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                onClick={() => onSegmentClick(activeSignal === seg.signal ? null : seg.signal)}
+              >
+                {seg.percent >= 12 && (
+                  <span className="text-[10px] font-bold text-white drop-shadow-sm">{seg.percent}%</span>
+                )}
+              </motion.div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              <p className="font-semibold">{seg.signal}</p>
+              <p>{seg.count} item(s) — {seg.percent}%</p>
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
       {/* Legend */}
@@ -331,16 +329,14 @@ function SectionHeader() {
       <div className="flex items-center gap-2">
         <ShieldAlert className="w-4 h-4 text-primary" />
         <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Risk Signals Overview</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
-              <p>Decision-support view derived from execution status (read-only). Signals summarize status; validate with unit owners.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+            <p>Decision-support view derived from execution status (read-only). Signals summarize status; validate with unit owners.</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
       <p className="text-[10px] text-muted-foreground italic">Decision-support only. Signals summarize execution status and should be validated with unit owners.</p>
     </div>

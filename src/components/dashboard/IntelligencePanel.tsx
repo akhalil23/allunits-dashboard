@@ -4,7 +4,7 @@ import { QUALIFIER_COLORS } from '@/lib/constants';
 import { computeQualifierDistribution, computeRiskIndex, computeTimeProgress, getApplicableItems } from '@/lib/intelligence';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingUp, ShieldAlert, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
   items: ActionItem[];
@@ -51,16 +51,14 @@ export default function IntelligencePanel({ items, viewType, term, observedAt, a
       <div className="flex items-center gap-2 mb-4 px-1">
         <ShieldAlert className="w-4 h-4 text-primary" />
         <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Intelligence Layer — Risk Signals</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
-              <p>Computed risk signals based on <strong>time progress</strong>, <strong>qualifier distribution</strong>, and a composite <strong>risk index</strong>. Based on {applicableItems.length} applicable item(s). For decision-support only.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+            <p>Computed risk signals based on <strong>time progress</strong>, <strong>qualifier distribution</strong>, and a composite <strong>risk index</strong>. Based on {applicableItems.length} applicable item(s). For decision-support only.</p>
+          </TooltipContent>
+        </Tooltip>
         <span className="text-[10px] text-muted-foreground italic">(Decision Support Only)</span>
       </div>
 

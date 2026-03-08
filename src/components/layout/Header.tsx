@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import type { ActionItem, Term, AcademicYear, ViewType } from '@/lib/types';
 import { getTermWindowKey } from '@/lib/types';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { exportPDF } from '@/lib/export-pdf';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -165,79 +165,73 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
           >
             {/* Back to Admin */}
             {isAdmin && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <motion.button
-                      onClick={() => navigate('/admin')}
-                      className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                    </motion.button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom"><p>Back to Admin Panel</p></TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={() => navigate('/admin')}
+                    className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom"><p>Back to Admin Panel</p></TooltipContent>
+              </Tooltip>
             )}
 
             {/* Data Integrity Badge */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full border backdrop-blur-sm text-[11px] font-semibold ${integrityConfig.bg} ${integrityConfig.text} ${integrityConfig.border}`}
-                    whileHover={{ scale: 1.03 }}
-                  >
-                    <span className="relative flex h-2 w-2">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${integrityConfig.dot} opacity-50`} />
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${integrityConfig.dot}`} />
-                    </span>
-                    <Shield className="w-3 h-3" />
-                    <span className="hidden sm:inline">Data: {integrity}</span>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
-                  {integrityAudit ? (
-                    <div className="space-y-1">
-                      <p><strong>{integrityAudit.applicableItems}</strong> applicable / <strong>{integrityAudit.totalItems}</strong> total items</p>
-                      {integrityAudit.diagnosticMessages.length > 0 ? (
-                        <ul className="list-disc list-inside space-y-0.5">
-                          {integrityAudit.diagnosticMessages.map((m, i) => <li key={i}>{m}</li>)}
-                        </ul>
-                      ) : (
-                        <p>All integrity checks passed.</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p>Data integrity: {integrity}</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full border backdrop-blur-sm text-[11px] font-semibold ${integrityConfig.bg} ${integrityConfig.text} ${integrityConfig.border}`}
+                  whileHover={{ scale: 1.03 }}
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${integrityConfig.dot} opacity-50`} />
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${integrityConfig.dot}`} />
+                  </span>
+                  <Shield className="w-3 h-3" />
+                  <span className="hidden sm:inline">Data: {integrity}</span>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs text-xs leading-relaxed">
+                {integrityAudit ? (
+                  <div className="space-y-1">
+                    <p><strong>{integrityAudit.applicableItems}</strong> applicable / <strong>{integrityAudit.totalItems}</strong> total items</p>
+                    {integrityAudit.diagnosticMessages.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {integrityAudit.diagnosticMessages.map((m, i) => <li key={i}>{m}</li>)}
+                      </ul>
+                    ) : (
+                      <p>All integrity checks passed.</p>
+                    )}
+                  </div>
+                ) : (
+                  <p>Data integrity: {integrity}</p>
+                )}
+              </TooltipContent>
+            </Tooltip>
 
             {/* Export Dropdown */}
             <DropdownMenu>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <motion.button
-                        disabled={!items?.length}
-                        className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
-                        whileHover={{ scale: 1.08 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Download className="w-4 h-4" />
-                      </motion.button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Export report</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <motion.button
+                      disabled={!items?.length}
+                      className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Download className="w-4 h-4" />
+                    </motion.button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Export report</p>
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align="end" className="min-w-[160px]">
                 <DropdownMenuItem onClick={handleExportCSV} className="gap-2 cursor-pointer">
                   <FileSpreadsheet className="w-4 h-4" />
@@ -262,21 +256,19 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             </motion.button>
 
             {/* Logout */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    onClick={() => { logout(); navigate('/login'); }}
-                    className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom"><p>Sign out</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  onClick={() => { logout(); navigate('/login'); }}
+                  className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <LogOut className="w-4 h-4" />
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom"><p>Sign out</p></TooltipContent>
+            </Tooltip>
 
             {/* Theme toggle */}
             <motion.button

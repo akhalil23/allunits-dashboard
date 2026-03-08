@@ -5,7 +5,7 @@ import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
 import { computeNewRiskIndex, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
 import { motion } from 'framer-motion';
 import { Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
   items: ActionItem[];
@@ -56,16 +56,14 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
     <div>
       <div className="flex items-center gap-2 mb-4 px-1">
         <h3 className="font-display text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pillar Performance Overview</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
-              <p>Each pillar shows the percentage of action items that are <strong>On Target</strong>, the risk index (0–3), and a mid→end completion trend. Items marked "Not Applicable" are excluded.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+            <p>Each pillar shows the percentage of action items that are <strong>On Target</strong>, the risk index (0–3), and a mid→end completion trend. Items marked "Not Applicable" are excluded.</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
       {/* Responsive grid: 1 col mobile, 2 col tablet, 5 col desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
@@ -75,22 +73,20 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
               <span className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{pd.pillar}</span>
               <span className="text-xs font-medium text-foreground truncate flex-1">{pd.label}</span>
               {/* Risk Index Badge */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white shrink-0"
-                      style={{ backgroundColor: riskColor(pd.riskIndex) }}
-                    >
-                      {pd.riskIndex.toFixed(1)}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    <p>Risk Index: {pd.riskIndex.toFixed(2)} / 3.00</p>
-                    <p className="text-muted-foreground">{pd.applicable} applicable items</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white shrink-0"
+                    style={{ backgroundColor: riskColor(pd.riskIndex) }}
+                  >
+                    {pd.riskIndex.toFixed(1)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  <p>Risk Index: {pd.riskIndex.toFixed(2)} / 3.00</p>
+                  <p className="text-muted-foreground">{pd.applicable} applicable items</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             {/* Status bar */}
             <div className="h-2 rounded-full bg-muted overflow-hidden mb-3 flex">
