@@ -357,8 +357,7 @@ function PillarLegend() {
 
         <div className="flex flex-col sm:flex-row gap-0 sm:gap-0">
           {romanNumerals.map((p, i) => (
-            <TooltipProvider key={p}>
-              <Tooltip>
+            <Tooltip key={p}>
                 <TooltipTrigger asChild>
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
@@ -402,7 +401,6 @@ function PillarLegend() {
                   <p>{PILLAR_FULL[p]}</p>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
           ))}
         </div>
       </div>
