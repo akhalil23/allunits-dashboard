@@ -386,7 +386,7 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
   label: string; value: string; icon: React.ElementType; color: string; tooltip: string;
 }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 sm:p-5 relative overflow-hidden">
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5 sm:p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
       <div className="relative flex items-start justify-between">
         <div>
@@ -394,10 +394,10 @@ function KPICard({ label, value, icon: Icon, color, tooltip }: {
             {label}
             <InfoTip text={tooltip} />
           </p>
-          <p className="text-xl sm:text-2xl font-display font-bold mt-1" style={{ color }}>{value}</p>
+          <p className="text-2xl sm:text-3xl font-display font-bold mt-1.5" style={{ color }}>{value}</p>
         </div>
-        <div className="p-2 rounded-lg bg-muted/50">
-          <Icon className="w-4 h-4 text-muted-foreground" />
+        <div className="p-2.5 rounded-xl bg-muted/50">
+          <Icon className="w-5 h-5 text-muted-foreground" />
         </div>
       </div>
     </motion.div>
