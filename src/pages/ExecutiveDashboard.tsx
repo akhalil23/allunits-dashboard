@@ -60,7 +60,7 @@ export default function ExecutiveDashboard() {
   if (isError || !aggregation) {
     return (
       <div className="flex h-screen overflow-hidden bg-background">
-        <ExecutiveSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <ExecutiveSidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3 max-w-md px-4">
             <AlertCircle className="w-8 h-8 text-destructive mx-auto" />
