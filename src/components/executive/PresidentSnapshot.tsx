@@ -430,9 +430,8 @@ function KPICard({ label, value, icon: Icon, color }: {
       <div className="relative p-5 sm:p-6">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight flex items-center gap-0.5">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">
               {label.split(' — ')[0]}
-              <InfoTip text={tooltip} />
             </p>
             {label.includes(' — ') && (
               <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">
