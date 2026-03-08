@@ -325,28 +325,58 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
 /** Pillar Legend component accessible from Executive Snapshot */
 function PillarLegend() {
+  const pillarColors: Record<string, string> = {
+    I: 'hsl(var(--primary))',
+    II: '#3B82F6',
+    III: '#8B5CF6',
+    IV: '#F59E0B',
+    V: '#EF4444',
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Info className="w-3.5 h-3.5 text-primary" />
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Strategic Plan IV — Pillar Reference</span>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        {(['I','II','III','IV','V'] as PillarId[]).map(p => (
-          <TooltipProvider key={p}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-start gap-2 text-[11px] rounded-md px-1.5 py-1 cursor-help hover:bg-muted/40 transition-colors">
-                  <span className="font-bold text-primary shrink-0">{PILLAR_LABELS[p]}</span>
-                  <span className="text-muted-foreground">{PILLAR_FULL[p].replace(`Pillar ${p} — `, '')}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs text-xs">
-                <p>{PILLAR_FULL[p]}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] p-5 sm:p-6"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.03] rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+      <div className="relative">
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="p-1.5 rounded-lg bg-primary/10">
+            <Info className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold text-foreground tracking-wide">Strategic Plan IV — Pillar Reference</h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5">5 strategic pillars guiding university-wide execution</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+          {(['I','II','III','IV','V'] as PillarId[]).map((p, i) => (
+            <TooltipProvider key={p}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="group relative rounded-lg border border-border/60 bg-card/80 backdrop-blur-sm px-3 py-2.5 cursor-help hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+                  >
+                    <div className="absolute top-0 left-0 w-full h-0.5 rounded-t-lg" style={{ backgroundColor: pillarColors[p] }} />
+                    <span className="text-[11px] font-bold block mb-0.5" style={{ color: pillarColors[p] }}>
+                      {PILLAR_LABELS[p]}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground leading-snug line-clamp-2">
+                      {PILLAR_FULL[p].replace(`Pillar ${p} — `, '')}
+                    </span>
+                  </motion.div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs text-xs">
+                  <p>{PILLAR_FULL[p]}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
