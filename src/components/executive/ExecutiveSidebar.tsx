@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
 
-export type ExecutiveTab = 'snapshot' | 'risk-priority' | 'budget' | 'tracker' | 'comparison' | 'ai-insights' | 'guide';
+export type ExecutiveTab = 'snapshot' | 'risk-priority' | 'budget' | 'comparison' | 'ai-insights' | 'guide';
 
 interface Props {
   activeTab: ExecutiveTab;
