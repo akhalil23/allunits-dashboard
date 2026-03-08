@@ -22,6 +22,12 @@ import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
+  const mainRef = useRef<HTMLElement>(null);
+
+  const handleTabChange = useCallback((tab: ExecutiveTab) => {
+    setActiveTab(tab);
+    mainRef.current?.scrollTo({ top: 0 });
+  }, []);
   const [trackerOpen, setTrackerOpen] = useState(false);
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
