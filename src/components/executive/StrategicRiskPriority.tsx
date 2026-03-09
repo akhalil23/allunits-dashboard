@@ -12,6 +12,7 @@ import {
 import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import {
@@ -19,6 +20,7 @@ import {
   type UniversityAggregation, type UnitPillarCell, type ExceptionFlag, type PillarAggregation, type UnitAggregation,
 } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS, RISK_SIGNAL_ORDER } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, RI_TOOLTIP, RI_BAND_LEGEND } from '@/lib/risk-display';
 import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
