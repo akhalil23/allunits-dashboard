@@ -15,6 +15,8 @@ import {
   type RiskSignal,
   type RiskSignalDistItem,
 } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, RI_TOOLTIP, RI_BAND_LEGEND } from '@/lib/risk-display';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
