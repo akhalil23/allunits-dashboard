@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import type { ActionItem, ViewType, AcademicYear, Term } from '@/lib/types';
 import { QUALIFIER_COLORS } from '@/lib/constants';
 import { computeQualifierDistribution, computeRiskIndex, computeTimeProgress, getApplicableItems } from '@/lib/intelligence';
+import { riToPercent, formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingUp, ShieldAlert, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
