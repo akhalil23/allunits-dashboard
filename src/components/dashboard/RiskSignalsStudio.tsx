@@ -158,17 +158,19 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
           <div className="relative">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Index</span>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className={`text-4xl sm:text-5xl font-display font-bold ${riskIndex < 1 ? 'text-[#16A34A]' : riskIndex < 2 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
-                {riskIndex.toFixed(2)}
+              <span className={`text-4xl sm:text-5xl font-display font-bold`} style={{ color: getRiskDisplayInfo(riskIndex).color }}>
+                {formatRIPercent(riskIndex)}
               </span>
-              <span className="text-xs text-muted-foreground">/ 3.00</span>
             </div>
+            <p className="text-sm font-semibold mt-1" style={{ color: getRiskDisplayInfo(riskIndex).color }}>
+              {getRiskDisplayInfo(riskIndex).band}
+            </p>
             <RiskGauge value={riskIndex} />
             <div className="flex items-center justify-between mt-3">
-              <span className="text-[10px] text-muted-foreground">Scale: 0 (low) → 3 (high)</span>
+              <span className="text-[10px] text-muted-foreground">Scale: 0% (low) → 100% (severe)</span>
               <span className="text-[10px] text-muted-foreground">{applicableItems.length} applicable items</span>
             </div>
-            <p className="text-[10px] text-muted-foreground/70 mt-2 italic">Compact average measure. Use the distribution below for the full picture.</p>
+            <p className="text-[10px] text-muted-foreground/70 mt-1 italic">{getRiskDisplayInfo(riskIndex).insight}</p>
           </div>
         </div>
 
