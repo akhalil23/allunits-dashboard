@@ -93,11 +93,12 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
     const worstPillar = [...pillarData].sort((a, b) => b.riskIndex - a.riskIndex)[0];
     if (worstPillar) {
+      const wpInfo = getRiskDisplayInfo(worstPillar.riskIndex);
       items.push({
         title: 'Risk Concentration',
-        insight: `Risk concentration remains highest in ${worstPillar.shortLabel} with RI ${worstPillar.riskIndex.toFixed(2)}.`,
+        insight: `Risk concentration remains highest in ${worstPillar.shortLabel} with RI ${formatRIPercent(worstPillar.riskIndex)} (${wpInfo.band}).`,
         icon: ShieldAlert,
-        color: getRiskBandColor(worstPillar.riskIndex),
+        color: wpInfo.color,
       });
     }
 
