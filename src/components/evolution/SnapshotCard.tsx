@@ -9,6 +9,7 @@ import {
   RISK_SIGNAL_COLORS,
   RISK_SIGNAL_ORDER,
 } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { motion } from 'framer-motion';
 
 interface Props {
