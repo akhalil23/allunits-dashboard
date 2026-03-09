@@ -183,7 +183,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
             <MetricCard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} />
-            <MetricCard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={getRiskBandColor(aggregation.riskIndex)} />
+            <MetricCard label="RI (Risk Index)" value={formatRIPercent(aggregation.riskIndex)} icon={ShieldAlert} color={getRiskDisplayInfo(aggregation.riskIndex).color} riValue={aggregation.riskIndex} />
             <MetricCard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} />
             <MetricCard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} />
             <MetricCard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} />
