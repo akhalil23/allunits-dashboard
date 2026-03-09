@@ -113,7 +113,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
     if (onTrackUnits > 0) {
       items.push({
         title: 'Low-Risk Units',
-        insight: `${onTrackUnits} unit${onTrackUnits > 1 ? 's' : ''} maintain${onTrackUnits === 1 ? 's' : ''} a Risk Index below 0.75, reflecting strong delivery alignment.`,
+        insight: `${onTrackUnits} unit${onTrackUnits > 1 ? 's' : ''} maintain${onTrackUnits === 1 ? 's' : ''} a Risk Index below 25%, reflecting strong delivery alignment.`,
         icon: CheckCircle2,
         color: '#16A34A',
       });
