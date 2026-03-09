@@ -8,7 +8,7 @@ export const METRIC_TOOLTIPS = {
   budgetUtilization: "Percentage of the allocated budget that has already been utilized during the selected reporting cycle.",
   onTrack: "Percentage of strategic actions currently progressing according to the planned schedule.",
   belowTarget: "Percentage of actions performing below expected progress levels.",
-  riskIndex: "Risk Index (RI) represents the aggregated severity of risk signals across applicable strategic actions. Lower values indicate lower structural risk.",
+  riskIndex: "Risk Index (RI) is displayed as a percentage from 0% to 100%. It represents the weighted structural severity of risk signals across applicable strategic items. Lower percentages indicate lower structural risk. Bands: 0–25% Low · 26–50% Moderate · 51–75% High · 76–100% Severe.",
   applicableItems: "Total number of strategic action items that are applicable under the current filter settings (excluding 'Not Applicable' items).",
 } as const;
 
