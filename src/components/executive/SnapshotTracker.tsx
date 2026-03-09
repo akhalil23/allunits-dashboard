@@ -299,7 +299,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-muted-foreground">RI</span>
-                      <DeltaArrow value={m.riskDelta} invert format={(v) => v.toFixed(2)} />
+                      <DeltaArrow value={m.riskDelta} invert format={(v) => `${riToPercent(Math.abs(v))}%`} />
                     </div>
                   </div>
                 </div>
