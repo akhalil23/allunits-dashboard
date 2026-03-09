@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { riToPercent, formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS, getPillarBudget } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
