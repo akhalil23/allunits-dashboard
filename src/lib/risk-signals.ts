@@ -210,7 +210,6 @@ export function generateNarrative(
 ): string {
   if (applicableCount === 0) return 'No applicable items for the selected context.';
 
-  const { riToPercent, getRiskDisplayInfo } = require('./risk-display');
   const riPct = riToPercent(riskIndex);
   const riInfo = getRiskDisplayInfo(riskIndex);
 
