@@ -28,5 +28,5 @@ export const METRIC_LABELS = {
   onTrackShort: "On-Track",
   belowTarget: "Below Target — Actions Underperforming (%)",
   belowTargetShort: "Below Target",
-  riskIndex: "RI (Risk Index)",
+  riskIndex: "RI (Risk Index %)",
 } as const;
