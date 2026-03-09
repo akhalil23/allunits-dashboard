@@ -12,6 +12,7 @@ import {
 import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import {
@@ -19,6 +20,7 @@ import {
   type UniversityAggregation, type UnitPillarCell, type ExceptionFlag, type PillarAggregation, type UnitAggregation,
 } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS, RISK_SIGNAL_ORDER } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, RI_TOOLTIP, RI_BAND_LEGEND } from '@/lib/risk-display';
 import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
@@ -49,12 +51,12 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
           {/* Risk Index by Pillar */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              RI by Pillar <InfoTip text="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk." />
+              RI by Pillar <InfoTip text={RI_TOOLTIP} />
             </span>
             <div className="space-y-3 mt-4">
               {pillarAgg.map((p, idx) => {
-                const color = getRiskBandColor(p.riskIndex);
-                const pct = Math.min(100, (p.riskIndex / 3) * 100);
+                const riInfo = getRiskDisplayInfo(p.riskIndex);
+                const pct = riInfo.percent;
                 return (
                   <motion.div
                     key={p.pillar}
@@ -75,10 +77,18 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}
                         transition={{ delay: 0.2 + idx * 0.05, duration: 0.6, ease: 'easeOut' }}
-                        style={{ backgroundColor: color }}
+                        style={{ backgroundColor: riInfo.color }}
                       />
                     </div>
-                    <span className="text-xs font-bold w-12 text-right" style={{ color }}>RI {p.riskIndex.toFixed(2)}</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs font-bold w-14 text-right cursor-help" style={{ color: riInfo.color }}>RI {pct}%</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs text-xs">
+                        <p className="font-semibold">{riInfo.band}</p>
+                        <p className="text-muted-foreground mt-0.5">{riInfo.insight}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </motion.div>
                 );
               })}
@@ -248,9 +258,9 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
           {visible.map((unit, idx) => {
             const value = unit[metricKey];
             const isRisk = metricKey === 'riskIndex';
-            const color = isRisk ? getRiskBandColor(value) : 'hsl(var(--primary))';
+            const color = isRisk ? getRiskDisplayInfo(value).color : 'hsl(var(--primary))';
             const maxVal = isRisk ? 3 : 100;
-            const pct = Math.min(100, (value / maxVal) * 100);
+            const pct = isRisk ? getRiskDisplayInfo(value).percent : Math.min(100, (value / maxVal) * 100);
             return (
               <motion.div
                 key={unit.unitId}
@@ -272,7 +282,7 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
                   />
                 </div>
                 <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
-                  {isRisk ? `RI ${value.toFixed(2)}` : `${value}%`}
+                  {isRisk ? `RI ${getRiskDisplayInfo(value).percent}%` : `${value}%`}
                 </span>
               </motion.div>
             );
@@ -327,19 +337,19 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
                 {pillars.map(pillar => {
                   const cell = getCell(unit.unitId, pillar);
                   if (!cell || cell.applicableItems === 0) return (<td key={pillar} className="text-center py-2 px-2"><span className="text-xs text-muted-foreground/50">—</span></td>);
-                  const color = getRiskBandColor(cell.riskIndex);
-                  const opacity = Math.max(0.15, Math.min(0.85, cell.riskIndex / 3));
+                  const color = getRiskDisplayInfo(cell.riskIndex).color;
+                  const riPct = getRiskDisplayInfo(cell.riskIndex).percent;
                   return (
                     <td key={pillar} className="text-center py-2 px-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="rounded-md py-1 px-1 mx-auto w-16 cursor-default" style={{ backgroundColor: color }}>
-                            <span className="text-xs font-bold text-white">RI {cell.riskIndex.toFixed(2)}</span>
+                            <span className="text-xs font-bold text-white">RI {riPct}%</span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="text-xs space-y-1">
                           <p className="font-semibold">{getUnitDisplayLabel(unit.unitId)} — {PILLAR_FULL[pillar]}</p>
-                          <p>RI: <span className="font-bold" style={{ color }}>{cell.riskIndex.toFixed(2)}</span></p>
+                          <p>RI: <span className="font-bold" style={{ color }}>{riPct}% — {getRiskDisplayInfo(cell.riskIndex).band}</span></p>
                           <p>Completion: {cell.completionPct}%</p>
                           <p>Applicable Items: {cell.applicableItems}</p>
                         </TooltipContent>
@@ -354,9 +364,9 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 pt-3 border-t border-border">
         <span className="text-xs text-muted-foreground">Risk Band:</span>
-        {(['green','amber','orange','red'] as const).map(band => (
-          <span key={band} className="text-xs px-2.5 py-0.5 rounded-full" style={{ borderColor: `${RISK_BAND_COLORS[band]}40`, color: RISK_BAND_COLORS[band], backgroundColor: `${RISK_BAND_COLORS[band]}10`, border: `1px solid ${RISK_BAND_COLORS[band]}40` }}>
-            {band === 'green' ? '0–0.75' : band === 'amber' ? '0.76–1.50' : band === 'orange' ? '1.51–2.25' : '2.26–3.00'}
+        {RI_BAND_LEGEND.map(band => (
+          <span key={band.label} className="text-xs px-2.5 py-0.5 rounded-full" style={{ borderColor: `${band.color}40`, color: band.color, backgroundColor: `${band.color}10`, border: `1px solid ${band.color}40` }}>
+            {band.range} {band.label}
           </span>
         ))}
       </div>
@@ -405,7 +415,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color: 'hsl(var(--destructive-foreground))', backgroundColor: badgeBackground, border: `1px solid ${badgeBorder}` }}>{severity}</span>
                 <span className="text-xs font-medium text-foreground truncate flex-1 min-w-0">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
                 <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">Completion: {flag.completion}%</span>
-                <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskBandColor(flag.riskWeight) }}>RI {flag.riskWeight.toFixed(1)}</span>
+                <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskDisplayInfo(flag.riskWeight).color }}>RI {getRiskDisplayInfo(flag.riskWeight).percent}%</span>
               </button>
               <AnimatePresence>
                 {isExpanded && (

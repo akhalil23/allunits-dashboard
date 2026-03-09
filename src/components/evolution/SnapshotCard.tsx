@@ -9,6 +9,7 @@ import {
   RISK_SIGNAL_COLORS,
   RISK_SIGNAL_ORDER,
 } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -60,8 +61,9 @@ export default function SnapshotCard({ label, accent, items, config, observedAt 
           <p className="text-[10px] text-muted-foreground">Applicable</p>
         </div>
         <div className="text-center p-3 rounded-lg bg-muted/50">
-          <p className="text-2xl font-display font-bold" style={{ color: riskColor }}>{stats.riskIndex.toFixed(2)}</p>
+          <p className="text-2xl font-display font-bold" style={{ color: getRiskDisplayInfo(stats.riskIndex).color }}>{formatRIPercent(stats.riskIndex)}</p>
           <p className="text-[10px] text-muted-foreground">Risk Index</p>
+          <p className="text-[9px] font-semibold" style={{ color: getRiskDisplayInfo(stats.riskIndex).color }}>{getRiskDisplayInfo(stats.riskIndex).band}</p>
         </div>
       </div>
 

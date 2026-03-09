@@ -15,6 +15,8 @@ import {
   type RiskSignal,
   type RiskSignalDistItem,
 } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, RI_TOOLTIP, RI_BAND_LEGEND } from '@/lib/risk-display';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -30,25 +32,7 @@ interface Props {
 // ─── Gauge Component ─────────────────────────────────────────────────────────
 
 function RiskGauge({ value }: { value: number }) {
-  const pct = Math.min(100, Math.max(0, (value / 3) * 100));
-  const color = value < 1 ? '#16A34A' : value < 2 ? '#F59E0B' : '#EF4444';
-
-  return (
-    <div className="relative h-3 rounded-full bg-muted overflow-hidden mt-3">
-      <div className="absolute inset-0 flex">
-        <div className="flex-1 bg-[#16A34A]/20" />
-        <div className="flex-1 bg-[#F59E0B]/20" />
-        <div className="flex-1 bg-[#EF4444]/20" />
-      </div>
-      <motion.div
-        className="absolute top-0 h-full w-1 rounded-full"
-        style={{ backgroundColor: color }}
-        initial={{ left: '0%' }}
-        animate={{ left: `${pct}%` }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-      />
-    </div>
-  );
+  return <RIMeter ri={value} showLabel={true} />;
 }
 
 // ─── Stacked Bar Segment ─────────────────────────────────────────────────────
@@ -174,17 +158,19 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
           <div className="relative">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Index</span>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className={`text-4xl sm:text-5xl font-display font-bold ${riskIndex < 1 ? 'text-[#16A34A]' : riskIndex < 2 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
-                {riskIndex.toFixed(2)}
+              <span className={`text-4xl sm:text-5xl font-display font-bold`} style={{ color: getRiskDisplayInfo(riskIndex).color }}>
+                {formatRIPercent(riskIndex)}
               </span>
-              <span className="text-xs text-muted-foreground">/ 3.00</span>
             </div>
+            <p className="text-sm font-semibold mt-1" style={{ color: getRiskDisplayInfo(riskIndex).color }}>
+              {getRiskDisplayInfo(riskIndex).band}
+            </p>
             <RiskGauge value={riskIndex} />
             <div className="flex items-center justify-between mt-3">
-              <span className="text-[10px] text-muted-foreground">Scale: 0 (low) → 3 (high)</span>
+              <span className="text-[10px] text-muted-foreground">Scale: 0% (low) → 100% (severe)</span>
               <span className="text-[10px] text-muted-foreground">{applicableItems.length} applicable items</span>
             </div>
-            <p className="text-[10px] text-muted-foreground/70 mt-2 italic">Compact average measure. Use the distribution below for the full picture.</p>
+            <p className="text-[10px] text-muted-foreground/70 mt-1 italic">{getRiskDisplayInfo(riskIndex).insight}</p>
           </div>
         </div>
 
@@ -207,7 +193,7 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
             <div className="mt-4 pt-3 border-t border-border space-y-2">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">How Risk Signals Work</span>
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Each action item is automatically classified into a risk signal based on its <strong className="text-foreground">execution status</strong> and <strong className="text-foreground">completion percentage</strong>. The <strong className="text-foreground">Risk Index</strong> (0–3) is a weighted average: No Risk = 0, Emerging = 1, Critical = 2, Realized = 3. Only applicable items are included; "Not Applicable" items are excluded.
+                Each action item is automatically classified into a risk signal based on its <strong className="text-foreground">execution status</strong> and <strong className="text-foreground">completion percentage</strong>. The <strong className="text-foreground">Risk Index</strong> is displayed as a percentage (0–100%), derived from a weighted average: No Risk = 0, Emerging = 1, Critical = 2, Realized = 3. Only applicable items are included; "Not Applicable" items are excluded.
               </p>
               <ul className="space-y-1 text-[10px] text-muted-foreground">
                 <li className="flex items-start gap-1.5">

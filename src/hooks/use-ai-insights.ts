@@ -20,6 +20,8 @@ interface InsightSummary {
   statusDistribution: Record<string, number>;
   qualifierDistribution: Record<string, { count: number; percent: number }>;
   riskIndex: number;
+  riskIndexBand?: string;
+  riskIndexInsight?: string;
   timeProgress: number;
   pillarCompletion: Record<string, number>;
   filters: {

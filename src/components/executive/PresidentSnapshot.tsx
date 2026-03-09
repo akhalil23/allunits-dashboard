@@ -15,9 +15,11 @@ import {
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
+import { RIMeter } from '@/components/ui/ri-meter';
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { getRiskBandColor, RISK_BAND_COLORS } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_ORDER, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, formatRIWithBand, RI_TOOLTIP, RI_BAND_LEGEND } from '@/lib/risk-display';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar } from '@/lib/university-aggregation';
@@ -91,11 +93,12 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
     const worstPillar = [...pillarData].sort((a, b) => b.riskIndex - a.riskIndex)[0];
     if (worstPillar) {
+      const wpInfo = getRiskDisplayInfo(worstPillar.riskIndex);
       items.push({
         title: 'Risk Concentration',
-        insight: `Risk concentration remains highest in ${worstPillar.shortLabel} with RI ${worstPillar.riskIndex.toFixed(2)}.`,
+        insight: `Risk concentration remains highest in ${worstPillar.shortLabel} with RI ${formatRIPercent(worstPillar.riskIndex)} (${wpInfo.band}).`,
         icon: ShieldAlert,
-        color: getRiskBandColor(worstPillar.riskIndex),
+        color: wpInfo.color,
       });
     }
 
@@ -110,7 +113,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
     if (onTrackUnits > 0) {
       items.push({
         title: 'Low-Risk Units',
-        insight: `${onTrackUnits} unit${onTrackUnits > 1 ? 's' : ''} maintain${onTrackUnits === 1 ? 's' : ''} a Risk Index below 0.75, reflecting strong delivery alignment.`,
+        insight: `${onTrackUnits} unit${onTrackUnits > 1 ? 's' : ''} maintain${onTrackUnits === 1 ? 's' : ''} a Risk Index below 25%, reflecting strong delivery alignment.`,
         icon: CheckCircle2,
         color: '#16A34A',
       });
@@ -119,7 +122,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
     return items.slice(0, 5);
   }, [pillarData, budgetUtilization, aggregation]);
 
-  const riskColor = getRiskBandColor(aggregation.riskIndex);
+  const riInfo = getRiskDisplayInfo(aggregation.riskIndex);
   const donutData = aggregation.riskDistribution.filter(d => d.count > 0);
 
   return (
@@ -133,7 +136,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           <KPICard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} color="hsl(var(--primary))" />
           <KPICard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} color="#16A34A" />
           <KPICard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} color="#B23A48" />
-          <KPICard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={riskColor} />
+          <KPICard label="RI (Risk Index) — Structural Risk" value={formatRIPercent(aggregation.riskIndex)} icon={ShieldAlert} color={riInfo.color} subtitle={riInfo.band} riValue={aggregation.riskIndex} />
           <KPICard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} />
         </div>
         <p className="text-xs text-muted-foreground italic mt-2.5 px-1">Budget context: Based on 2-Year Strategic Plan (2025–2027) planned allocations.</p>
@@ -197,7 +200,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                       <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                         <p className="font-semibold text-foreground">{d.fullLabel}</p>
                         <p className="text-muted-foreground">Completion: <span className="text-foreground font-medium">{d.y}%</span></p>
-                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.ri) }}>{d.ri.toFixed(2)}</span></p>
+                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskDisplayInfo(d.ri).color }}>{formatRIPercent(d.ri)} ({getRiskDisplayInfo(d.ri).band})</span></p>
                         <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
                         <p className="text-muted-foreground">Applicable Items: <span className="text-foreground font-medium">{d.applicable}</span></p>
                       </div>
@@ -206,7 +209,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 />
                 <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.completion, ri: p.riskIndex, label: p.label, shortLabel: p.shortLabel, fullLabel: p.fullLabel, applicable: p.applicable, z: Math.max(200, p.applicable * 15) }))}>
                   {pillarData.map((p, i) => (
-                    <Cell key={i} fill={getRiskBandColor(p.riskIndex)} fillOpacity={0.7} r={Math.max(8, Math.min(20, p.applicable / 3))} />
+                    <Cell key={i} fill={getRiskDisplayInfo(p.riskIndex).color} fillOpacity={0.7} r={Math.max(8, Math.min(20, p.applicable / 3))} />
                   ))}
                 </Scatter>
               </ScatterChart>
@@ -259,7 +262,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 </div>
                 <div className="space-y-2">
                   <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" delay={0.3 + idx * 0.07} />
-                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} delay={0.35 + idx * 0.07} />
+                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskDisplayInfo(p.riskIndex).color} format={(v) => formatRIPercent(v)} delay={0.35 + idx * 0.07} />
                   <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} delay={0.4 + idx * 0.07} />
                 </div>
               </motion.div>
@@ -408,8 +411,8 @@ function PillarLegend() {
   );
 }
 
-function KPICard({ label, value, icon: Icon, color }: {
-  label: string; value: string; icon: React.ElementType; color: string;
+function KPICard({ label, value, icon: Icon, color, subtitle, riValue }: {
+  label: string; value: string; icon: React.ElementType; color: string; subtitle?: string; riValue?: number;
 }) {
   return (
     <motion.div
@@ -443,6 +446,14 @@ function KPICard({ label, value, icon: Icon, color }: {
             <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight" style={{ color }}>
               {value}
             </p>
+            {subtitle && (
+              <p className="text-[10px] sm:text-xs font-semibold mt-0.5" style={{ color }}>{subtitle}</p>
+            )}
+            {riValue !== undefined && (
+              <div className="mt-2">
+                <RIMeter ri={riValue} showLabel={false} compact />
+              </div>
+            )}
           </div>
           <div
             className="p-2.5 rounded-xl shrink-0 transition-colors duration-200"

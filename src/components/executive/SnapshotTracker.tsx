@@ -18,6 +18,8 @@ import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { formatRIPercent, getRiskDisplayInfo, riToPercent } from '@/lib/risk-display';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import { getPillarBudget } from '@/lib/budget-data';
 import { supabase } from '@/integrations/supabase/client';
@@ -181,7 +183,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
             <MetricCard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} />
-            <MetricCard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={getRiskBandColor(aggregation.riskIndex)} />
+            <MetricCard label="RI (Risk Index)" value={formatRIPercent(aggregation.riskIndex)} icon={ShieldAlert} color={getRiskDisplayInfo(aggregation.riskIndex).color} riValue={aggregation.riskIndex} />
             <MetricCard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} />
             <MetricCard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} />
             <MetricCard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} />
@@ -250,7 +252,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
                   <p className="text-xs font-semibold text-foreground mb-2">{(snapshots[selectedSnapshotIdx] as any).reporting_cycle}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                     <div><span className="text-muted-foreground">Completion:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).completion_pct)}%</span></div>
-                    <div><span className="text-muted-foreground">RI:</span> <span className="font-bold" style={{ color: getRiskBandColor(Number((snapshots[selectedSnapshotIdx] as any).risk_index)) }}>RI {Number((snapshots[selectedSnapshotIdx] as any).risk_index).toFixed(2)}</span></div>
+                    <div><span className="text-muted-foreground">RI:</span> <span className="font-bold" style={{ color: getRiskDisplayInfo(Number((snapshots[selectedSnapshotIdx] as any).risk_index)).color }}>RI {riToPercent(Number((snapshots[selectedSnapshotIdx] as any).risk_index))}%</span></div>
                     <div><span className="text-muted-foreground">Budget Util:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).budget_utilization)}%</span></div>
                     <div><span className="text-muted-foreground">On-Track:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).on_track_pct)}%</span></div>
                     <div><span className="text-muted-foreground">Below Target:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).below_target_pct)}%</span></div>
@@ -269,7 +271,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 block">Performance Change vs Previous Snapshot</span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <ChangeCard label="Completion Change" delta={changes.completion} suffix="%" />
-              <ChangeCard label="RI Change" delta={changes.riskIndex} suffix="" invert format={(v) => v.toFixed(2)} />
+              <ChangeCard label="RI Change" delta={changes.riskIndex} suffix="" invert format={(v) => `${riToPercent(Math.abs(v))}%`} />
               <ChangeCard label="Budget Util Change" delta={changes.budgetUtil} suffix="%" />
             </div>
           </motion.div>
@@ -297,7 +299,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-muted-foreground">RI</span>
-                      <DeltaArrow value={m.riskDelta} invert format={(v) => v.toFixed(2)} />
+                      <DeltaArrow value={m.riskDelta} invert format={(v) => `${riToPercent(Math.abs(v))}%`} />
                     </div>
                   </div>
                 </div>
@@ -324,7 +326,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
           ) : (
             <div className="space-y-6">
               <TrendChart title="Completion %" dataKey="completion" data={trendData} domain={[0, 100]} color="hsl(var(--primary))" suffix="%" />
-              <TrendChart title="RI (Risk Index)" dataKey="riskIndex" data={trendData} domain={[0, 3]} color="#EF4444" suffix="" />
+              <TrendChart title="RI (Risk Index %)" dataKey="riskIndex" data={trendData.map(d => ({ ...d, riskIndex: riToPercent(d.riskIndex) }))} domain={[0, 100]} color="#EF4444" suffix="%" />
               <TrendChart title="Budget Utilization %" dataKey="budgetUtil" data={trendData} domain={[0, 100]} color="#3B82F6" suffix="%" />
             </div>
           )}
@@ -334,8 +336,8 @@ export default function SnapshotTracker({ aggregation }: Props) {
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color }: {
-  label: string; value: string; icon: React.ElementType; color?: string;
+function MetricCard({ label, value, icon: Icon, color, riValue }: {
+  label: string; value: string; icon: React.ElementType; color?: string; riValue?: number;
 }) {
   return (
     <div className="card-elevated p-3 sm:p-4 relative overflow-hidden">
@@ -350,6 +352,12 @@ function MetricCard({ label, value, icon: Icon, color }: {
           )}
         </div>
         <p className="text-base sm:text-lg font-display font-bold" style={{ color: color || 'hsl(var(--primary))' }}>{value}</p>
+        {riValue !== undefined && (
+          <div className="mt-1.5">
+            <RIMeter ri={riValue} showLabel={false} compact />
+            <p className="text-[9px] font-semibold mt-0.5" style={{ color: getRiskDisplayInfo(riValue).color }}>{getRiskDisplayInfo(riValue).band}</p>
+          </div>
+        )}
       </div>
     </div>
   );

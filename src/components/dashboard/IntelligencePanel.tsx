@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import type { ActionItem, ViewType, AcademicYear, Term } from '@/lib/types';
 import { QUALIFIER_COLORS } from '@/lib/constants';
 import { computeQualifierDistribution, computeRiskIndex, computeTimeProgress, getApplicableItems } from '@/lib/intelligence';
+import { riToPercent, formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingUp, ShieldAlert, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -43,8 +45,8 @@ export default function IntelligencePanel({ items, viewType, term, observedAt, a
     );
   }
 
-  const riskColor = riskIndex >= 2 ? 'text-qualifier-critical' : riskIndex >= 1.2 ? 'text-qualifier-emerging' : 'text-qualifier-ontrack';
-  const riskBg = riskIndex >= 2 ? 'bg-red-500/10' : riskIndex >= 1.2 ? 'bg-yellow-500/10' : 'bg-green-500/10';
+  const riInfo = getRiskDisplayInfo(riskIndex);
+  const riskBg = riInfo.percent >= 51 ? 'bg-red-500/10' : riInfo.percent >= 26 ? 'bg-yellow-500/10' : 'bg-green-500/10';
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -80,11 +82,13 @@ export default function IntelligencePanel({ items, viewType, term, observedAt, a
             <AlertTriangle className="w-4 h-4 text-qualifier-emerging" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Index</span>
           </div>
-          <p className={`text-4xl font-display font-bold ${riskColor}`}>{riskIndex.toFixed(2)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Scale: 0 (safe) – 3 (critical) • {applicableItems.length} items</p>
-          <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
-            <motion.div className="h-full rounded-full" style={{ backgroundColor: riskIndex >= 2 ? QUALIFIER_COLORS['Critical Risk'] : riskIndex >= 1.2 ? QUALIFIER_COLORS['Emerging Risk'] : QUALIFIER_COLORS['On Track'] }} initial={{ width: 0 }} animate={{ width: `${(riskIndex / 3) * 100}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} />
+          <p className="text-4xl font-display font-bold" style={{ color: riInfo.color }}>{formatRIPercent(riskIndex)}</p>
+          <p className="text-xs font-semibold mt-0.5" style={{ color: riInfo.color }}>{riInfo.band}</p>
+          <p className="text-xs text-muted-foreground mt-1">Scale: 0% (low) – 100% (severe) • {applicableItems.length} items</p>
+          <div className="mt-3">
+            <RIMeter ri={riskIndex} showLabel={false} compact />
           </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5 italic">{riInfo.insight}</p>
         </div>
 
         <div className="card-elevated p-5">

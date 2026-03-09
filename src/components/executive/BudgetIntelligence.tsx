@@ -16,6 +16,7 @@ import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { formatRIPercent, getRiskDisplayInfo, RI_BAND_LEGEND } from '@/lib/risk-display';
 import { PILLAR_LABELS, MOCK_BUDGET, getPillarBudget, formatCurrency, type BudgetScope, type PillarBudgetRow } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
@@ -71,7 +72,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
       {hasPressure && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
-          <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive shrink-0" /><span className="text-xs font-medium text-foreground">Budget Pressure Detected — Budget Utilization ≥ 80% and RI ≥ 1.51</span></div>
+          <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive shrink-0" /><span className="text-xs font-medium text-foreground">Budget Pressure Detected — Budget Utilization ≥ 80% and RI ≥ 50%</span></div>
         </motion.div>
       )}
 
@@ -110,22 +111,22 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           <div className="flex items-center gap-2 mb-1">
             <Target className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Alignment</span>
-            <InfoTip text="Quadrant chart mapping budget utilization (X) against Risk Index (Y). High utilization + high RI = budget pressure zone." />
+           <InfoTip text="Quadrant chart mapping budget utilization (X) against Risk Index % (Y). High utilization + high RI = budget pressure zone." />
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Risk Index — colored by quadrant position.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Risk Index % — colored by quadrant position.</p>
           <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 {/* Quadrant zone shading */}
-                <ReferenceArea x1={80} x2={100} y1={1.51} y2={3} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={80} y1={1.51} y2={3} fill="rgba(249,115,22,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={80} x2={100} y1={0} y2={1.51} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={80} y1={0} y2={1.51} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={80} x2={100} y1={50} y2={100} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={80} y1={50} y2={100} fill="rgba(249,115,22,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={80} x2={100} y1={0} y2={50} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={80} y1={0} y2={50} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
                 <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Risk Index', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Risk Index %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <ReferenceLine x={80} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReferenceLine y={1.51} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
                 <ReTooltip content={({ payload }) => {
                   if (!payload?.[0]) return null;
                   const d = payload[0].payload;
@@ -133,13 +134,14 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                     <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                       <p className="font-semibold text-foreground">{d.fullName}</p>
                       <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
-                      <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.y) }}>RI {d.y.toFixed(2)}</span></p>
+                      <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskDisplayInfo(d.ri).color }}>RI {getRiskDisplayInfo(d.ri).percent}% — {getRiskDisplayInfo(d.ri).band}</span></p>
                     </div>
                   );
                 }} />
-                <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: r.riskIndex, name: r.label, fullName: PILLAR_FULL[r.pillar] }))}>
+                <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: getRiskDisplayInfo(r.riskIndex).percent, ri: r.riskIndex, name: r.label, fullName: PILLAR_FULL[r.pillar] }))}>
                   {allRows.map((r, i) => {
-                    const q = r.utilization >= 0.80 && r.riskIndex >= 1.51 ? '#EF4444' : r.utilization < 0.80 && r.riskIndex >= 1.51 ? '#F97316' : r.utilization >= 0.80 ? '#16A34A' : '#3B82F6';
+                    const riPct = getRiskDisplayInfo(r.riskIndex).percent;
+                    const q = r.utilization >= 0.80 && riPct >= 50 ? '#EF4444' : r.utilization < 0.80 && riPct >= 50 ? '#F97316' : r.utilization >= 0.80 ? '#16A34A' : '#3B82F6';
                     return <Cell key={i} fill={q} fillOpacity={0.7} r={Math.max(8, 12)} />;
                   })}
                 </Scatter>

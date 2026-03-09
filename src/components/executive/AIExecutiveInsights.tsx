@@ -8,6 +8,7 @@ import { Brain, Sparkles, ShieldAlert, TrendingUp, Lightbulb, RefreshCw, AlertCi
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, type UniversityAggregation } from '@/lib/university-aggregation';
+import { riToPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { useAIInsights, type AIInsightsResult, type InsightSummary } from '@/hooks/use-ai-insights';
 
 interface Props { aggregation: UniversityAggregation; }
@@ -41,7 +42,9 @@ export default function AIExecutiveInsights({ aggregation }: Props) {
     const timeProgress = Math.min(100, Math.round((elapsedMs / totalMs) * 100));
     const pillarCompletion: Record<string, number> = {};
     pillarAgg.forEach(p => { pillarCompletion[`Pillar ${p.pillar}`] = p.completionPct; });
-    return { totalItems, applicableItems, statusDistribution, qualifierDistribution, riskIndex, timeProgress, pillarCompletion, filters: { academicYear: `AY ${academicYear}`, term: term === 'mid' ? 'Mid-Year' : 'End-of-Year', viewType: viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly', selectedPillar: 'all' } };
+    const riPct = riToPercent(riskIndex);
+    const riInfo = getRiskDisplayInfo(riskIndex);
+    return { totalItems, applicableItems, statusDistribution, qualifierDistribution, riskIndex: riPct, riskIndexBand: riInfo.band, riskIndexInsight: riInfo.insight, timeProgress, pillarCompletion, filters: { academicYear: `AY ${academicYear}`, term: term === 'mid' ? 'Mid-Year' : 'End-of-Year', viewType: viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly', selectedPillar: 'all' } };
   }, [aggregation, pillarAgg, academicYear, term, viewType]);
 
   const handleGenerate = useCallback(async () => { setHasGenerated(true); await generate(buildSummary()); }, [generate, buildSummary]);

@@ -1,6 +1,7 @@
 import type { ActionItem, ViewType, AcademicYear, Term, PillarId } from './types';
 import { isNotApplicableStatus } from './types';
 import { getItemStatus, getItemCompletion, getApplicableItems, getTermData } from './intelligence';
+import { riToPercent, getRiskDisplayInfo } from './risk-display';
 
 // ─── Risk Signal Types ───────────────────────────────────────────────────────
 
@@ -209,7 +210,8 @@ export function generateNarrative(
 ): string {
   if (applicableCount === 0) return 'No applicable items for the selected context.';
 
-  const level = riskIndex < 1 ? 'low' : riskIndex < 2 ? 'moderate' : 'high';
+  const riPct = riToPercent(riskIndex);
+  const riInfo = getRiskDisplayInfo(riskIndex);
 
   const largest = [...dist].sort((a, b) => b.count - a.count)[0];
   const largestPct = largest.percent;
@@ -220,13 +222,15 @@ export function generateNarrative(
     ? Math.round(((criticalCount + realizedCount) / applicableCount) * 100)
     : 0;
 
-  let narrative = `Overall signal is ${level} based on Risk Index (${riskIndex.toFixed(2)}). `;
+  let narrative = `Overall signal is ${riInfo.band} based on Risk Index (RI ${riPct}%). `;
+  narrative += `${riInfo.insight} `;
   narrative += `Largest share: ${largest.signal} (${largestPct}%). `;
   if (attentionPct > 0) {
     narrative += `Action focus: ${attentionPct}% of items require close attention or mitigation. `;
   }
   if (worstPillar && worstPillar.riskIndex > 0) {
-    narrative += `Highest risk: Pillar ${worstPillar.pillar} — ${pillarLabels[worstPillar.pillar]} (${worstPillar.riskIndex.toFixed(2)}). `;
+    const wpPct = riToPercent(worstPillar.riskIndex);
+    narrative += `Highest risk: Pillar ${worstPillar.pillar} — ${pillarLabels[worstPillar.pillar]} (RI ${wpPct}%). `;
   }
   narrative += 'See the distribution bar chart for details.';
 

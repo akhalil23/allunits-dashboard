@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { riToPercent, formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS, getPillarBudget } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
@@ -49,7 +50,7 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
 
     if (level === 'university') {
       const val = indicator === 'completion' ? aggregation.completionPct
-        : indicator === 'riskIndex' ? aggregation.riskIndex
+        : indicator === 'riskIndex' ? riToPercent(aggregation.riskIndex)
         : 64.2; // mock budget utilization
       points[currentIdx] = { ...points[currentIdx], value: val };
     }
@@ -131,8 +132,8 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
                   {indicator === 'completion' ? 'Completion' : indicator === 'riskIndex' ? 'RI (Risk Index)' : 'Budget Utilization'} Trend
                 </span>
                 {currentValue !== null && currentValue !== undefined && (
-                  <p className="text-xl font-display font-bold mt-1" style={{ color: indicator === 'riskIndex' ? getRiskBandColor(currentValue) : 'hsl(var(--primary))' }}>
-                    {indicator === 'riskIndex' ? `RI ${currentValue.toFixed(2)}` : `${currentValue}%`}
+                  <p className="text-xl font-display font-bold mt-1" style={{ color: indicator === 'riskIndex' ? getRiskDisplayInfo(aggregation.riskIndex).color : 'hsl(var(--primary))' }}>
+                    {indicator === 'riskIndex' ? `RI ${currentValue}%` : `${currentValue}%`}
                   </p>
                 )}
                 <div className="h-48 mt-3">
@@ -140,8 +141,8 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
                     <LineChart data={trendData.filter(d => d.value !== null)}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="period" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis domain={indicator === 'riskIndex' ? [0, 3] : [0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <ReTooltip contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} formatter={(v: number) => [indicator === 'riskIndex' ? `RI ${v.toFixed(2)}` : `${v}%`, '']} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                      <ReTooltip contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} formatter={(v: number) => [`${v}%`, '']} />
                       <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 5, fill: 'hsl(var(--primary))' }} />
                     </LineChart>
                   </ResponsiveContainer>

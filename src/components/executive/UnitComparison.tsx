@@ -12,10 +12,12 @@ import {
 import { GitCompareArrows } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUnitByPillar, getRiskBandColor, RISK_BAND_COLORS, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, formatRIWithBand } from '@/lib/risk-display';
 import { getUnitDisplayLabel, getUnitDisplayName, UNIT_IDS } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
@@ -90,7 +92,7 @@ export default function UnitComparison({ aggregation }: Props) {
           <section>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <CompareKPI label="Completion" subtitle="Actions Completed (%)" a={`${unitA.completionPct}%`} b={`${unitB.completionPct}%`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.completionPct > unitB.completionPct} betterB={unitB.completionPct > unitA.completionPct} tooltip="Percentage of applicable strategic actions marked as completed." />
-              <CompareKPI label="RI (Risk Index)" a={`RI ${unitA.riskIndex.toFixed(2)}`} b={`RI ${unitB.riskIndex.toFixed(2)}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.riskIndex < unitB.riskIndex} betterB={unitB.riskIndex < unitA.riskIndex} colorA={getRiskBandColor(unitA.riskIndex)} colorB={getRiskBandColor(unitB.riskIndex)} tooltip="Risk Index (RI) represents the aggregated severity of risk signals. Lower values indicate lower structural risk." />
+              <CompareKPI label="RI (Risk Index)" a={formatRIPercent(unitA.riskIndex)} b={formatRIPercent(unitB.riskIndex)} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} betterA={unitA.riskIndex < unitB.riskIndex} betterB={unitB.riskIndex < unitA.riskIndex} colorA={getRiskDisplayInfo(unitA.riskIndex).color} colorB={getRiskDisplayInfo(unitB.riskIndex).color} subtitle={`${getRiskDisplayInfo(unitA.riskIndex).band} vs ${getRiskDisplayInfo(unitB.riskIndex).band}`} tooltip="Risk Index (RI) is displayed as a percentage from 0% to 100%. Lower percentages indicate lower structural risk." />
               <CompareKPI label="Budget Utilization" subtitle="Used (%)" a="—" b="—" unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} tooltip="Percentage of the allocated budget that has already been utilized." />
               <CompareKPI label="Applicable Items" a={`${unitA.applicableItems}`} b={`${unitB.applicableItems}`} unitA={getUnitDisplayName(unitA.unitId)} unitB={getUnitDisplayName(unitB.unitId)} tooltip="Total number of strategic action items applicable under current filters." />
             </div>
