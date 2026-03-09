@@ -51,7 +51,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
           {/* Risk Index by Pillar */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              RI by Pillar <InfoTip text="Risk Index (RI) represents the weighted severity of risk signals across applicable strategic items. Lower values indicate lower structural risk." />
+              RI by Pillar <InfoTip text={RI_TOOLTIP} />
             </span>
             <div className="space-y-3 mt-4">
               {pillarAgg.map((p, idx) => {
