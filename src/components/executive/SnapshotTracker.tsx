@@ -352,6 +352,12 @@ function MetricCard({ label, value, icon: Icon, color, riValue }: {
           )}
         </div>
         <p className="text-base sm:text-lg font-display font-bold" style={{ color: color || 'hsl(var(--primary))' }}>{value}</p>
+        {riValue !== undefined && (
+          <div className="mt-1.5">
+            <RIMeter ri={riValue} showLabel={false} compact />
+            <p className="text-[9px] font-semibold mt-0.5" style={{ color: getRiskDisplayInfo(riValue).color }}>{getRiskDisplayInfo(riValue).band}</p>
+          </div>
+        )}
       </div>
     </div>
   );
