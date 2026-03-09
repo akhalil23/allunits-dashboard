@@ -76,15 +76,15 @@ export default function PillarHealthGrid({ items, viewType, term, academicYear }
               {/* Risk Index Badge */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span
+                   <span
                     className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white shrink-0"
-                    style={{ backgroundColor: riskColor(pd.riskIndex) }}
+                    style={{ backgroundColor: getRiskDisplayInfo(pd.riskIndex).color }}
                   >
-                    {pd.riskIndex.toFixed(1)}
+                    {riToPercent(pd.riskIndex)}%
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  <p>Risk Index: {pd.riskIndex.toFixed(2)} / 3.00</p>
+                  <p>Risk Index: {formatRIPercent(pd.riskIndex)} — {getRiskDisplayInfo(pd.riskIndex).band}</p>
                   <p className="text-muted-foreground">{pd.applicable} applicable items</p>
                 </TooltipContent>
               </Tooltip>
