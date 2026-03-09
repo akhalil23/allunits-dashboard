@@ -132,8 +132,8 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
                   {indicator === 'completion' ? 'Completion' : indicator === 'riskIndex' ? 'RI (Risk Index)' : 'Budget Utilization'} Trend
                 </span>
                 {currentValue !== null && currentValue !== undefined && (
-                  <p className="text-xl font-display font-bold mt-1" style={{ color: indicator === 'riskIndex' ? getRiskBandColor(currentValue) : 'hsl(var(--primary))' }}>
-                    {indicator === 'riskIndex' ? `RI ${currentValue.toFixed(2)}` : `${currentValue}%`}
+                  <p className="text-xl font-display font-bold mt-1" style={{ color: indicator === 'riskIndex' ? getRiskDisplayInfo(aggregation.riskIndex).color : 'hsl(var(--primary))' }}>
+                    {indicator === 'riskIndex' ? `RI ${currentValue}%` : `${currentValue}%`}
                   </p>
                 )}
                 <div className="h-48 mt-3">
