@@ -134,13 +134,14 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                     <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                       <p className="font-semibold text-foreground">{d.fullName}</p>
                       <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
-                      <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.y) }}>RI {d.y.toFixed(2)}</span></p>
+                      <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskDisplayInfo(d.ri).color }}>RI {getRiskDisplayInfo(d.ri).percent}% — {getRiskDisplayInfo(d.ri).band}</span></p>
                     </div>
                   );
                 }} />
-                <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: r.riskIndex, name: r.label, fullName: PILLAR_FULL[r.pillar] }))}>
+                <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: getRiskDisplayInfo(r.riskIndex).percent, ri: r.riskIndex, name: r.label, fullName: PILLAR_FULL[r.pillar] }))}>
                   {allRows.map((r, i) => {
-                    const q = r.utilization >= 0.80 && r.riskIndex >= 1.51 ? '#EF4444' : r.utilization < 0.80 && r.riskIndex >= 1.51 ? '#F97316' : r.utilization >= 0.80 ? '#16A34A' : '#3B82F6';
+                    const riPct = getRiskDisplayInfo(r.riskIndex).percent;
+                    const q = r.utilization >= 0.80 && riPct >= 50 ? '#EF4444' : r.utilization < 0.80 && riPct >= 50 ? '#F97316' : r.utilization >= 0.80 ? '#16A34A' : '#3B82F6';
                     return <Cell key={i} fill={q} fillOpacity={0.7} r={Math.max(8, 12)} />;
                   })}
                 </Scatter>
