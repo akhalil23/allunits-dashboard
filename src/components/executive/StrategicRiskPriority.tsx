@@ -282,7 +282,7 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
                   />
                 </div>
                 <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
-                  {isRisk ? `RI ${value.toFixed(2)}` : `${value}%`}
+                  {isRisk ? `RI ${getRiskDisplayInfo(value).percent}%` : `${value}%`}
                 </span>
               </motion.div>
             );
