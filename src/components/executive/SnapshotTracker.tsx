@@ -326,7 +326,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
           ) : (
             <div className="space-y-6">
               <TrendChart title="Completion %" dataKey="completion" data={trendData} domain={[0, 100]} color="hsl(var(--primary))" suffix="%" />
-              <TrendChart title="RI (Risk Index)" dataKey="riskIndex" data={trendData} domain={[0, 3]} color="#EF4444" suffix="" />
+              <TrendChart title="RI (Risk Index %)" dataKey="riskIndex" data={trendData.map(d => ({ ...d, riskIndex: riToPercent(d.riskIndex) }))} domain={[0, 100]} color="#EF4444" suffix="%" />
               <TrendChart title="Budget Utilization %" dataKey="budgetUtil" data={trendData} domain={[0, 100]} color="#3B82F6" suffix="%" />
             </div>
           )}
