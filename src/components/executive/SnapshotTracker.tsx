@@ -252,7 +252,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
                   <p className="text-xs font-semibold text-foreground mb-2">{(snapshots[selectedSnapshotIdx] as any).reporting_cycle}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                     <div><span className="text-muted-foreground">Completion:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).completion_pct)}%</span></div>
-                    <div><span className="text-muted-foreground">RI:</span> <span className="font-bold" style={{ color: getRiskBandColor(Number((snapshots[selectedSnapshotIdx] as any).risk_index)) }}>RI {Number((snapshots[selectedSnapshotIdx] as any).risk_index).toFixed(2)}</span></div>
+                    <div><span className="text-muted-foreground">RI:</span> <span className="font-bold" style={{ color: getRiskDisplayInfo(Number((snapshots[selectedSnapshotIdx] as any).risk_index)).color }}>RI {riToPercent(Number((snapshots[selectedSnapshotIdx] as any).risk_index))}%</span></div>
                     <div><span className="text-muted-foreground">Budget Util:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).budget_utilization)}%</span></div>
                     <div><span className="text-muted-foreground">On-Track:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).on_track_pct)}%</span></div>
                     <div><span className="text-muted-foreground">Below Target:</span> <span className="font-bold">{Number((snapshots[selectedSnapshotIdx] as any).below_target_pct)}%</span></div>
