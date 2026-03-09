@@ -200,7 +200,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                       <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                         <p className="font-semibold text-foreground">{d.fullLabel}</p>
                         <p className="text-muted-foreground">Completion: <span className="text-foreground font-medium">{d.y}%</span></p>
-                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskBandColor(d.ri) }}>{d.ri.toFixed(2)}</span></p>
+                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskDisplayInfo(d.ri).color }}>{formatRIPercent(d.ri)} ({getRiskDisplayInfo(d.ri).band})</span></p>
                         <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
                         <p className="text-muted-foreground">Applicable Items: <span className="text-foreground font-medium">{d.applicable}</span></p>
                       </div>
