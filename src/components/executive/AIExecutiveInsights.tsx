@@ -8,6 +8,7 @@ import { Brain, Sparkles, ShieldAlert, TrendingUp, Lightbulb, RefreshCw, AlertCi
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, type UniversityAggregation } from '@/lib/university-aggregation';
+import { riToPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { useAIInsights, type AIInsightsResult, type InsightSummary } from '@/hooks/use-ai-insights';
 
 interface Props { aggregation: UniversityAggregation; }
