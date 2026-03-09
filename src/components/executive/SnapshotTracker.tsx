@@ -18,6 +18,8 @@ import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { formatRIPercent, getRiskDisplayInfo, riToPercent } from '@/lib/risk-display';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import { getPillarBudget } from '@/lib/budget-data';
 import { supabase } from '@/integrations/supabase/client';
