@@ -193,7 +193,7 @@ export default function RiskSignalsStudio({ items, viewType, term, academicYear 
             <div className="mt-4 pt-3 border-t border-border space-y-2">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">How Risk Signals Work</span>
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Each action item is automatically classified into a risk signal based on its <strong className="text-foreground">execution status</strong> and <strong className="text-foreground">completion percentage</strong>. The <strong className="text-foreground">Risk Index</strong> (0–3) is a weighted average: No Risk = 0, Emerging = 1, Critical = 2, Realized = 3. Only applicable items are included; "Not Applicable" items are excluded.
+                Each action item is automatically classified into a risk signal based on its <strong className="text-foreground">execution status</strong> and <strong className="text-foreground">completion percentage</strong>. The <strong className="text-foreground">Risk Index</strong> is displayed as a percentage (0–100%), derived from a weighted average: No Risk = 0, Emerging = 1, Critical = 2, Realized = 3. Only applicable items are included; "Not Applicable" items are excluded.
               </p>
               <ul className="space-y-1 text-[10px] text-muted-foreground">
                 <li className="flex items-start gap-1.5">
