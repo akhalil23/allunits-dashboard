@@ -122,7 +122,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
     return items.slice(0, 5);
   }, [pillarData, budgetUtilization, aggregation]);
 
-  const riskColor = getRiskBandColor(aggregation.riskIndex);
+  const riInfo = getRiskDisplayInfo(aggregation.riskIndex);
   const donutData = aggregation.riskDistribution.filter(d => d.count > 0);
 
   return (
@@ -136,7 +136,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           <KPICard label="Completion — Actions Completed" value={`${aggregation.completionPct}%`} icon={CheckCircle2} color="hsl(var(--primary))" />
           <KPICard label="On-Track — As Planned" value={`${aggregation.onTrackPct}%`} icon={CheckCircle2} color="#16A34A" />
           <KPICard label="Below Target — Underperforming" value={`${aggregation.belowTargetPct}%`} icon={AlertTriangle} color="#B23A48" />
-          <KPICard label="RI (Risk Index)" value={`RI ${aggregation.riskIndex.toFixed(2)}`} icon={ShieldAlert} color={riskColor} />
+          <KPICard label="RI (Risk Index) — Structural Risk" value={formatRIPercent(aggregation.riskIndex)} icon={ShieldAlert} color={riInfo.color} subtitle={riInfo.band} riValue={aggregation.riskIndex} />
           <KPICard label="Budget Utilization — Used" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetUtilization >= 80 ? '#EF4444' : budgetUtilization >= 60 ? '#F59E0B' : '#16A34A'} />
         </div>
         <p className="text-xs text-muted-foreground italic mt-2.5 px-1">Budget context: Based on 2-Year Strategic Plan (2025–2027) planned allocations.</p>
