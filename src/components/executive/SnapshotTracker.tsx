@@ -271,7 +271,7 @@ export default function SnapshotTracker({ aggregation }: Props) {
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 block">Performance Change vs Previous Snapshot</span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <ChangeCard label="Completion Change" delta={changes.completion} suffix="%" />
-              <ChangeCard label="RI Change" delta={changes.riskIndex} suffix="" invert format={(v) => v.toFixed(2)} />
+              <ChangeCard label="RI Change" delta={changes.riskIndex} suffix="" invert format={(v) => `${riToPercent(Math.abs(v))}%`} />
               <ChangeCard label="Budget Util Change" delta={changes.budgetUtil} suffix="%" />
             </div>
           </motion.div>
