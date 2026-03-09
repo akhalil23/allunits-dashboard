@@ -12,10 +12,12 @@ import {
 import { GitCompareArrows } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
+import { RIMeter } from '@/components/ui/ri-meter';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateUnitByPillar, getRiskBandColor, RISK_BAND_COLORS, type UniversityAggregation, type UnitAggregation } from '@/lib/university-aggregation';
 import { RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, formatRIWithBand } from '@/lib/risk-display';
 import { getUnitDisplayLabel, getUnitDisplayName, UNIT_IDS } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
