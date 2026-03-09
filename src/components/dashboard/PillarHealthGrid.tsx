@@ -3,6 +3,7 @@ import type { ActionItem, ViewType, PillarId, Status, Term, AcademicYear } from 
 import { PILLAR_LABELS, STATUS_COLORS } from '@/lib/constants';
 import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
 import { computeNewRiskIndex, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
+import { formatRIPercent, getRiskDisplayInfo, riToPercent } from '@/lib/risk-display';
 import { motion } from 'framer-motion';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
