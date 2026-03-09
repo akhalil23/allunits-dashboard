@@ -111,9 +111,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           <div className="flex items-center gap-2 mb-1">
             <Target className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Alignment</span>
-            <InfoTip text="Quadrant chart mapping budget utilization (X) against Risk Index (Y). High utilization + high RI = budget pressure zone." />
+           <InfoTip text="Quadrant chart mapping budget utilization (X) against Risk Index % (Y). High utilization + high RI = budget pressure zone." />
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Risk Index — colored by quadrant position.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Risk Index % — colored by quadrant position.</p>
           <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
