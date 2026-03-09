@@ -32,25 +32,7 @@ interface Props {
 // ─── Gauge Component ─────────────────────────────────────────────────────────
 
 function RiskGauge({ value }: { value: number }) {
-  const pct = Math.min(100, Math.max(0, (value / 3) * 100));
-  const color = value < 1 ? '#16A34A' : value < 2 ? '#F59E0B' : '#EF4444';
-
-  return (
-    <div className="relative h-3 rounded-full bg-muted overflow-hidden mt-3">
-      <div className="absolute inset-0 flex">
-        <div className="flex-1 bg-[#16A34A]/20" />
-        <div className="flex-1 bg-[#F59E0B]/20" />
-        <div className="flex-1 bg-[#EF4444]/20" />
-      </div>
-      <motion.div
-        className="absolute top-0 h-full w-1 rounded-full"
-        style={{ backgroundColor: color }}
-        initial={{ left: '0%' }}
-        animate={{ left: `${pct}%` }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-      />
-    </div>
-  );
+  return <RIMeter ri={value} showLabel={true} />;
 }
 
 // ─── Stacked Bar Segment ─────────────────────────────────────────────────────
