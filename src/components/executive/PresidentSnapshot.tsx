@@ -209,7 +209,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 />
                 <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.completion, ri: p.riskIndex, label: p.label, shortLabel: p.shortLabel, fullLabel: p.fullLabel, applicable: p.applicable, z: Math.max(200, p.applicable * 15) }))}>
                   {pillarData.map((p, i) => (
-                    <Cell key={i} fill={getRiskBandColor(p.riskIndex)} fillOpacity={0.7} r={Math.max(8, Math.min(20, p.applicable / 3))} />
+                    <Cell key={i} fill={getRiskDisplayInfo(p.riskIndex).color} fillOpacity={0.7} r={Math.max(8, Math.min(20, p.applicable / 3))} />
                   ))}
                 </Scatter>
               </ScatterChart>
