@@ -337,19 +337,19 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
                 {pillars.map(pillar => {
                   const cell = getCell(unit.unitId, pillar);
                   if (!cell || cell.applicableItems === 0) return (<td key={pillar} className="text-center py-2 px-2"><span className="text-xs text-muted-foreground/50">—</span></td>);
-                  const color = getRiskBandColor(cell.riskIndex);
-                  const opacity = Math.max(0.15, Math.min(0.85, cell.riskIndex / 3));
+                  const color = getRiskDisplayInfo(cell.riskIndex).color;
+                  const riPct = getRiskDisplayInfo(cell.riskIndex).percent;
                   return (
                     <td key={pillar} className="text-center py-2 px-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="rounded-md py-1 px-1 mx-auto w-16 cursor-default" style={{ backgroundColor: color }}>
-                            <span className="text-xs font-bold text-white">RI {cell.riskIndex.toFixed(2)}</span>
+                            <span className="text-xs font-bold text-white">RI {riPct}%</span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="text-xs space-y-1">
                           <p className="font-semibold">{getUnitDisplayLabel(unit.unitId)} — {PILLAR_FULL[pillar]}</p>
-                          <p>RI: <span className="font-bold" style={{ color }}>{cell.riskIndex.toFixed(2)}</span></p>
+                          <p>RI: <span className="font-bold" style={{ color }}>{riPct}% — {getRiskDisplayInfo(cell.riskIndex).band}</span></p>
                           <p>Completion: {cell.completionPct}%</p>
                           <p>Applicable Items: {cell.applicableItems}</p>
                         </TooltipContent>
