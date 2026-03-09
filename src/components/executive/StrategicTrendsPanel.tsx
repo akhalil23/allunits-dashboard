@@ -50,7 +50,7 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
 
     if (level === 'university') {
       const val = indicator === 'completion' ? aggregation.completionPct
-        : indicator === 'riskIndex' ? aggregation.riskIndex
+        : indicator === 'riskIndex' ? riToPercent(aggregation.riskIndex)
         : 64.2; // mock budget utilization
       points[currentIdx] = { ...points[currentIdx], value: val };
     }
