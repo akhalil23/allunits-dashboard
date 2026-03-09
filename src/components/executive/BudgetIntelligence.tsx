@@ -16,6 +16,7 @@ import { InfoTip } from '@/components/ui/info-tip';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
+import { formatRIPercent, getRiskDisplayInfo, RI_BAND_LEGEND } from '@/lib/risk-display';
 import { PILLAR_LABELS, MOCK_BUDGET, getPillarBudget, formatCurrency, type BudgetScope, type PillarBudgetRow } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
