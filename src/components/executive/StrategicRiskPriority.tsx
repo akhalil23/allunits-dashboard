@@ -55,8 +55,8 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
             </span>
             <div className="space-y-3 mt-4">
               {pillarAgg.map((p, idx) => {
-                const color = getRiskBandColor(p.riskIndex);
-                const pct = Math.min(100, (p.riskIndex / 3) * 100);
+                const riInfo = getRiskDisplayInfo(p.riskIndex);
+                const pct = riInfo.percent;
                 return (
                   <motion.div
                     key={p.pillar}
@@ -77,10 +77,18 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}
                         transition={{ delay: 0.2 + idx * 0.05, duration: 0.6, ease: 'easeOut' }}
-                        style={{ backgroundColor: color }}
+                        style={{ backgroundColor: riInfo.color }}
                       />
                     </div>
-                    <span className="text-xs font-bold w-12 text-right" style={{ color }}>RI {p.riskIndex.toFixed(2)}</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs font-bold w-14 text-right cursor-help" style={{ color: riInfo.color }}>RI {pct}%</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs text-xs">
+                        <p className="font-semibold">{riInfo.band}</p>
+                        <p className="text-muted-foreground mt-0.5">{riInfo.insight}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </motion.div>
                 );
               })}
