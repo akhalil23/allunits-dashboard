@@ -45,8 +45,8 @@ export default function IntelligencePanel({ items, viewType, term, observedAt, a
     );
   }
 
-  const riskColor = riskIndex >= 2 ? 'text-qualifier-critical' : riskIndex >= 1.2 ? 'text-qualifier-emerging' : 'text-qualifier-ontrack';
-  const riskBg = riskIndex >= 2 ? 'bg-red-500/10' : riskIndex >= 1.2 ? 'bg-yellow-500/10' : 'bg-green-500/10';
+  const riInfo = getRiskDisplayInfo(riskIndex);
+  const riskBg = riInfo.percent >= 51 ? 'bg-red-500/10' : riInfo.percent >= 26 ? 'bg-yellow-500/10' : 'bg-green-500/10';
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
