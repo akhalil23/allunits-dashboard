@@ -1,6 +1,7 @@
 import type { ActionItem, ViewType, AcademicYear, Term, PillarId } from './types';
 import { isNotApplicableStatus } from './types';
 import { getItemStatus, getItemCompletion, getApplicableItems, getTermData } from './intelligence';
+import { riToPercent, getRiskDisplayInfo } from './risk-display';
 
 // ─── Risk Signal Types ───────────────────────────────────────────────────────
 
