@@ -411,8 +411,8 @@ function PillarLegend() {
   );
 }
 
-function KPICard({ label, value, icon: Icon, color }: {
-  label: string; value: string; icon: React.ElementType; color: string;
+function KPICard({ label, value, icon: Icon, color, subtitle, riValue }: {
+  label: string; value: string; icon: React.ElementType; color: string; subtitle?: string; riValue?: number;
 }) {
   return (
     <motion.div
@@ -446,6 +446,14 @@ function KPICard({ label, value, icon: Icon, color }: {
             <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight" style={{ color }}>
               {value}
             </p>
+            {subtitle && (
+              <p className="text-[10px] sm:text-xs font-semibold mt-0.5" style={{ color }}>{subtitle}</p>
+            )}
+            {riValue !== undefined && (
+              <div className="mt-2">
+                <RIMeter ri={riValue} showLabel={false} compact />
+              </div>
+            )}
           </div>
           <div
             className="p-2.5 rounded-xl shrink-0 transition-colors duration-200"
