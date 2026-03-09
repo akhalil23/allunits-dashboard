@@ -141,8 +141,8 @@ export default function StrategicTrendsPanel({ open, onClose, aggregation }: Pro
                     <LineChart data={trendData.filter(d => d.value !== null)}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="period" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis domain={indicator === 'riskIndex' ? [0, 3] : [0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <ReTooltip contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} formatter={(v: number) => [indicator === 'riskIndex' ? `RI ${v.toFixed(2)}` : `${v}%`, '']} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                      <ReTooltip contentStyle={{ fontSize: 11, background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} formatter={(v: number) => [`${v}%`, '']} />
                       <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 5, fill: 'hsl(var(--primary))' }} />
                     </LineChart>
                   </ResponsiveContainer>

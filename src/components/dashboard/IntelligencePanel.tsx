@@ -82,11 +82,13 @@ export default function IntelligencePanel({ items, viewType, term, observedAt, a
             <AlertTriangle className="w-4 h-4 text-qualifier-emerging" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Index</span>
           </div>
-          <p className={`text-4xl font-display font-bold ${riskColor}`}>{riskIndex.toFixed(2)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Scale: 0 (safe) – 3 (critical) • {applicableItems.length} items</p>
-          <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
-            <motion.div className="h-full rounded-full" style={{ backgroundColor: riskIndex >= 2 ? QUALIFIER_COLORS['Critical Risk'] : riskIndex >= 1.2 ? QUALIFIER_COLORS['Emerging Risk'] : QUALIFIER_COLORS['On Track'] }} initial={{ width: 0 }} animate={{ width: `${(riskIndex / 3) * 100}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} />
+          <p className="text-4xl font-display font-bold" style={{ color: riInfo.color }}>{formatRIPercent(riskIndex)}</p>
+          <p className="text-xs font-semibold mt-0.5" style={{ color: riInfo.color }}>{riInfo.band}</p>
+          <p className="text-xs text-muted-foreground mt-1">Scale: 0% (low) – 100% (severe) • {applicableItems.length} items</p>
+          <div className="mt-3">
+            <RIMeter ri={riskIndex} showLabel={false} compact />
           </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5 italic">{riInfo.insight}</p>
         </div>
 
         <div className="card-elevated p-5">
