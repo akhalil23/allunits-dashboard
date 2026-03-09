@@ -258,9 +258,9 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
           {visible.map((unit, idx) => {
             const value = unit[metricKey];
             const isRisk = metricKey === 'riskIndex';
-            const color = isRisk ? getRiskBandColor(value) : 'hsl(var(--primary))';
+            const color = isRisk ? getRiskDisplayInfo(value).color : 'hsl(var(--primary))';
             const maxVal = isRisk ? 3 : 100;
-            const pct = Math.min(100, (value / maxVal) * 100);
+            const pct = isRisk ? getRiskDisplayInfo(value).percent : Math.min(100, (value / maxVal) * 100);
             return (
               <motion.div
                 key={unit.unitId}
