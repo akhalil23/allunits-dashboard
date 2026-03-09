@@ -262,7 +262,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
                 </div>
                 <div className="space-y-2">
                   <BarRow label="Completion" value={p.completion} max={100} suffix="%" color="hsl(var(--primary))" delay={0.3 + idx * 0.07} />
-                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskBandColor(p.riskIndex)} format={(v) => `RI ${v.toFixed(2)}`} delay={0.35 + idx * 0.07} />
+                  <BarRow label="RI" value={p.riskIndex} max={3} suffix="" color={getRiskDisplayInfo(p.riskIndex).color} format={(v) => formatRIPercent(v)} delay={0.35 + idx * 0.07} />
                   <BarRow label="Budget Util" value={p.budgetUtil} max={100} suffix="%" color={p.budgetUtil >= 80 ? '#EF4444' : '#3B82F6'} delay={0.4 + idx * 0.07} />
                 </div>
               </motion.div>
