@@ -119,14 +119,14 @@ export default function BudgetIntelligence({ aggregation }: Props) {
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 {/* Quadrant zone shading */}
-                <ReferenceArea x1={80} x2={100} y1={1.51} y2={3} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={80} y1={1.51} y2={3} fill="rgba(249,115,22,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={80} x2={100} y1={0} y2={1.51} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={80} y1={0} y2={1.51} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={80} x2={100} y1={50} y2={100} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={80} y1={50} y2={100} fill="rgba(249,115,22,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={80} x2={100} y1={0} y2={50} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={80} y1={0} y2={50} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
                 <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <YAxis type="number" dataKey="y" domain={[0, 3]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Risk Index', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Risk Index %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
                 <ReferenceLine x={80} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReferenceLine y={1.51} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
                 <ReTooltip content={({ payload }) => {
                   if (!payload?.[0]) return null;
                   const d = payload[0].payload;
