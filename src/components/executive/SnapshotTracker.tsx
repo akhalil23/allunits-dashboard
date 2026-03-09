@@ -336,8 +336,8 @@ export default function SnapshotTracker({ aggregation }: Props) {
   );
 }
 
-function MetricCard({ label, value, icon: Icon, color }: {
-  label: string; value: string; icon: React.ElementType; color?: string;
+function MetricCard({ label, value, icon: Icon, color, riValue }: {
+  label: string; value: string; icon: React.ElementType; color?: string; riValue?: number;
 }) {
   return (
     <div className="card-elevated p-3 sm:p-4 relative overflow-hidden">
