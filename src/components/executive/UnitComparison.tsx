@@ -193,7 +193,7 @@ export default function UnitComparison({ aggregation }: Props) {
           </div>
 
           {/* Multi-select Dropdown */}
-          <div className="relative mb-4">
+          <div className="relative mb-4" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border text-sm text-foreground text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30"
