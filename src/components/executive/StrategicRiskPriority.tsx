@@ -350,7 +350,7 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
                         <TooltipContent side="top" className="text-xs space-y-1">
                           <p className="font-semibold">{getUnitDisplayLabel(unit.unitId)} — {PILLAR_FULL[pillar]}</p>
                           <p>RI: <span className="font-bold" style={{ color }}>{riPct}% — {getRiskDisplayInfo(cell.riskIndex).band}</span></p>
-                          <p>Completion: {cell.completionPct}%</p>
+                          <p>Actions Completed: {cell.completionPct}%</p>
                           <p>Applicable Items: {cell.applicableItems}</p>
                         </TooltipContent>
                       </Tooltip>
