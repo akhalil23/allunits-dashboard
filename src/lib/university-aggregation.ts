@@ -159,6 +159,45 @@ function countStatuses(
   return { cot, cbt, inProgress, notStarted, na };
 }
 
+/**
+ * Compute the average target-achievement completion across applicable items.
+ * Rules:
+ *   COT → 100%, CBT → 0%, In Progress → actual %, Not Started → 0%
+ */
+function computeAvgCompletion(
+  items: ActionItem[],
+  viewType: ViewType,
+  term: Term,
+  academicYear: AcademicYear
+): number {
+  let sum = 0;
+  let applicable = 0;
+
+  items.forEach(item => {
+    const status = getItemStatus(item, viewType, term, academicYear);
+    if (isNotApplicableStatus(status)) return;
+    applicable++;
+    switch (status) {
+      case 'Completed – On Target':
+        sum += 100;
+        break;
+      case 'Completed – Below Target':
+        // Target not achieved → 0%
+        sum += 0;
+        break;
+      case 'In Progress':
+        sum += getItemCompletion(item, viewType, term, academicYear);
+        break;
+      case 'Not Started':
+        sum += 0;
+        break;
+    }
+  });
+
+  if (applicable === 0) return 0;
+  return parseFloat((sum / applicable).toFixed(1));
+}
+
 // ─── Compute RiskIndex from raw counts ───────────────────────────────────────
 
 export function computeRiskIndexFromCounts(counts: RiskCounts): number {
@@ -193,7 +232,7 @@ export function aggregateUnit(
     cbtCount: statusCounts.cbt,
     inProgressCount: statusCounts.inProgress,
     notStartedCount: statusCounts.notStarted,
-    completionPct: parseFloat(((statusCounts.cot + statusCounts.cbt) / denom * 100).toFixed(1)),
+    completionPct: computeAvgCompletion(items, viewType, term, academicYear),
     onTrackPct: parseFloat((statusCounts.cot / denom * 100).toFixed(1)),
     belowTargetPct: parseFloat((statusCounts.cbt / denom * 100).toFixed(1)),
     riskCounts,
@@ -281,7 +320,7 @@ export function aggregateUniversity(
     cbtCount: totalCbt,
     inProgressCount: totalInProgress,
     notStartedCount: totalNotStarted,
-    completionPct: parseFloat(((totalCot + totalCbt) / denom * 100).toFixed(1)),
+    completionPct: parseFloat((unitAggregations.reduce((s, u) => s + u.completionPct * u.applicableItems, 0) / (applicableItems || 1)).toFixed(1)),
     onTrackPct: parseFloat((totalCot / denom * 100).toFixed(1)),
     belowTargetPct: parseFloat((totalCbt / denom * 100).toFixed(1)),
     riskCounts: totalRiskCounts,
@@ -327,7 +366,7 @@ export function aggregateByPillar(
       riskCounts,
       riskIndex: computeRiskIndexFromCounts(riskCounts),
       applicableItems,
-      completionPct: parseFloat(((statusCounts.cot + statusCounts.cbt) / denom * 100).toFixed(1)),
+      completionPct: computeAvgCompletion(allPillarItems, viewType, term, academicYear),
     };
   });
 }
@@ -368,7 +407,7 @@ export function aggregateUnitByPillar(
         riskCounts,
         riskIndex: computeRiskIndexFromCounts(riskCounts),
         applicableItems,
-        completionPct: parseFloat(((statusCounts.cot + statusCounts.cbt) / denom * 100).toFixed(1)),
+        completionPct: computeAvgCompletion(items, viewType, term, academicYear),
       });
     });
   });
