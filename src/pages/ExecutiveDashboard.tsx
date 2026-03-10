@@ -16,9 +16,10 @@ import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
 import DashboardGuide from '@/components/executive/DashboardGuide';
 import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
+import MetricsExplainer from '@/components/executive/MetricsExplainer';
 import FilterBar from '@/components/dashboard/FilterBar';
 import { useDashboard } from '@/contexts/DashboardContext';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, BookOpen } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
