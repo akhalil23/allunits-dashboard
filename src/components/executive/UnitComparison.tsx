@@ -3,7 +3,7 @@
  * Select up to 5 units, compare KPIs, pillar charts, and detailed table.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer,
@@ -43,6 +43,19 @@ export default function UnitComparison({ aggregation }: Props) {
   const [compareMetric, setCompareMetric] = useState<CompareMetric>('completion');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+        setSearchQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [dropdownOpen]);
 
   const heatCells = useMemo(() => unitResults ? aggregateUnitByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
 
@@ -180,7 +193,7 @@ export default function UnitComparison({ aggregation }: Props) {
           </div>
 
           {/* Multi-select Dropdown */}
-          <div className="relative mb-4">
+          <div className="relative mb-4" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border text-sm text-foreground text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30"
