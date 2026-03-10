@@ -320,7 +320,7 @@ export function aggregateUniversity(
     cbtCount: totalCbt,
     inProgressCount: totalInProgress,
     notStartedCount: totalNotStarted,
-    completionPct: parseFloat(((totalCot + totalCbt) / denom * 100).toFixed(1)),
+    completionPct: parseFloat((unitAggregations.reduce((s, u) => s + u.completionPct * u.applicableItems, 0) / (applicableItems || 1)).toFixed(1)),
     onTrackPct: parseFloat((totalCot / denom * 100).toFixed(1)),
     belowTargetPct: parseFloat((totalCbt / denom * 100).toFixed(1)),
     riskCounts: totalRiskCounts,
