@@ -172,7 +172,7 @@ export default function UnitComparison({ aggregation }: Props) {
     <div className="space-y-8">
       {/* Section 1: Unit Selector */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <GitCompareArrows className="w-4 h-4 text-primary" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Select Units to Compare</span>
