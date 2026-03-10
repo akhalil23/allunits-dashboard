@@ -407,7 +407,7 @@ export function aggregateUnitByPillar(
         riskCounts,
         riskIndex: computeRiskIndexFromCounts(riskCounts),
         applicableItems,
-        completionPct: parseFloat(((statusCounts.cot + statusCounts.cbt) / denom * 100).toFixed(1)),
+        completionPct: computeAvgCompletion(items, viewType, term, academicYear),
       });
     });
   });
