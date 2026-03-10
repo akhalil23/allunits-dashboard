@@ -30,6 +30,7 @@ export default function ExecutiveDashboard() {
     mainRef.current?.scrollTo({ top: 0 });
   }, []);
   const [trackerOpen, setTrackerOpen] = useState(false);
+  const [metricsOpen, setMetricsOpen] = useState(false);
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
   const queryClient = useQueryClient();
