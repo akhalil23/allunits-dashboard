@@ -16,9 +16,10 @@ import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
 import DashboardGuide from '@/components/executive/DashboardGuide';
 import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
+import MetricsExplainer from '@/components/executive/MetricsExplainer';
 import FilterBar from '@/components/dashboard/FilterBar';
 import { useDashboard } from '@/contexts/DashboardContext';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, BookOpen } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
@@ -29,6 +30,7 @@ export default function ExecutiveDashboard() {
     mainRef.current?.scrollTo({ top: 0 });
   }, []);
   const [trackerOpen, setTrackerOpen] = useState(false);
+  const [metricsOpen, setMetricsOpen] = useState(false);
   const { viewType, academicYear, term } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
   const queryClient = useQueryClient();
@@ -97,6 +99,16 @@ export default function ExecutiveDashboard() {
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         {activeTab !== 'budget' && activeTab !== 'guide' && <FilterBar />}
+        {/* How Metrics Work button */}
+        <div className="px-4 sm:px-6 lg:px-8 pt-3">
+          <button
+            onClick={() => setMetricsOpen(true)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors border border-primary/20"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            How Metrics Work
+          </button>
+        </div>
         <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
@@ -124,6 +136,10 @@ export default function ExecutiveDashboard() {
         open={trackerOpen}
         onClose={() => setTrackerOpen(false)}
         aggregation={aggregation}
+      />
+      <MetricsExplainer
+        open={metricsOpen}
+        onClose={() => setMetricsOpen(false)}
       />
     </div>
   );
