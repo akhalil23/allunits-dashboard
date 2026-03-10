@@ -137,6 +137,10 @@ export default function ExecutiveDashboard() {
         onClose={() => setTrackerOpen(false)}
         aggregation={aggregation}
       />
+      <MetricsExplainer
+        open={metricsOpen}
+        onClose={() => setMetricsOpen(false)}
+      />
     </div>
   );
 }
