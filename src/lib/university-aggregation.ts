@@ -232,7 +232,7 @@ export function aggregateUnit(
     cbtCount: statusCounts.cbt,
     inProgressCount: statusCounts.inProgress,
     notStartedCount: statusCounts.notStarted,
-    completionPct: parseFloat(((statusCounts.cot + statusCounts.cbt) / denom * 100).toFixed(1)),
+    completionPct: computeAvgCompletion(items, viewType, term, academicYear),
     onTrackPct: parseFloat((statusCounts.cot / denom * 100).toFixed(1)),
     belowTargetPct: parseFloat((statusCounts.cbt / denom * 100).toFixed(1)),
     riskCounts,
