@@ -4,7 +4,7 @@ import { PILLAR_LABELS } from '@/lib/constants';
 import { getUnitConfig } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 import {
-  LayoutDashboard, FlaskConical, ChevronRight, Menu, X, Shield,
+  LayoutDashboard, FlaskConical, ChevronRight, Menu, X, Shield, BookOpen,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo-white.png';
