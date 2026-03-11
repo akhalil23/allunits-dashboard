@@ -1,12 +1,15 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { DashboardFilters, PillarId, ViewMode, ViewType, AcademicYear, Term } from '@/lib/types';
 
-interface DashboardCtx extends DashboardFilters {
+type PillarSelection = 'all' | PillarId | 'guide';
+
+interface DashboardCtx extends Omit<DashboardFilters, 'selectedPillar'> {
+  selectedPillar: PillarSelection;
   setViewMode: (m: ViewMode) => void;
   setViewType: (v: ViewType) => void;
   setAcademicYear: (y: AcademicYear) => void;
   setTerm: (t: Term) => void;
-  setSelectedPillar: (p: 'all' | PillarId) => void;
+  setSelectedPillar: (p: PillarSelection) => void;
 }
 
 const DashboardContext = createContext<DashboardCtx | null>(null);
@@ -16,7 +19,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [viewType, setViewType] = useState<ViewType>('cumulative');
   const [academicYear, setAcademicYear] = useState<AcademicYear>('2025-2026');
   const [term, setTerm] = useState<Term>('mid');
-  const [selectedPillar, setSelectedPillar] = useState<'all' | PillarId>('all');
+  const [selectedPillar, setSelectedPillar] = useState<'all' | PillarId | 'guide'>('all');
 
   return (
     <DashboardContext.Provider value={{

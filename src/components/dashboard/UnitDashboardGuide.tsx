@@ -1,16 +1,18 @@
 /**
- * Dashboard Guide — Comprehensive Help Center for the Executive Command Center.
+ * Unit Dashboard Guide — Comprehensive help center for individual unit/school dashboards.
+ * Mirrors the premium design of the Executive Dashboard Guide.
  */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
-  LayoutDashboard, ShieldAlert, Target, DollarSign, GitCompare, Brain, Camera,
-  HelpCircle, Lightbulb, FileDown, Moon, Sun, RefreshCw,
+  LayoutDashboard, ShieldAlert, Target, FlaskConical,
+  HelpCircle, Lightbulb, FileDown, Moon, AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 
-export default function DashboardGuide() {
+export default function UnitDashboardGuide() {
   return (
     <div className="space-y-8">
       {/* Data Refresh Policy — Prominent */}
@@ -36,19 +38,19 @@ export default function DashboardGuide() {
 
       {/* Section A: Dashboard Overview */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="w-4 h-4 text-primary" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dashboard Overview</span>
           </div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
-              The <span className="font-semibold text-foreground">University Executive Command Center</span> is the central strategic monitoring tool for
-              the Lebanese American University's <span className="font-semibold text-foreground">Strategic Plan IV (2025–2027)</span>.
+              The <span className="font-semibold text-foreground">Unit Dashboard</span> is a strategic monitoring tool for tracking
+              performance against the Lebanese American University's <span className="font-semibold text-foreground">Strategic Plan IV (2025–2027)</span> at the individual unit/school level.
             </p>
             <p>
-              It provides the President, Board members, and senior leadership with a real-time, data-driven view of
-              strategic performance across all 21 reporting units and five strategic pillars.
+              It provides unit heads, directors, and coordinators with a focused view of their unit's
+              strategic performance across the five strategic pillars, including progress tracking, risk signals, and pillar-level breakdowns.
             </p>
           </div>
 
@@ -56,19 +58,35 @@ export default function DashboardGuide() {
           <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Data Flow</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <FlowNode label="21 Units" sublabel="Report progress" />
+              <FlowNode label="Unit Reporting Sheet" sublabel="Source data" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              <FlowNode label="5 Strategic Pillars" sublabel="Aggregate performance" />
+              <FlowNode label="5 Strategic Pillars" sublabel="Pillar breakdown" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              <FlowNode label="University Metrics" sublabel="Executive insight" />
+              <FlowNode label="Unit Metrics" sublabel="Performance insight" />
             </div>
           </div>
         </motion.div>
       </section>
 
-      {/* Section B: Key Metrics Explained */}
+      {/* Section B: Main Sections Explained */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <LayoutDashboard className="w-4 h-4 text-primary" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Main Sections & Visuals</span>
+          </div>
+          <div className="space-y-3">
+            <TabGuide icon={LayoutDashboard} title="Pillar Performance Overview" description="Displays KPI cards (Risk Index, Completion %, On-Track %, Below Target %) and a status donut chart summarizing the distribution of all strategic action items. The Pillar Health Grid shows each pillar's risk level, completion progress, and item counts." />
+            <TabGuide icon={ShieldAlert} title="Risk Signals Overview" description="Highlights items flagged with elevated risk. Includes a risk distribution chart, pillar-level risk breakdown, and a detailed table of strategic exceptions (items that are Not Started or Completed Below Target)." />
+            <TabGuide icon={Target} title="Pillar Filters" description="Use the sidebar pillar filters (PI–PV) to drill down into a specific pillar's action items. Selecting a pillar narrows all dashboard views to only that pillar's data." />
+            <TabGuide icon={FlaskConical} title="Evolution Lab" description="A comparative analysis tool that lets you view how your unit's metrics have changed across different time periods, terms, and view types. Use the axis selectors and delta strips to identify trends." />
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Section C: Key Metrics Explained */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.09 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Info className="w-4 h-4 text-primary" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Key Metrics Explained</span>
@@ -99,42 +117,62 @@ export default function DashboardGuide() {
               interpretation="High Below Target % signals execution gaps even when completion looks strong."
             />
             <MetricExplainer
-              title="Budget Utilization"
-              definition="The percentage of total allocated budget (committed + available) that has been committed to active initiatives."
-              calculation="Committed Budget ÷ (Committed + Available) × 100"
-              interpretation="High utilization (>80%) with elevated risk may indicate financial pressure. Low utilization may indicate underdeployment."
+              title="Progress Status Mapping"
+              definition="Each strategic action item is assigned a status that maps to a risk signal."
+              calculation="Completed – On Target → No Risk (RI 0%) | In Progress → Emergent Risk (RI 33%) | Not Started → Critical Risk (RI 67%) | Completed – Below Target → Realized Risk (RI 100%)"
+              interpretation="'Completed – Below Target' items count as 0% completion because the outcome was not met, but they register as Realized Risk (highest risk weight)."
             />
             <MetricExplainer
-              title="Budget Allocation"
-              definition="The total planned budget assigned to a pillar or unit for the strategic plan period."
-              calculation="Sum of year-1 and year-2 allocations."
-              interpretation="Allocation reflects strategic investment priority. Compare with utilization to assess deployment efficiency."
+              title="Cumulative (SP) vs Yearly View"
+              definition="Two independent lenses for viewing strategic performance."
+              calculation="Cumulative (SP): Reads SP Status and SP % Completion fields. Yearly: Reads Yearly Status and Yearly % Completion fields."
+              interpretation="Always compare within the same view. Cumulative tracks full strategic plan progress; Yearly tracks current academic year progress. These are independent datasets — never mix them."
             />
           </div>
         </motion.div>
       </section>
 
-      {/* Section C: How to Read Each Tab */}
+      {/* Section D: Interpreting Results */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
-            <LayoutDashboard className="w-4 h-4 text-primary" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">How to Read Each Tab</span>
+            <AlertTriangle className="w-4 h-4 text-primary" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">How to Interpret Results & Signals</span>
           </div>
-          <div className="space-y-3">
-            <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="High-level overview of strategic performance across pillars. Start here for a quick situational understanding of completion, risk, and budget. The Strategic Plan IV — Pillar Reference legend maps pillar abbreviations (PI–PV) to their official titles." />
-            <TabGuide icon={ShieldAlert} title="Strategic Risk & Priority" description="Identifies initiatives with elevated risk signals. Use the heatmap to see which units and pillars need attention. Review strategic exceptions for critical items." />
-            <TabGuide icon={DollarSign} title="Budget Intelligence" description="Displays financial allocation and utilization across pillars. Identifies budget pressure zones where high utilization meets high risk." />
-            <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles. Each snapshot is uniquely labeled with timestamp. Trend charts use sequential labels (S1, S2, S3…) on the x-axis — hover over data points to see the full reporting cycle and capture time." />
-            <TabGuide icon={GitCompare} title="Unit Comparison" description="Allows side-by-side comparison of two units across all performance dimensions including pillar-level radar charts." />
-            <TabGuide icon={Brain} title="AI Executive Insights" description="AI-generated strategic interpretation of aggregated metrics. Provides narrative analysis of strengths, risks, and opportunities." />
+          <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 space-y-2">
+              <p className="text-xs font-semibold text-foreground">Risk Signal Colors</p>
+              <ul className="text-xs text-muted-foreground space-y-1.5">
+                <li className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" /> <span><span className="font-semibold text-foreground">No Risk</span> — Completed on target. Fully achieved.</span></li>
+                <li className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500 shrink-0" /> <span><span className="font-semibold text-foreground">Emergent Risk</span> — In progress. Work underway but not yet completed.</span></li>
+                <li className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-orange-500 shrink-0" /> <span><span className="font-semibold text-foreground">Critical Risk</span> — Not started. No progress recorded.</span></li>
+                <li className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-500 shrink-0" /> <span><span className="font-semibold text-foreground">Realized Risk</span> — Completed below target. Outcome fell short of expectations.</span></li>
+              </ul>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 space-y-2">
+              <p className="text-xs font-semibold text-foreground">Reading the Pillar Health Grid</p>
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Each card represents one of the five strategic pillars</li>
+                <li>The colored accent bar indicates overall pillar risk level</li>
+                <li>Check item counts to understand the scope of each pillar</li>
+                <li>Compare Completion % with RI to distinguish quality from quantity</li>
+              </ul>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 space-y-2">
+              <p className="text-xs font-semibold text-foreground">Strategic Exceptions</p>
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Items with "Not Started" or "Completed – Below Target" status are flagged</li>
+                <li>These represent the highest-priority items requiring attention</li>
+                <li>Review the detailed exceptions table in the Risk Signals section</li>
+              </ul>
+            </div>
           </div>
         </motion.div>
       </section>
 
-      {/* Section D: Export & Reporting */}
+      {/* Section E: Export & Reporting */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <FileDown className="w-4 h-4 text-primary" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Export & Reporting</span>
@@ -150,7 +188,7 @@ export default function DashboardGuide() {
                 <li>A4 landscape layout optimized for board presentations</li>
                 <li>Includes inline SVG visualizations — status donut charts and pillar completion bars</li>
                 <li>Dynamically reflects the selected Academic Year, Term, and View Type</li>
-                <li>Unit-specific titles (e.g., "HR — Human Resources") for unit dashboards</li>
+                <li>Unit-specific titles (e.g., "HR — Human Resources")</li>
                 <li>Branded with LAU logo and official teal-green color palette</li>
               </ul>
             </div>
@@ -165,9 +203,9 @@ export default function DashboardGuide() {
         </motion.div>
       </section>
 
-      {/* Section E: Dark Mode */}
+      {/* Section F: Dark Mode */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Moon className="w-4 h-4 text-primary" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dark Mode</span>
@@ -184,9 +222,9 @@ export default function DashboardGuide() {
         </motion.div>
       </section>
 
-      {/* Section F: FAQ */}
+      {/* Section G: FAQ */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <HelpCircle className="w-4 h-4 text-primary" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Frequently Asked Questions</span>
@@ -201,43 +239,47 @@ export default function DashboardGuide() {
               answer="Completion % counts all items that have reached a 'Completed' status (both On Target and Below Target) divided by the total number of applicable items. Items marked 'Not Applicable' are excluded from the calculation."
             />
             <FAQItem
+              question="Why does 'Completed – Below Target' show 0% completion?"
+              answer="Completion % reflects target achievement, not effort. An item 'Completed – Below Target' means the work was done but the outcome did not meet expectations. Therefore it contributes 0% to the completion metric, while simultaneously registering as Realized Risk (RI weight of 3)."
+            />
+            <FAQItem
+              question="What is the difference between Cumulative (SP) and Yearly views?"
+              answer="Cumulative (SP) tracks progress across the entire Strategic Plan period using SP Status and SP % Completion fields. Yearly tracks performance within a single academic year using Yearly Status and Yearly % Completion. These are independent datasets — they should never be compared directly."
+            />
+            <FAQItem
               question="Why can an initiative have high completion but still show risk?"
               answer="An initiative can be 'Completed – Below Target', which counts toward completion but also registers as a Realized Risk signal. This means the work was done but didn't meet expectations, contributing to both completion and risk metrics simultaneously."
             />
             <FAQItem
               question="How often is the dashboard updated?"
-              answer="The dashboard pulls live data from unit reporting sheets each time you access it. Data freshness depends on when units last updated their reporting sheets. The 'Data Retrieved' timestamp in the header shows when data was last fetched."
-            />
-            <FAQItem
-              question="What is a strategic snapshot?"
-              answer="A snapshot captures the current state of all university-level metrics at a point in time. By comparing snapshots across reporting cycles, leadership can observe the trajectory of strategic execution and identify trends. Each snapshot is uniquely labeled with a timestamp to distinguish multiple captures within the same cycle."
+              answer="Dashboard data is refreshed from the official online reporting sheets on a monthly schedule. Updates made to the source sheets will not appear immediately. Changes will be reflected only at the beginning or end of each month, depending on the reporting cycle."
             />
             <FAQItem
               question="How do I export a report?"
               answer="Click the download icon in the header to open the export dropdown. Select PDF for a presentation-ready A4 landscape report with charts and branding, or CSV for raw data. Both formats reflect the currently selected filters (Academic Year, Term, View Type)."
             />
             <FAQItem
-              question="Does dark mode affect exported reports?"
-              answer="No. PDF and CSV exports always use the standard light-mode branding with the official LAU teal-green palette, regardless of your display theme preference."
+              question="What is the Evolution Lab?"
+              answer="The Evolution Lab is a comparative analysis tool that allows you to view how your unit's metrics have changed across different time periods, terms, and view types. It helps identify trends, improvements, and areas of concern over time."
             />
           </div>
         </motion.div>
       </section>
 
-      {/* Section G: Reading Tips */}
+      {/* Section H: Reading Tips */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-4 h-4 text-primary" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Reading Tips for Executives</span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Reading Tips</span>
           </div>
           <div className="space-y-4">
-            <TipStep step={1} title="Start with Executive Snapshot" description="Get an instant overview of university-wide performance. Review the KPI banner and the Strategic Performance Matrix." />
-            <TipStep step={2} title="Check Strategic Risk & Priority" description="Identify critical issues using the risk heatmap and exceptions table. Focus on units and pillars with elevated risk signals." />
-            <TipStep step={3} title="Review Budget Intelligence" description="Analyze financial pressure signals. Look for pillars where high budget utilization coincides with high risk index." />
-            <TipStep step={4} title="Track Progress with Snapshots" description="Capture snapshots regularly and use the trajectory charts to understand whether strategic execution is improving over time." />
-            <TipStep step={5} title="Compare Units" description="Use Unit Comparison to analyze structural differences. The radar chart reveals pillar-level strengths and weaknesses between units." />
-            <TipStep step={6} title="Export for Board Meetings" description="Generate a PDF report before presentations. The exported report includes branded visualizations and reflects your current filter selections." />
+            <TipStep step={1} title="Start with the Dashboard Overview" description="Review the KPI banner and status donut chart for a quick snapshot of your unit's strategic performance." />
+            <TipStep step={2} title="Check Pillar Health" description="Examine each pillar's risk level, completion, and item distribution. Identify which pillars need the most attention." />
+            <TipStep step={3} title="Review Risk Signals" description="Focus on strategic exceptions — items that are Not Started or Completed Below Target. These require immediate attention." />
+            <TipStep step={4} title="Drill Down by Pillar" description="Use the sidebar pillar filters to isolate and analyze individual pillars in detail." />
+            <TipStep step={5} title="Compare Across Time" description="Use the Evolution Lab to track how your unit's metrics have changed between reporting cycles." />
+            <TipStep step={6} title="Export for Meetings" description="Generate a PDF report before presentations. The exported report includes branded visualizations and reflects your current filter selections." />
           </div>
         </motion.div>
       </section>
