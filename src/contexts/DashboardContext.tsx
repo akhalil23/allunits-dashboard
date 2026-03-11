@@ -6,7 +6,7 @@ interface DashboardCtx extends DashboardFilters {
   setViewType: (v: ViewType) => void;
   setAcademicYear: (y: AcademicYear) => void;
   setTerm: (t: Term) => void;
-  setSelectedPillar: (p: 'all' | PillarId) => void;
+  setSelectedPillar: (p: 'all' | PillarId | 'guide') => void;
 }
 
 const DashboardContext = createContext<DashboardCtx | null>(null);
