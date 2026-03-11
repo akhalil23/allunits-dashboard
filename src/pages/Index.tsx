@@ -20,7 +20,7 @@ export default function Index() {
 
   const filteredItems = useMemo(() => {
     if (!fetchResult?.data) return [];
-    if (selectedPillar === 'all') return fetchResult.data;
+    if (selectedPillar === 'all' || selectedPillar === 'guide') return fetchResult.data;
     return fetchResult.data.filter(i => i.pillar === selectedPillar);
   }, [fetchResult?.data, selectedPillar]);
 
