@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
   LayoutDashboard, ShieldAlert, Target, DollarSign, GitCompare, Brain, Camera,
-  HelpCircle, Lightbulb, FileDown, Moon, Sun,
+  HelpCircle, Lightbulb, FileDown, Moon, Sun, RefreshCw,
 } from 'lucide-react';
 
 export default function DashboardGuide() {
