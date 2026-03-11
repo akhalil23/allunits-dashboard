@@ -68,6 +68,13 @@ export default function Sidebar() {
       active: isEvolutionLab,
       onClick: () => navigate(`${basePath}/evolution-lab`),
     },
+    {
+      id: 'guide',
+      label: 'Dashboard Guide',
+      icon: BookOpen,
+      active: !isEvolutionLab && selectedPillar === 'guide',
+      onClick: () => { navigate(basePath); setSelectedPillar('guide' as any); },
+    },
     ...(isAdmin ? [{
       id: 'admin',
       label: 'Admin Panel',
