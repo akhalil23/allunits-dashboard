@@ -13,6 +13,27 @@ import {
 export default function DashboardGuide() {
   return (
     <div className="space-y-8">
+      {/* Data Refresh Policy — Prominent */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-amber-500/40 bg-amber-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <RefreshCw className="w-4 h-4 text-amber-500" />
+            <span className="text-xs sm:text-sm font-medium text-amber-500 uppercase tracking-wider">Data Refresh Policy</span>
+          </div>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              Dashboard data is refreshed from the official online reporting sheets on a <span className="font-semibold text-foreground">monthly schedule</span>.
+            </p>
+            <p>
+              As a result, updates made to the source sheets will <span className="font-semibold text-foreground">not appear immediately</span> in the dashboard.
+            </p>
+            <p>
+              Changes will be reflected only at the <span className="font-semibold text-foreground">beginning or end of each month</span>, depending on the reporting cycle.
+            </p>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Section A: Dashboard Overview */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
