@@ -33,9 +33,13 @@ export default function Index() {
     queryClient.invalidateQueries({ queryKey: ['gsr-data'] });
   }, [queryClient]);
 
-  const sectionTitle = selectedPillar === 'all'
-    ? 'All Pillars'
-    : `Pillar ${selectedPillar} — ${PILLAR_LABELS[selectedPillar]}`;
+  const isGuide = selectedPillar === 'guide';
+
+  const sectionTitle = isGuide
+    ? 'Dashboard Guide'
+    : selectedPillar === 'all'
+      ? 'All Pillars'
+      : `Pillar ${selectedPillar} — ${PILLAR_LABELS[selectedPillar]}`;
 
   if (isLoading) {
     return (
