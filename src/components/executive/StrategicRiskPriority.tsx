@@ -160,6 +160,9 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       <section>
         <ExceptionsTable flags={flags} />
       </section>
+
+      {/* Section 5: Strategic Coverage Gaps */}
+      <StrategicCoverageGaps />
     </div>
   );
 }
