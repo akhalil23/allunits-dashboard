@@ -102,6 +102,8 @@ export default function StrategicCoverageGaps() {
     }));
   }, [filteredGroups, sortKey]);
 
+  if (!analysis) return null;
+
   const toggleSet = (set: Set<string>, key: string, setter: (s: Set<string>) => void) => {
     const next = new Set(set);
     next.has(key) ? next.delete(key) : next.add(key);
