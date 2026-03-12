@@ -63,9 +63,11 @@ export default function StrategicCoverageGaps() {
     return computeCoverageGaps(unitResults, viewType, term, academicYear);
   }, [unitResults, viewType, term, academicYear]);
 
-  if (!analysis) return null;
-
-  const { pillarGroups, totalNS, totalNA, universityWideNS, majorityNA, totalLoadedUnits } = analysis;
+  const pillarGroups = analysis?.pillarGroups ?? [];
+  const totalNS = analysis?.totalNS ?? 0;
+  const totalNA = analysis?.totalNA ?? 0;
+  const universityWideNS = analysis?.universityWideNS ?? 0;
+  const majorityNA = analysis?.majorityNA ?? 0;
 
   // Apply filter
   const filteredGroups = useMemo(() => {
