@@ -26,6 +26,7 @@ import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import { RISK_SIGNAL_TOOLTIPS } from '@/lib/metric-definitions';
 import type { PillarId } from '@/lib/types';
+import StrategicCoverageGaps from './StrategicCoverageGaps';
 
 interface Props { aggregation: UniversityAggregation; }
 
@@ -159,6 +160,9 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       <section>
         <ExceptionsTable flags={flags} />
       </section>
+
+      {/* Section 5: Strategic Coverage Gaps */}
+      <StrategicCoverageGaps />
     </div>
   );
 }
