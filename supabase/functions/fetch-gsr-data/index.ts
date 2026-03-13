@@ -262,12 +262,12 @@ function safeGet(arr: any[], idx: number): string {
 
 function isRowFullyBlank(row: any[]): boolean {
   if (!row || row.length === 0) return true;
-  return row.every((c: any) => !c || String(c).trim() === '');
+  return row.every((c: any) => cleanCellText(c) === '');
 }
 
 function isValidItemRow(coreRow: any[], termRow: any[]): boolean {
   const colA = safeGet(coreRow, 0);
-  if (colA.trim() !== '') return true;
+  if (colA !== '') return true;
   if (termRow && termRow.length > 0 && !isRowFullyBlank(termRow)) return true;
   return false;
 }
