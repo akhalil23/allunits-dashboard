@@ -259,7 +259,7 @@ export default function Sidebar() {
               transition-all duration-300 group relative
               ${item.active
                 ? 'bg-white/15 text-white glow-left'
-                : 'text-white/70 hover:text-white hover:bg-white/8'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
               }
             `}
           >
