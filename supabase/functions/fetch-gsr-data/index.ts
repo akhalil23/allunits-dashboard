@@ -236,9 +236,28 @@ function parseCompletion(raw: string | undefined): { value: number | null; isInv
   return { value: Math.round(n), isInvalid: false };
 }
 
+/**
+ * Clean and normalize cell text: handle non-breaking spaces, tabs,
+ * control characters, then trim. Never discard text that has visible
+ * characters after cleaning.
+ */
+function cleanCellText(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  let text = String(value);
+  // Normalize non-breaking spaces (U+00A0) → regular space
+  text = text.replace(/\u00A0/g, ' ');
+  // Normalize tabs → space
+  text = text.replace(/\t/g, ' ');
+  // Remove invisible control characters (but keep normal whitespace)
+  text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  // Trim leading and trailing whitespace
+  text = text.trim();
+  return text;
+}
+
 function safeGet(arr: any[], idx: number): string {
   if (idx < 0 || !arr || idx >= arr.length) return '';
-  return String(arr[idx] ?? '');
+  return cleanCellText(arr[idx]);
 }
 
 function isRowFullyBlank(row: any[]): boolean {
