@@ -138,10 +138,10 @@ export default function Sidebar() {
                         transition-all duration-300 group relative
                         ${item.active
                           ? 'bg-white/15 text-white glow-left'
-                          : 'text-white/70 hover:text-white hover:bg-white/8'
-                        }
-                      `}
-                    >
+                         : 'text-white/70 hover:text-white hover:bg-white/10'
+                         }
+                       `}
+                     >
                       {item.active && (
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-white" />
                       )}
