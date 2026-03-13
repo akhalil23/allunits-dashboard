@@ -138,10 +138,10 @@ export default function Sidebar() {
                         transition-all duration-300 group relative
                         ${item.active
                           ? 'bg-white/15 text-white glow-left'
-                          : 'text-white/70 hover:text-white hover:bg-white/8'
-                        }
-                      `}
-                    >
+                         : 'text-white/70 hover:text-white hover:bg-white/10'
+                         }
+                       `}
+                     >
                       {item.active && (
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-white" />
                       )}
@@ -182,7 +182,7 @@ export default function Sidebar() {
   // Tablet: icon-only collapsed sidebar
   if (isTablet) {
     return (
-      <aside className="sidebar-gradient w-16 min-h-screen flex flex-col shrink-0">
+      <aside className="sidebar-gradient w-16 h-full flex flex-col shrink-0">
         <div className="px-2 pt-4 pb-3 flex justify-center">
           <img src={lauLogo} alt="LAU Logo" className="h-10 w-10 object-contain rounded" />
         </div>
@@ -200,7 +200,7 @@ export default function Sidebar() {
                 transition-all duration-300 relative
                 ${item.active
                   ? 'bg-white/15 text-white glow-left'
-                  : 'text-white/70 hover:text-white hover:bg-white/8'
+                   : 'text-white/70 hover:text-white hover:bg-white/10'
                 }
               `}
             >
@@ -227,7 +227,7 @@ export default function Sidebar() {
 
   // Desktop: full sidebar
   return (
-    <aside className="sidebar-gradient w-64 min-h-screen flex flex-col shrink-0">
+    <aside className="sidebar-gradient w-64 h-full flex flex-col shrink-0">
       {/* Logo */}
       <div className="px-4 pt-5 pb-4">
         <div className="flex flex-col items-center gap-3 px-3 py-4">
@@ -259,7 +259,7 @@ export default function Sidebar() {
               transition-all duration-300 group relative
               ${item.active
                 ? 'bg-white/15 text-white glow-left'
-                : 'text-white/70 hover:text-white hover:bg-white/8'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
               }
             `}
           >
