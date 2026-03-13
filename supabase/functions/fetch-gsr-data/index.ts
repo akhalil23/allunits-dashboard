@@ -574,7 +574,6 @@ serve(async (req) => {
         totalInvalidCompletions += invalidCompletions;
       }
     }
-    }
 
     if (anomalies.unexpectedStatuses.length > 0) {
       console.warn('Unexpected statuses:', anomalies.unexpectedStatuses.slice(0, 20));
