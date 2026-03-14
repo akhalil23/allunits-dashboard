@@ -340,9 +340,9 @@ function computeCategories(
 
       if (!stepMap.has(key)) {
         stepMap.set(key, {
-          actionStep: item.actionStep,
+          actionStep: cleanStep,
           pillar: item.pillar,
-          goal: item.goal,
+          goal: cleanGoal,
           nsUnits: [],
           naUnits: [],
         });
