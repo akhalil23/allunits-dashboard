@@ -333,7 +333,10 @@ function computeCategories(
   loadedUnits.forEach(ur => {
     ur.result!.data.forEach(item => {
       const status = getItemStatus(item, viewType, term, academicYear);
-      const key = `${item.pillar}|${item.goal}|${item.actionStep}`;
+      // Normalize text fields to prevent blank rows
+      const cleanGoal = (item.goal || '').replace(/\u00A0/g, ' ').replace(/[\t\r\n\f\v]/g, ' ').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+      const cleanStep = (item.actionStep || '').replace(/\u00A0/g, ' ').replace(/[\t\r\n\f\v]/g, ' ').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+      const key = `${item.pillar}|${cleanGoal}|${cleanStep}`;
 
       if (!stepMap.has(key)) {
         stepMap.set(key, {
