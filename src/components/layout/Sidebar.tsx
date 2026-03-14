@@ -30,13 +30,11 @@ export default function Sidebar() {
   const unitName = unitConfig?.name || 'GSR';
 
   useEffect(() => {
-    const check = () => {
-      const w = window.innerWidth;
-      setIsTablet(w >= 769 && w < 1280);
-    };
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const mql = window.matchMedia('(min-width: 768px) and (max-width: 1279.98px)');
+    const onChange = () => setIsTablet(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
   }, []);
 
   useEffect(() => {
