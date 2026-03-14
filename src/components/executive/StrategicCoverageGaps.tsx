@@ -333,13 +333,16 @@ function computeCategories(
   loadedUnits.forEach(ur => {
     ur.result!.data.forEach(item => {
       const status = getItemStatus(item, viewType, term, academicYear);
-      const key = `${item.pillar}|${item.goal}|${item.actionStep}`;
+      // Normalize text fields to prevent blank rows
+      const cleanGoal = (item.goal || '').replace(/\u00A0/g, ' ').replace(/[\t\r\n\f\v]/g, ' ').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+      const cleanStep = (item.actionStep || '').replace(/\u00A0/g, ' ').replace(/[\t\r\n\f\v]/g, ' ').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+      const key = `${item.pillar}|${cleanGoal}|${cleanStep}`;
 
       if (!stepMap.has(key)) {
         stepMap.set(key, {
-          actionStep: item.actionStep,
+          actionStep: cleanStep,
           pillar: item.pillar,
-          goal: item.goal,
+          goal: cleanGoal,
           nsUnits: [],
           naUnits: [],
         });
@@ -423,10 +426,14 @@ function computeCategories(
 function groupByPillar(items: StepItem[]): PillarGroup[] {
   const pillarMap = new Map<PillarId, Map<string, StepItem[]>>();
   items.forEach(item => {
+    // Skip items with no visible goal label
+    const cleanGoal = (item.goal || '').replace(/\u00A0/g, ' ').trim();
+    if (!cleanGoal) return;
+
     if (!pillarMap.has(item.pillar)) pillarMap.set(item.pillar, new Map());
     const goalMap = pillarMap.get(item.pillar)!;
-    if (!goalMap.has(item.goal)) goalMap.set(item.goal, []);
-    goalMap.get(item.goal)!.push(item);
+    if (!goalMap.has(cleanGoal)) goalMap.set(cleanGoal, []);
+    goalMap.get(cleanGoal)!.push(item);
   });
 
   const order: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
@@ -434,6 +441,9 @@ function groupByPillar(items: StepItem[]): PillarGroup[] {
     .filter(p => pillarMap.has(p))
     .map(p => ({
       pillar: p,
-      goals: Array.from(pillarMap.get(p)!.entries()).map(([goal, steps]) => ({ goal, steps })),
-    }));
+      goals: Array.from(pillarMap.get(p)!.entries())
+        .filter(([goal]) => goal.trim().length > 0)
+        .map(([goal, steps]) => ({ goal, steps })),
+    }))
+    .filter(p => p.goals.length > 0);
 }

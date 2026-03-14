@@ -89,7 +89,7 @@ export default function ExecutiveDashboard() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <ExecutiveSidebar activeTab={activeTab} onTabChange={handleTabChange} />
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0">
         <ExecutiveHeader
           loadedUnits={aggregation.loadedUnits}
           totalUnits={aggregation.totalUnits}

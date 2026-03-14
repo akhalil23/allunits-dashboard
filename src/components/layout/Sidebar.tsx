@@ -182,7 +182,7 @@ export default function Sidebar() {
   // Tablet: icon-only collapsed sidebar
   if (isTablet) {
     return (
-      <aside className="sidebar-gradient w-16 h-full flex flex-col shrink-0">
+      <aside className="sidebar-gradient w-16 h-screen flex flex-col shrink-0 min-h-0">
         <div className="px-2 pt-4 pb-3 flex justify-center">
           <img src={lauLogo} alt="LAU Logo" className="h-10 w-10 object-contain rounded" />
         </div>
@@ -227,7 +227,7 @@ export default function Sidebar() {
 
   // Desktop: full sidebar
   return (
-    <aside className="sidebar-gradient w-64 h-full flex flex-col shrink-0">
+    <aside className="sidebar-gradient w-64 h-screen flex flex-col shrink-0 min-h-0">
       {/* Logo */}
       <div className="px-4 pt-5 pb-4">
         <div className="flex flex-col items-center gap-3 px-3 py-4">
