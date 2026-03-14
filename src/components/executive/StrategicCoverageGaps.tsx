@@ -426,14 +426,14 @@ function computeCategories(
 function groupByPillar(items: StepItem[]): PillarGroup[] {
   const pillarMap = new Map<PillarId, Map<string, StepItem[]>>();
   items.forEach(item => {
-    // Skip items with no visible goal label
     const cleanGoal = (item.goal || '').replace(/\u00A0/g, ' ').trim();
-    if (!cleanGoal) return;
+    // Use fallback label for items with no goal text
+    const goalLabel = cleanGoal || '(Unspecified Goal)';
 
     if (!pillarMap.has(item.pillar)) pillarMap.set(item.pillar, new Map());
     const goalMap = pillarMap.get(item.pillar)!;
-    if (!goalMap.has(cleanGoal)) goalMap.set(cleanGoal, []);
-    goalMap.get(cleanGoal)!.push(item);
+    if (!goalMap.has(goalLabel)) goalMap.set(goalLabel, []);
+    goalMap.get(goalLabel)!.push(item);
   });
 
   const order: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
@@ -442,7 +442,6 @@ function groupByPillar(items: StepItem[]): PillarGroup[] {
     .map(p => ({
       pillar: p,
       goals: Array.from(pillarMap.get(p)!.entries())
-        .filter(([goal]) => goal.trim().length > 0)
         .map(([goal, steps]) => ({ goal, steps })),
     }))
     .filter(p => p.goals.length > 0);
