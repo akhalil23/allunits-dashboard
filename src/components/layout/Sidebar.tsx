@@ -225,7 +225,7 @@ export default function Sidebar() {
 
   // Desktop: full sidebar
   return (
-    <aside className="sidebar-gradient w-64 h-screen flex flex-col shrink-0 min-h-0">
+    <aside className="sidebar-gradient w-64 min-w-[16rem] h-screen flex flex-col shrink-0 min-h-0">
       {/* Logo */}
       <div className="px-4 pt-5 pb-4">
         <div className="flex flex-col items-center gap-3 px-3 py-4">
