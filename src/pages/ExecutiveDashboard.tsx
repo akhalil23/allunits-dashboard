@@ -46,7 +46,7 @@ export default function ExecutiveDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="flex h-screen bg-background" style={{ overflow: 'clip' }}>
         <ExecutiveSidebar activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
