@@ -1,7 +1,8 @@
 /**
  * Strategic Coverage Exceptions
  * Premium hybrid panel: 2×2 summary grid + single expandable detail panel.
- * Identifies cross-unit strategic items broadly not started or not applicable.
+ * 3-level hierarchy: Goal → Action → Action Step
+ * Forward-fills blank Goal/Action cells from source sheets.
  */
 
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -13,7 +14,12 @@ import { getItemStatus } from '@/lib/intelligence';
 import { isNotApplicableStatus } from '@/lib/types';
 import { getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
-import type { PillarId } from '@/lib/types';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import type { PillarId, ActionItem } from '@/lib/types';
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -24,14 +30,20 @@ interface StepItem {
   actionStep: string;
   pillar: PillarId;
   goal: string;
+  action: string;
   nsUnits: string[];
   naUnits: string[];
   totalUnits: number;
 }
 
+interface ActionGroup {
+  action: string;
+  steps: StepItem[];
+}
+
 interface GoalGroup {
   goal: string;
-  steps: StepItem[];
+  actions: ActionGroup[];
 }
 
 interface PillarGroup {
@@ -50,6 +62,48 @@ interface CategoryData {
 
 const TOTAL_UNITS = 21;
 
+// ─── Text cleaning ──────────────────────────────────────────────────────────
+
+function cleanText(raw: string | null | undefined): string {
+  if (!raw) return '';
+  return raw
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\t\r\n\f\v]/g, ' ')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .trim();
+}
+
+// ─── Forward-fill logic ─────────────────────────────────────────────────────
+
+/**
+ * For a single unit's items within one pillar, sorted by sheetRow,
+ * forward-fill blank goal and objective (action) cells.
+ */
+function forwardFill(items: ActionItem[]): { goal: string; action: string; actionStep: string; pillar: PillarId; item: ActionItem }[] {
+  // Sort by sheetRow to preserve sheet order
+  const sorted = [...items].sort((a, b) => a.sheetRow - b.sheetRow);
+
+  let lastGoal = '';
+  let lastAction = '';
+
+  return sorted.map(item => {
+    const rawGoal = cleanText(item.goal);
+    const rawAction = cleanText(item.objective);
+    const rawStep = cleanText(item.actionStep);
+
+    if (rawGoal) lastGoal = rawGoal;
+    if (rawAction) lastAction = rawAction;
+
+    return {
+      goal: lastGoal,
+      action: lastAction,
+      actionStep: rawStep,
+      pillar: item.pillar,
+      item,
+    };
+  });
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function StrategicCoverageGaps() {
@@ -59,6 +113,7 @@ export default function StrategicCoverageGaps() {
   const detailRef = useRef<HTMLDivElement>(null);
   const [expandedPillars, setExpandedPillars] = useState<Set<string>>(new Set());
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
+  const [expandedActions, setExpandedActions] = useState<Set<string>>(new Set());
 
   const categories = useMemo(() => {
     if (!unitResults) return null;
@@ -76,6 +131,7 @@ export default function StrategicCoverageGaps() {
   useEffect(() => {
     setExpandedPillars(new Set());
     setExpandedGoals(new Set());
+    setExpandedActions(new Set());
   }, [activeCategory]);
 
   if (!categories) return null;
@@ -92,6 +148,9 @@ export default function StrategicCoverageGaps() {
     next.has(key) ? next.delete(key) : next.add(key);
     setter(next);
   };
+
+  /** Count all action steps in a goal group */
+  const goalStepCount = (g: GoalGroup) => g.actions.reduce((s, a) => s + a.steps.length, 0);
 
   return (
     <section className="space-y-5">
@@ -118,7 +177,7 @@ export default function StrategicCoverageGaps() {
         ))}
       </div>
 
-      {/* Level 2: Detail Panel */}
+      {/* Detail Panel */}
       <div ref={detailRef}>
         <AnimatePresence mode="wait">
           {activeCategory === null ? (
@@ -153,23 +212,26 @@ export default function StrategicCoverageGaps() {
               {/* Detail header */}
               <div className="px-5 py-4 border-b border-border/40">
                 <h4 className="text-sm font-semibold text-foreground">{activeData.title}</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">{activeData.count} item{activeData.count !== 1 ? 's' : ''} · {activeData.definition}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{activeData.count} action step{activeData.count !== 1 ? 's' : ''} · {activeData.definition}</p>
               </div>
 
-              {/* Pillar → Goal → Step hierarchy */}
+              {/* Pillar → Goal → Action → Step hierarchy */}
               <div className="divide-y divide-border/30">
                 {grouped.map(pg => {
                   const pKey = pg.pillar;
                   const pOpen = expandedPillars.has(pKey);
+                  const pillarStepCount = pg.goals.reduce((s, g) => s + goalStepCount(g), 0);
+
                   return (
                     <div key={pKey}>
+                      {/* ── Pillar row ── */}
                       <button
                         onClick={() => toggle(expandedPillars, pKey, setExpandedPillars)}
                         className="w-full flex items-center gap-2.5 px-5 py-3.5 hover:bg-muted/20 transition-colors text-left"
                       >
-                        <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${pOpen ? 'rotate-90' : ''}`} />
+                        <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${pOpen ? 'rotate-90' : ''}`} />
                         <span className="text-xs sm:text-sm font-semibold text-foreground flex-1">{PILLAR_FULL[pg.pillar]}</span>
-                        <span className="text-xs text-muted-foreground">{pg.goals.reduce((s, g) => s + g.steps.length, 0)} items</span>
+                        <span className="text-xs text-muted-foreground">{pillarStepCount} items</span>
                       </button>
 
                       <AnimatePresence>
@@ -182,17 +244,19 @@ export default function StrategicCoverageGaps() {
                             className="overflow-hidden"
                           >
                             {pg.goals.map(goal => {
-                              const gKey = `${pKey}-${goal.goal}`;
+                              const gKey = `${pKey}::${goal.goal}`;
                               const gOpen = expandedGoals.has(gKey);
+
                               return (
                                 <div key={gKey} className="border-t border-border/20">
+                                  {/* ── Goal row ── */}
                                   <button
                                     onClick={() => toggle(expandedGoals, gKey, setExpandedGoals)}
                                     className="w-full flex items-center gap-2 pl-9 pr-5 py-2.5 hover:bg-muted/10 transition-colors text-left"
                                   >
-                                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${gOpen ? 'rotate-90' : ''}`} />
-                                    <span className="text-xs font-medium text-foreground flex-1">{goal.goal}</span>
-                                    <span className="text-xs text-muted-foreground">{goal.steps.length}</span>
+                                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground shrink-0 transition-transform duration-200 ${gOpen ? 'rotate-90' : ''}`} />
+                                    <span className="text-xs font-semibold text-foreground flex-1">{goal.goal}</span>
+                                    <span className="text-xs text-muted-foreground">{goalStepCount(goal)}</span>
                                   </button>
 
                                   <AnimatePresence>
@@ -204,13 +268,44 @@ export default function StrategicCoverageGaps() {
                                         transition={{ duration: 0.2 }}
                                         className="overflow-hidden"
                                       >
-                                        {goal.steps.map((step, si) => (
-                                          <StepRow
-                                            key={si}
-                                            step={step}
-                                            categoryKey={activeCategory!}
-                                          />
-                                        ))}
+                                        {goal.actions.map(act => {
+                                          const aKey = `${gKey}::${act.action}`;
+                                          const aOpen = expandedActions.has(aKey);
+
+                                          return (
+                                            <div key={aKey} className="border-t border-border/10">
+                                              {/* ── Action row ── */}
+                                              <button
+                                                onClick={() => toggle(expandedActions, aKey, setExpandedActions)}
+                                                className="w-full flex items-center gap-2 pl-14 pr-5 py-2 hover:bg-muted/5 transition-colors text-left"
+                                              >
+                                                <ChevronRight className={`w-3 h-3 text-muted-foreground shrink-0 transition-transform duration-200 ${aOpen ? 'rotate-90' : ''}`} />
+                                                <span className="text-xs font-medium text-foreground/80 flex-1">{act.action}</span>
+                                                <span className="text-[11px] text-muted-foreground">{act.steps.length}</span>
+                                              </button>
+
+                                              <AnimatePresence>
+                                                {aOpen && (
+                                                  <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    className="overflow-hidden"
+                                                  >
+                                                    {act.steps.map((step, si) => (
+                                                      <StepRow
+                                                        key={si}
+                                                        step={step}
+                                                        categoryKey={activeCategory!}
+                                                      />
+                                                    ))}
+                                                  </motion.div>
+                                                )}
+                                              </AnimatePresence>
+                                            </div>
+                                          );
+                                        })}
                                       </motion.div>
                                     )}
                                   </AnimatePresence>
@@ -273,7 +368,7 @@ function ExceptionCard({ category, isActive, onClick, delay }: {
   );
 }
 
-// ─── Step Row ────────────────────────────────────────────────────────────────
+// ─── Step Row with Unit Popover ──────────────────────────────────────────────
 
 function StepRow({ step, categoryKey }: { step: StepItem; categoryKey: CategoryKey }) {
   const isNS = categoryKey.includes('ns');
@@ -283,28 +378,54 @@ function StepRow({ step, categoryKey }: { step: StepItem; categoryKey: CategoryK
   const isAbsolute = categoryKey.startsWith('absolute');
 
   return (
-    <div className="flex items-center gap-3 pl-14 pr-5 py-2.5 border-t border-border/10 hover:bg-muted/5 transition-colors">
+    <div className="flex items-center gap-3 pl-[4.5rem] pr-5 py-2.5 border-t border-border/10 hover:bg-muted/5 transition-colors">
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-foreground truncate">{step.actionStep}</p>
+        <p className="text-xs text-foreground">{step.actionStep || '(Unnamed Step)'}</p>
         <p className="text-[10px] text-muted-foreground mt-0.5">
-          Marked {isNS ? 'Not Started' : 'Not Applicable'} by {count} of {TOTAL_UNITS} units ({pct}%)
+          {isNS ? 'Not Started' : 'Not Applicable'} by {count}/{TOTAL_UNITS} units ({pct}%)
         </p>
       </div>
 
-      {/* Coverage badge */}
-      <span className={`
-        shrink-0 inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold
-        ${isAbsolute
-          ? isNS
-            ? 'bg-amber-500/20 text-amber-400'
-            : 'bg-muted/60 text-muted-foreground'
-          : isNS
-            ? 'bg-amber-500/10 text-amber-500'
-            : 'bg-muted/40 text-muted-foreground'
-        }
-      `}>
-        {count}/{TOTAL_UNITS}
-      </span>
+      {/* Coverage badge with unit list popover */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            className={`
+              shrink-0 inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold cursor-pointer
+              transition-opacity hover:opacity-80
+              ${isAbsolute
+                ? isNS
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : 'bg-muted/60 text-muted-foreground'
+                : isNS
+                  ? 'bg-amber-500/10 text-amber-500'
+                  : 'bg-muted/40 text-muted-foreground'
+              }
+            `}
+          >
+            {count}/{TOTAL_UNITS}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="left"
+          align="center"
+          className="w-auto max-w-[240px] p-3"
+        >
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            Units ({count})
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {relevantUnits.map(uid => (
+              <span
+                key={uid}
+                className="inline-block px-2 py-0.5 rounded-md bg-muted/60 text-[11px] font-medium text-foreground"
+              >
+                {getUnitDisplayName(uid)}
+              </span>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
@@ -318,42 +439,55 @@ function computeCategories(
   academicYear: '2025-2026' | '2026-2027'
 ): CategoryData[] {
   const loadedUnits = unitResults.filter(u => u.result && !u.error);
-  const totalLoadedUnits = loadedUnits.length;
   const threshold75 = Math.ceil(TOTAL_UNITS * 0.75); // 16
 
-  // Build step map: actionStep key → { nsUnits, naUnits }
+  // Build step map: unique key → aggregated units
+  // Key = pillar|goal|action|actionStep (all forward-filled & cleaned)
   const stepMap = new Map<string, {
     actionStep: string;
     pillar: PillarId;
     goal: string;
+    action: string;
     nsUnits: string[];
     naUnits: string[];
   }>();
 
   loadedUnits.forEach(ur => {
-    ur.result!.data.forEach(item => {
-      const status = getItemStatus(item, viewType, term, academicYear);
-      // Normalize text fields to prevent blank rows
-      const cleanGoal = (item.goal || '').replace(/\u00A0/g, ' ').replace(/[\t\r\n\f\v]/g, ' ').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
-      const cleanStep = (item.actionStep || '').replace(/\u00A0/g, ' ').replace(/[\t\r\n\f\v]/g, ' ').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
-      const key = `${item.pillar}|${cleanGoal}|${cleanStep}`;
+    const items = ur.result!.data;
 
-      if (!stepMap.has(key)) {
-        stepMap.set(key, {
-          actionStep: cleanStep,
-          pillar: item.pillar,
-          goal: cleanGoal,
-          nsUnits: [],
-          naUnits: [],
-        });
-      }
+    // Group by pillar for forward-fill within each pillar
+    const byPillar = new Map<PillarId, ActionItem[]>();
+    items.forEach(item => {
+      if (!byPillar.has(item.pillar)) byPillar.set(item.pillar, []);
+      byPillar.get(item.pillar)!.push(item);
+    });
 
-      const entry = stepMap.get(key)!;
-      if (status === 'Not Started') {
-        entry.nsUnits.push(ur.unitId);
-      } else if (isNotApplicableStatus(status)) {
-        entry.naUnits.push(ur.unitId);
-      }
+    // Forward-fill and process each pillar
+    byPillar.forEach((pillarItems, _pillar) => {
+      const filled = forwardFill(pillarItems);
+
+      filled.forEach(({ goal, action, actionStep, pillar, item }) => {
+        const status = getItemStatus(item, viewType, term, academicYear);
+        const key = `${pillar}|${goal}|${action}|${actionStep}`;
+
+        if (!stepMap.has(key)) {
+          stepMap.set(key, {
+            actionStep,
+            pillar,
+            goal,
+            action,
+            nsUnits: [],
+            naUnits: [],
+          });
+        }
+
+        const entry = stepMap.get(key)!;
+        if (status === 'Not Started') {
+          entry.nsUnits.push(ur.unitId);
+        } else if (isNotApplicableStatus(status)) {
+          entry.naUnits.push(ur.unitId);
+        }
+      });
     });
   });
 
@@ -368,81 +502,58 @@ function computeCategories(
       actionStep: entry.actionStep,
       pillar: entry.pillar,
       goal: entry.goal,
+      action: entry.action,
       nsUnits: entry.nsUnits,
       naUnits: entry.naUnits,
       totalUnits: TOTAL_UNITS,
     };
 
-    if (entry.nsUnits.length >= threshold75) {
-      majorityNS.push(item);
-    }
-    if (entry.nsUnits.length === TOTAL_UNITS) {
-      absoluteNS.push(item);
-    }
-    if (entry.naUnits.length >= threshold75) {
-      majorityNA.push(item);
-    }
-    if (entry.naUnits.length === TOTAL_UNITS) {
-      absoluteNA.push(item);
-    }
+    if (entry.nsUnits.length >= threshold75) majorityNS.push(item);
+    if (entry.nsUnits.length === TOTAL_UNITS) absoluteNS.push(item);
+    if (entry.naUnits.length >= threshold75) majorityNA.push(item);
+    if (entry.naUnits.length === TOTAL_UNITS) absoluteNA.push(item);
   });
 
   return [
-    {
-      key: 'majority-ns',
-      title: 'Majority Not Started',
-      definition: 'Not Started by ≥ 75% of units (≥ 16)',
-      count: majorityNS.length,
-      accent: 'ns',
-      items: majorityNS,
-    },
-    {
-      key: 'absolute-ns',
-      title: 'Absolute Not Started',
-      definition: 'Not Started by all 21 units',
-      count: absoluteNS.length,
-      accent: 'ns',
-      items: absoluteNS,
-    },
-    {
-      key: 'majority-na',
-      title: 'Majority Not Applicable',
-      definition: 'Not Applicable by ≥ 75% of units (≥ 16)',
-      count: majorityNA.length,
-      accent: 'na',
-      items: majorityNA,
-    },
-    {
-      key: 'absolute-na',
-      title: 'Absolute Not Applicable',
-      definition: 'Not Applicable by all 21 units',
-      count: absoluteNA.length,
-      accent: 'na',
-      items: absoluteNA,
-    },
+    { key: 'majority-ns', title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of units (≥ 16)', count: majorityNS.length, accent: 'ns', items: majorityNS },
+    { key: 'absolute-ns', title: 'Absolute Not Started', definition: 'Not Started by all 21 units', count: absoluteNS.length, accent: 'ns', items: absoluteNS },
+    { key: 'majority-na', title: 'Majority Not Applicable', definition: 'Not Applicable by ≥ 75% of units (≥ 16)', count: majorityNA.length, accent: 'na', items: majorityNA },
+    { key: 'absolute-na', title: 'Absolute Not Applicable', definition: 'Not Applicable by all 21 units', count: absoluteNA.length, accent: 'na', items: absoluteNA },
   ];
 }
 
+// ─── Grouping: Pillar → Goal → Action → Steps ───────────────────────────────
+
 function groupByPillar(items: StepItem[]): PillarGroup[] {
-  const pillarMap = new Map<PillarId, Map<string, StepItem[]>>();
+  const pillarMap = new Map<PillarId, Map<string, Map<string, StepItem[]>>>();
+
   items.forEach(item => {
-    const cleanGoal = (item.goal || '').replace(/\u00A0/g, ' ').trim();
-    // Use fallback label for items with no goal text
-    const goalLabel = cleanGoal || '(Unspecified Goal)';
+    const goalLabel = item.goal || '(Unspecified Goal)';
+    const actionLabel = item.action || '(Unspecified Action)';
 
     if (!pillarMap.has(item.pillar)) pillarMap.set(item.pillar, new Map());
     const goalMap = pillarMap.get(item.pillar)!;
-    if (!goalMap.has(goalLabel)) goalMap.set(goalLabel, []);
-    goalMap.get(goalLabel)!.push(item);
+
+    if (!goalMap.has(goalLabel)) goalMap.set(goalLabel, new Map());
+    const actionMap = goalMap.get(goalLabel)!;
+
+    if (!actionMap.has(actionLabel)) actionMap.set(actionLabel, []);
+    actionMap.get(actionLabel)!.push(item);
   });
 
   const order: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
+
   return order
     .filter(p => pillarMap.has(p))
     .map(p => ({
       pillar: p,
-      goals: Array.from(pillarMap.get(p)!.entries())
-        .map(([goal, steps]) => ({ goal, steps })),
+      goals: Array.from(pillarMap.get(p)!.entries()).map(([goal, actionMap]) => ({
+        goal,
+        actions: Array.from(actionMap.entries()).map(([action, steps]) => ({
+          action,
+          steps,
+        })),
+      })),
     }))
     .filter(p => p.goals.length > 0);
 }
