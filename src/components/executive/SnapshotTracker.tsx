@@ -35,6 +35,7 @@ interface Props { aggregation: UniversityAggregation; }
 export default function SnapshotTracker({ aggregation }: Props) {
   const { viewType, term, academicYear } = useDashboard();
   const { data: unitResults } = useUniversityData();
+  const { data: budgetResult } = useBudgetData();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [capturing, setCapturing] = useState(false);
@@ -42,15 +43,16 @@ export default function SnapshotTracker({ aggregation }: Props) {
   const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
 
   const budgetUtilization = useMemo(() => {
+    if (!budgetResult?.pillars) return 0;
     const pillars: PillarId[] = ['I','II','III','IV','V'];
-    let totalCommitted = 0, totalAll = 0;
+    let totalCommitted = 0, totalAllocation = 0;
     pillars.forEach(p => {
-      const b = getPillarBudget(p, 'total');
+      const b = getLivePillarBudget(budgetResult.pillars, p);
       totalCommitted += b.committed;
-      totalAll += b.committed + b.available;
+      totalAllocation += b.allocation;
     });
-    return totalAll > 0 ? parseFloat(((totalCommitted / totalAll) * 100).toFixed(1)) : 0;
-  }, []);
+    return totalAllocation > 0 ? parseFloat(((totalCommitted / totalAllocation) * 100).toFixed(1)) : 0;
+  }, [budgetResult]);
 
   const reportingCycle = `${term === 'mid' ? 'Mid-Year' : 'End-Year'} AY ${academicYear}`;
 

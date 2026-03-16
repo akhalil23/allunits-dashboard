@@ -65,8 +65,8 @@ export default function PresidentSnapshot({ aggregation }: Props) {
   // Pillar data with budget
   const pillarData = useMemo(() => {
     return pillarAgg.map(p => {
-      const b = getPillarBudget(p.pillar, 'total');
-      const util = (b.committed + b.available) > 0 ? (b.committed / (b.committed + b.available)) * 100 : 0;
+      const b = getLivePillarBudget(budgetResult?.pillars, p.pillar);
+      const util = b.allocation > 0 ? (b.committed / b.allocation) * 100 : 0;
       return {
         pillar: p.pillar,
         label: PILLAR_LABELS[p.pillar],
@@ -78,7 +78,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         applicable: p.applicableItems,
       };
     });
-  }, [pillarAgg]);
+  }, [pillarAgg, budgetResult]);
 
   // Executive highlights
   const highlights = useMemo(() => {
