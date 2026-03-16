@@ -21,7 +21,8 @@ import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from 
 import { formatRIPercent, getRiskDisplayInfo, riToPercent } from '@/lib/risk-display';
 import { RIMeter } from '@/components/ui/ri-meter';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
-import { getPillarBudget } from '@/lib/budget-data';
+import { getLivePillarBudget } from '@/lib/budget-data';
+import { useBudgetData } from '@/hooks/use-budget-data';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
