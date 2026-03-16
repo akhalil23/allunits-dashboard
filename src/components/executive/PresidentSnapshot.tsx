@@ -23,7 +23,8 @@ import { formatRIPercent, getRiskDisplayInfo, formatRIWithBand, RI_TOOLTIP, RI_B
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar } from '@/lib/university-aggregation';
-import { PILLAR_LABELS, getPillarBudget } from '@/lib/budget-data';
+import { PILLAR_LABELS, getLivePillarBudget } from '@/lib/budget-data';
+import { useBudgetData } from '@/hooks/use-budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import type { PillarId } from '@/lib/types';
 
