@@ -47,18 +47,20 @@ function PillarTooltipLabel({ pillar }: { pillar: PillarId }) {
 export default function PresidentSnapshot({ aggregation }: Props) {
   const { viewType, term, academicYear } = useDashboard();
   const { data: unitResults } = useUniversityData();
+  const { data: budgetResult } = useBudgetData();
   const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
 
   const budgetUtilization = useMemo(() => {
+    if (!budgetResult?.pillars) return 0;
     const pillars: PillarId[] = ['I','II','III','IV','V'];
-    let totalCommitted = 0, totalAll = 0;
+    let totalCommitted = 0, totalAllocation = 0;
     pillars.forEach(p => {
-      const b = getPillarBudget(p, 'total');
+      const b = getLivePillarBudget(budgetResult.pillars, p);
       totalCommitted += b.committed;
-      totalAll += b.committed + b.available;
+      totalAllocation += b.allocation;
     });
-    return totalAll > 0 ? parseFloat(((totalCommitted / totalAll) * 100).toFixed(1)) : 0;
-  }, []);
+    return totalAllocation > 0 ? parseFloat(((totalCommitted / totalAllocation) * 100).toFixed(1)) : 0;
+  }, [budgetResult]);
 
   // Pillar data with budget
   const pillarData = useMemo(() => {
