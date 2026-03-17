@@ -515,10 +515,10 @@ function computeCategories(
   });
 
   return [
-    { key: 'majority-ns', title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of units (≥ 16)', count: majorityNS.length, accent: 'ns', items: majorityNS },
-    { key: 'absolute-ns', title: 'Absolute Not Started', definition: 'Not Started by all 21 units', count: absoluteNS.length, accent: 'ns', items: absoluteNS },
-    { key: 'majority-na', title: 'Majority Not Applicable', definition: 'Not Applicable by ≥ 75% of units (≥ 16)', count: majorityNA.length, accent: 'na', items: majorityNA },
-    { key: 'absolute-na', title: 'Absolute Not Applicable', definition: 'Not Applicable by all 21 units', count: absoluteNA.length, accent: 'na', items: absoluteNA },
+    { key: 'majority-ns', title: 'Majority Not Started', definition: `Not Started by ≥ 75% of units (≥ ${threshold75})`, count: majorityNS.length, accent: 'ns', items: majorityNS },
+    { key: 'absolute-ns', title: 'Absolute Not Started', definition: `Not Started by all ${TOTAL_UNITS} units`, count: absoluteNS.length, accent: 'ns', items: absoluteNS },
+    { key: 'majority-na', title: 'Majority Not Applicable', definition: `Not Applicable by ≥ 75% of units (≥ ${threshold75})`, count: majorityNA.length, accent: 'na', items: majorityNA },
+    { key: 'absolute-na', title: 'Absolute Not Applicable', definition: `Not Applicable by all ${TOTAL_UNITS} units`, count: absoluteNA.length, accent: 'na', items: absoluteNA },
   ];
 }
 

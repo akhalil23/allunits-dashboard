@@ -51,7 +51,7 @@ export default function ExecutiveDashboard() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-            <p className="text-sm text-muted-foreground">Loading data from all 21 units…</p>
+            <p className="text-sm text-muted-foreground">Loading data from all 22 units…</p>
             <p className="text-xs text-muted-foreground/60">This may take a moment</p>
           </div>
         </div>
