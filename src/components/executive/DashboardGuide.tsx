@@ -56,7 +56,7 @@ export default function DashboardGuide() {
           <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Data Flow</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <FlowNode label="21 Units" sublabel="Report progress" />
+              <FlowNode label="22 Units" sublabel="Report progress" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
               <FlowNode label="5 Strategic Pillars" sublabel="Aggregate performance" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
