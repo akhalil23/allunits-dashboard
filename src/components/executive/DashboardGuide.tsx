@@ -48,7 +48,7 @@ export default function DashboardGuide() {
             </p>
             <p>
               It provides the President, Board members, and senior leadership with a real-time, data-driven view of
-              strategic performance across all 21 reporting units and five strategic pillars.
+              strategic performance across all 22 reporting units and five strategic pillars.
             </p>
           </div>
 
@@ -56,7 +56,7 @@ export default function DashboardGuide() {
           <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Data Flow</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <FlowNode label="21 Units" sublabel="Report progress" />
+              <FlowNode label="22 Units" sublabel="Report progress" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
               <FlowNode label="5 Strategic Pillars" sublabel="Aggregate performance" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -99,16 +99,34 @@ export default function DashboardGuide() {
               interpretation="High Below Target % signals execution gaps even when completion looks strong."
             />
             <MetricExplainer
+              title="Allocation (Total Planned)"
+              definition="Total approved budget across all pillars for the strategic plan period."
+              calculation="Sum of pillar-level allocations (Column V subtotals from Finance spreadsheet)."
+              interpretation="Allocation reflects strategic investment priority. Compare with utilization to assess deployment efficiency."
+            />
+            <MetricExplainer
+              title="Committed (Funds in Use)"
+              definition="Funds formally committed to initiatives. This includes both Spent Commitment (funds already disbursed) and Unspent Commitment (contractual or approved obligations not yet paid)."
+              calculation="Total Committed = Spent Commitment (Column Z) + Unspent Commitment (Column Y). Must satisfy: Committed + Available = Total Budget."
+              interpretation="High commitment levels indicate active strategic deployment. Check the Spent vs Unspent split to assess disbursement progress."
+            />
+            <MetricExplainer
+              title="Available (Remaining)"
+              definition="Budget capacity not yet committed and still available for future initiatives."
+              calculation="Available = Total Budget − Total Committed"
+              interpretation="Low availability with high risk signals budget pressure. The percentage of allocation still free is shown alongside the value."
+            />
+            <MetricExplainer
               title="Budget Utilization"
-              definition="The percentage of total allocated budget (committed + available) that has been committed to active initiatives."
-              calculation="Committed Budget ÷ (Committed + Available) × 100"
+              definition="Percentage of total budget that has been formally committed. Reflects financial commitment, not implementation progress."
+              calculation="Total Committed ÷ Total Budget × 100"
               interpretation="High utilization (>80%) with elevated risk may indicate financial pressure. Low utilization may indicate underdeployment."
             />
             <MetricExplainer
-              title="Budget Allocation"
-              definition="The total planned budget assigned to a pillar or unit for the strategic plan period."
-              calculation="Sum of year-1 and year-2 allocations."
-              interpretation="Allocation reflects strategic investment priority. Compare with utilization to assess deployment efficiency."
+              title="Budget Health"
+              definition="Overall financial capacity based on commitment pressure relative to the approved budget."
+              calculation="Derived from the Available-to-Allocation ratio. Healthy ≥ 30% available, Watch ≥ 15%, Critical < 15%."
+              interpretation="Healthy = strong available capacity, commitments well within budget. Watch = moderate pressure, limited room for new initiatives. Critical = high saturation, little remaining flexibility."
             />
           </div>
         </motion.div>

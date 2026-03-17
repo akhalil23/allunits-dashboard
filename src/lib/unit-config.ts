@@ -27,6 +27,7 @@ export const UNIT_CONFIGS: Record<string, UnitConfig> = {
   Advancement: { id: 'Advancement', name: 'Advancement', fullName: 'Advancement', spreadsheetId: '12xmb1qYhAGSBMkqQO-6LUrgp4uiGcdP3D0nyf3FF6Rs' },
   Provost: { id: 'Provost', name: 'Provost', fullName: 'Office of the Provost', spreadsheetId: '1cVGQZz1GGuoyEv0kljKJY4jCqauvR6K8IM_FIfYwkqE' },
   PwD: { id: 'PwD', name: 'PwD', fullName: 'Persons with Disabilities Committee', spreadsheetId: '1TEr6TeZ_rfHewK7_Pozl3DgHyK6Y1LTfyIt-P139T58' },
+  OfS: { id: 'OfS', name: 'OfS', fullName: 'Office of Sustainability', spreadsheetId: '1vzHWVOOL02qwdSX4RnT3rvECGcB0FSvXCgxPRKbha1Q' },
 };
 
 export const UNIT_IDS = Object.keys(UNIT_CONFIGS);

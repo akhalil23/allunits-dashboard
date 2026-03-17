@@ -120,6 +120,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             value={formatCurrency(totals.allocation)}
             fullValue={formatCurrencyFull(totals.allocation)}
             icon={DollarSign} color="hsl(var(--primary))"
+            infoTip="Total approved budget across all pillars for the strategic plan period."
           />
           {/* Committed — Enhanced with spent/unspent breakdown */}
           <CommittedKPICard
@@ -135,6 +136,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             fullValue={formatCurrencyFull(totals.available)}
             icon={DollarSign} color="hsl(var(--primary))"
             extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined}
+            infoTip="Budget capacity not yet committed and still available for future initiatives."
           />
           {/* Budget Health */}
           <BudgetKPICard
@@ -143,6 +145,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             icon={ShieldCheck} color={totals.health.color}
             showBar barPct={totals.utilization * 100} barColor={utilColor}
             extraText={`${(totals.utilization * 100).toFixed(1)}% utilized`}
+            infoTip="Overall financial capacity based on commitment pressure. Healthy = strong available capacity. Watch = moderate pressure, limited room. Critical = high saturation, little flexibility."
           />
         </div>
       </section>
@@ -399,8 +402,8 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
 /* ─── KPI Card Components ─────────────────────────────────────────── */
 
-function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, showBar, barPct, barColor, extraText }: {
-  label: string; subtitle: string; value: string; fullValue?: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string; extraText?: string;
+function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, showBar, barPct, barColor, extraText, infoTip }: {
+  label: string; subtitle: string; value: string; fullValue?: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string; extraText?: string; infoTip?: string;
 }) {
   return (
     <motion.div
@@ -415,7 +418,7 @@ function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, s
         <div className="flex items-start justify-between gap-2 flex-1">
           <div className="flex-1 min-w-0 flex flex-col">
             <div className="h-[32px] sm:h-[36px] flex flex-col justify-start">
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}</p>
+              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}{infoTip && <InfoTip text={infoTip} />}</p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
             </div>
             <Tooltip>
@@ -460,7 +463,7 @@ function CommittedKPICard({ committed, spent, unspent, allocation }: {
         <div className="flex items-start justify-between gap-2 flex-1">
           <div className="flex-1 min-w-0 flex flex-col">
             <div className="h-[32px] sm:h-[36px] flex flex-col justify-start">
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">Committed</p>
+              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">Committed<InfoTip text="Funds formally committed to initiatives. Includes Spent Commitment (funds already disbursed) and Unspent Commitment (contractual or approved obligations not yet paid)." /></p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">Funds in Use</p>
             </div>
             <Tooltip>
