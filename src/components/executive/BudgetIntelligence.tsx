@@ -120,6 +120,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             value={formatCurrency(totals.allocation)}
             fullValue={formatCurrencyFull(totals.allocation)}
             icon={DollarSign} color="hsl(var(--primary))"
+            infoTip="Total approved budget across all pillars for the strategic plan period."
           />
           {/* Committed — Enhanced with spent/unspent breakdown */}
           <CommittedKPICard
@@ -135,6 +136,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             fullValue={formatCurrencyFull(totals.available)}
             icon={DollarSign} color="hsl(var(--primary))"
             extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined}
+            infoTip="Budget capacity not yet committed and still available for future initiatives."
           />
           {/* Budget Health */}
           <BudgetKPICard
@@ -143,6 +145,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             icon={ShieldCheck} color={totals.health.color}
             showBar barPct={totals.utilization * 100} barColor={utilColor}
             extraText={`${(totals.utilization * 100).toFixed(1)}% utilized`}
+            infoTip="Overall financial capacity based on commitment pressure. Healthy = strong available capacity. Watch = moderate pressure, limited room. Critical = high saturation, little flexibility."
           />
         </div>
       </section>
