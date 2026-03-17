@@ -48,7 +48,7 @@ export default function DashboardGuide() {
             </p>
             <p>
               It provides the President, Board members, and senior leadership with a real-time, data-driven view of
-              strategic performance across all 21 reporting units and five strategic pillars.
+              strategic performance across all 22 reporting units and five strategic pillars.
             </p>
           </div>
 
