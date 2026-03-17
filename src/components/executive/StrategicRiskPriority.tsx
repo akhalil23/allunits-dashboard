@@ -435,7 +435,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Execution Status:</span> {flag.status}</p>
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Pillar:</span> {PILLAR_FULL[flag.pillar]}</p>
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Risk Signal:</span> {flag.riskSignal}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Target Achievement:</span> {flag.completion}%</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Completion:</span> {flag.completion}%</p>
                     </div>
                   </motion.div>
                 )}

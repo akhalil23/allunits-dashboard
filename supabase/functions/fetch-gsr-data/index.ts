@@ -116,6 +116,7 @@ const UNIT_SPREADSHEETS: Record<string, string> = {
   Advancement: '12xmb1qYhAGSBMkqQO-6LUrgp4uiGcdP3D0nyf3FF6Rs',
   Provost: '1cVGQZz1GGuoyEv0kljKJY4jCqauvR6K8IM_FIfYwkqE',
   PwD: '1TEr6TeZ_rfHewK7_Pozl3DgHyK6Y1LTfyIt-P139T58',
+  OfS: '1vzHWVOOL02qwdSX4RnT3rvECGcB0FSvXCgxPRKbha1Q',
 };
 
 // ============================================================
