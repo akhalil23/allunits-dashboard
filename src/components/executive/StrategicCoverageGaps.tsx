@@ -60,7 +60,7 @@ interface CategoryData {
   items: StepItem[];
 }
 
-const TOTAL_UNITS = 21;
+const TOTAL_UNITS = 22;
 
 // ─── Text cleaning ──────────────────────────────────────────────────────────
 
