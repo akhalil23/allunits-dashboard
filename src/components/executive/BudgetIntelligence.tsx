@@ -402,8 +402,8 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
 /* ─── KPI Card Components ─────────────────────────────────────────── */
 
-function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, showBar, barPct, barColor, extraText }: {
-  label: string; subtitle: string; value: string; fullValue?: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string; extraText?: string;
+function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, showBar, barPct, barColor, extraText, infoTip }: {
+  label: string; subtitle: string; value: string; fullValue?: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string; extraText?: string; infoTip?: string;
 }) {
   return (
     <motion.div
@@ -418,7 +418,7 @@ function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, s
         <div className="flex items-start justify-between gap-2 flex-1">
           <div className="flex-1 min-w-0 flex flex-col">
             <div className="h-[32px] sm:h-[36px] flex flex-col justify-start">
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}</p>
+              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}{infoTip && <InfoTip text={infoTip} />}</p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
             </div>
             <Tooltip>
