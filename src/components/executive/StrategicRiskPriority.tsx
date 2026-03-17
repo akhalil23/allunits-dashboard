@@ -418,7 +418,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
                 {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color: 'hsl(var(--destructive-foreground))', backgroundColor: badgeBackground, border: `1px solid ${badgeBorder}` }}>{severity}</span>
                 <span className="text-xs font-medium text-foreground truncate flex-1 min-w-0">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
-                <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">Target Achievement: {flag.completion}%</span>
+                <span className="text-xs text-muted-foreground shrink-0 hidden sm:inline">Completion: {flag.completion}%</span>
                 <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskDisplayInfo(flag.riskWeight).color }}>RI {getRiskDisplayInfo(flag.riskWeight).percent}%</span>
               </button>
               <AnimatePresence>
