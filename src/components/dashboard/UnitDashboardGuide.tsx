@@ -77,7 +77,7 @@ export default function UnitDashboardGuide() {
           </div>
           <div className="space-y-3">
             <TabGuide icon={LayoutDashboard} title="Pillar Performance Overview" description="Displays KPI cards (Risk Index, Completion %, On-Track %, Below Target %) and a status donut chart summarizing the distribution of all strategic action items. The Pillar Health Grid shows each pillar's risk level, completion progress, and item counts." />
-            <TabGuide icon={ShieldAlert} title="Risk Signals Overview" description="Highlights items flagged with elevated risk. Includes a risk distribution chart, pillar-level risk breakdown, and a detailed table of strategic exceptions (items that are Not Started or Completed Below Target)." />
+            <TabGuide icon={ShieldAlert} title="Risk Signals Overview" description="Highlights items flagged with elevated risk. Includes a risk distribution chart, pillar-level risk breakdown, and a detailed table of critical strategic items (items that are Not Started or Completed Below Target)." />
             <TabGuide icon={Target} title="Pillar Filters" description="Use the sidebar pillar filters (PI–PV) to drill down into a specific pillar's action items. Selecting a pillar narrows all dashboard views to only that pillar's data." />
             <TabGuide icon={FlaskConical} title="Evolution Lab" description="A comparative analysis tool that lets you view how your unit's metrics have changed across different time periods, terms, and view types. Use the axis selectors and delta strips to identify trends." />
           </div>
