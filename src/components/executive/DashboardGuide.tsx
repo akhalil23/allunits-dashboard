@@ -82,9 +82,9 @@ export default function DashboardGuide() {
             />
             <MetricExplainer
               title="Completion %"
-              definition="The percentage of applicable strategic items that have reached completion status (on target or below target)."
-              calculation="(Completed On Target + Completed Below Target) ÷ Applicable Items × 100"
-              interpretation="Higher completion indicates more items have been executed. Check quality via On-Track vs Below Target split."
+              definition="The weighted average completion across all applicable strategic items. Completed actions (both on target and below target) count as 100%. In Progress items use their actual percentage. Not Started items count as 0%."
+              calculation="Weighted average: COT → 100%, CBT → 100%, In Progress → actual %, Not Started → 0%"
+              interpretation="Higher completion indicates more items have been executed. Quality of completion is assessed via On-Track vs Below Target split and the Risk Index."
             />
             <MetricExplainer
               title="On-Track %"
