@@ -239,8 +239,8 @@ export default function UnitDashboardGuide() {
               answer="Completion % counts all items that have reached a 'Completed' status (both On Target and Below Target) divided by the total number of applicable items. Items marked 'Not Applicable' are excluded from the calculation."
             />
             <FAQItem
-              question="Why does 'Completed – Below Target' show 0% completion?"
-              answer="Completion % reflects target achievement, not effort. An item 'Completed – Below Target' means the work was done but the outcome did not meet expectations. Therefore it contributes 0% to the completion metric, while simultaneously registering as Realized Risk (RI weight of 3)."
+              question="Why does 'Completed – Below Target' count as 100% completion?"
+              answer="Completion % reflects whether a strategic action has been completed, regardless of target achievement. Both 'Completed – On Target' and 'Completed – Below Target' count as 100% because the work was executed. Quality of completion is assessed separately via the On-Track %, Below Target %, and Risk Index metrics."
             />
             <FAQItem
               question="What is the difference between Cumulative (SP) and Yearly views?"
