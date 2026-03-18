@@ -159,11 +159,11 @@ export default function UnitDashboardGuide() {
               </ul>
             </div>
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 space-y-2">
-              <p className="text-xs font-semibold text-foreground">Strategic Exceptions</p>
+              <p className="text-xs font-semibold text-foreground">Critical Strategic Items</p>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Items with "Not Started" or "Completed – Below Target" status are flagged</li>
-                <li>These represent the highest-priority items requiring attention</li>
-                <li>Review the detailed exceptions table in the Risk Signals section</li>
+                <li>These represent the highest-priority items requiring immediate attention</li>
+                <li>Review the detailed items table in the Risk Signals section</li>
               </ul>
             </div>
           </div>
