@@ -128,6 +128,18 @@ export default function DashboardGuide() {
               calculation="Derived from the Available-to-Allocation ratio. Healthy ≥ 30% available, Watch ≥ 15%, Critical < 15%."
               interpretation="Healthy = strong available capacity, commitments well within budget. Watch = moderate pressure, limited room for new initiatives. Critical = high saturation, little remaining flexibility."
             />
+            <MetricExplainer
+              title="Execution Pace"
+              definition="Evaluates whether in-progress work within each strategic pillar is advancing fast enough relative to the reporting period. Uses only items with 'In Progress' status."
+              calculation="Actual Progress = average completion % of in-progress items per pillar. Expected Progress = proportional time elapsed in the reporting window (Mid-Year: Jul–Dec, End-of-Year: Jul–Jun). Delay Gap = Expected − Actual."
+              interpretation="Ahead of Schedule (gap ≤ −10%): work is advancing faster than required. On Schedule (−10% to 10%): progress aligns with expectations. Behind Schedule (10% to 25%): action needed to catch up. Significantly Behind (>25%): immediate intervention required."
+            />
+            <MetricExplainer
+              title="Critical Strategic Items"
+              definition="Strategic action items flagged with Critical or Realized risk signals, indicating they require immediate executive attention."
+              calculation="Items are flagged when their risk signal is 'Critical Risk' (Not Started) or 'Realized Risk' (Completed Below Target)."
+              interpretation="These items represent the highest-priority concerns. Critical items have not yet started despite time progression. Realized items were completed but fell short of target expectations."
+            />
           </div>
         </motion.div>
       </section>
