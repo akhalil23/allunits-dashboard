@@ -156,7 +156,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
         />
       </section>
 
-      {/* Section 4: Strategic Exceptions Table */}
+      {/* Section 4: Critical Strategic Items */}
       <section>
         <ExceptionsTable flags={flags} />
       </section>
