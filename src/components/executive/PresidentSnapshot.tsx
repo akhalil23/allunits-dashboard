@@ -265,66 +265,127 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         </div>
       </section>
 
-      {/* Section 3: Strategic Performance Matrix (Bubble Quadrant) */}
+      {/* Section 3: Execution Pace vs Time Progress */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Strategic Performance Matrix</span>
-            <InfoTip text="Bubble chart combining delivery (Y), budget (X), and risk (color). Bubble size reflects the number of applicable initiatives." />
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Execution Pace vs Time Progress</span>
+            <InfoTip text="Evaluates whether in-progress work within each pillar is advancing fast enough relative to the reporting period. Bubbles show actual average completion of in-progress items. The reference line marks the expected progress at the reporting deadline." />
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Completion — colored by Risk Index, sized by applicable items.</p>
-          <div className="h-72 sm:h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                {/* Quadrant zone shading */}
-                <ReferenceArea x1={50} x2={100} y1={50} y2={100} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={50} y1={50} y2={100} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={50} x2={100} y1={0} y2={50} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={50} y1={0} y2={50} fill="rgba(245,158,11,0.06)" fillOpacity={1} />
-                <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Completion %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <ReferenceLine x={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReTooltip
-                  content={({ payload }) => {
-                    if (!payload?.[0]) return null;
-                    const d = payload[0].payload;
-                    return (
-                      <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
-                        <p className="font-semibold text-foreground">{d.fullLabel}</p>
-                        <p className="text-muted-foreground">Completion: <span className="text-foreground font-medium">{d.y}%</span></p>
-                        <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskDisplayInfo(d.ri).color }}>{formatRIPercent(d.ri)} ({getRiskDisplayInfo(d.ri).band})</span></p>
-                        <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
-                        <p className="text-muted-foreground">Applicable Items: <span className="text-foreground font-medium">{d.applicable}</span></p>
-                      </div>
-                    );
-                  }}
-                />
-                <Scatter data={pillarData.map(p => ({ x: p.budgetUtil, y: p.completion, ri: p.riskIndex, label: p.label, shortLabel: p.shortLabel, fullLabel: p.fullLabel, applicable: p.applicable, z: Math.max(200, p.applicable * 15) }))}>
-                  {pillarData.map((p, i) => (
-                    <Cell key={i} fill={getRiskDisplayInfo(p.riskIndex).color} fillOpacity={0.7} r={Math.max(8, Math.min(20, p.applicable / 3))} />
-                  ))}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
-            {[
-              { label: 'High Delivery / High Budget', desc: 'Strong Execution', pos: 'top-right', color: '#16A34A', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)' },
-              { label: 'High Delivery / Low Budget', desc: 'Efficient Execution', pos: 'top-left', color: '#3B82F6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)' },
-              { label: 'Low Delivery / High Budget', desc: 'Execution Risk', pos: 'bottom-right', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
-              { label: 'Low Delivery / Low Budget', desc: 'Underperforming', pos: 'bottom-left', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)' },
-            ].map(q => (
-              <div key={q.pos} className="text-center p-3 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
-                <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: q.color }} />
-                  <p className="text-xs font-semibold" style={{ color: q.color }}>{q.desc}</p>
-                </div>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground">{q.label}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4">In-progress items only — actual completion vs expected progress by strategic pillar.</p>
+
+          {allNoData ? (
+            <div className="h-48 flex items-center justify-center">
+              <p className="text-sm text-muted-foreground">No active in-progress items for the selected period.</p>
+            </div>
+          ) : (
+            <>
+              <div className="h-72 sm:h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart margin={{ top: 20, right: 40, bottom: 30, left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      type="number"
+                      dataKey="x"
+                      domain={[0.5, 5.5]}
+                      ticks={[1, 2, 3, 4, 5]}
+                      tickFormatter={(v: number) => {
+                        const labels: Record<number, string> = { 1: 'PI', 2: 'PII', 3: 'PIII', 4: 'PIV', 5: 'PV' };
+                        return labels[v] || '';
+                      }}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+                      label={{ value: 'Strategic Pillar', position: 'insideBottom', offset: -18, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }}
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="y"
+                      domain={[0, 100]}
+                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                      label={{ value: 'Actual Progress %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }}
+                    />
+                    <ReferenceLine
+                      y={expectedProgressLine}
+                      stroke="#DC2626"
+                      strokeWidth={2}
+                      strokeDasharray="8 4"
+                      label={{
+                        value: `Expected (${expectedProgressLine}%)`,
+                        position: 'right',
+                        style: { fontSize: 10, fill: '#DC2626', fontWeight: 700 },
+                      }}
+                    />
+                    <ReTooltip
+                      content={({ payload }) => {
+                        if (!payload?.[0]) return null;
+                        const d = payload[0].payload;
+                        if (!d.hasItems) {
+                          return (
+                            <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
+                              <p className="font-semibold text-foreground">{d.fullLabel}</p>
+                              <p className="text-muted-foreground italic">No in-progress items in selected period</p>
+                            </div>
+                          );
+                        }
+                        const gapSign = d.gap >= 0 ? '+' : '';
+                        return (
+                          <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
+                            <p className="font-semibold text-foreground">{d.fullLabel}</p>
+                            <p className="text-muted-foreground">Actual Progress: <span className="text-foreground font-medium">{d.actualProgress}%</span></p>
+                            <p className="text-muted-foreground">Expected Progress: <span className="text-foreground font-medium">{d.expectedProgress}%</span></p>
+                            <p className="text-muted-foreground">Schedule Gap: <span className="font-medium" style={{ color: d.gap >= 0 ? '#16A34A' : '#EF4444' }}>{gapSign}{d.gap}%</span></p>
+                            <p className="text-muted-foreground">Execution Pace: <span className="text-foreground font-bold">{d.pace}</span></p>
+                            <p className="text-muted-foreground">In-Progress Items: <span className="text-foreground font-medium">{d.inProgressCount}</span></p>
+                            <p className="text-muted-foreground/70 text-[10px]">{d.reportingWindow}</p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Scatter data={executionPaceData}>
+                      {executionPaceData.map((d, i) => (
+                        <Cell
+                          key={i}
+                          fill={d.hasItems ? d.color : '#6B7280'}
+                          fillOpacity={d.hasItems ? 0.85 : 0.3}
+                          stroke={d.hasItems ? d.color : '#6B7280'}
+                          strokeWidth={d.hasItems ? 2 : 1}
+                          r={d.hasItems ? Math.max(12, Math.min(22, 8 + d.inProgressCount / 5)) : 10}
+                        />
+                      ))}
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
+
+              {/* Legend: Pillar Colors + Pace Categories */}
+              <div className="mt-5 space-y-3">
+                {/* Pillar identity legend */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Pillars:</span>
+                  {executionPaceData.map(d => (
+                    <div key={d.pillar} className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                      <span className="text-xs text-muted-foreground">{d.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Execution Pace categories */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {[
+                    { label: 'Ahead of Schedule', desc: 'Gap ≤ −10%', color: '#059669', bg: 'rgba(5,150,105,0.08)', border: 'rgba(5,150,105,0.25)' },
+                    { label: 'On Schedule', desc: '−10% < Gap ≤ 10%', color: '#2563EB', bg: 'rgba(37,99,235,0.08)', border: 'rgba(37,99,235,0.25)' },
+                    { label: 'Behind Schedule', desc: '10% < Gap ≤ 25%', color: '#D97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)' },
+                    { label: 'Significantly Behind', desc: 'Gap > 25%', color: '#DC2626', bg: 'rgba(220,38,38,0.08)', border: 'rgba(220,38,38,0.25)' },
+                  ].map(c => (
+                    <div key={c.label} className="text-center p-3 rounded-lg" style={{ backgroundColor: c.bg, borderWidth: 1, borderColor: c.border, borderStyle: 'solid' }}>
+                      <p className="text-xs font-semibold" style={{ color: c.color }}>{c.label}</p>
+                      <p className="text-[10px] sm:text-[11px] text-muted-foreground">{c.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </motion.div>
       </section>
 
