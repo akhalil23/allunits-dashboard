@@ -398,10 +398,10 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-4">
         <ShieldAlert className="w-4 h-4 text-destructive" />
-        <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Strategic Exceptions</span>
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Critical Strategic Items</span>
         <span className="text-xs text-muted-foreground ml-auto">{flags.length} item{flags.length !== 1 ? 's' : ''}</span>
       </div>
-      <p className="text-xs text-muted-foreground mb-4">Items with Critical or Realized risk signals. Click to expand details.</p>
+      <p className="text-xs text-muted-foreground mb-4">Items requiring immediate attention due to Critical or Realized risk signals. Click to expand details.</p>
       <div className="space-y-1">
         {visible.map((flag, idx) => {
           const isExpanded = expandedIdx === idx;
