@@ -452,7 +452,7 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
           {showAll ? (
             <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></>
           ) : (
-            <>Show All {flags.length} Exceptions <ChevronDown className="w-3.5 h-3.5" /></>
+            <>Show All {flags.length} Items <ChevronDown className="w-3.5 h-3.5" /></>
           )}
         </button>
       )}

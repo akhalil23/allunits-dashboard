@@ -157,10 +157,10 @@ export default function StrategicCoverageGaps() {
       {/* Title */}
       <div>
         <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4" /> Strategic Coverage Exceptions
+          <ShieldCheck className="w-4 h-4" /> Items Requiring Immediate Attention
         </h3>
         <p className="text-xs text-muted-foreground">
-          Cross-unit strategic items requiring attention
+          Cross-unit strategic items with critical coverage gaps
         </p>
       </div>
 

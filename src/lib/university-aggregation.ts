@@ -162,7 +162,7 @@ function countStatuses(
 /**
  * Compute the average target-achievement completion across applicable items.
  * Rules:
- *   COT → 100%, CBT → 0%, In Progress → actual %, Not Started → 0%
+ *   COT → 100%, CBT → 100%, In Progress → actual %, Not Started → 0%
  */
 function computeAvgCompletion(
   items: ActionItem[],
@@ -182,8 +182,8 @@ function computeAvgCompletion(
         sum += 100;
         break;
       case 'Completed – Below Target':
-        // Target not achieved → 0%
-        sum += 0;
+        // Completed action → 100% (item was completed, regardless of target outcome)
+        sum += 100;
         break;
       case 'In Progress':
         sum += getItemCompletion(item, viewType, term, academicYear);
