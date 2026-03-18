@@ -276,7 +276,7 @@ export default function UnitDashboardGuide() {
           <div className="space-y-4">
             <TipStep step={1} title="Start with the Dashboard Overview" description="Review the KPI banner and status donut chart for a quick snapshot of your unit's strategic performance." />
             <TipStep step={2} title="Check Pillar Health" description="Examine each pillar's risk level, completion, and item distribution. Identify which pillars need the most attention." />
-            <TipStep step={3} title="Review Risk Signals" description="Focus on strategic exceptions — items that are Not Started or Completed Below Target. These require immediate attention." />
+            <TipStep step={3} title="Review Risk Signals" description="Focus on critical strategic items — items that are Not Started or Completed Below Target. These require immediate attention." />
             <TipStep step={4} title="Drill Down by Pillar" description="Use the sidebar pillar filters to isolate and analyze individual pillars in detail." />
             <TipStep step={5} title="Compare Across Time" description="Use the Evolution Lab to track how your unit's metrics have changed between reporting cycles." />
             <TipStep step={6} title="Export for Meetings" description="Generate a PDF report before presentations. The exported report includes branded visualizations and reflects your current filter selections." />
