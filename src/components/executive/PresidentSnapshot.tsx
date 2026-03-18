@@ -1,17 +1,17 @@
 /**
  * Tab 1 — Executive Snapshot (Redesigned)
- * Strategic command view: KPIs, highlights, bubble quadrant, pillar map, bars, donut.
+ * Strategic command view: KPIs, highlights, execution pace, pillar map, bars, donut.
  */
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   CheckCircle2, AlertTriangle, TrendingUp, DollarSign,
-  ShieldAlert, BarChart3, Lightbulb, Info,
+  ShieldAlert, BarChart3, Lightbulb, Info, Clock,
 } from 'lucide-react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
-  ResponsiveContainer, Cell, ReferenceLine, ReferenceArea, PieChart, Pie, Cell as PieCell,
+  ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie, Cell as PieCell,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
@@ -25,8 +25,10 @@ import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar } from '@/lib/university-aggregation';
 import { PILLAR_LABELS, getLivePillarBudget } from '@/lib/budget-data';
 import { useBudgetData } from '@/hooks/use-budget-data';
-import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
-import type { PillarId } from '@/lib/types';
+import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
+import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
+import { isNotApplicableStatus } from '@/lib/types';
+import type { PillarId, ActionItem } from '@/lib/types';
 
 interface Props {
   aggregation: UniversityAggregation;
