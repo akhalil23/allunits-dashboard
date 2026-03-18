@@ -1,5 +1,5 @@
 /**
- * Strategic Coverage Exceptions
+ * Items Requiring Immediate Attention — Coverage Analysis
  * Premium hybrid panel: 2×2 summary grid + single expandable detail panel.
  * 3-level hierarchy: Goal → Action → Action Step
  * Forward-fills blank Goal/Action cells from source sheets.
