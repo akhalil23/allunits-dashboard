@@ -82,7 +82,96 @@ export default function PresidentSnapshot({ aggregation }: Props) {
     });
   }, [pillarAgg, budgetResult]);
 
-  // Executive highlights
+  // ─── Execution Pace Data ───────────────────────────────────────────────
+  const PILLAR_COLORS: Record<PillarId, string> = {
+    I: '#2563EB',   // Blue
+    II: '#059669',  // Emerald
+    III: '#D97706', // Amber
+    IV: '#DC2626',  // Red
+    V: '#7C3AED',   // Violet
+  };
+
+  const executionPaceData = useMemo(() => {
+    if (!unitResults) return [];
+    const pillarIds: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
+
+    // Expected progress = 100% at reporting deadline
+    // Mid Year → Dec 31, End of Year → Jun 30
+    // Since we're AT the reporting deadline, expected = 100%
+    // But we compute based on where we are in the window:
+    const [startYearStr] = academicYear.split('-');
+    const startYear = parseInt(startYearStr);
+    const windowStart = new Date(startYear, 6, 1); // July 1
+    const windowEnd = term === 'mid'
+      ? new Date(startYear, 11, 31) // Dec 31
+      : new Date(startYear + 1, 5, 30); // Jun 30
+
+    const now = new Date();
+    const totalMs = windowEnd.getTime() - windowStart.getTime();
+    const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
+    const expectedProgress = Math.round((elapsedMs / totalMs) * 100);
+
+    const reportingWindowLabel = term === 'mid'
+      ? `Jul 1, ${startYear} – Dec 31, ${startYear}`
+      : `Jul 1, ${startYear} – Jun 30, ${startYear + 1}`;
+
+    return pillarIds.map((pillar, idx) => {
+      // Collect all in-progress items for this pillar across all units
+      const inProgressItems: { completion: number }[] = [];
+      unitResults.forEach(ur => {
+        if (!ur.result) return;
+        ur.result.data.forEach(item => {
+          if (item.pillar !== pillar) return;
+          const status = getItemStatus(item, viewType, term, academicYear);
+          if (status === 'In Progress') {
+            inProgressItems.push({
+              completion: getItemCompletion(item, viewType, term, academicYear),
+            });
+          }
+        });
+      });
+
+      const hasItems = inProgressItems.length > 0;
+      const actualProgress = hasItems
+        ? Math.round(inProgressItems.reduce((s, i) => s + i.completion, 0) / inProgressItems.length)
+        : -1; // sentinel for "no items"
+
+      const gap = hasItems ? expectedProgress - actualProgress : 0;
+      let pace: string;
+      if (!hasItems) {
+        pace = 'No Data';
+      } else if (gap <= -10) {
+        pace = 'Ahead of Schedule';
+      } else if (gap <= 10) {
+        pace = 'On Schedule';
+      } else if (gap <= 25) {
+        pace = 'Behind Schedule';
+      } else {
+        pace = 'Significantly Behind';
+      }
+
+      return {
+        pillar,
+        x: idx + 1,
+        y: hasItems ? actualProgress : 50, // neutral position for no-data
+        actualProgress: hasItems ? actualProgress : null,
+        expectedProgress,
+        gap: hasItems ? actualProgress - expectedProgress : null,
+        pace,
+        inProgressCount: inProgressItems.length,
+        hasItems,
+        color: PILLAR_COLORS[pillar],
+        label: PILLAR_ABBREV[pillar],
+        fullLabel: PILLAR_FULL[pillar],
+        shortLabel: PILLAR_SHORT[pillar],
+        reportingWindow: reportingWindowLabel,
+      };
+    });
+  }, [unitResults, viewType, term, academicYear]);
+
+  const allNoData = executionPaceData.every(d => !d.hasItems);
+  const expectedProgressLine = executionPaceData[0]?.expectedProgress ?? 100;
+
   const highlights = useMemo(() => {
     const items: { title: string; insight: string; icon: React.ElementType; color: string }[] = [];
     
