@@ -4,7 +4,7 @@
  */
 
 export const METRIC_TOOLTIPS = {
-  completion: "Percentage of applicable strategic actions marked as completed relative to the total strategic actions for the selected pillar or unit.",
+  completion: "Weighted average completion across applicable strategic actions. Completed items (on target or below target) count as 100%. In Progress items use their actual percentage. Not Started items count as 0%.",
   budgetUtilization: "Percentage of the allocated budget that has already been utilized during the selected reporting cycle.",
   onTrack: "Percentage of strategic actions currently progressing according to the planned schedule.",
   belowTarget: "Percentage of actions performing below expected progress levels.",
