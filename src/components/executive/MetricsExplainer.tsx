@@ -337,7 +337,7 @@ function CompletionSection() {
     { status: 'Not Started', completion: '0%', color: '#EF4444' },
     { status: 'In Progress', completion: '1–99%', color: '#F59E0B' },
     { status: 'Completed on Target', completion: '100%', color: '#16A34A' },
-    { status: 'Completed below Target', completion: '0%', color: '#7F1D1D' },
+    { status: 'Completed below Target', completion: '100%', color: '#7F1D1D' },
   ];
 
   return (
@@ -347,7 +347,7 @@ function CompletionSection() {
         <h3 className="text-sm font-semibold text-foreground">Understanding Completion %</h3>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Completion % reflects the level of achievement of the planned target associated with each action.
+        Completion % measures whether a strategic action has been completed, regardless of whether the target was fully achieved. Both on-target and below-target completions count as 100%.
       </p>
 
       <div className="rounded-xl border border-border/60 overflow-hidden">
@@ -381,8 +381,8 @@ function CompletionSection() {
           <div>
             <span className="text-xs font-semibold text-primary">Clarification</span>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              Completion % reflects target achievement rather than implementation effort.
-              Actions completed below target are recorded as 0% because the expected outcome was not achieved.
+              Completion % reflects whether an action has been completed. Both "Completed – On Target" and "Completed – Below Target" count as 100% because the work was executed.
+              Quality of completion is assessed separately via the On-Track % and Below Target % metrics, and the Risk Index captures the impact of below-target outcomes.
             </p>
           </div>
         </div>

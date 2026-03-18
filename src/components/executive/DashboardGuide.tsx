@@ -82,9 +82,9 @@ export default function DashboardGuide() {
             />
             <MetricExplainer
               title="Completion %"
-              definition="The percentage of applicable strategic items that have reached completion status (on target or below target)."
-              calculation="(Completed On Target + Completed Below Target) ÷ Applicable Items × 100"
-              interpretation="Higher completion indicates more items have been executed. Check quality via On-Track vs Below Target split."
+              definition="The weighted average completion across all applicable strategic items. Completed actions (both on target and below target) count as 100%. In Progress items use their actual percentage. Not Started items count as 0%."
+              calculation="Weighted average: COT → 100%, CBT → 100%, In Progress → actual %, Not Started → 0%"
+              interpretation="Higher completion indicates more items have been executed. Quality of completion is assessed via On-Track vs Below Target split and the Risk Index."
             />
             <MetricExplainer
               title="On-Track %"
@@ -128,6 +128,18 @@ export default function DashboardGuide() {
               calculation="Derived from the Available-to-Allocation ratio. Healthy ≥ 30% available, Watch ≥ 15%, Critical < 15%."
               interpretation="Healthy = strong available capacity, commitments well within budget. Watch = moderate pressure, limited room for new initiatives. Critical = high saturation, little remaining flexibility."
             />
+            <MetricExplainer
+              title="Execution Pace"
+              definition="Evaluates whether in-progress work within each strategic pillar is advancing fast enough relative to the reporting period. Uses only items with 'In Progress' status."
+              calculation="Actual Progress = average completion % of in-progress items per pillar. Expected Progress = proportional time elapsed in the reporting window (Mid-Year: Jul–Dec, End-of-Year: Jul–Jun). Delay Gap = Expected − Actual."
+              interpretation="Ahead of Schedule (gap ≤ −10%): work is advancing faster than required. On Schedule (−10% to 10%): progress aligns with expectations. Behind Schedule (10% to 25%): action needed to catch up. Significantly Behind (>25%): immediate intervention required."
+            />
+            <MetricExplainer
+              title="Critical Strategic Items"
+              definition="Strategic action items flagged with Critical or Realized risk signals, indicating they require immediate executive attention."
+              calculation="Items are flagged when their risk signal is 'Critical Risk' (Not Started) or 'Realized Risk' (Completed Below Target)."
+              interpretation="These items represent the highest-priority concerns. Critical items have not yet started despite time progression. Realized items were completed but fell short of target expectations."
+            />
           </div>
         </motion.div>
       </section>
@@ -140,8 +152,8 @@ export default function DashboardGuide() {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">How to Read Each Tab</span>
           </div>
           <div className="space-y-3">
-            <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="High-level overview of strategic performance across pillars. Start here for a quick situational understanding of completion, risk, and budget. The Strategic Plan IV — Pillar Reference legend maps pillar abbreviations (PI–PV) to their official titles." />
-            <TabGuide icon={ShieldAlert} title="Strategic Risk & Priority" description="Identifies initiatives with elevated risk signals. Use the heatmap to see which units and pillars need attention. Review strategic exceptions for critical items." />
+            <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="High-level overview of strategic performance across pillars. Start here for a quick situational understanding of completion, risk, and budget. The Execution Pace chart evaluates whether in-progress work is advancing fast enough relative to the reporting period." />
+            <TabGuide icon={ShieldAlert} title="Strategic Risk & Priority" description="Identifies initiatives with elevated risk signals. Use the heatmap to see which units and pillars need attention. Review Critical Strategic Items for items requiring immediate attention." />
             <TabGuide icon={DollarSign} title="Budget Intelligence" description="Displays financial allocation and utilization across pillars. Identifies budget pressure zones where high utilization meets high risk." />
             <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles. Each snapshot is uniquely labeled with timestamp. Trend charts use sequential labels (S1, S2, S3…) on the x-axis — hover over data points to see the full reporting cycle and capture time." />
             <TabGuide icon={GitCompare} title="Unit Comparison" description="Allows side-by-side comparison of two units across all performance dimensions including pillar-level radar charts." />
@@ -250,7 +262,7 @@ export default function DashboardGuide() {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Reading Tips for Executives</span>
           </div>
           <div className="space-y-4">
-            <TipStep step={1} title="Start with Executive Snapshot" description="Get an instant overview of university-wide performance. Review the KPI banner and the Strategic Performance Matrix." />
+            <TipStep step={1} title="Start with Executive Snapshot" description="Get an instant overview of university-wide performance. Review the KPI banner and the Execution Pace chart to see how in-progress work compares to expected timelines." />
             <TipStep step={2} title="Check Strategic Risk & Priority" description="Identify critical issues using the risk heatmap and exceptions table. Focus on units and pillars with elevated risk signals." />
             <TipStep step={3} title="Review Budget Intelligence" description="Analyze financial pressure signals. Look for pillars where high budget utilization coincides with high risk index." />
             <TipStep step={4} title="Track Progress with Snapshots" description="Capture snapshots regularly and use the trajectory charts to understand whether strategic execution is improving over time." />

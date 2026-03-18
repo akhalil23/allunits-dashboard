@@ -77,7 +77,7 @@ export default function UnitDashboardGuide() {
           </div>
           <div className="space-y-3">
             <TabGuide icon={LayoutDashboard} title="Pillar Performance Overview" description="Displays KPI cards (Risk Index, Completion %, On-Track %, Below Target %) and a status donut chart summarizing the distribution of all strategic action items. The Pillar Health Grid shows each pillar's risk level, completion progress, and item counts." />
-            <TabGuide icon={ShieldAlert} title="Risk Signals Overview" description="Highlights items flagged with elevated risk. Includes a risk distribution chart, pillar-level risk breakdown, and a detailed table of strategic exceptions (items that are Not Started or Completed Below Target)." />
+            <TabGuide icon={ShieldAlert} title="Risk Signals Overview" description="Highlights items flagged with elevated risk. Includes a risk distribution chart, pillar-level risk breakdown, and a detailed table of critical strategic items (items that are Not Started or Completed Below Target)." />
             <TabGuide icon={Target} title="Pillar Filters" description="Use the sidebar pillar filters (PI–PV) to drill down into a specific pillar's action items. Selecting a pillar narrows all dashboard views to only that pillar's data." />
             <TabGuide icon={FlaskConical} title="Evolution Lab" description="A comparative analysis tool that lets you view how your unit's metrics have changed across different time periods, terms, and view types. Use the axis selectors and delta strips to identify trends." />
           </div>
@@ -159,11 +159,11 @@ export default function UnitDashboardGuide() {
               </ul>
             </div>
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 space-y-2">
-              <p className="text-xs font-semibold text-foreground">Strategic Exceptions</p>
+              <p className="text-xs font-semibold text-foreground">Critical Strategic Items</p>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Items with "Not Started" or "Completed – Below Target" status are flagged</li>
-                <li>These represent the highest-priority items requiring attention</li>
-                <li>Review the detailed exceptions table in the Risk Signals section</li>
+                <li>These represent the highest-priority items requiring immediate attention</li>
+                <li>Review the detailed items table in the Risk Signals section</li>
               </ul>
             </div>
           </div>
@@ -239,8 +239,8 @@ export default function UnitDashboardGuide() {
               answer="Completion % counts all items that have reached a 'Completed' status (both On Target and Below Target) divided by the total number of applicable items. Items marked 'Not Applicable' are excluded from the calculation."
             />
             <FAQItem
-              question="Why does 'Completed – Below Target' show 0% completion?"
-              answer="Completion % reflects target achievement, not effort. An item 'Completed – Below Target' means the work was done but the outcome did not meet expectations. Therefore it contributes 0% to the completion metric, while simultaneously registering as Realized Risk (RI weight of 3)."
+              question="Why does 'Completed – Below Target' count as 100% completion?"
+              answer="Completion % reflects whether a strategic action has been completed, regardless of target achievement. Both 'Completed – On Target' and 'Completed – Below Target' count as 100% because the work was executed. Quality of completion is assessed separately via the On-Track %, Below Target %, and Risk Index metrics."
             />
             <FAQItem
               question="What is the difference between Cumulative (SP) and Yearly views?"
@@ -276,7 +276,7 @@ export default function UnitDashboardGuide() {
           <div className="space-y-4">
             <TipStep step={1} title="Start with the Dashboard Overview" description="Review the KPI banner and status donut chart for a quick snapshot of your unit's strategic performance." />
             <TipStep step={2} title="Check Pillar Health" description="Examine each pillar's risk level, completion, and item distribution. Identify which pillars need the most attention." />
-            <TipStep step={3} title="Review Risk Signals" description="Focus on strategic exceptions — items that are Not Started or Completed Below Target. These require immediate attention." />
+            <TipStep step={3} title="Review Risk Signals" description="Focus on critical strategic items — items that are Not Started or Completed Below Target. These require immediate attention." />
             <TipStep step={4} title="Drill Down by Pillar" description="Use the sidebar pillar filters to isolate and analyze individual pillars in detail." />
             <TipStep step={5} title="Compare Across Time" description="Use the Evolution Lab to track how your unit's metrics have changed between reporting cycles." />
             <TipStep step={6} title="Export for Meetings" description="Generate a PDF report before presentations. The exported report includes branded visualizations and reflects your current filter selections." />

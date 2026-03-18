@@ -1,5 +1,5 @@
 /**
- * Strategic Coverage Exceptions
+ * Items Requiring Immediate Attention — Coverage Analysis
  * Premium hybrid panel: 2×2 summary grid + single expandable detail panel.
  * 3-level hierarchy: Goal → Action → Action Step
  * Forward-fills blank Goal/Action cells from source sheets.
@@ -157,10 +157,10 @@ export default function StrategicCoverageGaps() {
       {/* Title */}
       <div>
         <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4" /> Strategic Coverage Exceptions
+          <ShieldCheck className="w-4 h-4" /> Items Requiring Immediate Attention
         </h3>
         <p className="text-xs text-muted-foreground">
-          Cross-unit strategic items requiring attention
+          Cross-unit strategic items with critical coverage gaps
         </p>
       </div>
 
