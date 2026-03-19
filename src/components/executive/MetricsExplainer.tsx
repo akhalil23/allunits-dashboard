@@ -1,13 +1,13 @@
 /**
  * "How Metrics Work" — Premium informational modal
- * Explains Progress, Risk, Completion, and mapping logic.
+ * Explains Progress, Risk, Completion, Efficiency, and mapping logic.
  */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, BookOpen, CheckCircle2, AlertTriangle, ShieldAlert, Target,
-  ArrowRight, Info, BarChart3,
+  ArrowRight, Info, BarChart3, Gauge,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -16,13 +16,14 @@ interface Props {
   onClose: () => void;
 }
 
-type Section = 'progress' | 'risk' | 'mapping' | 'completion';
+type Section = 'progress' | 'risk' | 'mapping' | 'completion' | 'efficiency';
 
 const SECTIONS: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: 'progress', label: 'Progress Qualifiers', icon: BarChart3 },
   { id: 'risk', label: 'Risk Qualifiers', icon: ShieldAlert },
   { id: 'mapping', label: 'Mapping Logic', icon: ArrowRight },
   { id: 'completion', label: 'Completion %', icon: Target },
+  { id: 'efficiency', label: 'Efficiency Metrics', icon: Gauge },
 ];
 
 export default function MetricsExplainer({ open, onClose }: Props) {
@@ -64,7 +65,7 @@ export default function MetricsExplainer({ open, onClose }: Props) {
                 </div>
                 <div>
                   <h2 className="text-lg font-display font-bold text-foreground">How Metrics Work</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Understanding Progress, Risk, and Completion in the Strategic Plan</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Understanding Progress, Risk, Completion, and Efficiency in the Strategic Plan</p>
                 </div>
               </div>
               <button
@@ -107,6 +108,7 @@ export default function MetricsExplainer({ open, onClose }: Props) {
                   {activeSection === 'risk' && <RiskSection />}
                   {activeSection === 'mapping' && <MappingSection />}
                   {activeSection === 'completion' && <CompletionSection />}
+                  {activeSection === 'efficiency' && <EfficiencySection />}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -190,30 +192,10 @@ function ProgressSection() {
 
 function RiskSection() {
   const risks = [
-    {
-      label: 'No Risk',
-      desc: 'Implementation is progressing as expected and targets are met.',
-      color: '#16A34A',
-      weight: 0,
-    },
-    {
-      label: 'Emergent Risk',
-      desc: 'Minor issues or delays may affect the achievement of targets.',
-      color: '#F59E0B',
-      weight: 1,
-    },
-    {
-      label: 'Critical Risk',
-      desc: 'Significant issues threaten the achievement of targets.',
-      color: '#EF4444',
-      weight: 2,
-    },
-    {
-      label: 'Realized Risk',
-      desc: 'The expected target has not been achieved.',
-      color: '#7F1D1D',
-      weight: 3,
-    },
+    { label: 'No Risk', desc: 'Implementation is progressing as expected and targets are met.', color: '#16A34A', weight: 0 },
+    { label: 'Emergent Risk', desc: 'Minor issues or delays may affect the achievement of targets.', color: '#F59E0B', weight: 1 },
+    { label: 'Critical Risk', desc: 'Significant issues threaten the achievement of targets.', color: '#EF4444', weight: 2 },
+    { label: 'Realized Risk', desc: 'The expected target has not been achieved.', color: '#7F1D1D', weight: 3 },
   ];
 
   return (
@@ -223,28 +205,20 @@ function RiskSection() {
         <h3 className="text-sm font-semibold text-foreground">Strategic Risk Classification</h3>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Risk is derived from the progress status of each action, not from completion percentage alone. Progress status determines the structural risk level.
+        Risk is derived from the progress status of each action, not from completion percentage alone.
       </p>
       <div className="space-y-2.5">
         {risks.map(r => (
-          <motion.div
-            key={r.label}
-            className="flex items-center gap-4 rounded-xl border border-border/60 p-4 bg-card"
-            whileHover={{ x: 4 }}
-          >
+          <motion.div key={r.label} className="flex items-center gap-4 rounded-xl border border-border/60 p-4 bg-card" whileHover={{ x: 4 }}>
             <div className="flex items-center gap-2.5 min-w-[140px]">
               <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: r.color }} />
               <span className="text-sm font-bold text-foreground">{r.label}</span>
             </div>
             <p className="text-xs text-muted-foreground flex-1">{r.desc}</p>
-            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-muted text-foreground shrink-0">
-              Weight: {r.weight}
-            </span>
+            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-muted text-foreground shrink-0">Weight: {r.weight}</span>
           </motion.div>
         ))}
       </div>
-
-      {/* RI Formula */}
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mt-4">
         <div className="flex items-center gap-2 mb-2">
           <Info className="w-3.5 h-3.5 text-primary" />
@@ -253,9 +227,7 @@ function RiskSection() {
         <p className="text-xs text-muted-foreground font-mono leading-relaxed">
           RI = (0×No Risk + 1×Emergent + 2×Critical + 3×Realized) / Applicable Items
         </p>
-        <p className="text-xs text-muted-foreground mt-2">
-          The result (0–3) is normalized to a 0–100% scale for display.
-        </p>
+        <p className="text-xs text-muted-foreground mt-2">The result (0–3) is normalized to a 0–100% scale for display.</p>
       </div>
     </div>
   );
@@ -278,42 +250,19 @@ function MappingSection() {
         <h3 className="text-sm font-semibold text-foreground">Progress → Risk → Risk Index</h3>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Risk classification is always derived from the Progress Status, not from Completion % alone. Completion % is informational, while Progress Status determines the risk level.
+        Risk classification is always derived from the Progress Status, not from Completion % alone.
       </p>
-
-      {/* Visual mapping flow */}
       <div className="space-y-2">
         {mappings.map(m => (
-          <motion.div
-            key={m.progress}
-            className="flex items-center gap-2 sm:gap-3 rounded-xl border border-border/60 bg-card p-3"
-            whileHover={{ x: 4 }}
-          >
-            {/* Progress badge */}
-            <span
-              className="text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 text-white"
-              style={{ backgroundColor: m.progressColor }}
-            >
-              {m.progress}
-            </span>
+          <motion.div key={m.progress} className="flex items-center gap-2 sm:gap-3 rounded-xl border border-border/60 bg-card p-3" whileHover={{ x: 4 }}>
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 text-white" style={{ backgroundColor: m.progressColor }}>{m.progress}</span>
             <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            {/* Risk badge */}
-            <span
-              className="text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 text-white"
-              style={{ backgroundColor: m.riskColor }}
-            >
-              {m.risk}
-            </span>
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full shrink-0 text-white" style={{ backgroundColor: m.riskColor }}>{m.risk}</span>
             <ArrowRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            {/* RI value */}
-            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-muted text-foreground shrink-0">
-              RI {m.riPct}
-            </span>
+            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-muted text-foreground shrink-0">RI {m.riPct}</span>
           </motion.div>
         ))}
       </div>
-
-      {/* Important note */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mt-2">
         <div className="flex items-start gap-2">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
@@ -321,7 +270,6 @@ function MappingSection() {
             <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Important</span>
             <p className="text-xs text-muted-foreground mt-1">
               Risk classification must always be derived from the Progress Status, not from Completion % alone.
-              Completion % is informational, while Progress Status determines the risk level.
             </p>
           </div>
         </div>
@@ -347,9 +295,8 @@ function CompletionSection() {
         <h3 className="text-sm font-semibold text-foreground">Understanding Completion %</h3>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Completion % measures whether a strategic action has been completed, regardless of whether the target was fully achieved. Both on-target and below-target completions count as 100%.
+        Completion % measures whether a strategic action has been completed, regardless of whether the target was fully achieved.
       </p>
-
       <div className="rounded-xl border border-border/60 overflow-hidden">
         <table className="w-full text-xs">
           <thead>
@@ -373,22 +320,18 @@ function CompletionSection() {
           </tbody>
         </table>
       </div>
-
-      {/* Clarification */}
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-start gap-2">
           <Info className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
           <div>
             <span className="text-xs font-semibold text-primary">Clarification</span>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              Completion % reflects whether an action has been completed. Both "Completed – On Target" and "Completed – Below Target" count as 100% because the work was executed.
-              Quality of completion is assessed separately via the On-Track % and Below Target % metrics, and the Risk Index captures the impact of below-target outcomes.
+              Both "Completed – On Target" and "Completed – Below Target" count as 100% because the work was executed.
+              Quality is assessed separately via On-Track %, Below Target %, and Risk Index.
             </p>
           </div>
         </div>
       </div>
-
-      {/* Smart Tooltips reference */}
       <div className="rounded-xl border border-border/60 bg-card p-4 mt-2">
         <h4 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-2">
           <Info className="w-3.5 h-3.5 text-muted-foreground" />
@@ -406,6 +349,113 @@ function CompletionSection() {
               <span className="text-xs text-muted-foreground">{t.tip}</span>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Efficiency Metrics (NEW) ────────────────────────── */
+
+function EfficiencySection() {
+  const metrics = [
+    {
+      label: 'Strategic Execution Efficiency Index (SEEI)',
+      formula: 'SEEI = Actual Progress % ÷ Budget Utilization %',
+      desc: 'Headline KPI measuring whether execution output is proportional to financial resource deployment.',
+      color: '#059669',
+      bands: [
+        { range: '≥ 1.20', label: 'Highly Efficient', color: '#065F46' },
+        { range: '0.90 – 1.19', label: 'Balanced Execution', color: '#16A34A' },
+        { range: '0.60 – 0.89', label: 'Efficiency Concern', color: '#D97706' },
+        { range: '< 0.60', label: 'Critical Inefficiency', color: '#DC2626' },
+      ],
+    },
+    {
+      label: 'Actual Progress % (In-Progress Items)',
+      formula: 'Average completion % of all in-progress items',
+      desc: 'Completed items are excluded from this metric because they no longer reflect ongoing delivery performance. Only items with "In Progress" status are included.',
+      color: '#2563EB',
+      bands: [],
+    },
+    {
+      label: 'Budget Utilization %',
+      formula: 'Total Committed ÷ Total Budget × 100',
+      desc: 'Percentage of total budget that has been formally committed. Reflects financial commitment, not implementation progress.',
+      color: '#7C3AED',
+      bands: [],
+    },
+    {
+      label: 'Progress Ratio',
+      formula: 'Actual Progress % ÷ Expected Progress %',
+      desc: 'Measures delivery speed relative to the reporting timeline. Values > 1.0 = ahead of schedule, < 1.0 = behind schedule.',
+      color: '#D97706',
+      bands: [],
+    },
+    {
+      label: 'Intervention Priority Score (IPS)',
+      formula: 'IPS = (1 − Progress Ratio) × Budget Utilization %',
+      desc: 'Identifies pillars where financial resources are deployed but execution is lagging.',
+      color: '#DC2626',
+      bands: [
+        { range: '> 25', label: '🔴 Critical Priority', color: '#DC2626' },
+        { range: '> 15', label: '🟠 High Priority', color: '#F97316' },
+        { range: '> 5', label: '🟡 Monitor', color: '#D97706' },
+        { range: '≤ 5', label: '🟢 Stable', color: '#16A34A' },
+      ],
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Gauge className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-semibold text-foreground">Efficiency & Execution Metrics</h3>
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        These metrics provide executive situational awareness by linking execution progress to resource deployment and timeline expectations.
+      </p>
+
+      <div className="space-y-3">
+        {metrics.map(m => (
+          <motion.div
+            key={m.label}
+            className="rounded-xl border border-border/60 bg-card p-4"
+            whileHover={{ x: 4 }}
+          >
+            <div className="flex items-center gap-2.5 mb-2">
+              <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
+              <span className="text-sm font-bold text-foreground">{m.label}</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-2">{m.desc}</p>
+            <div className="px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
+              <p className="text-xs font-mono font-semibold text-foreground">{m.formula}</p>
+            </div>
+            {m.bands.length > 0 && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {m.bands.map(b => (
+                  <div key={b.range} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ backgroundColor: `${b.color}10` }}>
+                    <span className="text-[11px] font-bold" style={{ color: b.color }}>{b.label}</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto">{b.range}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Important note */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mt-2">
+        <div className="flex items-start gap-2">
+          <Info className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+          <div>
+            <span className="text-xs font-semibold text-primary">Note on Completed Items</span>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Completed items are excluded from execution pace analysis because they no longer reflect ongoing delivery performance.
+              SEEI, Progress Ratio, and IPS use only in-progress items to measure current execution velocity.
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -135,10 +135,34 @@ export default function DashboardGuide() {
               interpretation="Ahead of Schedule (gap ≤ −10%): work is advancing faster than required. On Schedule (−10% to 10%): progress aligns with expectations. Behind Schedule (10% to 25%): action needed to catch up. Significantly Behind (>25%): immediate intervention required."
             />
             <MetricExplainer
+              title="Strategic Execution Efficiency Index (SEEI)"
+              definition="Headline efficiency metric for executive situational awareness. Measures whether execution output is proportional to financial resource deployment."
+              calculation="SEEI = Actual Progress % ÷ Budget Utilization %. Actual Progress = average completion of all in-progress items. Budget Utilization = Total Committed ÷ Total Budget × 100."
+              interpretation="≥ 1.20 = Highly Efficient (execution exceeds resource consumption). 0.90–1.19 = Balanced Execution. 0.60–0.89 = Efficiency Concern (spending outpaces delivery). < 0.60 = Critical Inefficiency."
+            />
+            <MetricExplainer
+              title="Progress Ratio"
+              definition="Measures how actual execution compares to expected time-based progress within the reporting window."
+              calculation="Progress Ratio = Actual Progress % ÷ Expected Progress %. Values > 1.0 mean work is ahead; < 1.0 means behind."
+              interpretation="Used per pillar to assess delivery speed. A ratio below 1.0 signals that execution is not keeping pace with the timeline."
+            />
+            <MetricExplainer
+              title="Intervention Priority Score (IPS)"
+              definition="Composite metric combining schedule delay with financial exposure. Identifies pillars where delay coincides with high budget deployment."
+              calculation="IPS = (1 − Progress Ratio) × Budget Utilization %. Classification: > 25 = Critical Priority, > 15 = High Priority, > 5 = Monitor, ≤ 5 = Stable."
+              interpretation="Higher IPS values indicate pillars where financial resources are deployed but execution is lagging — requiring prioritized intervention."
+            />
+            <MetricExplainer
               title="Critical Strategic Items"
               definition="Strategic action items flagged with Critical or Realized risk signals, indicating they require immediate executive attention."
               calculation="Items are flagged when their risk signal is 'Critical Risk' (Not Started) or 'Realized Risk' (Completed Below Target)."
               interpretation="These items represent the highest-priority concerns. Critical items have not yet started despite time progression. Realized items were completed but fell short of target expectations."
+            />
+            <MetricExplainer
+              title="Actual Progress % (In-Progress Items)"
+              definition="Average completion percentage computed exclusively from items with 'In Progress' status. Completed items are excluded because they no longer reflect ongoing delivery performance."
+              calculation="Simple arithmetic mean of completion percentages across all in-progress items within the selected scope (pillar, unit, or university)."
+              interpretation="Provides a real-time measure of current execution velocity. Used in SEEI, Execution Pace, and Budget-Progress alignment charts."
             />
           </div>
         </motion.div>
@@ -152,9 +176,9 @@ export default function DashboardGuide() {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">How to Read Each Tab</span>
           </div>
           <div className="space-y-3">
-            <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="High-level overview of strategic performance across pillars. Start here for a quick situational understanding of completion, risk, and budget. The Execution Pace chart evaluates whether in-progress work is advancing fast enough relative to the reporting period." />
+            <TabGuide icon={LayoutDashboard} title="Executive Snapshot" description="SEEI-centric command view. The Strategic Execution Efficiency Index (SEEI) headline KPI measures execution efficiency relative to budget deployment. The Execution Pace bar chart evaluates whether in-progress work is advancing fast enough. The Budget Utilization vs Progress chart assesses resource-outcome alignment per pillar." />
             <TabGuide icon={ShieldAlert} title="Strategic Risk & Priority" description="Identifies initiatives with elevated risk signals. Use the heatmap to see which units and pillars need attention. Review Critical Strategic Items for items requiring immediate attention." />
-            <TabGuide icon={DollarSign} title="Budget Intelligence" description="Displays financial allocation and utilization across pillars. Identifies budget pressure zones where high utilization meets high risk." />
+            <TabGuide icon={DollarSign} title="Budget Intelligence" description="Deep diagnostic view of financial effectiveness. The Budget Utilization vs Execution Progress scatter chart maps spending against in-progress delivery outcomes per pillar, with quadrant classification and automated summary insights." />
             <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles. Each snapshot is uniquely labeled with timestamp. Trend charts use sequential labels (S1, S2, S3…) on the x-axis — hover over data points to see the full reporting cycle and capture time." />
             <TabGuide icon={GitCompare} title="Unit Comparison" description="Allows side-by-side comparison of two units across all performance dimensions including pillar-level radar charts." />
             <TabGuide icon={Brain} title="AI Executive Insights" description="AI-generated strategic interpretation of aggregated metrics. Provides narrative analysis of strengths, risks, and opportunities." />
@@ -262,7 +286,7 @@ export default function DashboardGuide() {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Reading Tips for Executives</span>
           </div>
           <div className="space-y-4">
-            <TipStep step={1} title="Start with Executive Snapshot" description="Get an instant overview of university-wide performance. Review the KPI banner and the Execution Pace chart to see how in-progress work compares to expected timelines." />
+            <TipStep step={1} title="Start with Executive Snapshot" description="Check the SEEI headline for overall efficiency. Review the Execution Pace bar chart to see which pillars are behind schedule, and the Budget vs Progress chart to assess resource alignment." />
             <TipStep step={2} title="Check Strategic Risk & Priority" description="Identify critical issues using the risk heatmap and exceptions table. Focus on units and pillars with elevated risk signals." />
             <TipStep step={3} title="Review Budget Intelligence" description="Analyze financial pressure signals. Look for pillars where high budget utilization coincides with high risk index." />
             <TipStep step={4} title="Track Progress with Snapshots" description="Capture snapshots regularly and use the trajectory charts to understand whether strategic execution is improving over time." />
