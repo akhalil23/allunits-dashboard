@@ -135,10 +135,34 @@ export default function DashboardGuide() {
               interpretation="Ahead of Schedule (gap ≤ −10%): work is advancing faster than required. On Schedule (−10% to 10%): progress aligns with expectations. Behind Schedule (10% to 25%): action needed to catch up. Significantly Behind (>25%): immediate intervention required."
             />
             <MetricExplainer
+              title="Strategic Execution Efficiency Index (SEEI)"
+              definition="Headline efficiency metric for executive situational awareness. Measures whether execution output is proportional to financial resource deployment."
+              calculation="SEEI = Actual Progress % ÷ Budget Utilization %. Actual Progress = average completion of all in-progress items. Budget Utilization = Total Committed ÷ Total Budget × 100."
+              interpretation="≥ 1.20 = Highly Efficient (execution exceeds resource consumption). 0.90–1.19 = Balanced Execution. 0.60–0.89 = Efficiency Concern (spending outpaces delivery). < 0.60 = Critical Inefficiency."
+            />
+            <MetricExplainer
+              title="Progress Ratio"
+              definition="Measures how actual execution compares to expected time-based progress within the reporting window."
+              calculation="Progress Ratio = Actual Progress % ÷ Expected Progress %. Values > 1.0 mean work is ahead; < 1.0 means behind."
+              interpretation="Used per pillar to assess delivery speed. A ratio below 1.0 signals that execution is not keeping pace with the timeline."
+            />
+            <MetricExplainer
+              title="Intervention Priority Score (IPS)"
+              definition="Composite metric combining schedule delay with financial exposure. Identifies pillars where delay coincides with high budget deployment."
+              calculation="IPS = (1 − Progress Ratio) × Budget Utilization %. Classification: > 25 = Critical Priority, > 15 = High Priority, > 5 = Monitor, ≤ 5 = Stable."
+              interpretation="Higher IPS values indicate pillars where financial resources are deployed but execution is lagging — requiring prioritized intervention."
+            />
+            <MetricExplainer
               title="Critical Strategic Items"
               definition="Strategic action items flagged with Critical or Realized risk signals, indicating they require immediate executive attention."
               calculation="Items are flagged when their risk signal is 'Critical Risk' (Not Started) or 'Realized Risk' (Completed Below Target)."
               interpretation="These items represent the highest-priority concerns. Critical items have not yet started despite time progression. Realized items were completed but fell short of target expectations."
+            />
+            <MetricExplainer
+              title="Actual Progress % (In-Progress Items)"
+              definition="Average completion percentage computed exclusively from items with 'In Progress' status. Completed items are excluded because they no longer reflect ongoing delivery performance."
+              calculation="Simple arithmetic mean of completion percentages across all in-progress items within the selected scope (pillar, unit, or university)."
+              interpretation="Provides a real-time measure of current execution velocity. Used in SEEI, Execution Pace, and Budget-Progress alignment charts."
             />
           </div>
         </motion.div>
