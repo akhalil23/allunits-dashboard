@@ -1,11 +1,12 @@
 /**
  * Tab 3 — Budget Intelligence (CFO-Grade, Live Data)
  * Reads live budget from Finance spreadsheet. Spent/Unspent commitment model.
+ * Includes Budget Utilization vs Execution Progress scatter chart.
  */
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2 } from 'lucide-react';
+import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2, Lightbulb } from 'lucide-react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, BarChart, Bar, ReferenceLine, ReferenceArea,
@@ -19,13 +20,19 @@ import { useBudgetData } from '@/hooks/use-budget-data';
 import { aggregateByPillar, getRiskBandColor, type UniversityAggregation } from '@/lib/university-aggregation';
 import { formatRIPercent, getRiskDisplayInfo, RI_BAND_LEGEND } from '@/lib/risk-display';
 import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, type PillarBudgetRow } from '@/lib/budget-data';
-import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
+import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
+import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
+import { isNotApplicableStatus } from '@/lib/types';
 import type { PillarId } from '@/lib/types';
 
 interface Props { aggregation: UniversityAggregation; }
 
 const PILLAR_DONUT_COLORS: Record<PillarId, string> = {
   I: '#6366F1', II: '#F59E0B', III: '#10B981', IV: '#F97316', V: '#8B5CF6',
+};
+
+const PILLAR_SCATTER_COLORS: Record<PillarId, string> = {
+  I: '#2563EB', II: '#059669', III: '#D97706', IV: '#DC2626', V: '#7C3AED',
 };
 
 export default function BudgetIntelligence({ aggregation }: Props) {
@@ -57,6 +64,77 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     const health = computeBudgetHealth(available, allocation);
     return { allocation, spent, unspent, committed, available, utilization, health };
   }, [allRows]);
+
+  // ─── Per-pillar in-progress actual progress ─────────────────────────
+  const pillarProgressData = useMemo(() => {
+    if (!unitResults) return [] as { pillar: PillarId; actualProgress: number; inProgressCount: number }[];
+    const pillarIds: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
+    return pillarIds.map(pillar => {
+      let sum = 0, count = 0;
+      unitResults.forEach(ur => {
+        if (!ur.result) return;
+        ur.result.data.forEach(item => {
+          if (item.pillar !== pillar) return;
+          const status = getItemStatus(item, viewType, term, academicYear);
+          if (status === 'In Progress') {
+            sum += getItemCompletion(item, viewType, term, academicYear);
+            count++;
+          }
+        });
+      });
+      return {
+        pillar,
+        actualProgress: count > 0 ? parseFloat((sum / count).toFixed(1)) : 0,
+        inProgressCount: count,
+      };
+    });
+  }, [unitResults, viewType, term, academicYear]);
+
+  // ─── Scatter data for Budget Utilization vs Execution Progress ──────
+  const scatterData = useMemo(() => {
+    return allRows.map(r => {
+      const prog = pillarProgressData.find(p => p.pillar === r.pillar);
+      const budgetUtil = parseFloat((r.utilization * 100).toFixed(1));
+      const actualProgress = prog?.actualProgress ?? 0;
+      const progressRatio = budgetUtil > 0 ? parseFloat((actualProgress / budgetUtil).toFixed(2)) : 0;
+      return {
+        pillar: r.pillar,
+        x: budgetUtil,
+        y: actualProgress,
+        name: r.label,
+        fullName: PILLAR_FULL[r.pillar],
+        progressRatio,
+        allocated: r.allocation,
+        spent: r.spent,
+        available: r.available,
+        inProgressCount: prog?.inProgressCount ?? 0,
+        markerSize: Math.max(10, Math.min(22, 8 + actualProgress / 5)),
+      };
+    });
+  }, [allRows, pillarProgressData]);
+
+  const avgBudgetUtil = useMemo(() => {
+    const vals = scatterData.map(d => d.x);
+    return vals.length > 0 ? parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) : 0;
+  }, [scatterData]);
+
+  const avgProgress = useMemo(() => {
+    const vals = scatterData.map(d => d.y);
+    return vals.length > 0 ? parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) : 0;
+  }, [scatterData]);
+
+  // ─── Automated summary for scatter ──────────────────────────────────
+  const scatterSummary = useMemo(() => {
+    const inefficient = scatterData.filter(d => d.x > avgBudgetUtil && d.y < avgProgress);
+    const efficient = scatterData.filter(d => d.x < avgBudgetUtil && d.y > avgProgress);
+    if (inefficient.length > 0) {
+      return `High spending with low progress observed in ${inefficient.map(d => PILLAR_ABBREV[d.pillar]).join(', ')}.`;
+    }
+    if (efficient.length > 0) {
+      return `${efficient.map(d => PILLAR_ABBREV[d.pillar]).join(', ')} show${efficient.length === 1 ? 's' : ''} efficient execution with lower resource consumption.`;
+    }
+    return 'Spending and progress are broadly aligned across all pillars.';
+  }, [scatterData, avgBudgetUtil, avgProgress]);
 
   const hasPressure = allRows.some(r => r.budgetPressure);
   const utilColor = totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A';
@@ -114,7 +192,6 @@ export default function BudgetIntelligence({ aggregation }: Props) {
       {/* Section 1: CFO-Grade KPI Header */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {/* Allocation */}
           <BudgetKPICard
             label="Allocation" subtitle="Total Planned"
             value={formatCurrency(totals.allocation)}
@@ -122,14 +199,12 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             icon={DollarSign} color="hsl(var(--primary))"
             infoTip="Total approved budget across all pillars for the strategic plan period."
           />
-          {/* Committed — Enhanced with spent/unspent breakdown */}
           <CommittedKPICard
             committed={totals.committed}
             spent={totals.spent}
             unspent={totals.unspent}
             allocation={totals.allocation}
           />
-          {/* Available */}
           <BudgetKPICard
             label="Available" subtitle="Remaining"
             value={formatCurrency(totals.available)}
@@ -138,7 +213,6 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined}
             infoTip="Budget capacity not yet committed and still available for future initiatives."
           />
-          {/* Budget Health */}
           <BudgetKPICard
             label="Budget Health" subtitle="Commitment Pressure"
             value={totals.health.health}
@@ -150,7 +224,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
         </div>
       </section>
 
-      {/* Section 2: Budget Composition by Pillar (Spent/Unspent/Available stacked) */}
+      {/* Section 2: Budget Composition by Pillar */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><BarChart3 className="w-4 h-4 text-muted-foreground" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Budget Composition by Pillar</span></div>
@@ -182,7 +256,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      {/* Section 3: Per-Pillar Analytics with Spent/Unspent */}
+      {/* Section 3: Per-Pillar Budget Analytics */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Per-Pillar Budget Analytics</span>
@@ -226,7 +300,6 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                       <p className="text-[9px] text-muted-foreground">{availPct}%</p>
                     </div>
                   </div>
-                  {/* Stacked utilization bar */}
                   <div className="h-2 rounded-full bg-muted overflow-hidden mt-3 flex">
                     <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${spentPct}%` }} transition={{ delay: 0.3, duration: 0.5 }} style={{ backgroundColor: '#16A34A' }} />
                     <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${unspentPct}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: '#F59E0B' }} />
@@ -238,56 +311,86 @@ export default function BudgetIntelligence({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      {/* Section 4: Risk vs Budget Alignment */}
+      {/* Section 4: Budget Utilization vs Execution Progress (NEW) */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-1">
             <Target className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Risk vs Budget Alignment</span>
-           <InfoTip text="Quadrant chart mapping budget utilization (X) against Risk Index % (Y). High utilization + high RI = budget pressure zone." />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Budget Utilization vs Execution Progress by Strategic Pillar</span>
+            <InfoTip text="Scatter chart mapping budget utilization (X) against actual execution progress of in-progress items (Y). Reference lines show average values. Marker size reflects progress level." />
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-4">Budget Utilization vs Risk Index % — colored by quadrant position.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2">Determines whether spending translates into execution outcomes.</p>
+
+          {/* Automated summary */}
+          <div className="rounded-lg bg-muted/30 border border-border/40 px-3 py-2 mb-4">
+            <p className="text-xs text-foreground font-medium flex items-center gap-1.5">
+              <Lightbulb className="w-3 h-3 text-primary" />
+              {scatterSummary}
+            </p>
+          </div>
+
           <div className="h-72 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 30, bottom: 25, left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <ReferenceArea x1={80} x2={100} y1={50} y2={100} fill="rgba(239,68,68,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={80} y1={50} y2={100} fill="rgba(249,115,22,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={80} x2={100} y1={0} y2={50} fill="rgba(22,163,74,0.06)" fillOpacity={1} />
-                <ReferenceArea x1={0} x2={80} y1={0} y2={50} fill="rgba(59,130,246,0.06)" fillOpacity={1} />
+                {/* Quadrant background shading */}
+                <ReferenceArea x1={0} x2={avgBudgetUtil} y1={avgProgress} y2={100} fill="rgba(5,150,105,0.12)" fillOpacity={1} />
+                <ReferenceArea x1={0} x2={avgBudgetUtil} y1={0} y2={avgProgress} fill="rgba(217,119,6,0.12)" fillOpacity={1} />
+                <ReferenceArea x1={avgBudgetUtil} x2={100} y1={avgProgress} y2={100} fill="rgba(37,99,235,0.12)" fillOpacity={1} />
+                <ReferenceArea x1={avgBudgetUtil} x2={100} y1={0} y2={avgProgress} fill="rgba(220,38,38,0.12)" fillOpacity={1} />
                 <XAxis type="number" dataKey="x" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -15, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Risk Index %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-                <ReferenceLine x={80} stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <YAxis type="number" dataKey="y" domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Actual Progress %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+                <ReferenceLine x={avgBudgetUtil} stroke="hsl(var(--foreground))" strokeDasharray="6 4" strokeOpacity={0.5} label={{ value: `Avg ${avgBudgetUtil}%`, position: 'top', style: { fontSize: 9, fill: 'hsl(var(--muted-foreground))' } }} />
+                <ReferenceLine y={avgProgress} stroke="hsl(var(--foreground))" strokeDasharray="6 4" strokeOpacity={0.5} label={{ value: `Avg ${avgProgress}%`, position: 'right', style: { fontSize: 9, fill: 'hsl(var(--muted-foreground))' } }} />
                 <ReTooltip content={({ payload }) => {
                   if (!payload?.[0]) return null;
                   const d = payload[0].payload;
+                  const ipsVal = d.x > 0 && d.y < d.x ? ((1 - d.y / d.x) * d.x).toFixed(1) : '0';
+                  const ipsNum = parseFloat(ipsVal);
+                  const ipsLabel = ipsNum > 25 ? '🔴 Critical Priority' : ipsNum > 15 ? '🟠 High Priority' : ipsNum > 5 ? '🟡 Monitor' : '🟢 Stable';
                   return (
                     <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                       <p className="font-semibold text-foreground">{d.fullName}</p>
                       <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.x}%</span></p>
-                      <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskDisplayInfo(d.ri).color }}>RI {getRiskDisplayInfo(d.ri).percent}% — {getRiskDisplayInfo(d.ri).band}</span></p>
+                      <p className="text-muted-foreground">Actual Progress: <span className="text-foreground font-medium">{d.y}%</span></p>
+                      <p className="text-muted-foreground">Progress Ratio: <span className="text-foreground font-medium">{d.progressRatio}</span></p>
+                      <p className="text-muted-foreground">Allocated: <span className="text-foreground font-medium">{formatCurrencyFull(d.allocated)}</span></p>
+                      <p className="text-muted-foreground">Spent: <span className="text-foreground font-medium">{formatCurrencyFull(d.spent)}</span></p>
+                      <p className="text-muted-foreground">Remaining: <span className="text-foreground font-medium">{formatCurrencyFull(d.available)}</span></p>
+                      <p className="text-muted-foreground">In-Progress Items: <span className="text-foreground font-medium">{d.inProgressCount}</span></p>
+                      <p className="text-muted-foreground">Intervention Priority: <span className="font-medium">{ipsLabel}</span></p>
                     </div>
                   );
                 }} />
-                <Scatter data={allRows.map(r => ({ x: parseFloat((r.utilization*100).toFixed(1)), y: getRiskDisplayInfo(r.riskIndex).percent, ri: r.riskIndex, name: r.label, fullName: PILLAR_FULL[r.pillar] }))}>
-                  {allRows.map((r, i) => {
-                    const riPct = getRiskDisplayInfo(r.riskIndex).percent;
-                    const q = r.utilization >= 0.80 && riPct >= 50 ? '#EF4444' : r.utilization < 0.80 && riPct >= 50 ? '#F97316' : r.utilization >= 0.80 ? '#16A34A' : '#3B82F6';
-                    return <Cell key={i} fill={q} fillOpacity={0.7} r={Math.max(8, 12)} />;
-                  })}
+                <Scatter data={scatterData}>
+                  {scatterData.map((d, i) => (
+                    <Cell key={i} fill={PILLAR_SCATTER_COLORS[d.pillar]} fillOpacity={0.85} r={d.markerSize} />
+                  ))}
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
+
+          {/* Pillar legend */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 mb-3">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Pillars:</span>
+            {(['I','II','III','IV','V'] as PillarId[]).map(p => (
+              <div key={p} className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_SCATTER_COLORS[p] }} />
+                <span className="text-xs text-muted-foreground">{PILLAR_ABBREV[p]}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Quadrant legend */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {[
-              { label: 'High Budget / High Risk', desc: 'Budget Pressure', pos: 'top-right', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)' },
-              { label: 'Low Budget / High Risk', desc: 'Underfunded Risk', pos: 'top-left', color: '#F97316', bg: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.25)' },
-              { label: 'High Budget / Low Risk', desc: 'Healthy Spend', pos: 'bottom-right', color: '#16A34A', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)' },
-              { label: 'Low Budget / Low Risk', desc: 'Balanced', pos: 'bottom-left', color: '#3B82F6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.25)' },
+              { label: 'Low Budget / High Progress', desc: 'Efficient Execution', color: '#059669', bg: 'rgba(5,150,105,0.08)', border: 'rgba(5,150,105,0.25)' },
+              { label: 'Low Budget / Low Progress', desc: 'Under-resourced / Stalled', color: '#D97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)' },
+              { label: 'High Budget / High Progress', desc: 'Productive but Costly', color: '#2563EB', bg: 'rgba(37,99,235,0.08)', border: 'rgba(37,99,235,0.25)' },
+              { label: 'High Budget / Low Progress', desc: 'Critical Inefficiency', color: '#DC2626', bg: 'rgba(220,38,38,0.08)', border: 'rgba(220,38,38,0.25)' },
             ].map(q => (
-              <div key={q.pos} className="text-center p-3 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
+              <div key={q.desc} className="text-center p-3 rounded-lg" style={{ backgroundColor: q.bg, borderWidth: 1, borderColor: q.border, borderStyle: 'solid' }}>
                 <div className="flex items-center justify-center gap-1.5 mb-0.5">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: q.color }} />
                   <p className="text-xs font-semibold" style={{ color: q.color }}>{q.desc}</p>
@@ -308,7 +411,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
               <ResponsiveContainer>
                 <PieChart>
                   <Pie data={allRows.map(r => ({ name: PILLAR_SHORT[r.pillar], value: r.allocation, pillar: r.pillar, fullName: PILLAR_FULL[r.pillar] }))} innerRadius="55%" outerRadius="85%" dataKey="value" startAngle={90} endAngle={-270} strokeWidth={0}>
-                    {allRows.map((r, i) => <Cell key={i} fill={PILLAR_DONUT_COLORS[r.pillar]} />)}
+                    {allRows.map((r, i) => <PieCell key={i} fill={PILLAR_DONUT_COLORS[r.pillar]} />)}
                   </Pie>
                   <ReTooltip formatter={(v: number, n: string) => [formatCurrencyFull(v), n]} />
                 </PieChart>
@@ -472,7 +575,6 @@ function CommittedKPICard({ committed, spent, unspent, allocation }: {
               </TooltipTrigger>
               <TooltipContent><p className="text-xs font-mono">{formatCurrencyFull(committed)}</p></TooltipContent>
             </Tooltip>
-            {/* Spent / Unspent breakdown */}
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#16A34A' }} />
@@ -485,7 +587,6 @@ function CommittedKPICard({ committed, spent, unspent, allocation }: {
                 <span className="text-[10px] font-bold text-foreground">{formatCurrency(unspent)}</span>
               </div>
             </div>
-            {/* Stacked bar: spent + unspent relative to allocation */}
             <div className="h-2 rounded-full bg-muted overflow-hidden mt-2 flex">
               <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${spentPct}%` }} transition={{ delay: 0.3, duration: 0.5 }} style={{ backgroundColor: '#16A34A' }} />
               <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${unspentPct}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: '#F59E0B' }} />

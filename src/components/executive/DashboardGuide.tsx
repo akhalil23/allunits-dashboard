@@ -286,7 +286,7 @@ export default function DashboardGuide() {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Reading Tips for Executives</span>
           </div>
           <div className="space-y-4">
-            <TipStep step={1} title="Start with Executive Snapshot" description="Get an instant overview of university-wide performance. Review the KPI banner and the Execution Pace chart to see how in-progress work compares to expected timelines." />
+            <TipStep step={1} title="Start with Executive Snapshot" description="Check the SEEI headline for overall efficiency. Review the Execution Pace bar chart to see which pillars are behind schedule, and the Budget vs Progress chart to assess resource alignment." />
             <TipStep step={2} title="Check Strategic Risk & Priority" description="Identify critical issues using the risk heatmap and exceptions table. Focus on units and pillars with elevated risk signals." />
             <TipStep step={3} title="Review Budget Intelligence" description="Analyze financial pressure signals. Look for pillars where high budget utilization coincides with high risk index." />
             <TipStep step={4} title="Track Progress with Snapshots" description="Capture snapshots regularly and use the trajectory charts to understand whether strategic execution is improving over time." />
