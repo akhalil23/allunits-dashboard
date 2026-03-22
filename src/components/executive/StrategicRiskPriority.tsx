@@ -1,6 +1,6 @@
 /**
- * Tab 2 — Strategic Risk & Priority (Merged)
- * Combines previous Risk & Exceptions + Priority & Impact.
+ * Tab 2 — Strategic Risk & Priority
+ * Risk diagnosis, execution gap, enhanced analytical panels.
  */
 
 import { useState, useMemo } from 'react';
@@ -9,7 +9,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts';
-import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight, TrendingDown, AlertCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
 import { RIMeter } from '@/components/ui/ri-meter';
@@ -25,11 +25,11 @@ import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import { RISK_SIGNAL_TOOLTIPS } from '@/lib/metric-definitions';
+import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
 import type { PillarId } from '@/lib/types';
 import StrategicCoverageGaps from './StrategicCoverageGaps';
 
 interface Props { aggregation: UniversityAggregation; }
-
 
 export default function StrategicRiskPriority({ aggregation }: Props) {
   const { viewType, academicYear, term } = useDashboard();
@@ -41,31 +41,62 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   const unitsByRisk = useMemo(() => [...aggregation.unitAggregations].sort((a, b) => b.riskIndex - a.riskIndex), [aggregation]);
   const unitsByCompletion = useMemo(() => [...aggregation.unitAggregations].sort((a, b) => a.completionPct - b.completionPct), [aggregation]);
 
+  // ─── Expected Progress ────────────────────────────────────────────────
+  const expectedProgress = useMemo(() => {
+    const [startYearStr] = academicYear.split('-');
+    const startYear = parseInt(startYearStr);
+    const windowStart = new Date(startYear, 6, 1);
+    const windowEnd = term === 'mid' ? new Date(startYear, 11, 31) : new Date(startYear + 1, 5, 30);
+    const now = new Date();
+    const totalMs = windowEnd.getTime() - windowStart.getTime();
+    const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
+    return Math.round((elapsedMs / totalMs) * 100);
+  }, [academicYear, term]);
+
+  // ─── Execution Gap by Unit ────────────────────────────────────────────
+  const unitExecutionGaps = useMemo(() => {
+    if (!unitResults) return [];
+    return aggregation.unitAggregations.map(u => {
+      // Compute actual progress for in-progress items
+      const ur = unitResults.find(r => r.unitId === u.unitId);
+      let sum = 0, count = 0;
+      if (ur?.result) {
+        ur.result.data.forEach(item => {
+          const status = getItemStatus(item, viewType, term, academicYear);
+          if (status === 'In Progress') {
+            sum += getItemCompletion(item, viewType, term, academicYear);
+            count++;
+          }
+        });
+      }
+      const actualProgress = count > 0 ? Math.round(sum / count) : 0;
+      const gap = actualProgress - expectedProgress;
+      return { ...u, actualProgress, gap, hasInProgress: count > 0 };
+    })
+    .filter(u => u.hasInProgress)
+    .sort((a, b) => a.gap - b.gap);
+  }, [unitResults, aggregation.unitAggregations, viewType, term, academicYear, expectedProgress]);
+
   return (
     <div className="space-y-8">
-      {/* Section 1: Strategic Risk Overview */}
+      {/* Section 1: Strategic Risk Overview — Enhanced */}
       <section>
         <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
           <ShieldAlert className="w-4 h-4" /> Strategic Risk Overview
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Risk Index by Pillar */}
+          {/* Risk Exposure by Pillar — Enhanced with bands */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              RI by Pillar <InfoTip text={RI_TOOLTIP} />
+              Risk Exposure by Pillar <InfoTip text={RI_TOOLTIP} />
             </span>
             <div className="space-y-3 mt-4">
               {pillarAgg.map((p, idx) => {
                 const riInfo = getRiskDisplayInfo(p.riskIndex);
                 const pct = riInfo.percent;
+                const bandLabel = pct <= 25 ? 'Low' : pct <= 50 ? 'Moderate' : pct <= 75 ? 'High' : 'Critical';
                 return (
-                  <motion.div
-                    key={p.pillar}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + idx * 0.05 }}
-                    className="flex items-center gap-2.5"
-                  >
+                  <motion.div key={p.pillar} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + idx * 0.05 }} className="flex items-center gap-2.5">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="text-xs font-semibold text-foreground w-14 cursor-help">{PILLAR_LABELS[p.pillar]}</span>
@@ -73,21 +104,18 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                       <TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent>
                     </Tooltip>
                     <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ delay: 0.2 + idx * 0.05, duration: 0.6, ease: 'easeOut' }}
-                        style={{ backgroundColor: riInfo.color }}
-                      />
+                      <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.2 + idx * 0.05, duration: 0.6 }} style={{ backgroundColor: riInfo.color }} />
                     </div>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="text-xs font-bold w-14 text-right cursor-help" style={{ color: riInfo.color }}>RI {pct}%</span>
+                        <span className="text-xs font-bold w-20 text-right cursor-help" style={{ color: riInfo.color }}>
+                          RI {pct}% <span className="font-normal text-[10px]">({bandLabel})</span>
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent side="left" className="max-w-xs text-xs">
                         <p className="font-semibold">{riInfo.band}</p>
                         <p className="text-muted-foreground mt-0.5">{riInfo.insight}</p>
+                        {pct >= 50 && <p className="text-amber-500 font-semibold mt-1">⚠ Monitoring recommended</p>}
                       </TooltipContent>
                     </Tooltip>
                   </motion.div>
@@ -96,10 +124,10 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
             </div>
           </motion.div>
 
-          {/* Risk Distribution Stacked */}
+          {/* Risk Signal Distribution — Enhanced with % labels */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Risk Signal Distribution by Pillar <InfoTip text="Distribution of risk signals across pillars. No Risk: actions with no risk indicators. Emerging: early warning signals. Critical: severe risk requiring intervention. Realized: risk event already occurred." />
+              Risk Signal Distribution <InfoTip text="Distribution of risk signals across pillars. Percentage labels show relative concentration." />
             </span>
             <div className="h-48 mt-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -109,16 +137,12 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
                 })} layout="vertical" barSize={18}>
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="name" width={40} tick={{ fontSize: 11 }} />
-                  <ReTooltip
-                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
-                    formatter={(v: number, n: string, props: any) => {
-                      const labelMap: Record<string,string> = { noRisk:'No Risk', emerging:'Emerging', critical:'Critical', realized:'Realized' };
-                      const total = props.payload?.total || 1;
-                      const pct = ((v / total) * 100).toFixed(1);
-                      return [`${v} items (${pct}%)`, labelMap[n] || n];
-                    }}
-                    labelFormatter={(label: string) => `${label} — Risk Signals`}
-                  />
+                  <ReTooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }} formatter={(v: number, n: string, props: any) => {
+                    const labelMap: Record<string,string> = { noRisk:'No Risk', emerging:'Emerging', critical:'Critical', realized:'Realized' };
+                    const total = props.payload?.total || 1;
+                    const pct = ((v / total) * 100).toFixed(1);
+                    return [`${v} items (${pct}%)`, labelMap[n] || n];
+                  }} labelFormatter={(label: string) => `${label} — Risk Signals`} />
                   <Bar dataKey="noRisk" stackId="a" fill={RISK_SIGNAL_COLORS['No Risk (On Track)']} />
                   <Bar dataKey="emerging" stackId="a" fill={RISK_SIGNAL_COLORS['Emerging Risk (Needs Attention)']} />
                   <Bar dataKey="critical" stackId="a" fill={RISK_SIGNAL_COLORS['Critical Risk (Needs Close Attention)']} />
@@ -129,23 +153,28 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
             <RiskSignalLegend pillarAgg={pillarAgg} />
           </motion.div>
 
-          {/* Completion Status Distribution Donut */}
+          {/* Completion Status — Enhanced with narrative */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by their completion status across all units." /></span>
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Completion Status <InfoTip text="Distribution of strategic actions by status. Narrative insights describe execution momentum." /></span>
             <CompletionDonut aggregation={aggregation} />
           </motion.div>
         </div>
       </section>
 
-      {/* Section 2: Strategic Priority Signals */}
+      {/* Section 2: Strategic Priority Signals + Execution Gap */}
       <section>
         <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
           <Target className="w-4 h-4" /> Strategic Priority Signals
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <RankingBars title="Units Ranked by RI (Risk Index)" subtitle="Highest risk first" units={unitsByRisk} metricKey="riskIndex" />
-          <RankingBars title="Units Ranked by Completion" subtitle="Lowest completion first" units={unitsByCompletion} metricKey="completionPct" />
+          <RankingBars title="Units Ranked by Completion" subtitle="Lowest completion first — context indicators below" units={unitsByCompletion} metricKey="completionPct" />
         </div>
+      </section>
+
+      {/* Section 2b: Execution Gap Panel */}
+      <section>
+        <ExecutionGapPanel units={unitExecutionGaps} expectedProgress={expectedProgress} />
       </section>
 
       {/* Section 3: Unit × Pillar Risk Heatmap */}
@@ -161,21 +190,81 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
         <ExceptionsTable flags={flags} />
       </section>
 
-      {/* Section 5: Strategic Coverage Gaps */}
+      {/* Section 5: Coverage Gaps */}
       <StrategicCoverageGaps />
     </div>
   );
 }
 
+/* ─── Execution Gap Panel ─────────────────────────────────────────── */
+
+function ExecutionGapPanel({ units, expectedProgress }: { units: (UnitAggregation & { actualProgress: number; gap: number; hasInProgress: boolean })[]; expectedProgress: number }) {
+  const [showAll, setShowAll] = useState(false);
+  const INITIAL = 10;
+  const visible = showAll ? units : units.slice(0, INITIAL);
+  const hasMore = units.length > INITIAL;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <TrendingDown className="w-4 h-4 text-muted-foreground" />
+        <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Units Ranked by Execution Gap</span>
+        <InfoTip text={`Execution Gap = Actual Progress − Expected Progress (${expectedProgress}%). Negative values indicate units behind schedule. Expected Progress is the same timeline-based benchmark used across all tabs.`} />
+      </div>
+      <p className="text-xs text-muted-foreground mb-4">Largest negative gap first — units most behind schedule.</p>
+
+      <div className="space-y-1.5">
+        <AnimatePresence initial={false}>
+          {visible.map((unit, idx) => {
+            const gapColor = unit.gap >= 0 ? '#16A34A' : unit.gap > -15 ? '#D97706' : '#DC2626';
+            const barWidth = Math.min(100, Math.abs(unit.gap));
+            return (
+              <motion.div key={unit.unitId} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ delay: 0.05 + idx * 0.02 }} className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0 cursor-help">{getUnitDisplayLabel(unit.unitId)}</span>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs space-y-1">
+                    <p className="font-semibold">{getUnitDisplayName(unit.unitId)}</p>
+                    <p>Actual Progress: {unit.actualProgress}%</p>
+                    <p>Expected Progress: {expectedProgress}%</p>
+                    <p>Gap: {unit.gap >= 0 ? '+' : ''}{unit.gap}%</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0 flex justify-end">
+                  <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${barWidth}%` }} transition={{ delay: 0.1, duration: 0.5 }} style={{ backgroundColor: gapColor }} />
+                </div>
+                <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: gapColor }}>
+                  {unit.gap >= 0 ? '+' : ''}{unit.gap}%
+                </span>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+      {hasMore && (
+        <button onClick={() => setShowAll(!showAll)} className="mt-3 pt-3 border-t border-border w-full flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+          {showAll ? <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></> : <>Show All {units.length} Units <ChevronDown className="w-3.5 h-3.5" /></>}
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
+/* ─── Risk Signal Legend ──────────────────────────────────────────── */
+
 function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
   const totals = pillarAgg.reduce((acc, p) => ({
-    noRisk: acc.noRisk + p.riskCounts.noRisk,
-    emerging: acc.emerging + p.riskCounts.emerging,
-    critical: acc.critical + p.riskCounts.critical,
-    realized: acc.realized + p.riskCounts.realized,
+    noRisk: acc.noRisk + p.riskCounts.noRisk, emerging: acc.emerging + p.riskCounts.emerging,
+    critical: acc.critical + p.riskCounts.critical, realized: acc.realized + p.riskCounts.realized,
   }), { noRisk: 0, emerging: 0, critical: 0, realized: 0 });
   const grand = totals.noRisk + totals.emerging + totals.critical + totals.realized;
   const pct = (v: number) => grand > 0 ? ((v / grand) * 100).toFixed(1) : '0.0';
+
+  // Dominant risk signal
+  const dominant = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
+  const severeConcentration = (totals.critical + totals.realized) / (grand || 1);
 
   const items = [
     { key: 'noRisk' as const, label: 'No Risk', color: RISK_SIGNAL_COLORS['No Risk (On Track)'], tip: RISK_SIGNAL_TOOLTIPS.noRisk },
@@ -185,24 +274,33 @@ function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border">
-      {items.map(item => (
-        <Tooltip key={item.key}>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-1.5 cursor-help">
-              <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-              <span className="text-xs text-muted-foreground">{item.label}</span>
-              <span className="text-xs font-bold text-foreground">{totals[item.key]}</span>
-              <span className="text-xs text-muted-foreground">({pct(totals[item.key])}%)</span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
-        </Tooltip>
-      ))}
-      <span className="text-xs text-muted-foreground ml-auto">Total: {grand} items</span>
+    <div className="space-y-2 mt-3 pt-3 border-t border-border">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        {items.map(item => (
+          <Tooltip key={item.key}>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 cursor-help">
+                <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
+                <span className="text-xs text-muted-foreground">{item.label}</span>
+                <span className="text-xs font-bold text-foreground">{totals[item.key]}</span>
+                <span className="text-xs text-muted-foreground">({pct(totals[item.key])}%)</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs text-xs"><p>{item.tip}</p></TooltipContent>
+          </Tooltip>
+        ))}
+        <span className="text-xs text-muted-foreground ml-auto">Total: {grand}</span>
+      </div>
+      {severeConcentration > 0.3 && (
+        <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3" /> High severe risk concentration ({((severeConcentration) * 100).toFixed(0)}% critical+realized)
+        </p>
+      )}
     </div>
   );
 }
+
+/* ─── Completion Donut — Enhanced with narrative ──────────────────── */
 
 function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }) {
   const STATUS_COLORS: Record<string, string> = { 'On Target': '#16A34A', 'Below Target': '#7F1D1D', 'In Progress': '#F59E0B', 'Not Started': '#EF4444' };
@@ -213,39 +311,57 @@ function CompletionDonut({ aggregation }: { aggregation: UniversityAggregation }
     { name: 'Not Started', value: aggregation.notStartedCount, color: STATUS_COLORS['Not Started'] },
   ].filter(d => d.value > 0);
 
+  const total = aggregation.applicableItems || 1;
+  const completedPct = (((aggregation.cotCount + aggregation.cbtCount) / total) * 100).toFixed(0);
+  const inProgressPct = ((aggregation.inProgressCount / total) * 100).toFixed(0);
+  const notStartedPct = ((aggregation.notStartedCount / total) * 100).toFixed(0);
+
+  // Narrative
+  let narrative = '';
+  if (parseInt(inProgressPct) > 50) narrative = 'Strong execution momentum — majority of items actively in progress.';
+  else if (parseInt(notStartedPct) > 30) narrative = `Backlog alert: ${notStartedPct}% of items have not started.`;
+  else if (parseInt(completedPct) > 60) narrative = 'Mature execution stage — over 60% of items completed.';
+  else narrative = 'Balanced distribution across execution stages.';
+
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mt-4">
-      <div className="w-32 h-32 shrink-0">
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" nameKey="name" startAngle={90} endAngle={-270} strokeWidth={0}>
-              {data.map((d, i) => <Cell key={i} fill={d.color} />)}
-            </Pie>
-            <ReTooltip content={({ payload }) => {
-              if (!payload?.[0]) return null;
-              const d = payload[0].payload;
-              return (
-                <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs space-y-0.5">
-                  <p className="font-semibold text-foreground">{d.name}</p>
-                  <p className="text-muted-foreground">{d.value} items</p>
-                </div>
-              );
-            }} />
-          </PieChart>
-        </ResponsiveContainer>
+    <div className="space-y-3 mt-4">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+        <div className="w-32 h-32 shrink-0">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" nameKey="name" startAngle={90} endAngle={-270} strokeWidth={0}>
+                {data.map((d, i) => <Cell key={i} fill={d.color} />)}
+              </Pie>
+              <ReTooltip content={({ payload }) => {
+                if (!payload?.[0]) return null;
+                const d = payload[0].payload;
+                return (
+                  <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs space-y-0.5">
+                    <p className="font-semibold text-foreground">{d.name}</p>
+                    <p className="text-muted-foreground">{d.value} items ({((d.value / total) * 100).toFixed(1)}%)</p>
+                  </div>
+                );
+              }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex-1 space-y-2 min-w-0">
+          {data.map(d => (
+            <div key={d.name} className="flex items-center gap-2.5">
+              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+              <span className="text-xs text-foreground flex-1">{d.name}</span>
+              <span className="text-xs font-bold text-foreground">{d.value}</span>
+              <span className="text-xs text-muted-foreground">({((d.value / total) * 100).toFixed(1)}%)</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="flex-1 space-y-2 min-w-0">
-        {data.map(d => (
-          <div key={d.name} className="flex items-center gap-2.5">
-            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-xs text-foreground flex-1">{d.name}</span>
-            <span className="text-xs font-bold text-foreground">{d.value}</span>
-          </div>
-        ))}
-      </div>
+      <p className="text-[10px] text-muted-foreground italic px-1">{narrative}</p>
     </div>
   );
 }
+
+/* ─── Ranking Bars ────────────────────────────────────────────────── */
 
 function RankingBars({ title, subtitle, units, metricKey }: { title: string; subtitle: string; units: UnitAggregation[]; metricKey: 'riskIndex' | 'completionPct' }) {
   const INITIAL_COUNT = 10;
@@ -266,24 +382,11 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
             const maxVal = isRisk ? 3 : 100;
             const pct = isRisk ? getRiskDisplayInfo(value).percent : Math.min(100, (value / maxVal) * 100);
             return (
-              <motion.div
-                key={unit.unitId}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
-                transition={{ delay: 0.05 + idx * 0.02 }}
-                className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors"
-              >
+              <motion.div key={unit.unitId} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ delay: 0.05 + idx * 0.02 }} className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors">
                 <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
                 <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(unit.unitId)}</span>
                 <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
-                  <motion.div
-                    className="h-full rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ delay: 0.1 + idx * 0.02, duration: 0.5, ease: 'easeOut' }}
-                    style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }}
-                  />
+                  <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.1 + idx * 0.02, duration: 0.5 }} style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} />
                 </div>
                 <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
                   {isRisk ? `RI ${getRiskDisplayInfo(value).percent}%` : `${value}%`}
@@ -294,20 +397,15 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
         </AnimatePresence>
       </div>
       {hasMore && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="mt-3 pt-3 border-t border-border w-full flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-        >
-          {showAll ? (
-            <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></>
-          ) : (
-            <>Show All {units.length} Units <ChevronDown className="w-3.5 h-3.5" /></>
-          )}
+        <button onClick={() => setShowAll(!showAll)} className="mt-3 pt-3 border-t border-border w-full flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+          {showAll ? <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></> : <>Show All {units.length} Units <ChevronDown className="w-3.5 h-3.5" /></>}
         </button>
       )}
     </motion.div>
   );
 }
+
+/* ─── HeatMap ─────────────────────────────────────────────────────── */
 
 function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; unitName: string }[]; heatCells: UnitPillarCell[] }) {
   const pillars: PillarId[] = ['I','II','III','IV','V'];
@@ -317,7 +415,7 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-5">
         <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Unit × Pillar Risk Heatmap</span>
-        <InfoTip text="Interactive heatmap showing Risk Index per unit and pillar intersection. Hover for details." />
+        <InfoTip text="Interactive heatmap showing Risk Index per unit and pillar intersection." />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
@@ -326,10 +424,7 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
               <th className="text-left py-2.5 px-2 font-medium text-muted-foreground border-b border-border sticky left-0 bg-card z-10 min-w-[140px]">Unit</th>
               {pillars.map(p => (
                 <th key={p} className="text-center py-2.5 px-2 font-medium text-muted-foreground border-b border-border w-20">
-                  <Tooltip>
-                    <TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger>
-                    <TooltipContent><p className="text-xs">{PILLAR_FULL[p]}</p></TooltipContent>
-                  </Tooltip>
+                  <Tooltip><TooltipTrigger asChild><span className="cursor-help">{PILLAR_LABELS[p]}</span></TooltipTrigger><TooltipContent><p className="text-xs">{PILLAR_FULL[p]}</p></TooltipContent></Tooltip>
                 </th>
               ))}
             </tr>
@@ -378,6 +473,8 @@ function HeatMap({ loadedUnits, heatCells }: { loadedUnits: { unitId: string; un
   );
 }
 
+/* ─── Exceptions Table ────────────────────────────────────────────── */
+
 function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
   const INITIAL_COUNT = 10;
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
@@ -401,38 +498,28 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
         <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Critical Strategic Items</span>
         <span className="text-xs text-muted-foreground ml-auto">{flags.length} item{flags.length !== 1 ? 's' : ''}</span>
       </div>
-      <p className="text-xs text-muted-foreground mb-4">Items requiring immediate attention due to Critical or Realized risk signals. Click to expand details.</p>
+      <p className="text-xs text-muted-foreground mb-4">Items requiring immediate attention due to Critical or Realized risk signals.</p>
       <div className="space-y-1">
         {visible.map((flag, idx) => {
           const isExpanded = expandedIdx === idx;
           const isRealized = flag.riskSignal.includes('Realized');
           const severity = isRealized ? 'Realized' : 'Critical';
           const badgeBackground = isRealized ? '#7F1D1D' : 'hsl(var(--destructive))';
-          const badgeBorder = isRealized ? '#7F1D1D' : 'hsl(var(--destructive))';
           return (
             <div key={`${flag.unitId}-${flag.sheetRow}-${idx}`}>
-               <button
-                onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-                className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left flex-wrap sm:flex-nowrap"
-              >
+              <button onClick={() => setExpandedIdx(isExpanded ? null : idx)} className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors text-left flex-wrap sm:flex-nowrap">
                 {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color: 'hsl(var(--destructive-foreground))', backgroundColor: badgeBackground, border: `1px solid ${badgeBorder}` }}>{severity}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ color: 'hsl(var(--destructive-foreground))', backgroundColor: badgeBackground }}>{severity}</span>
                 <span className="text-xs font-medium text-foreground truncate flex-1 min-w-0">{getUnitDisplayName(flag.unitId)} — {PILLAR_SHORT[flag.pillar]}</span>
-              
                 <span className="text-xs font-bold shrink-0 ml-1" style={{ color: getRiskDisplayInfo(flag.riskWeight).color }}>RI {getRiskDisplayInfo(flag.riskWeight).percent}%</span>
               </button>
               <AnimatePresence>
                 {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                     <div className="ml-8 mr-3 mb-2 p-3.5 rounded-xl bg-muted/20 border border-border/50 space-y-1.5">
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Strategic Action:</span> {flag.actionStep}</p>
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Unit:</span> {getUnitDisplayLabel(flag.unitId)}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Execution Status:</span> {flag.status}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Status:</span> {flag.status}</p>
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Pillar:</span> {PILLAR_FULL[flag.pillar]}</p>
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Risk Signal:</span> {flag.riskSignal}</p>
                       <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Completion:</span> {flag.completion}%</p>
@@ -445,15 +532,8 @@ function ExceptionsTable({ flags }: { flags: ExceptionFlag[] }) {
         })}
       </div>
       {hasMore && (
-        <button
-          onClick={() => { setShowAll(!showAll); setExpandedIdx(null); }}
-          className="mt-3 pt-3 border-t border-border w-full flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-        >
-          {showAll ? (
-            <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></>
-          ) : (
-            <>Show All {flags.length} Items <ChevronDown className="w-3.5 h-3.5" /></>
-          )}
+        <button onClick={() => { setShowAll(!showAll); setExpandedIdx(null); }} className="mt-3 pt-3 border-t border-border w-full flex items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+          {showAll ? <>Show Less <ChevronDown className="w-3.5 h-3.5 rotate-180" /></> : <>Show All {flags.length} Items <ChevronDown className="w-3.5 h-3.5" /></>}
         </button>
       )}
     </motion.div>
