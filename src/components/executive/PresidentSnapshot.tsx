@@ -1,7 +1,7 @@
 /**
  * Tab 1 — Executive Snapshot
  * SEEI + SSI + Progress + Budget Util + RI + Completion KPIs
- * Master Alignment Scatter with dynamic quadrants + Focus Mode
+ * Grouped Bar Chart with Focus Mode (Combined/Execution/Budget)
  * Pillar Execution Diagnostics (All/Single Pillar)
  */
 
@@ -12,9 +12,9 @@ import {
   ShieldAlert, Lightbulb, Info, Gauge, Activity, Eye, BarChart3, Target,
 } from 'lucide-react';
 import {
-  ScatterChart, Scatter, BarChart, Bar,
+  BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
-  ResponsiveContainer, Cell, ReferenceLine, ReferenceArea,
+  ResponsiveContainer, Cell, ReferenceLine,
   LabelList, PieChart, Pie,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -69,17 +69,21 @@ function getExecStatusColor(status: string): string {
 
 function getMicroInsight(p: any, budgetHealth: string): string {
   const riPct = p.riPct;
-  const onTargetShare = p.onTargetShare;
-  const belowTargetShare = p.belowTargetShare;
   const naPct = p.totalItems > 0 ? (p.naCount / p.totalItems * 100) : 0;
 
   if (naPct > 40) return 'High Not Applicable share suggests limited operational relevance at this stage.';
-  if (p.completionPct >= 70 && belowTargetShare < 10 && riPct < 25) return 'Strong completion quality with low risk exposure and healthy financial capacity.';
+  if (p.completionPct >= 70 && p.belowTargetShare < 10 && riPct < 25) return 'Strong completion quality with low risk exposure and healthy financial capacity.';
   if (p.inProgressCount > p.applicableItems * 0.5) return 'Execution remains active, but closure quality is moderate and funding flexibility is tightening.';
   if (riPct >= 50 && p.completionPct < 40) return 'Elevated RI with low completion points to unresolved execution issues.';
   if (budgetHealth === 'Critical') return 'Critical financial capacity suggests limited flexibility despite continuing execution.';
   if (p.completionPct >= 50 && riPct < 30) return 'Solid execution momentum with manageable risk. Monitor below-target items.';
   return 'High applicability with uneven completion and rising risk requires closer monitoring.';
+}
+
+function getProgressStatus(actual: number, expected: number, tolerance: number = 5): { label: string; color: string } {
+  if (actual > expected + tolerance) return { label: 'Ahead of Plan', color: '#065F46' };
+  if (actual >= expected - tolerance) return { label: 'On Track', color: '#16A34A' };
+  return { label: 'Behind Plan', color: '#DC2626' };
 }
 
 export default function PresidentSnapshot({ aggregation }: Props) {
@@ -226,10 +230,12 @@ export default function PresidentSnapshot({ aggregation }: Props) {
   // Completion breakdown
   const cotTotal = aggregation.cotCount;
   const cbtTotal = aggregation.cbtCount;
-  const completedTotal = cotTotal + cbtTotal;
   const completionPctOverall = aggregation.completionPct;
   const otPct = aggregation.applicableItems > 0 ? parseFloat((cotTotal / aggregation.applicableItems * 100).toFixed(1)) : 0;
   const btPct = aggregation.applicableItems > 0 ? parseFloat((cbtTotal / aggregation.applicableItems * 100).toFixed(1)) : 0;
+
+  // Progress status relative to expected
+  const progressStatus = getProgressStatus(overallActualProgress, expectedProgress);
 
   // Executive highlights
   const highlights = useMemo(() => {
@@ -266,7 +272,19 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
           <KPICard label="SEEI" value={`${seei.percent}%`} icon={Gauge} color={seei.color} subtitle={seei.label} tooltip="Measures execution output relative to financial deployment. Higher values indicate stronger efficiency in converting spending into progress." />
           <KPICard label="SSI" value={`${ssi.value}%`} icon={Activity} color={ssi.color} subtitle={ssi.label} tooltip="Integrated signal combining progress, budget alignment, and risk exposure to reflect overall strategic stability." />
-          <KPICard label="Progress" value={`${overallActualProgress}%`} icon={TrendingUp} color="#059669" tooltip="Average completion of all in-progress strategic items across all units." />
+          {/* Progress KPI with Expected Progress comparison */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
+            <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${progressStatus.color}, ${progressStatus.color}88)` }} />
+            <div className="relative p-4 sm:p-5">
+              <div className="flex items-center gap-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Progress</p>
+                <InfoTip text="Average completion of all in-progress strategic items. Compared against Expected Progress derived from the reporting window." />
+              </div>
+              <p className="text-xl font-display font-extrabold mt-1" style={{ color: progressStatus.color }}>{overallActualProgress}%</p>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold mt-1 inline-block" style={{ backgroundColor: `${progressStatus.color}15`, color: progressStatus.color }}>{progressStatus.label}</span>
+              <p className="text-[10px] text-muted-foreground mt-1">Expected {expectedProgress}%</p>
+            </div>
+          </motion.div>
           <KPICard label="Budget Utilization" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetHealth.color} subtitle={budgetHealth.label} tooltip="Overall financial capacity. Healthy = ≥30% available. Watch = ≥15%. Critical = <15%. Reflects commitment level against total allocation." />
           <KPICard label="Risk Index" value={`${riInfo.percent}%`} icon={ShieldAlert} color={riInfo.color} subtitle={riInfo.band} tooltip="Risk Index reflects exposure to delivery risk based on emerging, critical, and realized signals." />
           {/* Completion with breakdown */}
@@ -321,14 +339,14 @@ export default function PresidentSnapshot({ aggregation }: Props) {
         </div>
       </section>
 
-      {/* Master Alignment Panel with Focus Mode */}
+      {/* Progress vs Budget Grouped Bar Chart with Focus Mode */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-muted-foreground" />
               <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Execution & Budget Alignment by Pillar</span>
-              <InfoTip text="Master strategic visual showing how budget deployment translates into execution progress. Dynamic viewport adapts to actual data." />
+              <InfoTip text="Grouped bar chart comparing Progress vs Budget Utilization per pillar. Use Focus Mode to inspect independently." />
             </div>
             <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
               {([
@@ -345,7 +363,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           {focusMode !== 'combined' && (
             <p className="text-[10px] text-muted-foreground italic mb-3">In Focus Mode, metrics are shown independently to support detailed inspection.</p>
           )}
-          {focusMode === 'combined' && <DynamicQuadrantScatter pillarData={pillarData} avgBudgetUtil={avgBudgetUtil} expectedProgress={expectedProgress} />}
+          {focusMode === 'combined' && <CombinedBarChart pillarData={pillarData} avgBudgetUtil={avgBudgetUtil} expectedProgress={expectedProgress} />}
           {focusMode === 'execution' && <ExecutionFocusChart pillarData={pillarData} expectedProgress={expectedProgress} />}
           {focusMode === 'budget' && <BudgetFocusChart pillarData={pillarData} avgBudgetUtil={avgBudgetUtil} />}
         </motion.div>
@@ -365,9 +383,9 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           <p className="text-[10px] text-muted-foreground mb-5">Executive view of execution quality, applicability, completion behavior, risk exposure, and financial capacity by pillar.</p>
 
           {pillarView === 'all' ? (
-            <AllPillarsDiagnostics pillarData={pillarData} />
+            <AllPillarsDiagnostics pillarData={pillarData} expectedProgress={expectedProgress} />
           ) : (
-            selectedPillarData && <SinglePillarDiagnostics data={selectedPillarData} pillarAgg={pillarAgg} />
+            selectedPillarData && <SinglePillarDiagnostics data={selectedPillarData} pillarAgg={pillarAgg} expectedProgress={expectedProgress} />
           )}
         </motion.div>
       </section>
@@ -410,79 +428,75 @@ function PillarReferencePanel() {
   );
 }
 
-/* ─── Dynamic Quadrant Scatter ───────────────────────────────────── */
+/* ─── Combined Bar Chart (replaces quadrant scatter) ─────────────── */
 
-function DynamicQuadrantScatter({ pillarData, avgBudgetUtil, expectedProgress }: { pillarData: any[]; avgBudgetUtil: number; expectedProgress: number }) {
-  // Compute dynamic domain
-  const allX = [...pillarData.map(p => p.budgetUtil), avgBudgetUtil];
-  const allY = [...pillarData.map(p => p.actualProgress), expectedProgress];
-  const minX = Math.min(...allX);
-  const maxX = Math.max(...allX);
-  const minY = Math.min(...allY);
-  const maxY = Math.max(...allY);
-  const spanX = Math.max(20, maxX - minX);
-  const spanY = Math.max(20, maxY - minY);
-  const padX = spanX * 0.25;
-  const padY = spanY * 0.25;
-  const domainX: [number, number] = [Math.max(0, Math.floor(minX - padX)), Math.min(100, Math.ceil(maxX + padX))];
-  const domainY: [number, number] = [Math.max(0, Math.floor(minY - padY)), Math.min(100, Math.ceil(maxY + padY))];
+function CombinedBarChart({ pillarData, avgBudgetUtil, expectedProgress }: { pillarData: any[]; avgBudgetUtil: number; expectedProgress: number }) {
+  const chartData = pillarData.map(p => ({
+    label: PILLAR_ABBREV[p.pillar as PillarId],
+    pillar: p.pillar,
+    progress: p.hasItems ? p.actualProgress : 0,
+    budgetUtil: p.budgetUtil,
+    hasItems: p.hasItems,
+    fullLabel: PILLAR_FULL[p.pillar as PillarId],
+    gap: p.gap,
+  }));
 
-  // Ensure benchmark lines are inside domain
-  if (avgBudgetUtil < domainX[0]) domainX[0] = Math.max(0, avgBudgetUtil - 5);
-  if (avgBudgetUtil > domainX[1]) domainX[1] = Math.min(100, avgBudgetUtil + 5);
-  if (expectedProgress < domainY[0]) domainY[0] = Math.max(0, expectedProgress - 5);
-  if (expectedProgress > domainY[1]) domainY[1] = Math.min(100, expectedProgress + 5);
-
-  const scatterData = pillarData.map(p => ({ x: p.budgetUtil, y: p.actualProgress, pillar: p.pillar, ...p }));
+  const MUTED_OPACITY = 0.35;
 
   return (
     <>
       <div className="h-80 sm:h-96">
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 30, bottom: 30, left: 15 }}>
-            {/* Quadrant backgrounds — neutral grey */}
-            <ReferenceArea x1={domainX[0]} x2={avgBudgetUtil} y1={expectedProgress} y2={domainY[1]} fill="#E5E7EB" fillOpacity={0.3} stroke="#065F4650" strokeWidth={2} />
-            <ReferenceArea x1={avgBudgetUtil} x2={domainX[1]} y1={expectedProgress} y2={domainY[1]} fill="#F3F4F6" fillOpacity={0.3} stroke="#1E40AF50" strokeWidth={2} />
-            <ReferenceArea x1={domainX[0]} x2={avgBudgetUtil} y1={domainY[0]} y2={expectedProgress} fill="#F9FAFB" fillOpacity={0.3} stroke="#D9770650" strokeWidth={2} />
-            <ReferenceArea x1={avgBudgetUtil} x2={domainX[1]} y1={domainY[0]} y2={expectedProgress} fill="#FEF2F2" fillOpacity={0.15} stroke="#DC262650" strokeWidth={2} />
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis type="number" dataKey="x" domain={domainX} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', position: 'insideBottom', offset: -20, style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-            <YAxis type="number" dataKey="y" domain={domainY} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Actual Progress %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-            <ReferenceLine x={avgBudgetUtil} stroke="#6B7280" strokeWidth={2} strokeDasharray="8 4" label={{ value: `Avg Budget ${avgBudgetUtil}%`, position: 'insideTopRight', style: { fontSize: 10, fontWeight: 700, fill: '#6B7280' } }} />
-            <ReferenceLine y={expectedProgress} stroke="#DC2626" strokeWidth={2} strokeDasharray="8 4" label={{ value: `Expected Progress ${expectedProgress}%`, position: 'insideTopLeft', style: { fontSize: 10, fontWeight: 700, fill: '#DC2626' } }} />
+          <BarChart data={chartData} margin={{ top: 25, right: 20, bottom: 25, left: 10 }} barGap={2} barCategoryGap="25%">
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: '%', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+            <ReferenceLine y={expectedProgress} stroke="#DC2626" strokeWidth={2.5} strokeDasharray="10 5" label={{ value: `Expected Progress (${expectedProgress}%)`, position: 'insideTopRight', style: { fontSize: 11, fill: '#DC2626', fontWeight: 700 } }} />
+            <ReferenceLine y={avgBudgetUtil} stroke="#6B7280" strokeWidth={2} strokeDasharray="8 4" label={{ value: `Avg Budget (${avgBudgetUtil}%)`, position: 'insideTopLeft', style: { fontSize: 10, fill: '#6B7280', fontWeight: 700 } }} />
             <ReTooltip content={({ payload }) => {
               if (!payload?.[0]) return null;
               const d = payload[0].payload;
               return (
                 <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
-                  <p className="font-semibold text-foreground">{PILLAR_FULL[d.pillar]}</p>
-                  <p className="text-muted-foreground">Actual Progress: <span className="text-foreground font-medium">{d.actualProgress}%</span></p>
+                  <p className="font-semibold text-foreground">{d.fullLabel}</p>
+                  <p className="text-muted-foreground">Progress: <span className="text-foreground font-medium">{d.progress}%</span></p>
                   <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.budgetUtil}%</span></p>
-                  <p className="text-muted-foreground">Progress-Budget Gap: <span className="font-medium" style={{ color: d.gap >= 0 ? '#16A34A' : '#DC2626' }}>{d.gap >= 0 ? '+' : ''}{d.gap}%</span></p>
-                  <p className="text-muted-foreground">RI: <span className="font-medium" style={{ color: getRiskDisplayInfo(d.riskIndex).color }}>{d.riPct}%</span></p>
+                  <p className="text-muted-foreground">Gap: <span className="font-medium" style={{ color: d.gap >= 0 ? '#16A34A' : '#DC2626' }}>{d.gap >= 0 ? '+' : ''}{d.gap}%</span></p>
                 </div>
               );
             }} />
-            <Scatter data={scatterData}>
-              {scatterData.map((d, i) => (<Cell key={i} fill={PILLAR_COLORS[d.pillar as PillarId]} stroke="#FFFFFF" strokeWidth={2} r={14} />))}
-            </Scatter>
-          </ScatterChart>
+            <Bar dataKey="progress" name="Progress" radius={[4, 4, 0, 0]} maxBarSize={36}>
+              <LabelList dataKey="progress" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 10, fontWeight: 700, fill: 'hsl(var(--foreground))' }} />
+              {chartData.map((d, i) => (<Cell key={i} fill={d.hasItems ? PILLAR_COLORS[d.pillar as PillarId] : '#6B7280'} fillOpacity={d.hasItems ? 0.9 : 0.3} />))}
+            </Bar>
+            <Bar dataKey="budgetUtil" name="Budget Utilization" radius={[4, 4, 0, 0]} maxBarSize={36}>
+              <LabelList dataKey="budgetUtil" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 10, fontWeight: 600, fill: 'hsl(var(--muted-foreground))' }} />
+              {chartData.map((d, i) => (<Cell key={i} fill={PILLAR_COLORS[d.pillar as PillarId]} fillOpacity={MUTED_OPACITY} />))}
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-        {[
-          { label: 'Efficient Execution', desc: 'Low budget / High progress', color: '#065F46' },
-          { label: 'Under-resourced / Delayed', desc: 'Low budget / Low progress', color: '#D97706' },
-          { label: 'Productive but Costly', desc: 'High budget / High progress', color: '#1E40AF' },
-          { label: 'Critical Inefficiency', desc: 'High budget / Low progress', color: '#DC2626' },
-        ].map(q => (
-          <div key={q.label} className="text-center p-2.5 rounded-lg border-2" style={{ borderColor: `${q.color}50`, backgroundColor: '#F5F6F7' }}>
-            <p className="text-[11px] font-bold" style={{ color: q.color }}>{q.label}</p>
-            <p className="text-[10px] text-muted-foreground">{q.desc}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Legend:</span>
+        {(['I','II','III','IV','V'] as PillarId[]).map(p => (
+          <div key={p} className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: PILLAR_COLORS[p] }} />
+            <span className="text-xs text-muted-foreground">{PILLAR_ABBREV[p]} Progress</span>
           </div>
         ))}
+        <div className="flex items-center gap-1.5 ml-2">
+          <span className="w-3 h-3 rounded-sm shrink-0 bg-muted-foreground/30" />
+          <span className="text-xs text-muted-foreground">Budget Utilization (muted)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-5 border-t-2 border-dashed" style={{ borderColor: '#DC2626' }} />
+          <span className="text-xs text-muted-foreground">Expected Progress</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-5 border-t-2 border-dashed" style={{ borderColor: '#6B7280' }} />
+          <span className="text-xs text-muted-foreground">Avg Budget</span>
+        </div>
       </div>
-      <PillarLegendStrip />
     </>
   );
 }
@@ -572,9 +586,9 @@ function BudgetFocusChart({ pillarData, avgBudgetUtil }: { pillarData: any[]; av
   );
 }
 
-/* ─── All Pillars Diagnostics ──────────────────────────────────────── */
+/* ─── All Pillars Diagnostics (graphical) ─────────────────────────── */
 
-function AllPillarsDiagnostics({ pillarData }: { pillarData: any[] }) {
+function AllPillarsDiagnostics({ pillarData, expectedProgress }: { pillarData: any[]; expectedProgress: number }) {
   return (
     <div className="space-y-4">
       {pillarData.map((p, idx) => {
@@ -584,6 +598,7 @@ function AllPillarsDiagnostics({ pillarData }: { pillarData: any[] }) {
         const execColor = getExecStatusColor(execStatus);
         const insight = getMicroInsight(p, bHealth.label);
         const total = p.applicableItems || 1;
+        const pStatus = getProgressStatus(p.actualProgress, expectedProgress);
 
         return (
           <motion.div key={p.pillar} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + idx * 0.05 }} className="rounded-xl border border-border/40 p-4">
@@ -592,7 +607,10 @@ function AllPillarsDiagnostics({ pillarData }: { pillarData: any[] }) {
                 <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar] }} />
                 <Tooltip><TooltipTrigger asChild><span className="text-xs font-semibold text-foreground cursor-help">{PILLAR_SHORT[p.pillar]}</span></TooltipTrigger><TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar]}</p></TooltipContent></Tooltip>
               </div>
-              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: `${execColor}15`, color: execColor, border: `1px solid ${execColor}30` }}>{execStatus}</span>
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
+                <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: `${execColor}15`, color: execColor, border: `1px solid ${execColor}30` }}>{execStatus}</span>
+              </div>
             </div>
 
             {/* Applicability */}
@@ -616,13 +634,41 @@ function AllPillarsDiagnostics({ pillarData }: { pillarData: any[] }) {
               <StatusLegend label="Not Started" value={p.notStartedCount} color="#EF4444" />
             </div>
 
-            {/* Metrics row */}
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 text-center mb-3">
-              <MiniStat label="Completion" value={`${p.completionPct}%`} color={PILLAR_COLORS[p.pillar]} />
-              <MiniStat label="On Target" value={`${p.onTargetShare}%`} color="#16A34A" />
-              <MiniStat label="Below Target" value={`${p.belowTargetShare}%`} color="#7F1D1D" />
-              <MiniStat label="RI" value={`${riInfo.percent}%`} color={riInfo.color} subtitle={riInfo.band} />
-              <MiniStat label="Budget Health" value={bHealth.label} color={bHealth.color} />
+            {/* Visual metrics row with progress bars */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+              <div className="rounded-lg border border-border/40 p-2.5">
+                <p className="text-[10px] text-muted-foreground mb-1">Progress vs Expected</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold" style={{ color: PILLAR_COLORS[p.pillar] }}>{p.actualProgress}%</span>
+                  <span className="text-[10px] text-muted-foreground">/ {expectedProgress}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5 relative">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.actualProgress)}%`, backgroundColor: PILLAR_COLORS[p.pillar] }} />
+                  <div className="absolute top-0 h-full w-0.5 bg-[#DC2626]" style={{ left: `${Math.min(100, expectedProgress)}%` }} />
+                </div>
+              </div>
+              <div className="rounded-lg border border-border/40 p-2.5">
+                <p className="text-[10px] text-muted-foreground mb-1">Completion Rate</p>
+                <span className="text-sm font-bold" style={{ color: PILLAR_COLORS[p.pillar] }}>{p.completionPct}%</span>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.completionPct)}%`, backgroundColor: PILLAR_COLORS[p.pillar] }} />
+                </div>
+              </div>
+              <div className="rounded-lg border border-border/40 p-2.5">
+                <p className="text-[10px] text-muted-foreground mb-1">Risk Index</p>
+                <span className="text-sm font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, riInfo.percent)}%`, backgroundColor: riInfo.color }} />
+                </div>
+                <p className="text-[9px] text-muted-foreground mt-0.5">{riInfo.band}</p>
+              </div>
+              <div className="rounded-lg border border-border/40 p-2.5">
+                <p className="text-[10px] text-muted-foreground mb-1">Budget Health</p>
+                <span className="text-sm font-bold" style={{ color: bHealth.color }}>{bHealth.label}</span>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5">
+                  <div className="h-full rounded-full" style={{ width: `${bHealth.label === 'Healthy' ? 100 : bHealth.label === 'Watch' ? 50 : 20}%`, backgroundColor: bHealth.color }} />
+                </div>
+              </div>
             </div>
 
             {/* Micro insight */}
@@ -636,13 +682,14 @@ function AllPillarsDiagnostics({ pillarData }: { pillarData: any[] }) {
 
 /* ─── Single Pillar Diagnostics ──────────────────────────────────── */
 
-function SinglePillarDiagnostics({ data: p, pillarAgg }: { data: any; pillarAgg: any[] }) {
+function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { data: any; pillarAgg: any[]; expectedProgress: number }) {
   const riInfo = getRiskDisplayInfo(p.riskIndex);
   const bHealth = p.budgetHealth;
   const execStatus = getExecutiveStatusLabel(p.completionPct, p.riPct, bHealth.label);
   const execColor = getExecStatusColor(execStatus);
   const total = p.applicableItems || 1;
   const avgIPCompletion = p.inProgressCount > 0 ? Math.round(p.actualProgress) : null;
+  const pStatus = getProgressStatus(p.actualProgress, expectedProgress);
 
   return (
     <div className="space-y-6">
@@ -674,15 +721,44 @@ function SinglePillarDiagnostics({ data: p, pillarAgg }: { data: any; pillarAgg:
         </div>
       </div>
 
-      {/* Row 2 — Key Metrics */}
-      <div className="grid grid-cols-3 sm:grid-cols-7 gap-3">
-        <MiniCard label="Completion Rate" value={`${p.completionPct}%`} color={PILLAR_COLORS[p.pillar]} />
-        <MiniCard label="On Target" value={`${p.cotCount}`} color="#16A34A" />
-        <MiniCard label="Below Target" value={`${p.cbtCount}`} color="#7F1D1D" />
-        <MiniCard label="Risk Index" value={`${riInfo.percent}%`} color={riInfo.color} />
-        <MiniCard label="Applicable" value={`${p.applicableItems}`} />
-        <MiniCard label="Not Applicable" value={`${p.naCount}`} color="#6B7280" />
-        <MiniCard label="Budget Health" value={bHealth.label} color={bHealth.color} />
+      {/* Row 2 — Visual Key Metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-lg border border-border/40 p-3">
+          <p className="text-[10px] text-muted-foreground mb-1">Progress vs Expected</p>
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar] }}>{p.actualProgress}%</span>
+            <span className="text-[10px] text-muted-foreground">/ {expectedProgress}%</span>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
+          <div className="h-2 rounded-full bg-muted overflow-hidden mt-2 relative">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.actualProgress)}%`, backgroundColor: PILLAR_COLORS[p.pillar] }} />
+            <div className="absolute top-0 h-full w-0.5 bg-[#DC2626]" style={{ left: `${Math.min(100, expectedProgress)}%` }} />
+          </div>
+        </div>
+        <div className="rounded-lg border border-border/40 p-3">
+          <p className="text-[10px] text-muted-foreground mb-1">Completion Rate</p>
+          <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar] }}>{p.completionPct}%</span>
+          <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.completionPct)}%`, backgroundColor: PILLAR_COLORS[p.pillar] }} />
+          </div>
+          <div className="mt-1 flex items-center gap-2 text-[9px]">
+            <span style={{ color: '#16A34A' }}>OT: {p.cotCount}</span>
+            <span style={{ color: '#7F1D1D' }}>BT: {p.cbtCount}</span>
+          </div>
+        </div>
+        <div className="rounded-lg border border-border/40 p-3">
+          <p className="text-[10px] text-muted-foreground mb-1">Risk Index</p>
+          <span className="text-lg font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span>
+          <p className="text-[9px] font-semibold mt-0.5" style={{ color: riInfo.color }}>{riInfo.band}</p>
+          <div className="h-2 rounded-full bg-muted overflow-hidden mt-1">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, riInfo.percent)}%`, backgroundColor: riInfo.color }} />
+          </div>
+        </div>
+        <div className="rounded-lg border border-border/40 p-3">
+          <p className="text-[10px] text-muted-foreground mb-1">Budget Health</p>
+          <span className="text-lg font-bold" style={{ color: bHealth.color }}>{bHealth.label}</span>
+          {p.allocated > 0 && <p className="text-[10px] text-muted-foreground mt-1">{((p.available / p.allocated) * 100).toFixed(1)}% available</p>}
+        </div>
       </div>
 
       {/* Row 3 — Risk & Narrative */}
