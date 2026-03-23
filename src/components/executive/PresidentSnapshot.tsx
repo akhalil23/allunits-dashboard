@@ -173,9 +173,9 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
       return {
         pillar, actualProgress, budgetUtil, riskIndex, riPct, completionPct,
-        applicableItems, inProgressCount: count, hasItems,
+        applicableItems, hasItems,
         gap: actualProgress - budgetUtil, alignment,
-        totalItems, naCount, cotCount, cbtCount, inProgressCount: inProgressCount, notStartedCount,
+        totalItems, naCount, cotCount, cbtCount, inProgressCount, notStartedCount,
         onTargetShare, belowTargetShare, budgetHealth: bHealth,
         allocated: b.allocation, spent: b.spent, available: b.available,
       };
