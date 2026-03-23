@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2, Lightbulb, Activity } from 'lucide-react';
+import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2, Lightbulb } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie,
@@ -64,10 +64,13 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     const pillarIds: PillarId[] = ['I','II','III','IV','V'];
     return pillarIds.map(p => {
       const b = getLivePillarBudget(budgetResult.pillars, p);
-      // Apply budget scope filtering
-      let allocation = b.allocation, spent = b.spent, unspent = b.unspent, committed = b.committed, available = b.available;
-      // Note: budget scope filtering would need year-specific data from the edge function
-      // For now, total is the default and only fully supported scope
+      const raw = budgetResult.pillars[p];
+      // Apply budget scope: use year-specific allocation from columns Q/R
+      let allocation = b.allocation;
+      if (budgetScope === '2025-2026' && raw) allocation = raw.year4;
+      if (budgetScope === '2026-2027' && raw) allocation = raw.year5;
+      const { spent, unspent, committed } = b;
+      const available = Math.max(0, allocation - committed);
       const utilization = allocation > 0 ? committed / allocation : 0;
       const riskIdx = pillarAgg.find(pa => pa.pillar === p)?.riskIndex ?? 0;
       const budgetPressure = utilization >= 0.80 && riskIdx >= 1.51;
@@ -389,34 +392,6 @@ export default function BudgetIntelligence({ aggregation }: Props) {
         </motion.div>
       </section>
 
-      {/* Financial Contribution to Strategic Stability */}
-      <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4"><Activity className="w-4 h-4 text-muted-foreground" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Financial Contribution to Strategic Stability</span><InfoTip text="How funding patterns support or undermine SSI." /></div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div className="rounded-xl border border-border/40 p-4 text-center">
-              <p className="text-[10px] text-muted-foreground mb-1">Current SSI</p>
-              <p className="text-2xl font-bold" style={{ color: ssi.color }}>{ssi.value}%</p>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${ssi.color}15`, color: ssi.color }}>{ssi.label}</span>
-            </div>
-            <div className="rounded-xl border border-border/40 p-4 text-center">
-              <p className="text-[10px] text-muted-foreground mb-1">Alignment Gap</p>
-              <p className="text-2xl font-bold text-foreground">{Math.abs(overallProgress - budgetUtilPct).toFixed(1)}%</p>
-              <p className="text-[10px] text-muted-foreground">|Progress − Budget Util.|</p>
-            </div>
-            <div className="rounded-xl border border-border/40 p-4 text-center">
-              <p className="text-[10px] text-muted-foreground mb-1">Risk Contribution</p>
-              <p className="text-2xl font-bold" style={{ color: getRiskDisplayInfo(aggregation.riskIndex).color }}>{riPctOverall}%</p>
-              <p className="text-[10px] text-muted-foreground">Risk Index (normalized)</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {budgetUtilPct > overallProgress + 15 && <p className="text-xs text-foreground flex items-start gap-2"><AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" /> Budget deployment significantly outpaces execution, creating alignment pressure that reduces SSI.</p>}
-            {budgetUtilPct < overallProgress - 15 && <p className="text-xs text-foreground flex items-start gap-2"><Lightbulb className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" /> Progress exceeds spending, suggesting efficient execution. Positively contributes to SSI.</p>}
-            {Math.abs(budgetUtilPct - overallProgress) <= 15 && <p className="text-xs text-foreground flex items-start gap-2"><Lightbulb className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" /> Progress and spending well-aligned, supporting stability.</p>}
-          </div>
-        </motion.div>
-      </section>
     </div>
   );
 }
