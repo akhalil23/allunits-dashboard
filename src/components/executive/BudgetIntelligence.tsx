@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2, Lightbulb, Activity } from 'lucide-react';
+import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2, Lightbulb } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie,
