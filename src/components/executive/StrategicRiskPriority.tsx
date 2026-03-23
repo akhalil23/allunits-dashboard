@@ -232,7 +232,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       </section>
 
       {/* Section 5: Coverage Gaps */}
-      <StrategicCoverageGaps filterPillar={pillarView !== 'all' ? pillarView : undefined} />
+      <StrategicCoverageGaps />
 
       {/* Single Pillar Narrative */}
       {pillarView !== 'all' && selectedPillar && (
