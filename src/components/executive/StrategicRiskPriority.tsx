@@ -303,6 +303,15 @@ function ExecutionGapPanel({ units, expectedProgress, pillarLabel }: { units: (U
       <div className="space-y-1.5">
         <AnimatePresence initial={false}>
           {visible.map((unit, idx) => {
+            if (!unit.hasInProgress) {
+              return (
+                <motion.div key={unit.unitId} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + idx * 0.02 }} className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                  <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
+                  <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(unit.unitId)}</span>
+                  <span className="text-xs text-muted-foreground w-36 text-right shrink-0">—</span>
+                </motion.div>
+              );
+            }
             const gapColor = unit.gap >= 0 ? '#16A34A' : unit.gap > -15 ? '#D97706' : '#DC2626';
             const barWidth = Math.min(100, Math.abs(unit.gap));
             return (
