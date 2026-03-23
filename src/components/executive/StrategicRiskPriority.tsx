@@ -69,7 +69,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       }
       const actualProgress = count > 0 ? Math.round(sum / count) : 0;
       return { ...u, actualProgress, gap: actualProgress - expectedProgress, hasInProgress: count > 0 };
-    }).filter(u => u.hasInProgress).sort((a, b) => a.gap - b.gap);
+    }).sort((a, b) => a.gap - b.gap);
   }, [unitResults, aggregation.unitAggregations, viewType, term, academicYear, expectedProgress, pillarView]);
 
   // Pillar-filtered data for single-pillar mode
@@ -99,19 +99,29 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   // Pillar-specific unit risks
   const pillarUnitRisks = useMemo(() => {
     if (pillarView === 'all') return unitsByRisk;
-    return heatCells.filter(c => c.pillar === pillarView && c.applicableItems > 0)
-      .sort((a, b) => b.riskIndex - a.riskIndex)
-      .map(c => ({
-        unitId: c.unitId, unitName: c.unitName,
-        riskIndex: c.riskIndex, completionPct: c.completionPct,
-        applicableItems: c.applicableItems,
-        // Fill in missing fields with defaults
-        totalItems: c.applicableItems, naCount: 0,
-        cotCount: 0, cbtCount: 0, inProgressCount: 0, notStartedCount: 0,
-        onTrackPct: 0, belowTargetPct: 0,
-        riskCounts: { noRisk: 0, emerging: 0, critical: 0, realized: 0, notApplicable: 0 },
-      } as UnitAggregation));
-  }, [pillarView, unitsByRisk, heatCells]);
+    // Include ALL units, even if they have no applicable items for this pillar
+    return aggregation.unitAggregations.map(u => {
+      const cell = heatCells.find(c => c.unitId === u.unitId && c.pillar === pillarView);
+      if (cell && cell.applicableItems > 0) {
+        return {
+          unitId: cell.unitId, unitName: cell.unitName,
+          riskIndex: cell.riskIndex, completionPct: cell.completionPct,
+          applicableItems: cell.applicableItems,
+          totalItems: cell.applicableItems, naCount: 0,
+          cotCount: 0, cbtCount: 0, inProgressCount: 0, notStartedCount: 0,
+          onTrackPct: 0, belowTargetPct: 0,
+          riskCounts: { noRisk: 0, emerging: 0, critical: 0, realized: 0, notApplicable: 0 },
+          _hasData: true,
+        } as UnitAggregation & { _hasData: boolean };
+      }
+      return { ...u, riskIndex: -1, completionPct: -1, _hasData: false } as UnitAggregation & { _hasData: boolean };
+    }).sort((a, b) => {
+      // Units with data first, sorted by RI desc; units without data last
+      if ((a as any)._hasData && !(b as any)._hasData) return -1;
+      if (!(a as any)._hasData && (b as any)._hasData) return 1;
+      return b.riskIndex - a.riskIndex;
+    });
+  }, [pillarView, unitsByRisk, heatCells, aggregation.unitAggregations]);
 
   const pillarLabel = pillarView !== 'all' ? ` — Pillar ${pillarView}` : '';
 
@@ -293,6 +303,15 @@ function ExecutionGapPanel({ units, expectedProgress, pillarLabel }: { units: (U
       <div className="space-y-1.5">
         <AnimatePresence initial={false}>
           {visible.map((unit, idx) => {
+            if (!unit.hasInProgress) {
+              return (
+                <motion.div key={unit.unitId} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + idx * 0.02 }} className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                  <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
+                  <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(unit.unitId)}</span>
+                  <span className="text-xs text-muted-foreground w-36 text-right shrink-0">—</span>
+                </motion.div>
+              );
+            }
             const gapColor = unit.gap >= 0 ? '#16A34A' : unit.gap > -15 ? '#D97706' : '#DC2626';
             const barWidth = Math.min(100, Math.abs(unit.gap));
             return (
@@ -462,19 +481,26 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
           {visible.map((unit, idx) => {
             const value = unit[metricKey];
             const isRisk = metricKey === 'riskIndex';
-            const color = isRisk ? getRiskDisplayInfo(value).color : 'hsl(var(--primary))';
+            const noData = value < 0;
+            const color = noData ? '#9CA3AF' : isRisk ? getRiskDisplayInfo(value).color : 'hsl(var(--primary))';
             const maxVal = isRisk ? 3 : 100;
-            const pct = isRisk ? getRiskDisplayInfo(value).percent : Math.min(100, (value / maxVal) * 100);
+            const pct = noData ? 0 : isRisk ? getRiskDisplayInfo(value).percent : Math.min(100, (value / maxVal) * 100);
             return (
               <motion.div key={unit.unitId} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ delay: 0.05 + idx * 0.02 }} className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors">
                 <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
                 <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(unit.unitId)}</span>
-                <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
-                  <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.1 + idx * 0.02, duration: 0.5 }} style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} />
-                </div>
-                <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
-                  {isRisk ? `RI ${getRiskDisplayInfo(value).percent}%` : `${value}%`}
-                </span>
+                {noData ? (
+                  <span className="text-xs text-muted-foreground w-36 text-right shrink-0">—</span>
+                ) : (
+                  <>
+                    <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
+                      <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.1 + idx * 0.02, duration: 0.5 }} style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} />
+                    </div>
+                    <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
+                      {isRisk ? `RI ${getRiskDisplayInfo(value).percent}%` : `${value}%`}
+                    </span>
+                  </>
+                )}
               </motion.div>
             );
           })}
