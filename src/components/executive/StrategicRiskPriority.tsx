@@ -69,7 +69,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       }
       const actualProgress = count > 0 ? Math.round(sum / count) : 0;
       return { ...u, actualProgress, gap: actualProgress - expectedProgress, hasInProgress: count > 0 };
-    }).filter(u => u.hasInProgress).sort((a, b) => a.gap - b.gap);
+    }).sort((a, b) => a.gap - b.gap);
   }, [unitResults, aggregation.unitAggregations, viewType, term, academicYear, expectedProgress, pillarView]);
 
   // Pillar-filtered data for single-pillar mode
