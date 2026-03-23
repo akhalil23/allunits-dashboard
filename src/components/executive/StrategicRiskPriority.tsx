@@ -159,7 +159,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
             </div>
             {pillarView !== 'all' && selectedPillar && (
               <div className="mt-4 pt-3 border-t border-border">
-                <RIMeter value={selectedPillar.riskIndex} />
+                <RIMeter ri={selectedPillar.riskIndex} compact />
               </div>
             )}
           </motion.div>
