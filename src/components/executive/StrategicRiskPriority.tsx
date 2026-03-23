@@ -204,7 +204,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
           </motion.div>
 
           {/* Completion Status */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm p-5 sm:p-6">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Completion Status{pillarLabel} <InfoTip text="Distribution of strategic actions by status." /></span>
             <CompletionDonut aggregation={aggregation} pillarView={pillarView} unitResults={unitResults} />
           </motion.div>
