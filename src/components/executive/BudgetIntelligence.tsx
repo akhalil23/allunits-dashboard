@@ -64,10 +64,13 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     const pillarIds: PillarId[] = ['I','II','III','IV','V'];
     return pillarIds.map(p => {
       const b = getLivePillarBudget(budgetResult.pillars, p);
-      // Apply budget scope filtering
-      let allocation = b.allocation, spent = b.spent, unspent = b.unspent, committed = b.committed, available = b.available;
-      // Note: budget scope filtering would need year-specific data from the edge function
-      // For now, total is the default and only fully supported scope
+      const raw = budgetResult.pillars[p];
+      // Apply budget scope: use year-specific allocation from columns Q/R
+      let allocation = b.allocation;
+      if (budgetScope === '2025-2026' && raw) allocation = raw.year4;
+      if (budgetScope === '2026-2027' && raw) allocation = raw.year5;
+      const { spent, unspent, committed } = b;
+      const available = Math.max(0, allocation - committed);
       const utilization = allocation > 0 ? committed / allocation : 0;
       const riskIdx = pillarAgg.find(pa => pa.pillar === p)?.riskIndex ?? 0;
       const budgetPressure = utilization >= 0.80 && riskIdx >= 1.51;
