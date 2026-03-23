@@ -692,7 +692,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg }: { data: any; pillarAgg:
           <p className="text-2xl font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</p>
           <p className="text-[10px] font-semibold mt-1" style={{ color: riInfo.color }}>{riInfo.band}</p>
           <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{riInfo.insight}</p>
-          <RIMeter ri={p.riskIndex} compact className="mt-3" />
+          <div className="mt-3"><RIMeter ri={p.riskIndex} compact /></div>
         </div>
         <div className="rounded-xl border border-border/40 p-4">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Financial Capacity</h4>
