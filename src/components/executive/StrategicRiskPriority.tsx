@@ -472,19 +472,26 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
           {visible.map((unit, idx) => {
             const value = unit[metricKey];
             const isRisk = metricKey === 'riskIndex';
-            const color = isRisk ? getRiskDisplayInfo(value).color : 'hsl(var(--primary))';
+            const noData = value < 0;
+            const color = noData ? '#9CA3AF' : isRisk ? getRiskDisplayInfo(value).color : 'hsl(var(--primary))';
             const maxVal = isRisk ? 3 : 100;
-            const pct = isRisk ? getRiskDisplayInfo(value).percent : Math.min(100, (value / maxVal) * 100);
+            const pct = noData ? 0 : isRisk ? getRiskDisplayInfo(value).percent : Math.min(100, (value / maxVal) * 100);
             return (
               <motion.div key={unit.unitId} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ delay: 0.05 + idx * 0.02 }} className="flex items-center gap-2.5 py-1.5 px-2.5 rounded-lg hover:bg-muted/30 transition-colors">
                 <span className="text-xs text-muted-foreground w-5 text-right shrink-0">{idx + 1}</span>
                 <span className="text-xs font-medium text-foreground flex-1 truncate min-w-0">{getUnitDisplayLabel(unit.unitId)}</span>
-                <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
-                  <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.1 + idx * 0.02, duration: 0.5 }} style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} />
-                </div>
-                <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
-                  {isRisk ? `RI ${getRiskDisplayInfo(value).percent}%` : `${value}%`}
-                </span>
+                {noData ? (
+                  <span className="text-xs text-muted-foreground w-36 text-right shrink-0">—</span>
+                ) : (
+                  <>
+                    <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0">
+                      <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.1 + idx * 0.02, duration: 0.5 }} style={{ backgroundColor: isRisk ? color : undefined, background: !isRisk ? 'hsl(var(--primary))' : undefined }} />
+                    </div>
+                    <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: isRisk ? color : undefined }}>
+                      {isRisk ? `RI ${getRiskDisplayInfo(value).percent}%` : `${value}%`}
+                    </span>
+                  </>
+                )}
               </motion.div>
             );
           })}
