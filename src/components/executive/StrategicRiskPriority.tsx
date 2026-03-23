@@ -448,13 +448,13 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex-1 space-y-2 min-w-0">
+        <div className="flex-1 space-y-2 min-w-0 overflow-visible">
           {data.map(d => (
-            <div key={d.name} className="flex items-center gap-2.5">
+            <div key={d.name} className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
               <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-              <span className="text-xs text-foreground flex-1 whitespace-nowrap">{d.name}</span>
-              <span className="text-xs font-bold text-foreground whitespace-nowrap">{d.value}</span>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">({((d.value / total) * 100).toFixed(1)}%)</span>
+              <span className="text-xs text-foreground shrink-0">{d.name}</span>
+              <span className="text-xs font-bold text-foreground shrink-0 ml-auto">{d.value}</span>
+              <span className="text-xs text-muted-foreground shrink-0">({((d.value / total) * 100).toFixed(1)}%)</span>
             </div>
           ))}
         </div>
