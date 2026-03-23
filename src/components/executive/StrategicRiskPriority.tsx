@@ -99,19 +99,29 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   // Pillar-specific unit risks
   const pillarUnitRisks = useMemo(() => {
     if (pillarView === 'all') return unitsByRisk;
-    return heatCells.filter(c => c.pillar === pillarView && c.applicableItems > 0)
-      .sort((a, b) => b.riskIndex - a.riskIndex)
-      .map(c => ({
-        unitId: c.unitId, unitName: c.unitName,
-        riskIndex: c.riskIndex, completionPct: c.completionPct,
-        applicableItems: c.applicableItems,
-        // Fill in missing fields with defaults
-        totalItems: c.applicableItems, naCount: 0,
-        cotCount: 0, cbtCount: 0, inProgressCount: 0, notStartedCount: 0,
-        onTrackPct: 0, belowTargetPct: 0,
-        riskCounts: { noRisk: 0, emerging: 0, critical: 0, realized: 0, notApplicable: 0 },
-      } as UnitAggregation));
-  }, [pillarView, unitsByRisk, heatCells]);
+    // Include ALL units, even if they have no applicable items for this pillar
+    return aggregation.unitAggregations.map(u => {
+      const cell = heatCells.find(c => c.unitId === u.unitId && c.pillar === pillarView);
+      if (cell && cell.applicableItems > 0) {
+        return {
+          unitId: cell.unitId, unitName: cell.unitName,
+          riskIndex: cell.riskIndex, completionPct: cell.completionPct,
+          applicableItems: cell.applicableItems,
+          totalItems: cell.applicableItems, naCount: 0,
+          cotCount: 0, cbtCount: 0, inProgressCount: 0, notStartedCount: 0,
+          onTrackPct: 0, belowTargetPct: 0,
+          riskCounts: { noRisk: 0, emerging: 0, critical: 0, realized: 0, notApplicable: 0 },
+          _hasData: true,
+        } as UnitAggregation & { _hasData: boolean };
+      }
+      return { ...u, riskIndex: -1, completionPct: -1, _hasData: false } as UnitAggregation & { _hasData: boolean };
+    }).sort((a, b) => {
+      // Units with data first, sorted by RI desc; units without data last
+      if ((a as any)._hasData && !(b as any)._hasData) return -1;
+      if (!(a as any)._hasData && (b as any)._hasData) return 1;
+      return b.riskIndex - a.riskIndex;
+    });
+  }, [pillarView, unitsByRisk, heatCells, aggregation.unitAggregations]);
 
   const pillarLabel = pillarView !== 'all' ? ` — Pillar ${pillarView}` : '';
 
