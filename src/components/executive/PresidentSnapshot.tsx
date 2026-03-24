@@ -595,20 +595,9 @@ function BudgetFocusChart({ pillarData, avgBudgetUtil }: { pillarData: any[]; av
 function AllPillarsDiagnostics({ pillarData, expectedProgress }: { pillarData: any[]; expectedProgress: number }) {
   return (
     <div className="space-y-4">
-      {/* Top row: 3 pillars */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {pillarData.slice(0, 3).map((p, idx) => (
-          <PillarDiagCard key={p.pillar} p={p} idx={idx} expectedProgress={expectedProgress} />
-        ))}
-      </div>
-      {/* Bottom row: 2 pillars centered */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="hidden md:block" />
-        {pillarData.slice(3, 5).map((p, idx) => (
-          <PillarDiagCard key={p.pillar} p={p} idx={idx + 3} expectedProgress={expectedProgress} />
-        ))}
-        {pillarData.length === 4 && <div className="hidden md:block" />}
-      </div>
+      {pillarData.map((p, idx) => (
+        <PillarDiagCard key={p.pillar} p={p} idx={idx} expectedProgress={expectedProgress} />
+      ))}
     </div>
   );
 }
