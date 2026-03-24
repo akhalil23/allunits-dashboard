@@ -483,15 +483,16 @@ function computeCategories(
 
         const entry = stepMap.get(key)!;
         if (status === 'Not Started') {
-          entry.nsUnits.push(ur.unitId);
+          if (!entry.nsUnits.includes(ur.unitId)) entry.nsUnits.push(ur.unitId);
         } else if (isNotApplicableStatus(status)) {
-          entry.naUnits.push(ur.unitId);
+          if (!entry.naUnits.includes(ur.unitId)) entry.naUnits.push(ur.unitId);
         }
       });
     });
   });
 
-  // Categorize
+  // Categorize — use actual loaded unit count for "absolute" checks
+  const actualUnitCount = loadedUnits.length;
   const majorityNS: StepItem[] = [];
   const absoluteNS: StepItem[] = [];
   const majorityNA: StepItem[] = [];
@@ -509,9 +510,9 @@ function computeCategories(
     };
 
     if (entry.nsUnits.length >= threshold75) majorityNS.push(item);
-    if (entry.nsUnits.length === TOTAL_UNITS) absoluteNS.push(item);
+    if (entry.nsUnits.length === actualUnitCount) absoluteNS.push(item);
     if (entry.naUnits.length >= threshold75) majorityNA.push(item);
-    if (entry.naUnits.length === TOTAL_UNITS) absoluteNA.push(item);
+    if (entry.naUnits.length === actualUnitCount) absoluteNA.push(item);
   });
 
   return [
