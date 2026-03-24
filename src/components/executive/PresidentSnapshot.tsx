@@ -448,15 +448,15 @@ function getSEEIBand(progress: number, budgetUtil: number): { label: string; col
 
 function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]; expectedProgress: number }) {
   // Generate summary
-  const categories = pillarData.map(p => ({ ...p, alignment: getAlignmentCategory(p.actualProgress, p.budgetUtil) }));
-  const efficient = categories.filter(c => c.alignment.label === 'Efficient' || c.alignment.label === 'Balanced');
-  const concern = categories.filter(c => c.alignment.label === 'Critical Misalignment' || c.alignment.label === 'Spending Ahead');
+  const categories = pillarData.map(p => ({ ...p, alignment: getSEEIBand(p.actualProgress, p.budgetUtil) }));
+  const healthy = categories.filter(c => c.alignment.label === 'Highly Efficient' || c.alignment.label === 'Balanced');
+  const atRisk = categories.filter(c => c.alignment.label === 'Critical' || c.alignment.label === 'Concern');
 
   const summaryLines: string[] = [];
-  if (efficient.length === 5) summaryLines.push('All pillars show balanced or efficient alignment between progress and spending.');
+  if (healthy.length === 5) summaryLines.push('All pillars show balanced or highly efficient execution relative to spending.');
   else {
-    if (efficient.length > 0) summaryLines.push(`${efficient.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${efficient.length === 1 ? 'shows' : 'show'} healthy alignment.`);
-    if (concern.length > 0) summaryLines.push(`${concern.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${concern.length === 1 ? 'requires' : 'require'} attention due to spending-progress imbalance.`);
+    if (healthy.length > 0) summaryLines.push(`${healthy.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${healthy.length === 1 ? 'shows' : 'show'} healthy execution efficiency.`);
+    if (atRisk.length > 0) summaryLines.push(`${atRisk.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${atRisk.length === 1 ? 'requires' : 'require'} attention — execution efficiency is below expectations.`);
   }
 
   return (
