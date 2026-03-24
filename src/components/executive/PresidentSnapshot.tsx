@@ -473,20 +473,20 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map(p => {
-          const riPct = parseFloat(((p.riskIndex / 3) * 100).toFixed(1));
-          const gap = p.actualProgress - p.budgetUtil;
-          return (
-            <div key={p.pillar} className="rounded-xl border border-border/40 p-4 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
-              <div className="flex items-center gap-2 mb-3 mt-1">
-                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
-                <span className="text-xs font-semibold text-foreground">{PILLAR_SHORT[p.pillar as PillarId]}</span>
-              </div>
-              <div className="space-y-2 text-[11px]">
-                <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Budget Util.</span><span className="font-bold text-foreground">{p.budgetUtil}%</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Execution Gap</span><span className="font-bold" style={{ color: gap >= 0 ? '#16A34A' : '#DC2626' }}>{gap >= 0 ? '+' : ''}{gap.toFixed(1)}%</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">RI</span><span className="font-bold text-foreground">{riPct}%</span></div>
+           const gap = p.actualProgress - p.budgetUtil;
+           const seei = p.budgetUtil > 0 ? Math.min(100, parseFloat(((p.actualProgress / p.budgetUtil) * 100).toFixed(1))) : 0;
+           return (
+             <div key={p.pillar} className="rounded-xl border border-border/40 p-4 relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
+               <div className="flex items-center gap-2 mb-3 mt-1">
+                 <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
+                 <span className="text-xs font-semibold text-foreground">{PILLAR_SHORT[p.pillar as PillarId]}</span>
+               </div>
+               <div className="space-y-2 text-[11px]">
+                 <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span></div>
+                 <div className="flex justify-between"><span className="text-muted-foreground">Budget Util.</span><span className="font-bold text-foreground">{p.budgetUtil}%</span></div>
+                 <div className="flex justify-between"><span className="text-muted-foreground">Execution Gap</span><span className="font-bold" style={{ color: gap >= 0 ? '#16A34A' : '#DC2626' }}>{gap >= 0 ? '+' : ''}{gap.toFixed(1)}%</span></div>
+                 <div className="flex justify-between"><span className="text-muted-foreground">SEEI</span><span className="font-bold" style={{ color: seei >= 80 ? '#065F46' : seei >= 50 ? '#D97706' : '#DC2626' }}>{seei}%</span></div>
               </div>
               <div className="mt-3 pt-2 border-t border-border/30">
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1" style={{ backgroundColor: `${p.alignment.color}15`, color: p.alignment.color }}>
