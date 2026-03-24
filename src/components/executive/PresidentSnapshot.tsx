@@ -437,12 +437,13 @@ function PillarReferencePanel() {
 
 /* ─── Alignment Insights Panel ────────────────────────────────────── */
 
-function getAlignmentCategory(progress: number, budgetUtil: number): { label: string; color: string; icon: string } {
-  if (budgetUtil < 20 && progress < 20) return { label: 'Under-Activated', color: '#1D4ED8', icon: '🔵' };
-  if (budgetUtil > 60 && progress < 30) return { label: 'Critical Misalignment', color: '#DC2626', icon: '🔴' };
-  if (progress > budgetUtil + 15) return { label: 'Efficient', color: '#065F46', icon: '🟢' };
-  if (budgetUtil > progress + 15) return { label: 'Spending Ahead', color: '#D97706', icon: '🟠' };
-  return { label: 'Balanced', color: '#16A34A', icon: '🟡' };
+function getSEEIBand(progress: number, budgetUtil: number): { label: string; color: string; icon: string } {
+  if (budgetUtil < 1 && progress < 1) return { label: 'Under-Activated', color: '#1D4ED8', icon: '🔵' };
+  const seeiRaw = budgetUtil > 0 ? (progress / budgetUtil) * 100 : 0;
+  if (seeiRaw >= 120) return { label: 'Highly Efficient', color: '#065F46', icon: '🟢' };
+  if (seeiRaw >= 90) return { label: 'Balanced', color: '#16A34A', icon: '🟡' };
+  if (seeiRaw >= 60) return { label: 'Concern', color: '#D97706', icon: '🟠' };
+  return { label: 'Critical', color: '#DC2626', icon: '🔴' };
 }
 
 function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]; expectedProgress: number }) {
