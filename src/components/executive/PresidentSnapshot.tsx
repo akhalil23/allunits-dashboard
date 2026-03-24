@@ -705,58 +705,111 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
   const execStatus = getExecutiveStatusLabel(p.completionPct, p.riPct, bHealth.label);
   const execColor = getExecStatusColor(execStatus);
   const total = p.applicableItems || 1;
-  const avgIPCompletion = p.inProgressCount > 0 ? Math.round(p.actualProgress) : null;
   const pStatus = getProgressStatus(p.actualProgress, expectedProgress);
+
+  const progressDonut = [
+    { name: 'On Target', value: p.cotCount, fill: '#16A34A' },
+    { name: 'Below Target', value: p.cbtCount, fill: '#7F1D1D' },
+    { name: 'In Progress', value: p.inProgressCount, fill: '#F59E0B' },
+    { name: 'Not Started', value: p.notStartedCount, fill: '#EF4444' },
+  ].filter(d => d.value > 0);
+
+  const applicabilityDonut = [
+    { name: 'Applicable', value: p.applicableItems, fill: PILLAR_COLORS[p.pillar as PillarId] },
+    { name: 'Not Applicable', value: p.naCount, fill: '#6B7280' },
+  ].filter(d => d.value > 0);
 
   return (
     <div className="space-y-6">
-      {/* Row 1 — Performance Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Header badges */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${PILLAR_COLORS[p.pillar as PillarId]}18` }}>
+            <span className="text-sm font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.pillar}</span>
+          </div>
+          <span className="text-sm font-semibold text-foreground">{PILLAR_FULL[p.pillar as PillarId]}</span>
+        </div>
+        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
+        <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: `${execColor}15`, color: execColor, border: `1px solid ${execColor}30` }}>{execStatus}</span>
+      </div>
+
+      {/* Row 1: Donut Charts + RI Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Progress Distribution Donut */}
         <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Item Applicability</h4>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <MiniStat label="Total Items" value={p.totalItems} />
-            <MiniStat label="Applicable" value={p.applicableItems} />
-            <MiniStat label="Not Applicable" value={p.naCount} color="#6B7280" />
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Progress Distribution</h4>
+          <div className="flex items-center gap-3">
+            <div className="w-24 h-24 shrink-0">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={progressDonut} innerRadius="40%" outerRadius="85%" dataKey="value" strokeWidth={0}>
+                    {progressDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-1">
+              <StatusLegend label="On Target" value={p.cotCount} color="#16A34A" />
+              <StatusLegend label="Below Target" value={p.cbtCount} color="#7F1D1D" />
+              <StatusLegend label="In Progress" value={p.inProgressCount} color="#F59E0B" />
+              <StatusLegend label="Not Started" value={p.notStartedCount} color="#EF4444" />
+            </div>
           </div>
         </div>
+
+        {/* Applicability Donut */}
         <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Execution Status Distribution</h4>
-          <div className="h-3 rounded-full overflow-hidden flex mb-3">
-            {p.cotCount > 0 && <div style={{ width: `${(p.cotCount / total) * 100}%`, backgroundColor: '#16A34A' }} />}
-            {p.cbtCount > 0 && <div style={{ width: `${(p.cbtCount / total) * 100}%`, backgroundColor: '#7F1D1D' }} />}
-            {p.inProgressCount > 0 && <div style={{ width: `${(p.inProgressCount / total) * 100}%`, backgroundColor: '#F59E0B' }} />}
-            {p.notStartedCount > 0 && <div style={{ width: `${(p.notStartedCount / total) * 100}%`, backgroundColor: '#EF4444' }} />}
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Applicability</h4>
+          <div className="flex items-center gap-3">
+            <div className="w-24 h-24 shrink-0">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={applicabilityDonut} innerRadius="40%" outerRadius="85%" dataKey="value" strokeWidth={0}>
+                    {applicabilityDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} /><span className="text-[10px] text-muted-foreground">Applicable: <span className="font-bold text-foreground">{p.applicableItems}</span></span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6B7280] shrink-0" /><span className="text-[10px] text-muted-foreground">N/A: <span className="font-bold text-foreground">{p.naCount}</span></span></div>
+              <p className="text-[10px] text-muted-foreground mt-1">Total: {p.totalItems}</p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <StatusLegend label="On Target" value={p.cotCount} color="#16A34A" />
-            <StatusLegend label="Below Target" value={p.cbtCount} color="#7F1D1D" />
-            <StatusLegend label="In Progress" value={p.inProgressCount} color="#F59E0B" />
-            <StatusLegend label="Not Started" value={p.notStartedCount} color="#EF4444" />
+        </div>
+
+        {/* Risk Index — Horizontal Bar */}
+        <div className="rounded-xl border border-border/40 p-4">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Risk Index</h4>
+          <p className="text-2xl font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</p>
+          <p className="text-[10px] font-semibold mt-0.5" style={{ color: riInfo.color }}>{riInfo.band}</p>
+          <div className="h-3 rounded-full bg-muted overflow-hidden mt-3">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, riInfo.percent)}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: riInfo.color }} />
           </div>
-          {avgIPCompletion !== null && <p className="text-[10px] text-muted-foreground mt-2">Avg in-progress completion: {avgIPCompletion}%</p>}
+          <div className="mt-3"><RIMeter ri={p.riskIndex} compact /></div>
+          <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{riInfo.insight}</p>
         </div>
       </div>
 
-      {/* Row 2 — Visual Key Metrics */}
+      {/* Row 2: Key Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-lg border border-border/40 p-3">
           <p className="text-[10px] text-muted-foreground mb-1">Progress vs Expected</p>
           <div className="flex items-center gap-1.5">
-            <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar] }}>{p.actualProgress}%</span>
+            <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span>
             <span className="text-[10px] text-muted-foreground">/ {expectedProgress}%</span>
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
           <div className="h-2 rounded-full bg-muted overflow-hidden mt-2 relative">
-            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.actualProgress)}%`, backgroundColor: PILLAR_COLORS[p.pillar] }} />
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.actualProgress)}%`, backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
             <div className="absolute top-0 h-full w-0.5 bg-[#DC2626]" style={{ left: `${Math.min(100, expectedProgress)}%` }} />
           </div>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
           <p className="text-[10px] text-muted-foreground mb-1">Completion Rate</p>
-          <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar] }}>{p.completionPct}%</span>
+          <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.completionPct}%</span>
           <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
-            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.completionPct)}%`, backgroundColor: PILLAR_COLORS[p.pillar] }} />
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.completionPct)}%`, backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
           </div>
           <div className="mt-1 flex items-center gap-2 text-[9px]">
             <span style={{ color: '#16A34A' }}>OT: {p.cotCount}</span>
@@ -764,44 +817,25 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Risk Index</p>
-          <span className="text-lg font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span>
-          <p className="text-[9px] font-semibold mt-0.5" style={{ color: riInfo.color }}>{riInfo.band}</p>
-          <div className="h-2 rounded-full bg-muted overflow-hidden mt-1">
-            <div className="h-full rounded-full" style={{ width: `${Math.min(100, riInfo.percent)}%`, backgroundColor: riInfo.color }} />
-          </div>
-        </div>
-        <div className="rounded-lg border border-border/40 p-3">
           <p className="text-[10px] text-muted-foreground mb-1">Budget Health</p>
           <span className="text-lg font-bold" style={{ color: bHealth.color }}>{bHealth.label}</span>
           {p.allocated > 0 && <p className="text-[10px] text-muted-foreground mt-1">{((p.available / p.allocated) * 100).toFixed(1)}% available</p>}
         </div>
+        <div className="rounded-lg border border-border/40 p-3">
+          <p className="text-[10px] text-muted-foreground mb-1">Budget Utilization</p>
+          <span className="text-lg font-bold text-foreground">{p.budgetUtil}%</span>
+          <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.budgetUtil)}%`, backgroundColor: PILLAR_COLORS[p.pillar as PillarId], opacity: 0.5 }} />
+          </div>
+        </div>
       </div>
 
-      {/* Row 3 — Risk & Narrative */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Risk Index</h4>
-          <p className="text-2xl font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</p>
-          <p className="text-[10px] font-semibold mt-1" style={{ color: riInfo.color }}>{riInfo.band}</p>
-          <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{riInfo.insight}</p>
-          <div className="mt-3"><RIMeter ri={p.riskIndex} compact /></div>
-        </div>
-        <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Financial Capacity</h4>
-          <p className="text-xl font-bold" style={{ color: bHealth.color }}>{bHealth.label}</p>
-          {p.allocated > 0 && (
-            <p className="text-[10px] text-muted-foreground mt-2">{((p.available / p.allocated) * 100).toFixed(1)}% available capacity</p>
-          )}
-          <InfoTip text="Overall financial capacity. Healthy = ≥30% available. Watch = ≥15%. Critical = <15%." />
-        </div>
-        <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Executive Summary</h4>
-          <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: `${execColor}15`, color: execColor, border: `1px solid ${execColor}30` }}>{execStatus}</span>
-          <p className="text-[10px] text-muted-foreground mt-3 leading-relaxed">
-            {getMicroInsight(p, bHealth.label)} {p.belowTargetShare > 15 ? `Below-target share at ${p.belowTargetShare}% warrants quality review.` : ''} {p.notStartedCount > p.applicableItems * 0.3 ? `${p.notStartedCount} items remain unstarted.` : ''}
-          </p>
-        </div>
+      {/* Row 3: Executive Narrative */}
+      <div className="rounded-xl border border-border/40 p-4">
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Executive Summary</h4>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {getMicroInsight(p, bHealth.label)} {p.belowTargetShare > 15 ? ` Below-target share at ${p.belowTargetShare}% warrants quality review.` : ''} {p.notStartedCount > p.applicableItems * 0.3 ? ` ${p.notStartedCount} items remain unstarted.` : ''}
+        </p>
       </div>
     </div>
   );

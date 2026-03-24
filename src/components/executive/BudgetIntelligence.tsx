@@ -247,153 +247,87 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             </div>
           </div>
 
-          {/* Per-pillar cards with full analytics */}
-          <div className="space-y-4">
-            {displayRows.map(r => {
+          {/* Per-pillar cards — unit-level style */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
+            {displayRows.map((r, idx) => {
               const utilPct = (r.utilization * 100).toFixed(1);
-              const spentPct = r.allocation > 0 ? ((r.spent / r.allocation) * 100).toFixed(1) : '0';
-              const unspentPct = r.allocation > 0 ? ((r.unspent / r.allocation) * 100).toFixed(1) : '0';
               const health = computeBudgetHealth(r.available, r.allocation);
               const prog = pillarProgressData.find((p: any) => p.pillar === r.pillar);
               const actualProgress = prog?.actualProgress ?? 0;
-              const completionPct = prog?.completionPct ?? 0;
               const eff = getBudgetEffectivenessLabel(parseFloat(utilPct), actualProgress);
-              const insight = getBudgetInsight(r, actualProgress);
-              const riPct = parseFloat(((r.riskIndex / 3) * 100).toFixed(1));
               const riInfo = getRiskDisplayInfo(r.riskIndex);
-              const pillarSSI = computeSSI(actualProgress, parseFloat(utilPct), riPct);
-              const seeiRaw = parseFloat(utilPct) > 0 ? actualProgress / parseFloat(utilPct) : 0;
-              const seeiPct = Math.min(100, parseFloat((seeiRaw * 100).toFixed(1)));
+              const availPct = r.allocation > 0 ? ((r.available / r.allocation) * 100).toFixed(1) : '0';
+
+              // Donut data for budget composition
+              const budgetDonut = [
+                { name: 'Spent', value: r.spent, fill: '#16A34A' },
+                { name: 'Unspent', value: r.unspent, fill: '#F59E0B' },
+                { name: 'Available', value: r.available, fill: '#D1D5DB' },
+              ].filter(d => d.value > 0);
 
               return (
-                <div key={r.pillar} className="rounded-xl border border-border/40 p-4 space-y-4">
+                <motion.div key={r.pillar} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + idx * 0.06 }} className="rounded-xl border border-border/40 p-4 hover:shadow-md transition-shadow duration-300">
                   {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: PILLAR_COLORS[r.pillar] }} />
-                      <span className="text-xs font-semibold text-foreground">{PILLAR_SHORT[r.pillar]}</span>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${PILLAR_COLORS[r.pillar]}18` }}>
+                      <span className="text-xs font-bold" style={{ color: PILLAR_COLORS[r.pillar] }}>{r.pillar}</span>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: `${health.color}18`, color: health.color }}>{health.health}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${eff.color}15`, color: eff.color }}>{eff.label}</span>
-                    </div>
+                    <span className="text-xs font-semibold text-foreground truncate flex-1">{PILLAR_SHORT[r.pillar]}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold shrink-0" style={{ backgroundColor: `${health.color}18`, color: health.color }}>{health.health}</span>
                   </div>
 
-                  {/* B) Utilization & Capacity — visual gauge */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">Budget Utilization</p>
-                      <span className="text-sm font-bold" style={{ color: parseFloat(utilPct) >= 80 ? '#EF4444' : parseFloat(utilPct) >= 60 ? '#F59E0B' : '#16A34A' }}>{utilPct}%</span>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5">
-                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, parseFloat(utilPct))}%`, backgroundColor: parseFloat(utilPct) >= 80 ? '#EF4444' : parseFloat(utilPct) >= 60 ? '#F59E0B' : '#16A34A' }} />
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">Available Capacity</p>
-                      <span className="text-sm font-bold" style={{ color: health.color }}>{r.allocation > 0 ? ((r.available / r.allocation) * 100).toFixed(1) : '0'}%</span>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5">
-                        <div className="h-full rounded-full" style={{ width: `${r.allocation > 0 ? Math.min(100, (r.available / r.allocation) * 100) : 0}%`, backgroundColor: health.color }} />
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">Allocated</p>
-                      <span className="text-sm font-bold text-foreground">{formatCurrency(r.allocation)}</span>
-                    </div>
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">Committed</p>
-                      <span className="text-sm font-bold text-foreground">{formatCurrency(r.committed)}</span>
-                    </div>
-                  </div>
-
-                  {/* C) Execution Context — compact indicators */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">Progress</p>
-                      <span className="text-sm font-bold" style={{ color: PILLAR_COLORS[r.pillar] }}>{actualProgress}%</span>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5">
-                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, actualProgress)}%`, backgroundColor: PILLAR_COLORS[r.pillar] }} />
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">Completion</p>
-                      <span className="text-sm font-bold text-foreground">{completionPct}%</span>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-1.5">
-                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, completionPct)}%`, backgroundColor: PILLAR_COLORS[r.pillar], opacity: 0.6 }} />
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">SEEI</p>
-                      <span className="text-sm font-bold" style={{ color: seeiPct >= 90 ? '#065F46' : seeiPct >= 60 ? '#16A34A' : '#D97706' }}>{seeiPct}%</span>
-                    </div>
-                    <div className="rounded-lg border border-border/40 p-2.5">
-                      <p className="text-[10px] text-muted-foreground mb-1">SSI</p>
-                      <span className="text-sm font-bold" style={{ color: pillarSSI.color }}>{pillarSSI.value}%</span>
-                      <p className="text-[9px]" style={{ color: pillarSSI.color }}>{pillarSSI.label}</p>
-                    </div>
-                  </div>
-
-                  {/* D) Effectiveness & Alignment — Progress vs Utilization visual */}
-                  <div className="rounded-lg border border-border/30 bg-muted/10 p-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">Effectiveness & Alignment</p>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] text-muted-foreground">Progress</span>
-                          <span className="text-[10px] font-bold" style={{ color: PILLAR_COLORS[r.pillar] }}>{actualProgress}%</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(100, actualProgress)}%`, backgroundColor: PILLAR_COLORS[r.pillar] }} />
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground font-bold">vs</span>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] text-muted-foreground">Utilization</span>
-                          <span className="text-[10px] font-bold" style={{ color: parseFloat(utilPct) >= 80 ? '#EF4444' : '#6B7280' }}>{utilPct}%</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${Math.min(100, parseFloat(utilPct))}%`, backgroundColor: PILLAR_COLORS[r.pillar], opacity: 0.4 }} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">Expected Progress: {expectedProgress}%</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${eff.color}15`, color: eff.color }}>{eff.label}</span>
-                    </div>
-                  </div>
-
-                  {/* E) Budget Deployment Breakdown — mini donut */}
-                  <div className="flex items-center gap-4">
+                  {/* Budget Composition Donut */}
+                  <div className="flex items-center gap-2 mb-3">
                     <div className="w-16 h-16 shrink-0">
                       <ResponsiveContainer>
                         <PieChart>
-                          <Pie
-                            data={[
-                              { name: 'Spent', value: r.spent, fill: '#16A34A' },
-                              { name: 'Unspent', value: r.unspent, fill: '#F59E0B' },
-                              { name: 'Available', value: r.available, fill: '#D1D5DB' },
-                            ].filter(d => d.value > 0)}
-                            innerRadius="50%" outerRadius="90%" dataKey="value" strokeWidth={0}
-                          >
-                            {[
-                              { fill: '#16A34A' },
-                              { fill: '#F59E0B' },
-                              { fill: '#D1D5DB' },
-                            ].map((c, i) => <Cell key={i} fill={c.fill} />)}
+                          <Pie data={budgetDonut} innerRadius="45%" outerRadius="90%" dataKey="value" strokeWidth={0}>
+                            {budgetDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
                           </Pie>
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="flex-1 grid grid-cols-3 gap-2 text-center">
-                      <div><p className="text-[9px] text-muted-foreground">Spent</p><p className="text-xs font-bold" style={{ color: '#16A34A' }}>{formatCurrency(r.spent)}</p><p className="text-[9px] text-muted-foreground">{spentPct}%</p></div>
-                      <div><p className="text-[9px] text-muted-foreground">Unspent</p><p className="text-xs font-bold" style={{ color: '#F59E0B' }}>{formatCurrency(r.unspent)}</p><p className="text-[9px] text-muted-foreground">{unspentPct}%</p></div>
-                      <div><p className="text-[9px] text-muted-foreground">Available</p><p className="text-xs font-bold text-muted-foreground">{formatCurrency(r.available)}</p></div>
+                    <div className="flex-1 space-y-0.5 text-[10px]">
+                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#16A34A] shrink-0" /><span className="text-muted-foreground">Spent</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.spent)}</span></div>
+                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F59E0B] shrink-0" /><span className="text-muted-foreground">Unspent</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.unspent)}</span></div>
+                      <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#D1D5DB] shrink-0" /><span className="text-muted-foreground">Available</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.available)}</span></div>
                     </div>
                   </div>
 
-                  {/* F) Integrated Insight Panel */}
-                  <p className="text-[10px] text-muted-foreground italic leading-relaxed px-1">{insight}</p>
-                </div>
+                  {/* Utilization Bar */}
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between text-[10px] mb-1">
+                      <span className="text-muted-foreground">Utilization</span>
+                      <span className="font-bold" style={{ color: parseFloat(utilPct) >= 80 ? '#EF4444' : parseFloat(utilPct) >= 60 ? '#F59E0B' : '#16A34A' }}>{utilPct}%</span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, parseFloat(utilPct))}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: parseFloat(utilPct) >= 80 ? '#EF4444' : parseFloat(utilPct) >= 60 ? '#F59E0B' : '#16A34A' }} />
+                    </div>
+                  </div>
+
+                  {/* Capacity */}
+                  <div className="flex items-center justify-between text-[10px] mb-1">
+                    <span className="text-muted-foreground">Available Capacity</span>
+                    <span className="font-bold" style={{ color: health.color }}>{availPct}%</span>
+                  </div>
+
+                  {/* Allocation */}
+                  <div className="flex items-center justify-between text-[10px] mb-1">
+                    <span className="text-muted-foreground">Allocation</span>
+                    <span className="font-bold text-foreground">{formatCurrency(r.allocation)}</span>
+                  </div>
+
+                  {/* Execution context */}
+                  <div className="mt-2 pt-2 border-t border-border/30 space-y-1 text-[10px]">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: PILLAR_COLORS[r.pillar] }}>{actualProgress}%</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Risk Index</span><span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span></div>
+                  </div>
+
+                  {/* Effectiveness badge */}
+                  <div className="mt-2 pt-2 border-t border-border/30">
+                    <span className="text-[9px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${eff.color}15`, color: eff.color }}>{eff.label}</span>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
