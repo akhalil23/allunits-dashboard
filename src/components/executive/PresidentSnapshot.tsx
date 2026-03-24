@@ -476,8 +476,9 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map(p => {
            const gap = p.actualProgress - p.budgetUtil;
-           const seeiRaw = p.budgetUtil > 0 ? parseFloat(((p.actualProgress / p.budgetUtil) * 100).toFixed(1)) : 0;
-           const seeiColor = seeiRaw >= 120 ? '#065F46' : seeiRaw >= 90 ? '#16A34A' : seeiRaw >= 60 ? '#D97706' : '#DC2626';
+           const effectiveUtil = p.budgetUtil <= 0 ? 1 : p.budgetUtil;
+           const seeiRaw = Math.min(100, parseFloat(((p.actualProgress / effectiveUtil) * 100).toFixed(1)));
+           const seeiColor = seeiRaw >= 100 ? '#065F46' : seeiRaw >= 90 ? '#16A34A' : seeiRaw >= 60 ? '#D97706' : '#DC2626';
            return (
              <div key={p.pillar} className="rounded-xl border border-border/40 p-4 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
