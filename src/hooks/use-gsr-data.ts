@@ -9,6 +9,15 @@ function isUnauthorizedFunctionError(error: unknown): error is FunctionsHttpErro
   return error instanceof FunctionsHttpError && error.context?.status === 401;
 }
 
+function isRateLimitedFunctionError(error: unknown): boolean {
+  if (error instanceof FunctionsHttpError && error.context?.status === 429) {
+    return true;
+  }
+
+  const message = error instanceof Error ? error.message : '';
+  return /(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(message);
+}
+
 async function invokeFetch(unitId: string) {
   return supabase.functions.invoke('fetch-gsr-data', {
     body: { unitId },
@@ -35,11 +44,18 @@ async function fetchUnitData(unitId: string): Promise<FetchResult> {
       throw new Error('Session expired. Please sign in again.');
     }
 
+    if (isRateLimitedFunctionError(error)) {
+      throw new Error('Data source is temporarily rate-limited. Please retry in about a minute.');
+    }
+
     console.error('Edge function error:', error);
     throw new Error(error.message || 'Failed to fetch data');
   }
 
   if (data?.error) {
+    if (/(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(data.error)) {
+      throw new Error('Data source is temporarily rate-limited. Please retry in about a minute.');
+    }
     throw new Error(data.error);
   }
 
@@ -63,7 +79,12 @@ export function useGSRData() {
     queryFn: () => fetchUnitData(resolvedUnitId),
     enabled: !!hasAccess,
     staleTime: 2 * 60 * 1000,
-    retry: 2,
+    retry: (failureCount, err) => {
+      if (/(rate-limited|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(err.message)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
     refetchOnWindowFocus: false,
   });
 }

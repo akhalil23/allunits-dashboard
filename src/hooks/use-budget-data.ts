@@ -25,11 +25,18 @@ async function fetchBudgetData(): Promise<BudgetDataResult> {
   const { data, error } = await supabase.functions.invoke('fetch-budget-data');
 
   if (error) {
+    if (/(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(error.message)) {
+      throw new Error('Budget source is temporarily rate-limited. Please retry in about a minute.');
+    }
+
     console.error('Budget fetch error:', error);
     throw new Error(error.message || 'Failed to fetch budget data');
   }
 
   if (data?.error) {
+    if (/(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(data.error)) {
+      throw new Error('Budget source is temporarily rate-limited. Please retry in about a minute.');
+    }
     throw new Error(data.error);
   }
 
@@ -41,7 +48,12 @@ export function useBudgetData() {
     queryKey: ['budget-data'],
     queryFn: fetchBudgetData,
     staleTime: 3 * 60 * 1000,
-    retry: 2,
+    retry: (failureCount, err) => {
+      if (/(rate-limited|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(err.message)) {
+        return false;
+      }
+      return failureCount < 1;
+    },
     refetchOnWindowFocus: false,
   });
 }
