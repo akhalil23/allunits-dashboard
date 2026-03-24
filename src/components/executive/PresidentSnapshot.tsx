@@ -87,7 +87,7 @@ function getProgressStatus(actual: number, expected: number, tolerance: number =
 }
 
 export default function PresidentSnapshot({ aggregation }: Props) {
-  const [focusMode, setFocusMode] = useState<FocusMode>('combined');
+  const [focusMode, setFocusMode] = useState<FocusMode>('execution');
   const [pillarView, setPillarView] = useState<PillarViewMode>('all');
   const { viewType, term, academicYear } = useDashboard();
   const { data: unitResults } = useUniversityData();
