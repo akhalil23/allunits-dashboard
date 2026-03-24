@@ -339,7 +339,6 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 }
 
 /* ─── Helper Components ──────────────────────────────────────────── */
-}
 
 function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, showBar, barPct, barColor, extraText, infoTip }: {
   label: string; subtitle: string; value: string; fullValue?: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string; extraText?: string; infoTip?: string;
