@@ -339,14 +339,6 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 }
 
 /* ─── Helper Components ──────────────────────────────────────────── */
-
-function MiniCard({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <div className="rounded-lg border border-border/40 p-3 text-center">
-      <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm font-bold" style={{ color }}>{value}</p>
-    </div>
-  );
 }
 
 function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, showBar, barPct, barColor, extraText, infoTip }: {

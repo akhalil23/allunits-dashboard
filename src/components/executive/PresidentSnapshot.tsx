@@ -1,7 +1,7 @@
 /**
  * Tab 1 — Executive Snapshot
  * SEEI + SSI + Progress + Budget Util + RI + Completion KPIs
- * Grouped Bar Chart with Focus Mode (Combined/Execution/Budget)
+ * Execution/Budget Focus + Alignment Insights
  * Pillar Execution Diagnostics (All/Single Pillar)
  */
 
