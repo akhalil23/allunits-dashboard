@@ -439,7 +439,8 @@ function PillarReferencePanel() {
 
 function getSEEIBand(progress: number, budgetUtil: number): { label: string; color: string; icon: string } {
   if (budgetUtil < 1 && progress < 1) return { label: 'Under-Activated', color: '#1D4ED8', icon: '🔵' };
-  const seeiRaw = budgetUtil > 0 ? (progress / budgetUtil) * 100 : 0;
+  const effectiveUtil = budgetUtil <= 0 ? 1 : budgetUtil;
+  const seeiRaw = (progress / effectiveUtil) * 100;
   if (seeiRaw >= 120) return { label: 'Highly Efficient', color: '#065F46', icon: '🟢' };
   if (seeiRaw >= 90) return { label: 'Balanced', color: '#16A34A', icon: '🟡' };
   if (seeiRaw >= 60) return { label: 'Concern', color: '#D97706', icon: '🟠' };
