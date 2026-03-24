@@ -559,7 +559,7 @@ function BudgetFocusChart({ pillarData, avgBudgetUtil }: { pillarData: any[]; av
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }} />
             <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-            <ReferenceLine y={avgBudgetUtil} stroke="#6B7280" strokeWidth={2.5} strokeDasharray="10 5" label={{ value: `Average (${avgBudgetUtil}%)`, position: 'insideTopRight', style: { fontSize: 11, fill: '#6B7280', fontWeight: 700 } }} />
+            <ReferenceLine y={avgBudgetUtil} stroke="#6B7280" strokeWidth={2.5} strokeDasharray="10 5" label={{ value: `Avg Budget Util. (${avgBudgetUtil}%)`, position: 'top', offset: 8, style: { fontSize: 11, fill: '#6B7280', fontWeight: 700 } }} />
             <ReTooltip content={({ payload }) => {
               if (!payload?.[0]) return null;
               const d = payload[0].payload;
