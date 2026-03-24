@@ -594,110 +594,141 @@ function BudgetFocusChart({ pillarData, avgBudgetUtil }: { pillarData: any[]; av
 
 function AllPillarsDiagnostics({ pillarData, expectedProgress }: { pillarData: any[]; expectedProgress: number }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
-      {pillarData.map((p, idx) => {
-        const riInfo = getRiskDisplayInfo(p.riskIndex);
-        const bHealth = p.budgetHealth;
-        const pStatus = getProgressStatus(p.actualProgress, expectedProgress);
-        const total = p.applicableItems || 1;
+    <div className="space-y-4">
+      {/* Top row: 3 pillars */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {pillarData.slice(0, 3).map((p, idx) => (
+          <PillarDiagCard key={p.pillar} p={p} idx={idx} expectedProgress={expectedProgress} />
+        ))}
+      </div>
+      {/* Bottom row: 2 pillars centered */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="hidden md:block" />
+        {pillarData.slice(3, 5).map((p, idx) => (
+          <PillarDiagCard key={p.pillar} p={p} idx={idx + 3} expectedProgress={expectedProgress} />
+        ))}
+        {pillarData.length === 4 && <div className="hidden md:block" />}
+      </div>
+    </div>
+  );
+}
 
-        // Donut data for progress distribution
-        const progressDonut = [
-          { name: 'On Target', value: p.cotCount, fill: '#16A34A' },
-          { name: 'Below Target', value: p.cbtCount, fill: '#7F1D1D' },
-          { name: 'In Progress', value: p.inProgressCount, fill: '#F59E0B' },
-          { name: 'Not Started', value: p.notStartedCount, fill: '#EF4444' },
-        ].filter(d => d.value > 0);
+function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; expectedProgress: number }) {
+  const riInfo = getRiskDisplayInfo(p.riskIndex);
+  const bHealth = p.budgetHealth;
+  const pStatus = getProgressStatus(p.actualProgress, expectedProgress);
+  const pillarColor = PILLAR_COLORS[p.pillar as PillarId];
 
-        // Donut data for applicability
-        const applicabilityDonut = [
-          { name: 'Applicable', value: p.applicableItems, fill: PILLAR_COLORS[p.pillar as PillarId] },
-          { name: 'Not Applicable', value: p.naCount, fill: '#6B7280' },
-        ].filter(d => d.value > 0);
+  const progressDonut = [
+    { name: 'On Target', value: p.cotCount, fill: '#16A34A' },
+    { name: 'Below Target', value: p.cbtCount, fill: '#7F1D1D' },
+    { name: 'In Progress', value: p.inProgressCount, fill: '#F59E0B' },
+    { name: 'Not Started', value: p.notStartedCount, fill: '#EF4444' },
+  ].filter(d => d.value > 0);
 
-        return (
-          <motion.div key={p.pillar} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + idx * 0.06 }} className="rounded-xl border border-border/40 p-4 hover:shadow-md transition-shadow duration-300">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${PILLAR_COLORS[p.pillar as PillarId]}18` }}>
-                <span className="text-xs font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.pillar}</span>
-              </div>
-              <Tooltip><TooltipTrigger asChild><span className="text-xs font-semibold text-foreground cursor-help truncate flex-1">{PILLAR_SHORT[p.pillar as PillarId]}</span></TooltipTrigger><TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar as PillarId]}</p></TooltipContent></Tooltip>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md text-white shrink-0" style={{ backgroundColor: riInfo.color }}>{riInfo.percent}%</span>
-            </div>
+  const applicabilityDonut = [
+    { name: 'Applicable', value: p.applicableItems, fill: pillarColor },
+    { name: 'Not Applicable', value: p.naCount, fill: '#6B7280' },
+  ].filter(d => d.value > 0);
 
-            {/* Progress Distribution Donut */}
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-16 h-16 shrink-0">
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 + idx * 0.05 }}
+      className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-lg hover:border-border/70 transition-all duration-300 overflow-hidden"
+    >
+      {/* Accent bar */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${pillarColor}, ${pillarColor}66)` }} />
+      <div className="p-5">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ backgroundColor: `${pillarColor}18`, border: `1px solid ${pillarColor}30` }}>
+            <span className="text-xs font-bold" style={{ color: pillarColor }}>{p.pillar}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <Tooltip><TooltipTrigger asChild><p className="text-sm font-semibold text-foreground cursor-help truncate">{PILLAR_SHORT[p.pillar as PillarId]}</p></TooltipTrigger><TooltipContent><p className="text-xs">{PILLAR_FULL[p.pillar as PillarId]}</p></TooltipContent></Tooltip>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[9px] font-bold px-2 py-1 rounded-lg text-white" style={{ backgroundColor: riInfo.color }}>{riInfo.percent}%</span>
+            <span className="text-[9px] font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
+          </div>
+        </div>
+
+        {/* Charts row: Progress Donut + Applicability Donut */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* Progress Distribution */}
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Status Distribution</p>
+            <div className="flex items-center gap-2">
+              <div className="w-[52px] h-[52px] shrink-0">
                 <ResponsiveContainer>
                   <PieChart>
-                    <Pie data={progressDonut} innerRadius="45%" outerRadius="90%" dataKey="value" strokeWidth={0}>
+                    <Pie data={progressDonut} innerRadius="42%" outerRadius="92%" dataKey="value" strokeWidth={0}>
                       {progressDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="flex-1 space-y-0.5">
-                <StatusLegend label="On Target" value={p.cotCount} color="#16A34A" />
-                <StatusLegend label="Below Target" value={p.cbtCount} color="#7F1D1D" />
-                <StatusLegend label="In Progress" value={p.inProgressCount} color="#F59E0B" />
-                <StatusLegend label="Not Started" value={p.notStartedCount} color="#EF4444" />
+                <StatusLegend label="OT" value={p.cotCount} color="#16A34A" />
+                <StatusLegend label="BT" value={p.cbtCount} color="#7F1D1D" />
+                <StatusLegend label="IP" value={p.inProgressCount} color="#F59E0B" />
+                <StatusLegend label="NS" value={p.notStartedCount} color="#EF4444" />
               </div>
             </div>
-
-            {/* Applicability Donut */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-12 h-12 shrink-0">
+          </div>
+          {/* Applicability */}
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Applicability</p>
+            <div className="flex items-center gap-2">
+              <div className="w-[52px] h-[52px] shrink-0">
                 <ResponsiveContainer>
                   <PieChart>
-                    <Pie data={applicabilityDonut} innerRadius="40%" outerRadius="85%" dataKey="value" strokeWidth={0}>
+                    <Pie data={applicabilityDonut} innerRadius="42%" outerRadius="92%" dataKey="value" strokeWidth={0}>
                       {applicabilityDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex-1 text-[10px]">
-                <div className="flex justify-between"><span className="text-muted-foreground">Applicable</span><span className="font-bold text-foreground">{p.applicableItems}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">N/A</span><span className="font-bold text-muted-foreground">{p.naCount}</span></div>
+              <div className="flex-1 space-y-0.5 text-[10px]">
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pillarColor }} /><span className="text-muted-foreground">App: <span className="font-bold text-foreground">{p.applicableItems}</span></span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6B7280] shrink-0" /><span className="text-muted-foreground">N/A: <span className="font-bold text-foreground">{p.naCount}</span></span></div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Risk Index — Horizontal Bar */}
-            <div className="mb-3">
-              <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground">Risk Index</span>
-                <span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}% — {riInfo.band}</span>
-              </div>
-              <div className="h-2.5 rounded-full bg-muted overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, riInfo.percent)}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: riInfo.color }} />
-              </div>
-            </div>
+        {/* Risk Index bar */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between text-[10px] mb-1">
+            <span className="text-muted-foreground font-medium">Risk Index</span>
+            <span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}% — {riInfo.band}</span>
+          </div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, riInfo.percent)}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: riInfo.color }} />
+          </div>
+        </div>
 
-            {/* Progress vs Expected */}
-            <div className="flex items-center justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground">Progress</span>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span>
-                <span className="text-muted-foreground">/ {expectedProgress}%</span>
-              </div>
+        {/* Progress bar */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between text-[10px] mb-1">
+            <span className="text-muted-foreground font-medium">Progress</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold" style={{ color: pillarColor }}>{p.actualProgress}%</span>
+              <span className="text-muted-foreground/70">/ {expectedProgress}%</span>
             </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden relative mb-1">
-              <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.actualProgress)}%`, backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
-              <div className="absolute top-0 h-full w-0.5 bg-[#DC2626]" style={{ left: `${Math.min(100, expectedProgress)}%` }} />
-            </div>
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
+          </div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden relative">
+            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.actualProgress)}%`, backgroundColor: pillarColor }} />
+            <div className="absolute top-0 h-full w-0.5 bg-destructive" style={{ left: `${Math.min(100, expectedProgress)}%` }} />
+          </div>
+        </div>
 
-            {/* Budget Health */}
-            <div className="mt-2 pt-2 border-t border-border/30">
-              <div className="flex items-center justify-between text-[10px]">
-                <span className="text-muted-foreground">Budget Health</span>
-                <span className="font-bold" style={{ color: bHealth.color }}>{bHealth.label}</span>
-              </div>
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
+        {/* Budget Health footer */}
+        <div className="pt-3 border-t border-border/30 flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground font-medium">Budget Health</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg" style={{ backgroundColor: `${bHealth.color}15`, color: bHealth.color }}>{bHealth.label}</span>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
