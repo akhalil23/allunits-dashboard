@@ -214,8 +214,8 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
   // SEEI
   const seei = useMemo(() => {
-    if (budgetUtilization <= 0) return { value: 0, percent: 0, label: 'N/A', color: '#6B7280' };
-    const raw = overallActualProgress / budgetUtilization;
+    const effectiveUtil = budgetUtilization <= 0 ? 1 : budgetUtilization;
+    const raw = overallActualProgress / effectiveUtil;
     const pct = Math.min(100, parseFloat((raw * 100).toFixed(1)));
     let label: string, color: string;
     if (raw >= 1.20) { label = 'Highly Efficient'; color = '#065F46'; }
