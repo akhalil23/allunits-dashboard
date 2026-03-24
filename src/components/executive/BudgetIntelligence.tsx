@@ -248,28 +248,11 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           </div>
 
           {/* Per-pillar cards */}
-          {pillarView !== 'all' && displayRows.length === 1 ? (
-            <SinglePillarBudgetView row={displayRows[0]} pillarProgressData={pillarProgressData} expectedProgress={expectedProgress} />
-          ) : (
-            <div className="space-y-4">
-              {/* Top row: 3 pillars */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {displayRows.slice(0, 3).map((r, idx) => (
-                  <BudgetPillarCard key={r.pillar} r={r} idx={idx} pillarProgressData={pillarProgressData} />
-                ))}
-              </div>
-              {/* Bottom row: remaining pillars centered */}
-              {displayRows.length > 3 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="hidden md:block" />
-                  {displayRows.slice(3, 5).map((r, idx) => (
-                    <BudgetPillarCard key={r.pillar} r={r} idx={idx + 3} pillarProgressData={pillarProgressData} />
-                  ))}
-                  {displayRows.length === 4 && <div className="hidden md:block" />}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="space-y-4">
+            {displayRows.map((r, idx) => (
+              <BudgetPillarCard key={r.pillar} r={r} idx={idx} pillarProgressData={pillarProgressData} />
+            ))}
+          </div>
         </motion.div>
       </section>
 
