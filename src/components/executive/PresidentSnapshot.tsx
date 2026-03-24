@@ -214,8 +214,8 @@ export default function PresidentSnapshot({ aggregation }: Props) {
 
   // SEEI
   const seei = useMemo(() => {
-    if (budgetUtilization <= 0) return { value: 0, percent: 0, label: 'N/A', color: '#6B7280' };
-    const raw = overallActualProgress / budgetUtilization;
+    const effectiveUtil = budgetUtilization <= 0 ? 1 : budgetUtilization;
+    const raw = overallActualProgress / effectiveUtil;
     const pct = Math.min(100, parseFloat((raw * 100).toFixed(1)));
     let label: string, color: string;
     if (raw >= 1.20) { label = 'Highly Efficient'; color = '#065F46'; }
@@ -439,7 +439,8 @@ function PillarReferencePanel() {
 
 function getSEEIBand(progress: number, budgetUtil: number): { label: string; color: string; icon: string } {
   if (budgetUtil < 1 && progress < 1) return { label: 'Under-Activated', color: '#1D4ED8', icon: '🔵' };
-  const seeiRaw = budgetUtil > 0 ? (progress / budgetUtil) * 100 : 0;
+  const effectiveUtil = budgetUtil <= 0 ? 1 : budgetUtil;
+  const seeiRaw = (progress / effectiveUtil) * 100;
   if (seeiRaw >= 120) return { label: 'Highly Efficient', color: '#065F46', icon: '🟢' };
   if (seeiRaw >= 90) return { label: 'Balanced', color: '#16A34A', icon: '🟡' };
   if (seeiRaw >= 60) return { label: 'Concern', color: '#D97706', icon: '🟠' };
@@ -475,8 +476,9 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map(p => {
            const gap = p.actualProgress - p.budgetUtil;
-           const seeiRaw = p.budgetUtil > 0 ? parseFloat(((p.actualProgress / p.budgetUtil) * 100).toFixed(1)) : 0;
-           const seeiColor = seeiRaw >= 120 ? '#065F46' : seeiRaw >= 90 ? '#16A34A' : seeiRaw >= 60 ? '#D97706' : '#DC2626';
+           const effectiveUtil = p.budgetUtil <= 0 ? 1 : p.budgetUtil;
+           const seeiRaw = Math.min(100, parseFloat(((p.actualProgress / effectiveUtil) * 100).toFixed(1)));
+           const seeiColor = seeiRaw >= 100 ? '#065F46' : seeiRaw >= 90 ? '#16A34A' : seeiRaw >= 60 ? '#D97706' : '#DC2626';
            return (
              <div key={p.pillar} className="rounded-xl border border-border/40 p-4 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
