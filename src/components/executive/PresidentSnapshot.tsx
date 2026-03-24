@@ -355,11 +355,10 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-muted-foreground" />
               <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Execution & Budget Alignment by Pillar</span>
-              <InfoTip text="Grouped bar chart comparing Progress vs Budget Utilization per pillar. Use Focus Mode to inspect independently." />
+              <InfoTip text="View Progress or Budget Utilization per pillar. Alignment Insights provide per-pillar interpretation." />
             </div>
             <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
               {([
-                { key: 'combined' as FocusMode, label: 'Combined' },
                 { key: 'execution' as FocusMode, label: 'Execution' },
                 { key: 'budget' as FocusMode, label: 'Budget' },
               ]).map(m => (
@@ -369,12 +368,11 @@ export default function PresidentSnapshot({ aggregation }: Props) {
               ))}
             </div>
           </div>
-          {focusMode !== 'combined' && (
-            <p className="text-[10px] text-muted-foreground italic mb-3">In Focus Mode, metrics are shown independently to support detailed inspection.</p>
-          )}
-          {focusMode === 'combined' && <CombinedBarChart pillarData={pillarData} avgBudgetUtil={avgBudgetUtil} expectedProgress={expectedProgress} />}
           {focusMode === 'execution' && <ExecutionFocusChart pillarData={pillarData} expectedProgress={expectedProgress} />}
           {focusMode === 'budget' && <BudgetFocusChart pillarData={pillarData} avgBudgetUtil={avgBudgetUtil} />}
+
+          {/* Execution–Budget Alignment Insights */}
+          <AlignmentInsights pillarData={pillarData} expectedProgress={expectedProgress} />
         </motion.div>
       </section>
 
