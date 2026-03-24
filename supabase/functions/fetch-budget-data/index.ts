@@ -12,22 +12,99 @@ const FINANCE_SPREADSHEET_ID = '1SWb0okdTuFZub8XFS6tclitCv-FRaSXbcvx6kagvvu4';
 
 // Pillar subtotal rows and sheet names — STRICT, no auto-detection
 const PILLAR_BUDGET_CONFIG = [
-  { id: 'I',   sheetName: 'Pillar I GSR',         subtotalRow: 62 },
-  { id: 'II',  sheetName: 'Pillar II SAS',         subtotalRow: 81 },
-  { id: 'III', sheetName: 'Pillar III SOM',         subtotalRow: 101 },
-  { id: 'IV',  sheetName: 'Pillar IV Development',  subtotalRow: 225 },
-  { id: 'V',   sheetName: 'Pillar V ',              subtotalRow: 157 }, // trailing space required
+  { id: 'I', sheetName: 'Pillar I GSR', subtotalRow: 62 },
+  { id: 'II', sheetName: 'Pillar II SAS', subtotalRow: 81 },
+  { id: 'III', sheetName: 'Pillar III SOM', subtotalRow: 101 },
+  { id: 'IV', sheetName: 'Pillar IV Development', subtotalRow: 225 },
+  { id: 'V', sheetName: 'Pillar V ', subtotalRow: 157 }, // trailing space required
 ];
 
 // Column mapping within Q:AC range (0-indexed):
 // Q=0(Year4), R=1(Year5), S=2, T=3, U=4, V=5(Allocation), W=6, X=7, Y=8(Unspent), Z=9(Spent), AA=10(TotalCommitted), AB=11, AC=12(Available)
-const COL_YEAR4 = 0;       // Q - Year 4 (2025-2026)
-const COL_YEAR5 = 1;       // R - Year 5 (2026-2027)
-const COL_ALLOCATION = 5;  // V - Total Budget (Allocation)
-const COL_UNSPENT = 8;     // Y - Unspent Commitment
-const COL_SPENT = 9;       // Z - Spent Commitment
-const COL_COMMITTED = 10;  // AA - Total Committed
-const COL_AVAILABLE = 12;  // AC - Available Balance
+const COL_YEAR4 = 0; // Q - Year 4 (2025-2026)
+const COL_YEAR5 = 1; // R - Year 5 (2026-2027)
+const COL_ALLOCATION = 5; // V - Total Budget (Allocation)
+const COL_UNSPENT = 8; // Y - Unspent Commitment
+const COL_SPENT = 9; // Z - Spent Commitment
+const COL_COMMITTED = 10; // AA - Total Committed
+const COL_AVAILABLE = 12; // AC - Available Balance
+
+const RATE_LIMIT_PATTERN = /(RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|RATE_LIMITED|\b429\b)/i;
+const BUDGET_CACHE_TTL_MS = 2 * 60 * 1000;
+
+type BudgetDataPayload = {
+  pillars: Record<string, {
+    allocation: number;
+    spent: number;
+    unspent: number;
+    committed: number;
+    available: number;
+    year4: number;
+    year5: number;
+  }>;
+  observedAt: string;
+  validationErrors: string[];
+  stale?: boolean;
+  warning?: string;
+};
+
+type BudgetCacheEntry = {
+  data: BudgetDataPayload;
+  cachedAt: number;
+  expiresAt: number;
+};
+
+type BudgetCacheGlobal = typeof globalThis & {
+  __budget_data_cache__?: BudgetCacheEntry;
+};
+
+const budgetCacheGlobal = globalThis as BudgetCacheGlobal;
+
+function getBudgetCache(): BudgetCacheEntry | null {
+  return budgetCacheGlobal.__budget_data_cache__ ?? null;
+}
+
+function setBudgetCache(data: BudgetDataPayload) {
+  budgetCacheGlobal.__budget_data_cache__ = {
+    data,
+    cachedAt: Date.now(),
+    expiresAt: Date.now() + BUDGET_CACHE_TTL_MS,
+  };
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAttempts = 4): Promise<Response> {
+  let lastRateLimitBody = '';
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (response.status !== 429) {
+      return response;
+    }
+
+    lastRateLimitBody = await response.text();
+
+    if (attempt < maxAttempts - 1) {
+      const retryAfterHeader = response.headers.get('retry-after');
+      const retryAfterMs = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) * 1000 : NaN;
+      const backoffMs = Number.isFinite(retryAfterMs) && retryAfterMs > 0
+        ? retryAfterMs
+        : 1000 * Math.pow(2, attempt);
+      await sleep(backoffMs + Math.floor(Math.random() * 250));
+      continue;
+    }
+
+    throw new Error(`RATE_LIMITED: Google Sheets API error: 429 ${lastRateLimitBody}`);
+  }
+
+  throw new Error(`RATE_LIMITED: Google Sheets API error: 429 ${lastRateLimitBody}`);
+}
 
 async function createJWT(serviceAccount: any): Promise<string> {
   const header = { alg: "RS256", typ: "JWT" };
@@ -103,6 +180,20 @@ serve(async (req) => {
       });
     }
 
+    const freshCache = getBudgetCache();
+    if (freshCache && freshCache.expiresAt > Date.now()) {
+      return new Response(JSON.stringify({
+        ...freshCache.data,
+        cache: {
+          hit: true,
+          stale: false,
+          cachedAt: new Date(freshCache.cachedAt).toISOString(),
+        },
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Get service account
     const serviceAccountRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
     if (!serviceAccountRaw) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY is not configured');
@@ -110,17 +201,15 @@ serve(async (req) => {
     const accessToken = await getAccessToken(serviceAccount);
 
     // Build ranges: one row per pillar, columns Q:AC
-    const ranges = PILLAR_BUDGET_CONFIG.map(p => {
+    const ranges = PILLAR_BUDGET_CONFIG.map((p) => {
       const escaped = `'${p.sheetName}'`;
       return `${escaped}!Q${p.subtotalRow}:AC${p.subtotalRow}`;
     });
 
-    const rangeParams = ranges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
+    const rangeParams = ranges.map((r) => `ranges=${encodeURIComponent(r)}`).join('&');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${FINANCE_SPREADSHEET_ID}/values:batchGet?${rangeParams}&valueRenderOption=UNFORMATTED_VALUE`;
 
-    const sheetsResp = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const sheetsResp = await fetchWithRateLimitRetry(url, accessToken);
 
     if (!sheetsResp.ok) {
       const errText = await sheetsResp.text();
@@ -173,11 +262,13 @@ serve(async (req) => {
       console.warn('Budget validation warnings:', validationErrors);
     }
 
-    const result = {
+    const result: BudgetDataPayload = {
       pillars,
       observedAt: new Date().toISOString(),
       validationErrors,
     };
+
+    setBudgetCache(result);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -185,6 +276,34 @@ serve(async (req) => {
   } catch (error) {
     console.error('fetch-budget-data error:', error);
     const msg = error instanceof Error ? error.message : 'Unknown error';
+    const isRateLimited = RATE_LIMIT_PATTERN.test(msg);
+
+    if (isRateLimited) {
+      const staleCache = getBudgetCache();
+      if (staleCache) {
+        return new Response(JSON.stringify({
+          ...staleCache.data,
+          stale: true,
+          warning: 'Budget data is temporarily using a cached snapshot due to source rate limits.',
+          cache: {
+            hit: true,
+            stale: true,
+            cachedAt: new Date(staleCache.cachedAt).toISOString(),
+          },
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        error: 'Data source is temporarily rate-limited. Please retry in about a minute.',
+        code: 'RATE_LIMITED',
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: msg }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
