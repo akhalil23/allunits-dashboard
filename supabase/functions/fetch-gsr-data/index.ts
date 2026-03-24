@@ -421,10 +421,75 @@ function processPillarData(
 // MAIN HANDLER
 // ============================================================
 
+const RATE_LIMIT_PATTERN = /(RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|RATE_LIMITED|\b429\b)/i;
+const GSR_CACHE_TTL_MS = 2 * 60 * 1000;
+
+type GsrCacheEntry = {
+  data: any;
+  cachedAt: number;
+  expiresAt: number;
+};
+
+type GsrCacheGlobal = typeof globalThis & {
+  __gsr_data_cache__?: Map<string, GsrCacheEntry>;
+};
+
+const gsrCacheGlobal = globalThis as GsrCacheGlobal;
+const gsrDataCache = gsrCacheGlobal.__gsr_data_cache__ ?? new Map<string, GsrCacheEntry>();
+gsrCacheGlobal.__gsr_data_cache__ = gsrDataCache;
+
+function getGsrCache(unitId: string): GsrCacheEntry | null {
+  return gsrDataCache.get(unitId) ?? null;
+}
+
+function setGsrCache(unitId: string, data: any) {
+  gsrDataCache.set(unitId, {
+    data,
+    cachedAt: Date.now(),
+    expiresAt: Date.now() + GSR_CACHE_TTL_MS,
+  });
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAttempts = 4): Promise<Response> {
+  let lastRateLimitBody = '';
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (response.status !== 429) {
+      return response;
+    }
+
+    lastRateLimitBody = await response.text();
+
+    if (attempt < maxAttempts - 1) {
+      const retryAfterHeader = response.headers.get('retry-after');
+      const retryAfterMs = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) * 1000 : NaN;
+      const backoffMs = Number.isFinite(retryAfterMs) && retryAfterMs > 0
+        ? retryAfterMs
+        : 1000 * Math.pow(2, attempt);
+      await sleep(backoffMs + Math.floor(Math.random() * 250));
+      continue;
+    }
+
+    throw new Error(`RATE_LIMITED: Google Sheets API error: 429 ${lastRateLimitBody}`);
+  }
+
+  throw new Error(`RATE_LIMITED: Google Sheets API error: 429 ${lastRateLimitBody}`);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  let requestedUnitId = 'GSR';
 
   try {
     // --- SERVER-SIDE AUTH & UNIT ISOLATION ---
@@ -454,13 +519,14 @@ serve(async (req) => {
     const { data: userRole } = await userClient.rpc('get_user_role', { _user_id: user.id });
     const { data: userUnit } = await userClient.rpc('get_user_unit', { _user_id: user.id });
 
-    let requestedUnitId = 'GSR';
     try {
       if (req.method === 'POST') {
         const body = await req.json();
         if (body?.unitId) requestedUnitId = body.unitId;
       }
-    } catch { /* use default */ }
+    } catch {
+      // Use default
+    }
 
     // Enforce unit isolation
     if (userRole !== 'admin') {
@@ -477,6 +543,20 @@ serve(async (req) => {
     if (!spreadsheetId) {
       return new Response(JSON.stringify({ error: `Configuration error: unknown unit "${requestedUnitId}"` }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const freshCache = getGsrCache(requestedUnitId);
+    if (freshCache && freshCache.expiresAt > Date.now()) {
+      return new Response(JSON.stringify({
+        ...freshCache.data,
+        cache: {
+          hit: true,
+          stale: false,
+          cachedAt: new Date(freshCache.cachedAt).toISOString(),
+        },
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -498,9 +578,7 @@ serve(async (req) => {
     const rangeParams = RANGES.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangeParams}`;
 
-    let sheetsResp = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    let sheetsResp = await fetchWithRateLimitRetry(url, accessToken);
 
     // If BX:CY range exceeds grid limits, retry with core-only ranges
     let coreOnly = false;
@@ -511,9 +589,7 @@ serve(async (req) => {
         const { ranges: coreRanges } = buildCoreOnlyRanges(pillarConfig);
         const coreParams = coreRanges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
         const coreUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${coreParams}`;
-        sheetsResp = await fetch(coreUrl, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        sheetsResp = await fetchWithRateLimitRetry(coreUrl, accessToken);
         if (!sheetsResp.ok) {
           const coreErrText = await sheetsResp.text();
           throw new Error(`Google Sheets API error: ${sheetsResp.status} ${coreErrText}`);
@@ -551,7 +627,7 @@ serve(async (req) => {
         const coreRows = coreRange.values.slice(1);
         const termRows = coreRows.map(() => [] as any[]);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies
+          pillarMap[p].id, coreRows, termRows, anomalies,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -568,7 +644,7 @@ serve(async (req) => {
         const coreRows = coreRange.values.slice(1);
         const termRows = termRange.values.slice(1);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies
+          pillarMap[p].id, coreRows, termRows, anomalies,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -586,22 +662,9 @@ serve(async (req) => {
       console.warn('Missing term columns:', anomalies.missingTermColumns.slice(0, 20));
     }
 
-    // Fetch sheet metadata
-    let sheetLastModified: string | null = null;
-    let sheetLastModifiedBy: string | null = null;
-    try {
-      const driveUrl = `https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=modifiedTime,lastModifyingUser/displayName`;
-      const driveResp = await fetch(driveUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (driveResp.ok) {
-        const driveData = await driveResp.json();
-        sheetLastModified = driveData.modifiedTime || null;
-        sheetLastModifiedBy = driveData.lastModifyingUser?.displayName || null;
-      }
-    } catch (driveErr) {
-      console.warn('Drive metadata fetch error:', driveErr);
-    }
+    // Disabled per-request Drive metadata lookup to reduce external API pressure.
+    const sheetLastModified: string | null = null;
+    const sheetLastModifiedBy: string | null = null;
 
     const result = {
       data: allItems,
@@ -622,12 +685,42 @@ serve(async (req) => {
       },
     };
 
+    setGsrCache(requestedUnitId, result);
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('fetch-gsr-data error:', error);
     const msg = error instanceof Error ? error.message : 'Unknown error';
+    const isRateLimited = RATE_LIMIT_PATTERN.test(msg);
+
+    if (isRateLimited) {
+      const staleCache = getGsrCache(requestedUnitId);
+      if (staleCache) {
+        return new Response(JSON.stringify({
+          ...staleCache.data,
+          stale: true,
+          warning: `Unit ${requestedUnitId} is temporarily using a cached snapshot due to source rate limits.`,
+          cache: {
+            hit: true,
+            stale: true,
+            cachedAt: new Date(staleCache.cachedAt).toISOString(),
+          },
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({
+        error: 'Data source is temporarily rate-limited. Please retry in about a minute.',
+        code: 'RATE_LIMITED',
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
