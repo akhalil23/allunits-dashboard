@@ -483,9 +483,9 @@ function computeCategories(
 
         const entry = stepMap.get(key)!;
         if (status === 'Not Started') {
-          entry.nsUnits.push(ur.unitId);
+          if (!entry.nsUnits.includes(ur.unitId)) entry.nsUnits.push(ur.unitId);
         } else if (isNotApplicableStatus(status)) {
-          entry.naUnits.push(ur.unitId);
+          if (!entry.naUnits.includes(ur.unitId)) entry.naUnits.push(ur.unitId);
         }
       });
     });
