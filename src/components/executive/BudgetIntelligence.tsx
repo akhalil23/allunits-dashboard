@@ -107,17 +107,25 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     });
   }, [unitResults, pillarAgg, viewType, term, academicYear]);
 
-  // Expected progress
+  // Expected Progress based on academic year timelines (Sep–Aug), NOT terms
   const expectedProgress = useMemo(() => {
+    if (viewType === 'cumulative') {
+      const windowStart = new Date(2025, 8, 1); // Sep 1, 2025
+      const windowEnd = new Date(2027, 7, 31);  // Aug 31, 2027
+      const now = new Date();
+      const totalMs = windowEnd.getTime() - windowStart.getTime();
+      const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
+      return Math.round((elapsedMs / totalMs) * 100);
+    }
     const [startYearStr] = academicYear.split('-');
     const startYear = parseInt(startYearStr);
-    const windowStart = new Date(startYear, 6, 1);
-    const windowEnd = term === 'mid' ? new Date(startYear, 11, 31) : new Date(startYear + 1, 5, 30);
+    const windowStart = new Date(startYear, 8, 1);    // Sep 1
+    const windowEnd = new Date(startYear + 1, 7, 31); // Aug 31
     const now = new Date();
     const totalMs = windowEnd.getTime() - windowStart.getTime();
     const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
     return Math.round((elapsedMs / totalMs) * 100);
-  }, [term, academicYear]);
+  }, [viewType, academicYear]);
 
   const budgetEffectiveness = useMemo(() => {
     const insights: string[] = [];
