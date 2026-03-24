@@ -39,7 +39,7 @@ interface Props {
   aggregation: UniversityAggregation;
 }
 
-type FocusMode = 'combined' | 'execution' | 'budget';
+type FocusMode = 'execution' | 'budget';
 
 function getBudgetHealthLabel(available: number, allocation: number): { label: string; color: string } {
   const h = computeBudgetHealth(available, allocation);
