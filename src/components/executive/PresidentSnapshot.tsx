@@ -437,25 +437,26 @@ function PillarReferencePanel() {
 
 /* ─── Alignment Insights Panel ────────────────────────────────────── */
 
-function getAlignmentCategory(progress: number, budgetUtil: number): { label: string; color: string; icon: string } {
-  if (budgetUtil < 20 && progress < 20) return { label: 'Under-Activated', color: '#1D4ED8', icon: '🔵' };
-  if (budgetUtil > 60 && progress < 30) return { label: 'Critical Misalignment', color: '#DC2626', icon: '🔴' };
-  if (progress > budgetUtil + 15) return { label: 'Efficient', color: '#065F46', icon: '🟢' };
-  if (budgetUtil > progress + 15) return { label: 'Spending Ahead', color: '#D97706', icon: '🟠' };
-  return { label: 'Balanced', color: '#16A34A', icon: '🟡' };
+function getSEEIBand(progress: number, budgetUtil: number): { label: string; color: string; icon: string } {
+  if (budgetUtil < 1 && progress < 1) return { label: 'Under-Activated', color: '#1D4ED8', icon: '🔵' };
+  const seeiRaw = budgetUtil > 0 ? (progress / budgetUtil) * 100 : 0;
+  if (seeiRaw >= 120) return { label: 'Highly Efficient', color: '#065F46', icon: '🟢' };
+  if (seeiRaw >= 90) return { label: 'Balanced', color: '#16A34A', icon: '🟡' };
+  if (seeiRaw >= 60) return { label: 'Concern', color: '#D97706', icon: '🟠' };
+  return { label: 'Critical', color: '#DC2626', icon: '🔴' };
 }
 
 function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]; expectedProgress: number }) {
   // Generate summary
-  const categories = pillarData.map(p => ({ ...p, alignment: getAlignmentCategory(p.actualProgress, p.budgetUtil) }));
-  const efficient = categories.filter(c => c.alignment.label === 'Efficient' || c.alignment.label === 'Balanced');
-  const concern = categories.filter(c => c.alignment.label === 'Critical Misalignment' || c.alignment.label === 'Spending Ahead');
+  const categories = pillarData.map(p => ({ ...p, alignment: getSEEIBand(p.actualProgress, p.budgetUtil) }));
+  const healthy = categories.filter(c => c.alignment.label === 'Highly Efficient' || c.alignment.label === 'Balanced');
+  const atRisk = categories.filter(c => c.alignment.label === 'Critical' || c.alignment.label === 'Concern');
 
   const summaryLines: string[] = [];
-  if (efficient.length === 5) summaryLines.push('All pillars show balanced or efficient alignment between progress and spending.');
+  if (healthy.length === 5) summaryLines.push('All pillars show balanced or highly efficient execution relative to spending.');
   else {
-    if (efficient.length > 0) summaryLines.push(`${efficient.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${efficient.length === 1 ? 'shows' : 'show'} healthy alignment.`);
-    if (concern.length > 0) summaryLines.push(`${concern.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${concern.length === 1 ? 'requires' : 'require'} attention due to spending-progress imbalance.`);
+    if (healthy.length > 0) summaryLines.push(`${healthy.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${healthy.length === 1 ? 'shows' : 'show'} healthy execution efficiency.`);
+    if (atRisk.length > 0) summaryLines.push(`${atRisk.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${atRisk.length === 1 ? 'requires' : 'require'} attention — execution efficiency is below expectations.`);
   }
 
   return (
@@ -474,7 +475,8 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map(p => {
            const gap = p.actualProgress - p.budgetUtil;
-           const seei = p.budgetUtil > 0 ? Math.min(100, parseFloat(((p.actualProgress / p.budgetUtil) * 100).toFixed(1))) : 0;
+           const seeiRaw = p.budgetUtil > 0 ? parseFloat(((p.actualProgress / p.budgetUtil) * 100).toFixed(1)) : 0;
+           const seeiColor = seeiRaw >= 120 ? '#065F46' : seeiRaw >= 90 ? '#16A34A' : seeiRaw >= 60 ? '#D97706' : '#DC2626';
            return (
              <div key={p.pillar} className="rounded-xl border border-border/40 p-4 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
@@ -486,7 +488,7 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
                  <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span></div>
                  <div className="flex justify-between"><span className="text-muted-foreground">Budget Util.</span><span className="font-bold text-foreground">{p.budgetUtil}%</span></div>
                  <div className="flex justify-between"><span className="text-muted-foreground">Execution Gap</span><span className="font-bold" style={{ color: gap >= 0 ? '#16A34A' : '#DC2626' }}>{gap >= 0 ? '+' : ''}{gap.toFixed(1)}%</span></div>
-                 <div className="flex justify-between"><span className="text-muted-foreground">SEEI</span><span className="font-bold" style={{ color: seei >= 80 ? '#065F46' : seei >= 50 ? '#D97706' : '#DC2626' }}>{seei}%</span></div>
+                 <div className="flex justify-between"><span className="text-muted-foreground">SEEI</span><span className="font-bold" style={{ color: seeiColor }}>{seeiRaw}%</span></div>
               </div>
               <div className="mt-3 pt-2 border-t border-border/30">
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1" style={{ backgroundColor: `${p.alignment.color}15`, color: p.alignment.color }}>
