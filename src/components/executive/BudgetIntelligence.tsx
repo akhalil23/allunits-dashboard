@@ -307,7 +307,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
 
           {/* Col 2: Budget Composition donut */}
           <div className="md:w-[200px] shrink-0">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Composition</p>
+            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Composition</p>
             <div className="flex items-center gap-2">
               <div className="w-[48px] h-[48px] shrink-0">
                 <ResponsiveContainer>
