@@ -881,7 +881,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           <p className="text-[10px] text-foreground mb-1">Progress vs Expected</p>
           <div className="flex items-center gap-1.5">
             <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span>
-            <span className="text-[10px] text-muted-foreground">/ {expectedProgress}%</span>
+            <span className="text-[10px] text-foreground/70">/ {expectedProgress}%</span>
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
           <div className="h-2 rounded-full bg-muted overflow-hidden mt-2 relative">
