@@ -60,7 +60,13 @@ interface CategoryData {
   items: StepItem[];
 }
 
-const TOTAL_UNITS = 22;
+const VALID_STATUSES = new Set([
+  'Not Applicable',
+  'Not Started',
+  'In Progress',
+  'Completed – On Target',
+  'Completed – Below Target',
+]);
 
 // ─── Text cleaning ──────────────────────────────────────────────────────────
 
@@ -374,7 +380,8 @@ function StepRow({ step, categoryKey }: { step: StepItem; categoryKey: CategoryK
   const isNS = categoryKey.includes('ns');
   const relevantUnits = isNS ? step.nsUnits : step.naUnits;
   const count = relevantUnits.length;
-  const pct = Math.round((count / TOTAL_UNITS) * 100);
+  const denominator = step.totalUnits > 0 ? step.totalUnits : 1;
+  const pct = Math.round((count / denominator) * 100);
   const isAbsolute = categoryKey.startsWith('absolute');
 
   return (
@@ -382,7 +389,7 @@ function StepRow({ step, categoryKey }: { step: StepItem; categoryKey: CategoryK
       <div className="flex-1 min-w-0">
         <p className="text-xs text-foreground">{step.actionStep || '(Unnamed Step)'}</p>
         <p className="text-[10px] text-muted-foreground mt-0.5">
-          {isNS ? 'Not Started' : 'Not Applicable'} by {count}/{TOTAL_UNITS} units ({pct}%)
+          {isNS ? 'Not Started' : 'Not Applicable'} by {count}/{step.totalUnits} units ({pct}%)
         </p>
       </div>
 
@@ -403,7 +410,7 @@ function StepRow({ step, categoryKey }: { step: StepItem; categoryKey: CategoryK
               }
             `}
           >
-            {count}/{TOTAL_UNITS}
+            {count}/{step.totalUnits}
           </button>
         </PopoverTrigger>
         <PopoverContent
@@ -439,7 +446,8 @@ function computeCategories(
   academicYear: '2025-2026' | '2026-2027'
 ): CategoryData[] {
   const loadedUnits = unitResults.filter(u => u.result && !u.error);
-  const threshold75 = Math.ceil(TOTAL_UNITS * 0.75); // 16
+  const actualUnitCount = loadedUnits.length;
+  const threshold75 = Math.ceil(actualUnitCount * 0.75);
 
   // Build step map: unique key → aggregated units
   // Key = pillar|goal|action|actionStep (all forward-filled & cleaned)
@@ -467,8 +475,10 @@ function computeCategories(
       const filled = forwardFill(pillarItems);
 
       filled.forEach(({ goal, action, actionStep, pillar, item }) => {
-        const status = getItemStatus(item, viewType, term, academicYear);
-        const key = `${pillar}|${goal}|${action}|${actionStep}`;
+        const rawStatus = (getItemStatus(item, viewType, term, academicYear) || '').trim();
+        if (!VALID_STATUSES.has(rawStatus)) return;
+
+        const key = `${pillar}|${item.sheetRow}`;
 
         if (!stepMap.has(key)) {
           stepMap.set(key, {
@@ -482,17 +492,16 @@ function computeCategories(
         }
 
         const entry = stepMap.get(key)!;
-        if (status === 'Not Started') {
+        if (rawStatus === 'Not Started') {
           if (!entry.nsUnits.includes(ur.unitId)) entry.nsUnits.push(ur.unitId);
-        } else if (isNotApplicableStatus(status)) {
+        } else if (isNotApplicableStatus(rawStatus)) {
           if (!entry.naUnits.includes(ur.unitId)) entry.naUnits.push(ur.unitId);
         }
       });
     });
   });
 
-  // Categorize — use actual loaded unit count for "absolute" checks
-  const actualUnitCount = loadedUnits.length;
+  // Categorize — always based on active units only
   const majorityNS: StepItem[] = [];
   const absoluteNS: StepItem[] = [];
   const majorityNA: StepItem[] = [];
@@ -506,20 +515,20 @@ function computeCategories(
       action: entry.action,
       nsUnits: entry.nsUnits,
       naUnits: entry.naUnits,
-      totalUnits: TOTAL_UNITS,
+      totalUnits: actualUnitCount,
     };
 
-    if (entry.nsUnits.length >= threshold75) majorityNS.push(item);
-    if (entry.nsUnits.length === actualUnitCount) absoluteNS.push(item);
-    if (entry.naUnits.length >= threshold75) majorityNA.push(item);
-    if (entry.naUnits.length === actualUnitCount) absoluteNA.push(item);
+    if (actualUnitCount > 0 && entry.nsUnits.length >= threshold75) majorityNS.push(item);
+    if (actualUnitCount > 0 && entry.nsUnits.length === actualUnitCount) absoluteNS.push(item);
+    if (actualUnitCount > 0 && entry.naUnits.length >= threshold75) majorityNA.push(item);
+    if (actualUnitCount > 0 && entry.naUnits.length === actualUnitCount) absoluteNA.push(item);
   });
 
   return [
     { key: 'majority-ns', title: 'Majority Not Started', definition: `Not Started by ≥ 75% of units (≥ ${threshold75})`, count: majorityNS.length, accent: 'ns', items: majorityNS },
-    { key: 'absolute-ns', title: 'Absolute Not Started', definition: `Not Started by all ${TOTAL_UNITS} units`, count: absoluteNS.length, accent: 'ns', items: absoluteNS },
+    { key: 'absolute-ns', title: 'Absolute Not Started', definition: `Not Started by all ${actualUnitCount} active units`, count: absoluteNS.length, accent: 'ns', items: absoluteNS },
     { key: 'majority-na', title: 'Majority Not Applicable', definition: `Not Applicable by ≥ 75% of units (≥ ${threshold75})`, count: majorityNA.length, accent: 'na', items: majorityNA },
-    { key: 'absolute-na', title: 'Absolute Not Applicable', definition: `Not Applicable by all ${TOTAL_UNITS} units`, count: absoluteNA.length, accent: 'na', items: absoluteNA },
+    { key: 'absolute-na', title: 'Absolute Not Applicable', definition: `Not Applicable by all ${actualUnitCount} active units`, count: absoluteNA.length, accent: 'na', items: absoluteNA },
   ];
 }
 

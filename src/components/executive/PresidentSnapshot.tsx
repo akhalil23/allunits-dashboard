@@ -9,7 +9,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   CheckCircle2, AlertTriangle, TrendingUp, DollarSign,
-  ShieldAlert, Lightbulb, Info, Activity, Eye, BarChart3, Target,
+  ShieldAlert, Lightbulb, Info, Eye, BarChart3, Target,
 } from 'lucide-react';
 import {
   BarChart, Bar,
@@ -85,6 +85,14 @@ function getProgressStatus(actual: number, expected: number, tolerance: number =
   if (actual >= expected - tolerance) return { label: 'On Track', color: '#16A34A' };
   return { label: 'Behind Plan', color: '#DC2626' };
 }
+
+const roundPercent = (value: number) => Math.round(value * 10) / 10;
+const formatSignedPercent = (value: number) => {
+  const rounded = roundPercent(value);
+  const abs = Math.abs(rounded);
+  const formatted = Number.isInteger(rounded) ? abs.toFixed(0) : abs.toFixed(1);
+  return `${rounded >= 0 ? '+' : '-'}${formatted}%`;
+};
 
 /** Descriptive alignment insight for a pillar based on execution & budget ratios */
 function getAlignmentInsight(progress: number, commitmentRatio: number, spendingRatio: number, expectedProgress: number): {
@@ -288,7 +296,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       {/* KPI Cards */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
-          <KPICard label="SSI" value={`${ssi.value}%`} icon={Activity} color={ssi.color} subtitle={ssi.label} tooltip="Integrated signal combining progress, budget alignment, and risk exposure to reflect overall strategic stability." />
+          <KPICard label="SSI" value={`${ssi.value}%`} color={ssi.color} subtitle={ssi.label} tooltip="Integrated signal combining progress, budget alignment, and risk exposure to reflect overall strategic stability." />
           {/* Progress KPI with Expected Progress comparison */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
             <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${progressStatus.color}, ${progressStatus.color}88)` }} />
@@ -303,10 +311,10 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             </div>
           </motion.div>
           {/* Commitment Ratio KPI */}
-          <KPICard label="Commitment Ratio" value={`${(commitmentRatio * 100).toFixed(1)}%`} icon={DollarSign} color={budgetHealth.color} subtitle={budgetHealth.label} tooltip="Committed ÷ Allocated. Reflects total financial commitment against planned allocation." />
+          <KPICard label="Commitment Ratio" value={`${(commitmentRatio * 100).toFixed(1)}%`} color={budgetHealth.color} subtitle={budgetHealth.label} tooltip="Committed ÷ Allocated. Reflects total financial commitment against planned allocation." />
           {/* Spending Ratio KPI */}
-          <KPICard label="Spending Ratio" value={`${(spendingRatio * 100).toFixed(1)}%`} icon={DollarSign} color={spendingRatio > 0.7 ? '#EF4444' : spendingRatio > 0.4 ? '#F59E0B' : '#16A34A'} subtitle="Spent ÷ Allocated" tooltip="Spent ÷ Allocated. Indicates proportion of budget actually disbursed." />
-          <KPICard label="Risk Index" value={`${riInfo.percent}%`} icon={ShieldAlert} color={riInfo.color} subtitle={riInfo.band} tooltip="Risk Index reflects exposure to delivery risk based on emerging, critical, and realized signals." />
+          <KPICard label="Spending Ratio" value={`${(spendingRatio * 100).toFixed(1)}%`} color={spendingRatio > 0.7 ? '#EF4444' : spendingRatio > 0.4 ? '#F59E0B' : '#16A34A'} subtitle="Spent ÷ Allocated" tooltip="Spent ÷ Allocated. Indicates proportion of budget actually disbursed." />
+          <KPICard label="Risk Index" value={`${riInfo.percent}%`} color={riInfo.color} subtitle={riInfo.band} tooltip="Risk Index reflects exposure to delivery risk based on emerging, critical, and realized signals." />
           {/* Completion with breakdown */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
             <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, #059669, #05966988)` }} />
@@ -472,11 +480,29 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
     summaryLines.push(`${highSpendLowExec} pillar${highSpendLowExec > 1 ? 's show' : ' shows'} elevated spending with limited execution output, warranting efficiency review.`);
   }
 
+  const badgeTone = (badge: string): string => {
+    switch (badge) {
+      case 'Ahead of schedule':
+        return 'bg-primary/15 text-primary';
+      case 'Behind schedule':
+        return 'bg-destructive/15 text-destructive';
+      case 'Resource constrained':
+        return 'bg-amber-500/15 text-amber-600';
+      case 'Spending intensive':
+        return 'bg-orange-500/15 text-orange-600';
+      case 'Stable alignment':
+        return 'bg-emerald-500/15 text-emerald-600';
+      default:
+        return 'bg-muted/40 text-muted-foreground';
+    }
+  };
+
   return (
     <div className="mt-6 space-y-4">
       <div className="flex items-center gap-2 mb-2">
         <Target className="w-4 h-4 text-primary" />
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Execution–Budget Alignment Insights</span>
+        <InfoTip text="Per-pillar descriptive diagnosis of execution and funding alignment. Execution Gap is the primary highlighted signal." />
       </div>
       {/* Global Alignment Diagnosis */}
       {summaryLines.length > 0 && (
@@ -488,7 +514,7 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map(p => {
-           const gap = p.executionGap;
+           const gap = roundPercent(p.executionGap);
            return (
              <div key={p.pillar} className="rounded-xl border border-border/40 p-4 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
@@ -500,8 +526,7 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
                  <div className="flex justify-between"><span className="text-foreground">Progress</span><span className="font-bold text-foreground">{p.actualProgress}%</span></div>
                  <div className="flex justify-between"><span className="text-foreground">Commitment Ratio</span><span className="font-bold text-foreground">{(p.commitmentRatio * 100).toFixed(1)}%</span></div>
                  <div className="flex justify-between"><span className="text-foreground">Spending Ratio</span><span className="font-bold text-foreground">{(p.spendingRatio * 100).toFixed(1)}%</span></div>
-                 <div className="flex justify-between"><span className="text-foreground">vs Expected</span><span className="font-bold text-foreground">{expectedProgress}%</span></div>
-                 <div className="flex justify-between"><span className="text-foreground">Execution Gap</span><span className="font-bold" style={{ color: gap >= 0 ? '#16A34A' : '#DC2626' }}>{gap >= 0 ? '+' : ''}{gap}%</span></div>
+                  <div className="flex justify-between"><span className="text-foreground">Execution Gap</span><span className="font-bold" style={{ color: gap >= 0 ? '#16A34A' : '#DC2626' }}>{formatSignedPercent(gap)}</span></div>
               </div>
               {/* Diagnostic insight */}
               <p className="text-[10px] text-foreground mt-3 leading-relaxed border-t border-border/30 pt-2">{p.insight.label}</p>
@@ -509,7 +534,7 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
               {p.insight.badges.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {p.insight.badges.map((badge: string) => (
-                    <span key={badge} className="text-[9px] px-2 py-0.5 rounded-full font-semibold bg-muted/40 text-muted-foreground">{badge}</span>
+                    <span key={badge} className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${badgeTone(badge)}`}>{badge}</span>
                   ))}
                 </div>
               )}
@@ -932,26 +957,21 @@ function PillarLegendStrip({ showExpectedLine }: { showExpectedLine?: boolean } 
 
 /* ─── KPI Card ────────────────────────────────────────────────────── */
 
-function KPICard({ label, value, icon: Icon, color, subtitle, tooltip: tipText }: {
-  label: string; value: string; icon: React.ElementType; color: string; subtitle?: string; tooltip?: string;
+function KPICard({ label, value, color, subtitle, tooltip: tipText }: {
+  label: string; value: string; color: string; subtitle?: string; tooltip?: string;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2, transition: { duration: 0.2 } }} className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: color }} />
       <div className="relative p-4 sm:p-5 flex flex-col h-full">
-        <div className="flex items-start justify-between gap-2 flex-1">
-          <div className="flex-1 min-w-0 flex flex-col">
-            <div className="flex items-center gap-1">
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}</p>
-              {tipText && <InfoTip text={tipText} />}
-            </div>
-            <p className="text-xl sm:text-2xl font-display font-extrabold mt-1.5 tracking-tight" style={{ color }}>{value}</p>
-            {subtitle && <p className="text-[10px] sm:text-xs font-semibold mt-0.5" style={{ color }}>{subtitle}</p>}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex items-center gap-1">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}</p>
+            {tipText && <InfoTip text={tipText} />}
           </div>
-          <div className="p-2 rounded-xl shrink-0" style={{ backgroundColor: `${color}14` }}>
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color }} />
-          </div>
+          <p className="text-xl sm:text-2xl font-display font-extrabold mt-1.5 tracking-tight" style={{ color }}>{value}</p>
+          {subtitle && <p className="text-[10px] sm:text-xs font-semibold mt-0.5" style={{ color }}>{subtitle}</p>}
         </div>
       </div>
     </motion.div>

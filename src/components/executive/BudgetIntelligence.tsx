@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2, Lightbulb } from 'lucide-react';
+import { AlertTriangle, BarChart3, Loader2, Lightbulb } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, PieChart, Pie,
@@ -40,6 +40,14 @@ function getBudgetInsight(commitmentRatio: number, spendingRatio: number, prog: 
   if (prog > 60) return 'Active commitment with reasonable completion conversion.';
   return 'Commitment is active, but completion conversion remains moderate.';
 }
+
+const roundPercent = (value: number) => Math.round(value * 10) / 10;
+const formatSignedPercent = (value: number) => {
+  const rounded = roundPercent(value);
+  const abs = Math.abs(rounded);
+  const formatted = Number.isInteger(rounded) ? abs.toFixed(0) : abs.toFixed(1);
+  return `${rounded >= 0 ? '+' : '-'}${formatted}%`;
+};
 
 export default function BudgetIntelligence({ aggregation }: Props) {
   const [budgetScope, setBudgetScope] = useState<BudgetScope>('total');
@@ -116,6 +124,8 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
   const hasPressure = allRows.some(r => r.budgetPressure);
   const displayRows = pillarView === 'all' ? allRows : allRows.filter(r => r.pillar === pillarView);
+  const selectedRow = pillarView !== 'all' ? allRows.find(r => r.pillar === pillarView) : null;
+  const comparisonRows = pillarView !== 'all' ? allRows.filter(r => r.pillar !== pillarView) : [];
 
   if (budgetLoading) {
     return <div className="flex items-center justify-center py-20"><div className="text-center space-y-3"><Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" /><p className="text-sm text-muted-foreground">Loading live budget data…</p></div></div>;
@@ -151,9 +161,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
       {/* KPI Cards — Split into Commitment & Spending Ratios */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} fullValue={formatCurrencyFull(totals.allocation)} icon={DollarSign} color="hsl(var(--primary))" infoTip="Total approved budget across all pillars for the strategic plan period." />
+          <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} fullValue={formatCurrencyFull(totals.allocation)} color="hsl(var(--primary))" infoTip="Total approved budget across all pillars for the strategic plan period." />
           <CommittedKPICard committed={totals.committed} spent={totals.spent} unspent={totals.unspent} allocation={totals.allocation} />
-          <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} fullValue={formatCurrencyFull(totals.available)} icon={DollarSign} color="hsl(var(--primary))" extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined} infoTip="Budget capacity not yet committed and still available for future initiatives." />
+          <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} fullValue={formatCurrencyFull(totals.available)} color="hsl(var(--primary))" extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined} infoTip="Budget capacity not yet committed and still available for future initiatives." />
           {/* Commitment & Spending Ratio dual card */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
             <div className="h-1 w-full bg-gradient-to-r from-primary to-primary/50" />
@@ -181,7 +191,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
               </div>
             </div>
           </motion.div>
-          <BudgetKPICard label="Budget Health" subtitle="Financial Capacity" value={totals.health.health} icon={ShieldCheck} color={totals.health.color} showBar barPct={totals.utilization * 100} barColor={totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A'} extraText={`${(totals.utilization * 100).toFixed(1)}% committed`} infoTip="Budget health based on Commitment Ratio. Under-Deployed (<10%), Active (10–40%), Advanced (40–70%), Constrained (≥70%)." />
+          <BudgetKPICard label="Budget Health" subtitle="Financial Capacity" value={totals.health.health} color={totals.health.color} showBar barPct={totals.utilization * 100} barColor={totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A'} extraText={`${(totals.utilization * 100).toFixed(1)}% committed`} infoTip="Budget health based on Commitment Ratio. Under-Deployed (<10%), Active (10–40%), Advanced (40–70%), Constrained (≥70%)." />
         </div>
       </section>
 
@@ -234,11 +244,22 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           </div>
 
           {/* Per-pillar cards */}
-          <div className="space-y-4">
-            {displayRows.map((r, idx) => (
-              <BudgetPillarCard key={r.pillar} r={r} idx={idx} pillarProgressData={pillarProgressData} expectedProgress={expectedProgress} />
-            ))}
-          </div>
+          {pillarView === 'all' ? (
+            <div className="space-y-4">
+              {displayRows.map((r, idx) => (
+                <BudgetPillarCard key={r.pillar} r={r} idx={idx} pillarProgressData={pillarProgressData} expectedProgress={expectedProgress} />
+              ))}
+            </div>
+          ) : (
+            selectedRow && (
+              <SinglePillarBudgetAnalytics
+                row={selectedRow}
+                pillarProgressData={pillarProgressData}
+                expectedProgress={expectedProgress}
+                comparisonRows={comparisonRows}
+              />
+            )
+          )}
         </motion.div>
       </section>
     </div>
@@ -257,7 +278,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
   const riInfo = getRiskDisplayInfo(r.riskIndex);
   const pillarColor = PILLAR_COLORS[r.pillar];
   const availPct = r.allocation > 0 ? ((r.available / r.allocation) * 100).toFixed(1) : '0';
-  const executionGap = actualProgress - expectedProgress;
+  const executionGap = roundPercent(actualProgress - expectedProgress);
   const insight = getBudgetInsight(r.utilization, r.allocation > 0 ? r.spent / r.allocation : 0, actualProgress);
 
   const budgetDonut = [
@@ -335,7 +356,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
           <div className="md:w-[160px] shrink-0 space-y-1 text-[10px]">
             <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: pillarColor }}>{actualProgress}%</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Risk Index</span><span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Exec. Gap</span><span className="font-bold" style={{ color: executionGap >= 0 ? '#16A34A' : '#DC2626' }}>{executionGap >= 0 ? '+' : ''}{executionGap}%</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Exec. Gap</span><span className="font-bold" style={{ color: executionGap >= 0 ? '#16A34A' : '#DC2626' }}>{formatSignedPercent(executionGap)}</span></div>
             <p className="text-[9px] text-muted-foreground mt-1 leading-relaxed">{insight}</p>
           </div>
         </div>
@@ -344,35 +365,132 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
   );
 }
 
+function SinglePillarBudgetAnalytics({
+  row,
+  pillarProgressData,
+  expectedProgress,
+  comparisonRows,
+}: {
+  row: any;
+  pillarProgressData: any[];
+  expectedProgress: number;
+  comparisonRows: any[];
+}) {
+  const prog = pillarProgressData.find((p: any) => p.pillar === row.pillar);
+  const actualProgress = prog?.actualProgress ?? 0;
+  const executionGap = roundPercent(actualProgress - expectedProgress);
+  const commitmentRatio = row.utilization;
+  const spendingRatio = row.allocation > 0 ? row.spent / row.allocation : 0;
+  const insight = getBudgetInsight(commitmentRatio, spendingRatio, actualProgress);
+  const health = computeBudgetHealth(row.available, row.allocation);
+  const riInfo = getRiskDisplayInfo(row.riskIndex);
+  const pillarColor = PILLAR_COLORS[row.pillar];
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border/50 bg-card/90 p-5 sm:p-6 space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${pillarColor}18`, border: `1px solid ${pillarColor}30` }}>
+            <span className="text-xs font-bold" style={{ color: pillarColor }}>{row.pillar}</span>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">Expanded View — {PILLAR_FULL[row.pillar]}</p>
+            <p className="text-[10px] text-muted-foreground">Focused budget-to-execution analysis for selected pillar</p>
+          </div>
+        </div>
+        <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: `${health.color}15`, color: health.color }}>{health.health}</span>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+        <MetricBox label="Commitment Ratio" value={`${(commitmentRatio * 100).toFixed(1)}%`} />
+        <MetricBox label="Spending Ratio" value={`${(spendingRatio * 100).toFixed(1)}%`} />
+        <MetricBox label="Actual Progress" value={`${roundPercent(actualProgress)}%`} />
+        <MetricBox label="Expected Progress" value={`${expectedProgress}%`} />
+        <MetricBox label="Execution Gap" value={formatSignedPercent(executionGap)} valueClass={executionGap >= 0 ? 'text-primary' : 'text-destructive'} />
+        <MetricBox label="Risk Index" value={`${riInfo.percent}%`} valueStyle={{ color: riInfo.color }} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <RatioTrack label="Commitment Ratio" value={commitmentRatio * 100} color={commitmentRatio >= 0.8 ? '#EF4444' : commitmentRatio >= 0.4 ? '#F59E0B' : '#16A34A'} />
+        <RatioTrack label="Spending Ratio" value={spendingRatio * 100} color="#16A34A" />
+      </div>
+
+      <div className="rounded-xl border border-border/40 p-4">
+        <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Pillar Diagnosis</p>
+        <p className="text-xs text-foreground leading-relaxed">{insight}</p>
+      </div>
+
+      <div className="rounded-xl border border-border/40 p-4">
+        <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Other Pillars Context</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
+          {comparisonRows.map((other) => {
+            const otherProgress = pillarProgressData.find((p: any) => p.pillar === other.pillar)?.actualProgress ?? 0;
+            const otherGap = roundPercent(otherProgress - expectedProgress);
+            const otherHasValue = other.utilization >= 0;
+            return (
+              <div key={other.pillar} className="rounded-lg border border-border/30 p-2.5">
+                <p className="text-[10px] font-semibold text-foreground">P{other.pillar}</p>
+                <p className="text-[10px] text-muted-foreground">Commit {(other.utilization * 100).toFixed(1)}%</p>
+                <p className="text-[10px] text-muted-foreground">Spend {(other.allocation > 0 ? (other.spent / other.allocation) * 100 : 0).toFixed(1)}%</p>
+                <p className={`text-[10px] font-semibold ${otherHasValue ? '' : 'text-muted-foreground'}`} style={otherHasValue ? { color: otherGap >= 0 ? '#16A34A' : '#DC2626' } : undefined}>
+                  Gap {otherHasValue ? formatSignedPercent(otherGap) : '—'}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function MetricBox({ label, value, valueClass, valueStyle }: { label: string; value: string; valueClass?: string; valueStyle?: React.CSSProperties }) {
+  return (
+    <div className="rounded-lg border border-border/40 p-3">
+      <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
+      <p className={`text-sm font-bold text-foreground ${valueClass ?? ''}`} style={valueStyle}>{value}</p>
+    </div>
+  );
+}
+
+function RatioTrack({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[11px] mb-1">
+        <span className="text-muted-foreground font-medium">{label}</span>
+        <span className="font-bold text-foreground">{roundPercent(value)}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, value)}%` }} transition={{ delay: 0.2, duration: 0.45 }} style={{ backgroundColor: color }} />
+      </div>
+    </div>
+  );
+}
+
 /* ─── Helper Components ──────────────────────────────────────────── */
 
-function BudgetKPICard({ label, subtitle, value, fullValue, icon: Icon, color, showBar, barPct, barColor, extraText, infoTip }: {
-  label: string; subtitle: string; value: string; fullValue?: string; icon: React.ElementType; color: string; showBar?: boolean; barPct?: number; barColor?: string; extraText?: string; infoTip?: string;
+function BudgetKPICard({ label, subtitle, value, fullValue, color, showBar, barPct, barColor, extraText, infoTip }: {
+  label: string; subtitle: string; value: string; fullValue?: string; color: string; showBar?: boolean; barPct?: number; barColor?: string; extraText?: string; infoTip?: string;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2, transition: { duration: 0.2 } }} className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: color }} />
       <div className="relative p-5 sm:p-6 flex flex-col h-full">
-        <div className="flex items-start justify-between gap-2 flex-1">
-          <div className="flex-1 min-w-0 flex flex-col">
-            <div className="min-h-[32px] sm:min-h-[36px] flex flex-col justify-start">
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}{infoTip && <InfoTip text={infoTip} />}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="min-h-[32px] sm:min-h-[36px] flex flex-col justify-start">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}{infoTip && <InfoTip text={infoTip} />}</p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
+          </div>
+          <Tooltip><TooltipTrigger asChild>
+            <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight cursor-help" style={{ color }}>{value}</p>
+          </TooltipTrigger>{fullValue && <TooltipContent><p className="text-xs font-mono">{fullValue}</p></TooltipContent>}</Tooltip>
+          {extraText && <p className="text-[10px] text-muted-foreground mt-1">{extraText}</p>}
+          {showBar && barPct !== undefined && barColor && (
+            <div className="h-2 rounded-full bg-muted overflow-hidden mt-3">
+              <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, barPct)}%` }} transition={{ delay: 0.3, duration: 0.6 }} style={{ backgroundColor: barColor }} />
             </div>
-            <Tooltip><TooltipTrigger asChild>
-              <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight cursor-help" style={{ color }}>{value}</p>
-            </TooltipTrigger>{fullValue && <TooltipContent><p className="text-xs font-mono">{fullValue}</p></TooltipContent>}</Tooltip>
-            {extraText && <p className="text-[10px] text-muted-foreground mt-1">{extraText}</p>}
-            {showBar && barPct !== undefined && barColor && (
-              <div className="h-2 rounded-full bg-muted overflow-hidden mt-3">
-                <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, barPct)}%` }} transition={{ delay: 0.3, duration: 0.6 }} style={{ backgroundColor: barColor }} />
-              </div>
-            )}
-          </div>
-          <div className="p-2.5 rounded-xl shrink-0" style={{ backgroundColor: `${color}14` }}>
-            <Icon className="w-5 h-5" style={{ color }} />
-          </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -389,23 +507,20 @@ function CommittedKPICard({ committed, spent, unspent, allocation }: { committed
       <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: color }} />
       <div className="relative p-5 sm:p-6 flex flex-col h-full">
-        <div className="flex items-start justify-between gap-2 flex-1">
-          <div className="flex-1 min-w-0 flex flex-col">
-            <div className="min-h-[32px] sm:min-h-[36px] flex flex-col justify-start">
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">Committed <InfoTip text="Funds formally committed. Includes Spent (disbursed) and Unspent (contractual obligations)." /></p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">Funds in Use</p>
-            </div>
-            <Tooltip><TooltipTrigger asChild><p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight cursor-help" style={{ color }}>{formatCurrency(committed)}</p></TooltipTrigger><TooltipContent><p className="text-xs font-mono">{formatCurrencyFull(committed)}</p></TooltipContent></Tooltip>
-            <div className="space-y-1 mt-2">
-              <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Spent</span><span className="text-[10px] font-semibold" style={{ color: '#16A34A' }}>{formatCurrency(spent)}</span></div>
-              <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Unspent</span><span className="text-[10px] font-semibold" style={{ color: '#F59E0B' }}>{formatCurrency(unspent)}</span></div>
-            </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden mt-2 flex">
-              <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${spentPct}%` }} transition={{ delay: 0.3, duration: 0.5 }} style={{ backgroundColor: '#16A34A' }} />
-              <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${unspentPct}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: '#F59E0B' }} />
-            </div>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="min-h-[32px] sm:min-h-[36px] flex flex-col justify-start">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">Committed <InfoTip text="Funds formally committed. Includes Spent (disbursed) and Unspent (contractual obligations)." /></p>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">Funds in Use</p>
           </div>
-          <div className="p-2.5 rounded-xl shrink-0" style={{ backgroundColor: `${color}14` }}><DollarSign className="w-5 h-5" style={{ color }} /></div>
+          <Tooltip><TooltipTrigger asChild><p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight cursor-help" style={{ color }}>{formatCurrency(committed)}</p></TooltipTrigger><TooltipContent><p className="text-xs font-mono">{formatCurrencyFull(committed)}</p></TooltipContent></Tooltip>
+          <div className="space-y-1 mt-2">
+            <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Spent</span><span className="text-[10px] font-semibold" style={{ color: '#16A34A' }}>{formatCurrency(spent)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Unspent</span><span className="text-[10px] font-semibold" style={{ color: '#F59E0B' }}>{formatCurrency(unspent)}</span></div>
+          </div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden mt-2 flex">
+            <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${spentPct}%` }} transition={{ delay: 0.3, duration: 0.5 }} style={{ backgroundColor: '#16A34A' }} />
+            <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${unspentPct}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: '#F59E0B' }} />
+          </div>
         </div>
       </div>
     </motion.div>
