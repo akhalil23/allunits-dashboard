@@ -430,8 +430,8 @@ function SinglePillarBudgetAnalytics({
             return (
               <div key={other.pillar} className="rounded-lg border border-border/30 p-2.5">
                 <p className="text-[10px] font-semibold text-foreground">P{other.pillar}</p>
-                <p className="text-[10px] text-muted-foreground">Commit {(other.utilization * 100).toFixed(1)}%</p>
-                <p className="text-[10px] text-muted-foreground">Spend {(other.allocation > 0 ? (other.spent / other.allocation) * 100 : 0).toFixed(1)}%</p>
+                <p className="text-[10px] text-foreground">Commit {(other.utilization * 100).toFixed(1)}%</p>
+                <p className="text-[10px] text-foreground">Spend {(other.allocation > 0 ? (other.spent / other.allocation) * 100 : 0).toFixed(1)}%</p>
                 <p className={`text-[10px] font-semibold ${otherHasValue ? '' : 'text-muted-foreground'}`} style={otherHasValue ? { color: otherGap >= 0 ? '#16A34A' : '#DC2626' } : undefined}>
                   Gap {otherHasValue ? formatSignedPercent(otherGap) : '—'}
                 </p>
