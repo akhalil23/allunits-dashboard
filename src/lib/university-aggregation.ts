@@ -446,7 +446,8 @@ export function getExceptionFlags(
       if (isNotApplicableStatus(status)) return;
       const completion = getItemCompletion(item, viewType, term, academicYear);
       const completionValid = typeof completion === 'number' && completion >= 0 && completion <= 100;
-      const signal = mapItemToRiskSignal(status, completion, completionValid);
+      const expectedProg = computeExpectedProgress(viewType, academicYear);
+      const signal = mapItemToRiskSignal(status, completion, completionValid, expectedProg);
 
       if (signal === 'Critical Risk (Needs Close Attention)' || signal === 'Realized Risk (Needs Mitigation Strategy)') {
         flags.push({
