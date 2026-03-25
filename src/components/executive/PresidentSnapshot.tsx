@@ -761,10 +761,10 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
             </div>
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Progress</span>
+                <span className="text-foreground font-medium">Progress</span>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold" style={{ color: pillarColor }}>{p.actualProgress}%</span>
-                  <span className="text-muted-foreground/70">/ {expectedProgress}%</span>
+                  <span className="text-foreground/70">/ {expectedProgress}%</span>
                 </div>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden relative">
