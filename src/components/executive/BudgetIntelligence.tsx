@@ -395,7 +395,7 @@ function SinglePillarBudgetAnalytics({
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">Expanded View — {PILLAR_FULL[row.pillar]}</p>
-            <p className="text-[10px] text-muted-foreground">Focused budget-to-execution analysis for selected pillar</p>
+            <p className="text-[10px] text-foreground">Focused budget-to-execution analysis for selected pillar</p>
           </div>
         </div>
         <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: `${health.color}15`, color: health.color }}>{health.health}</span>
