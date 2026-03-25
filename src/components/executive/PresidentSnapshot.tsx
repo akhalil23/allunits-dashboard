@@ -708,7 +708,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
 
           {/* Col 2: Status Distribution donut */}
           <div className="md:w-[180px] shrink-0">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Status Distribution</p>
+            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Status Distribution</p>
             <div className="flex items-center gap-2">
               <div className="w-[48px] h-[48px] shrink-0">
                 <ResponsiveContainer>
