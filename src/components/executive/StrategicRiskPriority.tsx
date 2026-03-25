@@ -7,7 +7,6 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
 } from 'recharts';
 import { ShieldAlert, AlertTriangle, Target, BarChart3, ChevronDown, ChevronRight, TrendingDown, AlertCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -227,11 +226,6 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
             <RiskSignalLegend pillarAgg={pillarView === 'all' ? pillarAgg : pillarAgg.filter(p => p.pillar === pillarView)} />
           </motion.div>
 
-          {/* Completion Status */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm p-5 sm:p-6">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Completion Status{pillarLabel} <InfoTip text="Distribution of strategic actions by status." /></span>
-            <CompletionDonut aggregation={aggregation} pillarView={pillarView} unitResults={unitResults} />
-          </motion.div>
         </div>
       </section>
 
@@ -405,93 +399,6 @@ function RiskSignalLegend({ pillarAgg }: { pillarAgg: PillarAggregation[] }) {
           <AlertTriangle className="w-3 h-3" /> High severe risk concentration ({((severeConcentration) * 100).toFixed(0)}% critical+realized)
         </p>
       )}
-    </div>
-  );
-}
-
-/* ─── Completion Donut ────────────────────────────────────────────── */
-
-function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation: UniversityAggregation; pillarView: PillarViewMode; unitResults: any }) {
-  const { viewType, term, academicYear } = useDashboard();
-  const counts = useMemo(() => {
-    if (pillarView === 'all') return { cot: aggregation.cotCount, cbt: aggregation.cbtCount, ip: aggregation.inProgressCount, ns: aggregation.notStartedCount, applicable: aggregation.applicableItems };
-    let cot = 0, cbt = 0, ip = 0, ns = 0, na = 0, total = 0;
-    unitResults?.forEach((ur: any) => {
-      if (!ur.result) return;
-      ur.result.data.forEach((item: any) => {
-        if (item.pillar !== pillarView) return;
-        total++;
-        const status = getItemStatus(item, viewType, term, academicYear);
-        if (status === 'Completed – On Target') cot++;
-        else if (status === 'Completed – Below Target') cbt++;
-        else if (status === 'In Progress') ip++;
-        else if (status === 'Not Started') ns++;
-        else na++;
-      });
-    });
-    return { cot, cbt, ip, ns, applicable: total - na };
-  }, [aggregation, pillarView, unitResults, viewType, term, academicYear]);
-
-  const STATUS_CONFIG = [
-    { key: 'cot', name: 'Completed - On Target', color: '#16A34A', value: counts.cot },
-    { key: 'cbt', name: 'Completed - Below Target', color: '#7F1D1D', value: counts.cbt },
-    { key: 'ip', name: 'In Progress', color: '#F59E0B', value: counts.ip },
-    { key: 'ns', name: 'Not Started', color: '#EF4444', value: counts.ns },
-  ] as const;
-
-  const data = STATUS_CONFIG.filter(d => d.value > 0);
-
-  const total = counts.applicable || 1;
-  const completedPct = (((counts.cot + counts.cbt) / total) * 100).toFixed(1);
-  const inProgressPct = ((counts.ip / total) * 100).toFixed(1);
-  const notStartedPct = ((counts.ns / total) * 100).toFixed(1);
-
-  let narrative = '';
-  if (parseFloat(inProgressPct) > 50) narrative = 'Strong execution momentum — majority actively in progress.';
-  else if (parseFloat(notStartedPct) > 30) narrative = `Backlog alert: ${notStartedPct}% of items have not started.`;
-  else if (parseFloat(completedPct) > 60) narrative = 'Mature execution — over 60% completed.';
-  else narrative = 'Balanced distribution across execution stages.';
-
-  return (
-    <div className="space-y-3 mt-4">
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
-        <div className="w-full max-w-[9rem] sm:max-w-[8.75rem] aspect-square shrink-0">
-          <ResponsiveContainer>
-            <PieChart>
-              <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" nameKey="name" startAngle={90} endAngle={-270} strokeWidth={0}>
-                {data.map((d, i) => <Cell key={i} fill={d.color} />)}
-              </Pie>
-              <ReTooltip content={({ payload }) => {
-                if (!payload?.[0]) return null;
-                const d = payload[0].payload;
-                return (
-                  <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs space-y-0.5">
-                    <p className="font-semibold text-foreground">{d.name}</p>
-                    <p className="text-muted-foreground">{d.value} items ({((d.value / total) * 100).toFixed(1)}%)</p>
-                  </div>
-                );
-              }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="flex-1 w-full min-w-0 space-y-2">
-          {data.map(d => (
-            <div key={d.name} className="grid grid-cols-[auto,minmax(0,1fr),auto,auto] items-start gap-x-2 gap-y-1 rounded-md px-1 py-1">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mt-1 shrink-0" style={{ backgroundColor: d.color }} />
-              <span className="text-[clamp(0.68rem,1.8vw,0.78rem)] leading-tight text-foreground break-words min-w-0">
-                {d.name}
-              </span>
-              <span className="text-[clamp(0.68rem,1.8vw,0.78rem)] font-semibold text-foreground tabular-nums text-right shrink-0">
-                {d.value}
-              </span>
-              <span className="text-[clamp(0.66rem,1.7vw,0.75rem)] text-muted-foreground tabular-nums text-right shrink-0">
-                ({((d.value / total) * 100).toFixed(1)}%)
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <p className="text-[11px] leading-relaxed text-muted-foreground italic px-1">{narrative}</p>
     </div>
   );
 }
