@@ -823,7 +823,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
       {/* Row 1: Donut Charts + RI Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Progress Distribution</h4>
+          <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Progress Distribution</h4>
           <div className="flex items-center gap-3">
             <div className="w-24 h-24 shrink-0">
               <ResponsiveContainer>
