@@ -856,9 +856,9 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
               </ResponsiveContainer>
             </div>
             <div className="flex-1 space-y-1.5">
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} /><span className="text-[10px] text-muted-foreground">Applicable: <span className="font-bold text-foreground">{p.applicableItems}</span></span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6B7280] shrink-0" /><span className="text-[10px] text-muted-foreground">N/A: <span className="font-bold text-foreground">{p.naCount}</span></span></div>
-              <p className="text-[10px] text-muted-foreground mt-1">Total: {p.totalItems}</p>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} /><span className="text-[10px] text-foreground">Applicable: <span className="font-bold">{p.applicableItems}</span></span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6B7280] shrink-0" /><span className="text-[10px] text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
+              <p className="text-[10px] text-foreground mt-1">Total: {p.totalItems}</p>
             </div>
           </div>
         </div>
