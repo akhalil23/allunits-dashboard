@@ -15,6 +15,7 @@ import BudgetIntelligence from '@/components/executive/BudgetIntelligence';
 import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
 import DashboardGuide from '@/components/executive/DashboardGuide';
+import ExecutiveAIAdvisor from '@/components/executive/ExecutiveAIAdvisor';
 import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
 import MetricsExplainer from '@/components/executive/MetricsExplainer';
 import FilterBar from '@/components/dashboard/FilterBar';
