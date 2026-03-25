@@ -2,6 +2,35 @@ import type { ActionItem, Qualifier, QualifierResult, QualifierDistributionItem,
 import { getTermWindowKey, isNotApplicableStatus } from './types';
 import { AY_BOUNDARIES, QUALIFIER_COLORS, RISK_WEIGHTS } from './constants';
 
+// ─── Expected Progress (shared utility) ──────────────────────────────────────
+
+/**
+ * Compute Expected Progress as a percentage of time elapsed in the reporting window.
+ * Used across all tabs and in dynamic RI computation.
+ * Cumulative: Sep 2025 – Aug 2027.
+ * Yearly: Sep [startYear] – Aug [startYear+1].
+ */
+export function computeExpectedProgress(viewType: ViewType, academicYear: AcademicYear): number {
+  if (viewType === 'cumulative') {
+    const windowStart = new Date(2025, 8, 1); // Sep 1, 2025
+    const windowEnd = new Date(2027, 7, 31);  // Aug 31, 2027
+    const now = new Date();
+    const totalMs = windowEnd.getTime() - windowStart.getTime();
+    const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
+    return Math.round((elapsedMs / totalMs) * 100);
+  }
+  const [startYearStr] = academicYear.split('-');
+  const startYear = parseInt(startYearStr);
+  const windowStart = new Date(startYear, 8, 1);    // Sep 1
+  const windowEnd = new Date(startYear + 1, 7, 31); // Aug 31
+  const now = new Date();
+  const totalMs = windowEnd.getTime() - windowStart.getTime();
+  const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
+  return Math.round((elapsedMs / totalMs) * 100);
+}
+
+// ─── Core Functions ──────────────────────────────────────────────────────────
+
 export function computeTimeProgress(observedAt: string, academicYear: AcademicYear): number {
   const t = new Date(observedAt).getTime();
   const { start, end } = AY_BOUNDARIES[academicYear];
@@ -59,7 +88,13 @@ export function getItemStatus(item: ActionItem, viewType: ViewType, term: Term, 
   return viewType === 'cumulative' ? td.spStatus : td.yearlyStatus;
 }
 
+/**
+ * Get item completion percentage.
+ * RULE: Not Started → forced to 0% regardless of user-entered values.
+ */
 export function getItemCompletion(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): number {
+  const status = getItemStatus(item, viewType, term, academicYear);
+  if (status === 'Not Started') return 0; // Force 0% for Not Started
   const td = getTermData(item, term, academicYear);
   return viewType === 'cumulative' ? td.spCompletion : td.yearlyCompletion;
 }
@@ -181,7 +216,6 @@ export function runIntegrityAudit(
 ): IntegrityAuditResult {
   const diagnosticMessages: string[] = [];
 
-  // A) Validate observedAt
   const timeProgressValid = !!observedAt && !isNaN(new Date(observedAt).getTime());
   if (!timeProgressValid) {
     diagnosticMessages.push('Missing or invalid observed_at timestamp — Intelligence layer disabled.');
@@ -192,16 +226,13 @@ export function runIntegrityAudit(
     diagnosticMessages.push(`Time progress out of range: ${timeProgress.toFixed(1)}%`);
   }
 
-  // B) Count applicable vs not applicable
   const applicable = getApplicableItems(items, viewType, term, academicYear);
   const notApplicable = items.length - applicable.length;
 
-  // Verify total = applicable + notApplicable
   if (applicable.length + notApplicable !== items.length) {
     diagnosticMessages.push('Applicability count mismatch: applicable + notApplicable ≠ total.');
   }
 
-  // C) Qualifier counts sum check
   const qualDist = timeProgressValid
     ? computeQualifierDistribution(items, viewType, term, observedAt, academicYear)
     : [];
@@ -210,7 +241,6 @@ export function runIntegrityAudit(
     diagnosticMessages.push(`Qualifier sum (${qualifierSum}) ≠ applicable items (${applicable.length}).`);
   }
 
-  // D) Data quality anomalies from server
   if (dataQuality.anomalies) {
     if (dataQuality.anomalies.unexpectedStatusCount > 0) {
       let msg = `${dataQuality.anomalies.unexpectedStatusCount} unexpected status value(s) detected.`;
@@ -233,7 +263,6 @@ export function runIntegrityAudit(
     diagnosticMessages.push(`${dataQuality.missingBlocks} pillar data block(s) missing from source.`);
   }
 
-  // Compute overall level
   const invalidPct = dataQuality.totalItems > 0
     ? ((dataQuality.invalidStatuses + dataQuality.invalidCompletions) / dataQuality.totalItems) * 100
     : 0;
