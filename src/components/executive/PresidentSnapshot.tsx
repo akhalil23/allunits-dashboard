@@ -929,7 +929,7 @@ function StatusLegend({ label, value, color }: { label: string; value: number; c
   return (
     <div className="flex items-center gap-1.5">
       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-      <span className="text-[10px] text-muted-foreground">{label}: <span className="font-bold text-foreground">{value}</span></span>
+      <span className="text-[10px] text-foreground">{label}: <span className="font-bold">{value}</span></span>
     </div>
   );
 }
