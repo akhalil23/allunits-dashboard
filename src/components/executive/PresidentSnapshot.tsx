@@ -914,8 +914,8 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
 
       {/* Row 3: Executive Narrative */}
       <div className="rounded-xl border border-border/40 p-4">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Executive Summary</h4>
-        <p className="text-xs text-muted-foreground leading-relaxed">
+        <h4 className="text-xs font-semibold text-foreground uppercase mb-2">Executive Summary</h4>
+        <p className="text-xs text-foreground leading-relaxed">
           {getMicroInsight(p, bHealth.label)} {p.belowTargetShare > 15 ? ` Below-target share at ${p.belowTargetShare}% warrants quality review.` : ''} {p.notStartedCount > p.applicableItems * 0.3 ? ` ${p.notStartedCount} items remain unstarted.` : ''}
         </p>
       </div>
