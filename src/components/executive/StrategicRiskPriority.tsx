@@ -160,7 +160,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
 
       {/* Section 1: Risk Overview */}
       <section>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Risk Exposure */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
             <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">
