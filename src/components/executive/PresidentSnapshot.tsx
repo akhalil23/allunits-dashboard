@@ -752,7 +752,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
           <div className="flex-1 min-w-0 space-y-2.5">
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Risk Index</span>
+                <span className="text-foreground font-medium">Risk Index</span>
                 <span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}% — {riInfo.band}</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
