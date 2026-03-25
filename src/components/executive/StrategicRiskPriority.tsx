@@ -432,13 +432,14 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
     return { cot, cbt, ip, ns, applicable: total - na };
   }, [aggregation, pillarView, unitResults, viewType, term, academicYear]);
 
-  const STATUS_COLORS: Record<string, string> = { 'On Target': '#16A34A', 'Below Target': '#7F1D1D', 'In Progress': '#F59E0B', 'Not Started': '#EF4444' };
-  const data = [
-    { name: 'On Target', value: counts.cot, color: STATUS_COLORS['On Target'] },
-    { name: 'Below Target', value: counts.cbt, color: STATUS_COLORS['Below Target'] },
-    { name: 'In Progress', value: counts.ip, color: STATUS_COLORS['In Progress'] },
-    { name: 'Not Started', value: counts.ns, color: STATUS_COLORS['Not Started'] },
-  ].filter(d => d.value > 0);
+  const STATUS_CONFIG = [
+    { key: 'cot', name: 'Completed - On Target', color: '#16A34A', value: counts.cot },
+    { key: 'cbt', name: 'Completed - Below Target', color: '#7F1D1D', value: counts.cbt },
+    { key: 'ip', name: 'In Progress', color: '#F59E0B', value: counts.ip },
+    { key: 'ns', name: 'Not Started', color: '#EF4444', value: counts.ns },
+  ] as const;
+
+  const data = STATUS_CONFIG.filter(d => d.value > 0);
 
   const total = counts.applicable || 1;
   const completedPct = (((counts.cot + counts.cbt) / total) * 100).toFixed(1);
@@ -453,8 +454,8 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
 
   return (
     <div className="space-y-3 mt-4">
-      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
-        <div className="w-32 h-32 shrink-0">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
+        <div className="w-full max-w-[9rem] sm:max-w-[8.75rem] aspect-square shrink-0">
           <ResponsiveContainer>
             <PieChart>
               <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" nameKey="name" startAngle={90} endAngle={-270} strokeWidth={0}>
@@ -473,18 +474,24 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
+        <div className="flex-1 w-full min-w-0 space-y-2">
           {data.map(d => (
-            <div key={d.name} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-              <span className="text-xs text-foreground whitespace-nowrap">{d.name}</span>
-              <span className="text-xs font-bold text-foreground tabular-nums shrink-0 ml-auto">{d.value}</span>
-              <span className="text-xs text-muted-foreground tabular-nums shrink-0">({((d.value / total) * 100).toFixed(1)}%)</span>
+            <div key={d.name} className="grid grid-cols-[auto,minmax(0,1fr),auto,auto] items-start gap-x-2 gap-y-1 rounded-md px-1 py-1">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mt-1 shrink-0" style={{ backgroundColor: d.color }} />
+              <span className="text-[clamp(0.68rem,1.8vw,0.78rem)] leading-tight text-foreground break-words min-w-0">
+                {d.name}
+              </span>
+              <span className="text-[clamp(0.68rem,1.8vw,0.78rem)] font-semibold text-foreground tabular-nums text-right shrink-0">
+                {d.value}
+              </span>
+              <span className="text-[clamp(0.66rem,1.7vw,0.75rem)] text-muted-foreground tabular-nums text-right shrink-0">
+                ({((d.value / total) * 100).toFixed(1)}%)
+              </span>
             </div>
           ))}
         </div>
       </div>
-      <p className="text-[10px] text-muted-foreground italic px-1">{narrative}</p>
+      <p className="text-[11px] leading-relaxed text-muted-foreground italic px-1">{narrative}</p>
     </div>
   );
 }
