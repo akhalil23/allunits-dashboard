@@ -7,12 +7,20 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import {
-  X, Send, Trash2, Copy, Check, Sparkles, ChevronDown,
+  X, Send, Trash2, Copy, Check, Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useExecutiveAdvisor, type DashboardContextPayload } from '@/hooks/use-executive-advisor';
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { useDashboard } from '@/contexts/DashboardContext';
+import { useUniversityData } from '@/hooks/use-university-data';
+import { useBudgetData } from '@/hooks/use-budget-data';
+import { aggregateByPillar } from '@/lib/university-aggregation';
+import { getLivePillarBudget, computeBudgetHealth } from '@/lib/budget-data';
+import { computeExpectedProgress } from '@/lib/intelligence';
+import { PILLAR_FULL } from '@/lib/pillar-labels';
+import { METRIC_TOOLTIPS } from '@/lib/metric-definitions';
+import type { PillarId } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -25,10 +33,12 @@ const SUGGESTED_QUESTIONS = [
   'Which units are at highest risk?',
   'Summarize performance by pillar',
   'Explain the Risk Index',
-  'How is SEEI calculated?',
+  'What is Pillar I budget utilization?',
   'Show top performing units',
   'Prepare a briefing summary',
 ];
+
+const PILLAR_IDS: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
 export default function ExecutiveAIAdvisor({ aggregation }: Props) {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,46 +48,130 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { messages, isLoading, sendMessage, clearMessages } = useExecutiveAdvisor();
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
+  const { data: unitResults } = useUniversityData();
+  const { data: budgetResult } = useBudgetData();
 
-  const dashboardContext = useMemo<DashboardContextPayload>(() => ({
-    filters: {
-      academicYear,
-      term: term === 'mid' ? 'Mid-Year' : 'End-of-Year',
-      viewType: viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly',
-      selectedPillar: selectedPillar === 'all' ? 'All Pillars' : `Pillar ${selectedPillar}`,
-    },
-    universityMetrics: {
-      totalUnits: aggregation.totalUnits,
-      loadedUnits: aggregation.loadedUnits,
-      totalItems: aggregation.totalItems,
-      applicableItems: aggregation.applicableItems,
-      naCount: aggregation.naCount,
-      completionPct: aggregation.completionPct,
-      onTrackPct: aggregation.onTrackPct,
-      belowTargetPct: aggregation.belowTargetPct,
-      riskIndex: aggregation.riskIndex,
-      cotCount: aggregation.cotCount,
-      cbtCount: aggregation.cbtCount,
-      inProgressCount: aggregation.inProgressCount,
-      notStartedCount: aggregation.notStartedCount,
-      riskCounts: {
-        noRisk: aggregation.riskCounts.noRisk,
-        emerging: aggregation.riskCounts.emerging,
-        critical: aggregation.riskCounts.critical,
-        realized: aggregation.riskCounts.realized,
+  // Build FULL structured context payload
+  const dashboardContext = useMemo<DashboardContextPayload>(() => {
+    const expectedProgress = computeExpectedProgress(viewType, academicYear);
+
+    // Per-pillar execution metrics
+    const pillarAgg = unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [];
+
+    // Per-pillar budget
+    const pillarMetrics = PILLAR_IDS.map(pid => {
+      const pa = pillarAgg.find(p => p.pillar === pid);
+      const bud = budgetResult ? getLivePillarBudget(budgetResult.pillars, pid) : null;
+      const commitmentRatio = bud && bud.allocation > 0 ? ((bud.committed / bud.allocation) * 100) : 0;
+      const spendingRatio = bud && bud.allocation > 0 ? ((bud.spent / bud.allocation) * 100) : 0;
+      const health = bud ? computeBudgetHealth(bud.available, bud.allocation) : null;
+
+      return {
+        pillarId: `Pillar ${pid}`,
+        pillarName: PILLAR_FULL[pid],
+        applicableItems: pa?.applicableItems ?? 0,
+        completionPct: pa?.completionPct ?? 0,
+        riskIndex: pa?.riskIndex ?? 0,
+        riskCounts: pa ? {
+          noRisk: pa.riskCounts.noRisk,
+          emerging: pa.riskCounts.emerging,
+          critical: pa.riskCounts.critical,
+          realized: pa.riskCounts.realized,
+        } : { noRisk: 0, emerging: 0, critical: 0, realized: 0 },
+        ...(bud && bud.allocation > 0 ? {
+          budget: {
+            allocation: bud.allocation,
+            spent: bud.spent,
+            unspent: bud.unspent,
+            committed: bud.committed,
+            available: bud.available,
+            commitmentRatioPct: Math.round(commitmentRatio * 10) / 10,
+            spendingRatioPct: Math.round(spendingRatio * 10) / 10,
+            budgetHealth: health?.health ?? 'Unknown',
+          },
+        } : {}),
+      };
+    });
+
+    // Overall budget totals
+    let budgetOverall: DashboardContextPayload['budgetOverall'];
+    if (budgetResult) {
+      let totalAlloc = 0, totalSpent = 0, totalCommitted = 0, totalAvail = 0;
+      PILLAR_IDS.forEach(pid => {
+        const b = getLivePillarBudget(budgetResult.pillars, pid);
+        totalAlloc += b.allocation;
+        totalSpent += b.spent;
+        totalCommitted += b.committed;
+        totalAvail += b.available;
+      });
+      budgetOverall = {
+        totalAllocation: totalAlloc,
+        totalSpent,
+        totalCommitted,
+        totalAvailable: totalAvail,
+        commitmentRatioPct: totalAlloc > 0 ? Math.round((totalCommitted / totalAlloc) * 1000) / 10 : 0,
+        spendingRatioPct: totalAlloc > 0 ? Math.round((totalSpent / totalAlloc) * 1000) / 10 : 0,
+      };
+    }
+
+    return {
+      filters: {
+        academicYear,
+        term: term === 'mid' ? 'Mid-Year' : 'End-of-Year',
+        viewType: viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly',
+        selectedPillar: selectedPillar === 'all' ? 'All Pillars' : `Pillar ${selectedPillar}`,
+        expectedProgress,
       },
-    },
-    unitRankings: aggregation.unitAggregations
-      .map(u => ({
-        unitName: u.unitName,
-        completionPct: u.completionPct,
-        riskIndex: u.riskIndex,
-        applicableItems: u.applicableItems,
-      }))
-      .sort((a, b) => b.riskIndex - a.riskIndex),
-    topRiskUnits: aggregation.topRiskiestUnits.map(u => u.unitName),
-    failedUnits: aggregation.failedUnits,
-  }), [aggregation, viewType, academicYear, term, selectedPillar]);
+      universityMetrics: {
+        totalUnits: aggregation.totalUnits,
+        loadedUnits: aggregation.loadedUnits,
+        totalItems: aggregation.totalItems,
+        applicableItems: aggregation.applicableItems,
+        naCount: aggregation.naCount,
+        completionPct: aggregation.completionPct,
+        onTrackPct: aggregation.onTrackPct,
+        belowTargetPct: aggregation.belowTargetPct,
+        riskIndex: aggregation.riskIndex,
+        cotCount: aggregation.cotCount,
+        cbtCount: aggregation.cbtCount,
+        inProgressCount: aggregation.inProgressCount,
+        notStartedCount: aggregation.notStartedCount,
+        riskCounts: {
+          noRisk: aggregation.riskCounts.noRisk,
+          emerging: aggregation.riskCounts.emerging,
+          critical: aggregation.riskCounts.critical,
+          realized: aggregation.riskCounts.realized,
+        },
+      },
+      pillarMetrics,
+      budgetOverall,
+      unitRankings: aggregation.unitAggregations
+        .map(u => ({
+          unitName: u.unitName,
+          completionPct: u.completionPct,
+          riskIndex: u.riskIndex,
+          applicableItems: u.applicableItems,
+          naCount: u.naCount,
+        }))
+        .sort((a, b) => b.riskIndex - a.riskIndex),
+      topRiskUnits: aggregation.topRiskiestUnits.map(u => u.unitName),
+      failedUnits: aggregation.failedUnits,
+      metricDefinitions: {
+        completionPct: METRIC_TOOLTIPS.completion,
+        commitmentRatio: METRIC_TOOLTIPS.commitmentRatio,
+        spendingRatio: METRIC_TOOLTIPS.spendingRatio,
+        riskIndex: METRIC_TOOLTIPS.riskIndex,
+        executionGap: METRIC_TOOLTIPS.executionGap,
+        onTrack: METRIC_TOOLTIPS.onTrack,
+        belowTarget: METRIC_TOOLTIPS.belowTarget,
+        applicableItems: METRIC_TOOLTIPS.applicableItems,
+        budgetHealth: "Budget Health is based on Commitment Ratio: <10% Under-Deployed, 10-40% Active Deployment, 40-70% Advanced Deployment, ≥70% Constrained / Low Flexibility.",
+        ssi: "SSI (Strategic Stability Index) = 0.4 × Progress + 0.3 × (100 − |Progress − Commitment Ratio|) + 0.3 × (100 − RI%). Bands: 85–100% Highly Stable · 70–84% Stable · 50–69% Watch · <50% Unstable.",
+        expectedProgress: "Expected Progress is the percentage of time elapsed in the reporting window. Cumulative: Sep 2025 – Aug 2027. Yearly: Sep [year] – Aug [year+1].",
+        executionGapFormula: "Execution Gap = Actual Completion % − Expected Progress %. Negative means behind schedule.",
+      },
+    };
+  }, [aggregation, viewType, academicYear, term, selectedPillar, unitResults, budgetResult]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -165,7 +259,6 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
               {messages.length === 0 ? (
                 <div className="space-y-4">
-                  {/* Welcome */}
                   <div className="text-center py-4">
                     <Sparkles className="w-8 h-8 text-primary/40 mx-auto mb-3" />
                     <p className="text-xs text-muted-foreground leading-relaxed max-w-[280px] mx-auto">
@@ -173,7 +266,6 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
                       You can request explanations, comparisons, or executive summaries.
                     </p>
                   </div>
-                  {/* Suggested questions */}
                   <div className="space-y-1.5">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Suggested Questions</p>
                     <div className="grid grid-cols-1 gap-1.5">
