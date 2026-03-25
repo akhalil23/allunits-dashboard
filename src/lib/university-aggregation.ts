@@ -23,7 +23,7 @@ function largestRemainderRound(counts: number[], total: number, target: number):
 
 import type { ActionItem, ViewType, Term, AcademicYear, PillarId } from './types';
 import type { FetchResult } from './types';
-import { getItemStatus, getItemCompletion, getApplicableItems } from './intelligence';
+import { getItemStatus, getItemCompletion, getApplicableItems, computeExpectedProgress } from './intelligence';
 import { mapItemToRiskSignal, RISK_SIGNAL_WEIGHTS, RISK_SIGNAL_ORDER, RISK_SIGNAL_COLORS, type RiskSignal } from './risk-signals';
 import { isNotApplicableStatus } from './types';
 
