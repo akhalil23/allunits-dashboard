@@ -142,6 +142,7 @@ export default function ExecutiveDashboard() {
         open={metricsOpen}
         onClose={() => setMetricsOpen(false)}
       />
+      <ExecutiveAIAdvisor aggregation={aggregation} />
     </div>
   );
 }
