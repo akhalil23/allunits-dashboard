@@ -330,7 +330,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
           <div className="flex-1 min-w-0 space-y-2.5">
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Commitment Ratio</span>
+                <span className="text-foreground font-medium">Commitment Ratio</span>
                 <span className="font-bold text-foreground">{commitmentPct}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
