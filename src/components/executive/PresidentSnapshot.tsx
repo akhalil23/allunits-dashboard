@@ -878,7 +878,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
       {/* Row 2: Key Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Progress vs Expected</p>
+          <p className="text-[10px] text-foreground mb-1">Progress vs Expected</p>
           <div className="flex items-center gap-1.5">
             <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span>
             <span className="text-[10px] text-muted-foreground">/ {expectedProgress}%</span>
