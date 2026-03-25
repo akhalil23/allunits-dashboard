@@ -871,7 +871,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
             <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, riInfo.percent)}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: riInfo.color }} />
           </div>
           <div className="mt-3"><RIMeter ri={p.riskIndex} compact /></div>
-          <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{riInfo.insight}</p>
+          <p className="text-[10px] text-foreground mt-2 leading-relaxed">{riInfo.insight}</p>
         </div>
       </div>
 
