@@ -776,7 +776,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
 
           {/* Col 5: Budget Health */}
           <div className="md:w-[100px] shrink-0 flex md:flex-col items-center md:items-end gap-1">
-            <span className="text-[10px] text-muted-foreground font-medium">Budget</span>
+            <span className="text-[10px] text-foreground font-medium">Budget</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg" style={{ backgroundColor: `${bHealth.color}15`, color: bHealth.color }}>{bHealth.label}</span>
           </div>
         </div>
