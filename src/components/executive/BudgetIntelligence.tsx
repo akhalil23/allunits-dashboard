@@ -416,7 +416,7 @@ function SinglePillarBudgetAnalytics({
       </div>
 
       <div className="rounded-xl border border-border/40 p-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Pillar Diagnosis</p>
+        <p className="text-xs font-semibold text-foreground uppercase mb-2">Pillar Diagnosis</p>
         <p className="text-xs text-foreground leading-relaxed">{insight}</p>
       </div>
 
