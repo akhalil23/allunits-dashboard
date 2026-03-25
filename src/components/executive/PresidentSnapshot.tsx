@@ -901,14 +901,14 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Commitment Ratio</p>
+          <p className="text-[10px] text-foreground mb-1">Commitment Ratio</p>
           <span className="text-lg font-bold text-foreground">{(p.commitmentRatio * 100).toFixed(1)}%</span>
-          <p className="text-[10px] text-muted-foreground mt-1">Committed ÷ Allocated</p>
+          <p className="text-[10px] text-foreground mt-1">Committed ÷ Allocated</p>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Spending Ratio</p>
+          <p className="text-[10px] text-foreground mb-1">Spending Ratio</p>
           <span className="text-lg font-bold text-foreground">{(p.spendingRatio * 100).toFixed(1)}%</span>
-          <p className="text-[10px] text-muted-foreground mt-1">Spent ÷ Allocated</p>
+          <p className="text-[10px] text-foreground mt-1">Spent ÷ Allocated</p>
         </div>
       </div>
 
