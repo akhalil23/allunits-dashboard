@@ -452,9 +452,9 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
   else narrative = 'Balanced distribution across execution stages.';
 
   return (
-    <div className="space-y-3 mt-4">
-      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
-        <div className="w-32 h-32 shrink-0">
+    <div className="space-y-3.5 mt-4 min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 min-w-0">
+        <div className="w-full max-w-[8.5rem] aspect-square shrink-0 mx-auto sm:mx-0">
           <ResponsiveContainer>
             <PieChart>
               <Pie data={data} innerRadius="55%" outerRadius="85%" dataKey="value" nameKey="name" startAngle={90} endAngle={-270} strokeWidth={0}>
@@ -473,18 +473,20 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex-1 space-y-2 min-w-0 overflow-visible">
+        <div className="flex-1 w-full space-y-2 min-w-0">
           {data.map(d => (
-            <div key={d.name} className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-              <span className="text-xs text-foreground shrink-0">{d.name}</span>
-              <span className="text-xs font-bold text-foreground shrink-0 ml-auto">{d.value}</span>
-              <span className="text-xs text-muted-foreground shrink-0">({((d.value / total) * 100).toFixed(1)}%)</span>
+            <div key={d.name} className="grid grid-cols-[auto,minmax(0,1fr),auto] items-start gap-x-2.5 gap-y-0.5 rounded-lg bg-muted/20 px-2.5 py-2 min-w-0">
+              <div className="w-3 h-3 rounded-full mt-0.5 shrink-0" style={{ backgroundColor: d.color }} />
+              <span className="text-[clamp(0.68rem,1.8vw,0.75rem)] leading-snug text-foreground break-words min-w-0">{d.name}</span>
+              <div className="text-right leading-tight min-w-[4.75rem]">
+                <span className="block text-[clamp(0.68rem,1.8vw,0.75rem)] font-bold tabular-nums text-foreground">{d.value}</span>
+                <span className="block text-[clamp(0.66rem,1.7vw,0.72rem)] tabular-nums text-muted-foreground">{((d.value / total) * 100).toFixed(1)}%</span>
+              </div>
             </div>
           ))}
         </div>
       </div>
-      <p className="text-[10px] text-muted-foreground italic px-1">{narrative}</p>
+      <p className="text-[10px] sm:text-xs text-muted-foreground italic px-2 leading-relaxed break-words">{narrative}</p>
     </div>
   );
 }
