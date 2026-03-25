@@ -421,7 +421,7 @@ function SinglePillarBudgetAnalytics({
       </div>
 
       <div className="rounded-xl border border-border/40 p-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Other Pillars Context</p>
+        <p className="text-xs font-semibold text-foreground uppercase mb-2">Other Pillars Context</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
           {comparisonRows.map((other) => {
             const otherProgress = pillarProgressData.find((p: any) => p.pillar === other.pillar)?.actualProgress ?? 0;
