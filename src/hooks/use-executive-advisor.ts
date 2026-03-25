@@ -8,12 +8,14 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+/** Full structured context sent to the AI on every request */
 interface DashboardContextPayload {
   filters: {
     academicYear: string;
     term: string;
     viewType: string;
     selectedPillar: string;
+    expectedProgress: number;
   };
   universityMetrics: {
     totalUnits: number;
@@ -36,14 +38,42 @@ interface DashboardContextPayload {
       realized: number;
     };
   };
+  pillarMetrics: {
+    pillarId: string;
+    pillarName: string;
+    applicableItems: number;
+    completionPct: number;
+    riskIndex: number;
+    riskCounts: { noRisk: number; emerging: number; critical: number; realized: number };
+    budget?: {
+      allocation: number;
+      spent: number;
+      unspent: number;
+      committed: number;
+      available: number;
+      commitmentRatioPct: number;
+      spendingRatioPct: number;
+      budgetHealth: string;
+    };
+  }[];
+  budgetOverall?: {
+    totalAllocation: number;
+    totalSpent: number;
+    totalCommitted: number;
+    totalAvailable: number;
+    commitmentRatioPct: number;
+    spendingRatioPct: number;
+  };
   unitRankings: {
     unitName: string;
     completionPct: number;
     riskIndex: number;
     applicableItems: number;
+    naCount: number;
   }[];
   topRiskUnits: string[];
   failedUnits: string[];
+  metricDefinitions: Record<string, string>;
 }
 
 export function useExecutiveAdvisor() {
@@ -68,7 +98,6 @@ export function useExecutiveAdvisor() {
     const assistantId = crypto.randomUUID();
     let assistantContent = '';
 
-    // Add placeholder assistant message
     setMessages(prev => [...prev, {
       id: assistantId,
       role: 'assistant',
@@ -80,10 +109,19 @@ export function useExecutiveAdvisor() {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      // Build conversation history for AI (last 10 messages for context)
       const historyForAI = [...messages, userMsg]
         .slice(-10)
         .map(m => ({ role: m.role, content: m.content }));
+
+      // Debug log (dev only)
+      if (import.meta.env.DEV) {
+        console.log('[AI Advisor] Context payload:', {
+          filters: dashboardContext.filters,
+          pillarCount: dashboardContext.pillarMetrics.length,
+          hasBudget: !!dashboardContext.budgetOverall,
+          unitCount: dashboardContext.unitRankings.length,
+        });
+      }
 
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/executive-advisor`,
