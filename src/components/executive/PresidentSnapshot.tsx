@@ -730,7 +730,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
 
           {/* Col 3: Applicability donut */}
           <div className="md:w-[150px] shrink-0">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Applicability</p>
+            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Applicability</p>
             <div className="flex items-center gap-2">
               <div className="w-[48px] h-[48px] shrink-0">
                 <ResponsiveContainer>
