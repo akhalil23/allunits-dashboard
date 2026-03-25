@@ -33,6 +33,14 @@ import StrategicCoverageGaps from './StrategicCoverageGaps';
 
 interface Props { aggregation: UniversityAggregation; }
 
+const roundPercent = (value: number) => Math.round(value * 10) / 10;
+const formatSignedPercent = (value: number) => {
+  const rounded = roundPercent(value);
+  const abs = Math.abs(rounded);
+  const formatted = Number.isInteger(rounded) ? abs.toFixed(0) : abs.toFixed(1);
+  return `${rounded >= 0 ? '+' : '-'}${formatted}%`;
+};
+
 export default function StrategicRiskPriority({ aggregation }: Props) {
   const [pillarView, setPillarView] = useState<PillarViewMode>('all');
   const { viewType, academicYear, term } = useDashboard();
@@ -42,8 +50,6 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
   const heatCells = useMemo(() => unitResults ? aggregateUnitByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
   const unitsByRisk = useMemo(() => [...aggregation.unitAggregations].sort((a, b) => b.riskIndex - a.riskIndex), [aggregation]);
-  const unitsByCompletion = useMemo(() => [...aggregation.unitAggregations].sort((a, b) => a.completionPct - b.completionPct), [aggregation]);
-
   const expectedProgress = useMemo(() => {
     const [startYearStr] = academicYear.split('-');
     const startYear = parseInt(startYearStr);
@@ -67,8 +73,8 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
           if (status === 'In Progress') { sum += getItemCompletion(item, viewType, term, academicYear); count++; }
         });
       }
-      const actualProgress = count > 0 ? Math.round(sum / count) : 0;
-      return { ...u, actualProgress, gap: actualProgress - expectedProgress, hasInProgress: count > 0 };
+      const actualProgress = count > 0 ? roundPercent(sum / count) : 0;
+      return { ...u, actualProgress, gap: roundPercent(actualProgress - expectedProgress), hasInProgress: count > 0 };
     }).sort((a, b) => a.gap - b.gap);
   }, [unitResults, aggregation.unitAggregations, viewType, term, academicYear, expectedProgress, pillarView]);
 
@@ -116,12 +122,30 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       }
       return { ...u, riskIndex: -1, completionPct: -1, _hasData: false } as UnitAggregation & { _hasData: boolean };
     }).sort((a, b) => {
-      // Units with data first, sorted by RI desc; units without data last
+      // Units with data first, sorted by RI desc; units without data last (stable alphabetical placeholders)
       if ((a as any)._hasData && !(b as any)._hasData) return -1;
       if (!(a as any)._hasData && (b as any)._hasData) return 1;
-      return b.riskIndex - a.riskIndex;
+      if (!(a as any)._hasData && !(b as any)._hasData) {
+        return getUnitDisplayLabel(a.unitId).localeCompare(getUnitDisplayLabel(b.unitId));
+      }
+      const riskDiff = b.riskIndex - a.riskIndex;
+      if (riskDiff !== 0) return riskDiff;
+      return getUnitDisplayLabel(a.unitId).localeCompare(getUnitDisplayLabel(b.unitId));
     });
   }, [pillarView, unitsByRisk, heatCells, aggregation.unitAggregations]);
+
+  const orderedExecutionGaps = useMemo(() => {
+    return [...unitExecutionGaps].sort((a, b) => {
+      if (a.hasInProgress && !b.hasInProgress) return -1;
+      if (!a.hasInProgress && b.hasInProgress) return 1;
+      if (!a.hasInProgress && !b.hasInProgress) {
+        return getUnitDisplayLabel(a.unitId).localeCompare(getUnitDisplayLabel(b.unitId));
+      }
+      const gapDiff = a.gap - b.gap;
+      if (gapDiff !== 0) return gapDiff;
+      return getUnitDisplayLabel(a.unitId).localeCompare(getUnitDisplayLabel(b.unitId));
+    });
+  }, [unitExecutionGaps]);
 
   const pillarLabel = pillarView !== 'all' ? ` — Pillar ${pillarView}` : '';
 
@@ -215,16 +239,17 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
       <section>
         <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
           <Target className="w-4 h-4" /> Strategic Priority Signals{pillarLabel}
+          <InfoTip text="Per-pillar ranking view: RI ranking keeps all units visible and places NA/missing units after units with valid numeric values." />
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RankingBars title={`Units Ranked by RI${pillarLabel}`} subtitle="Highest risk first" units={pillarUnitRisks} metricKey="riskIndex" />
+          <RankingBars title={`Units Ranked by RI${pillarLabel}`} subtitle="Highest risk first" units={pillarUnitRisks} metricKey="riskIndex" infoTip="All units remain visible when filtering by a pillar. Units with valid RI appear first; NA/missing are listed last." />
           <RankingBarsQuality title={`Units Ranked by Completion${pillarLabel}`} subtitle="Lowest completion first — quality indicators included" units={unitsCompletionQuality} />
         </div>
       </section>
 
       {/* Section 2b: Execution Gap */}
       <section>
-        <ExecutionGapPanel units={unitExecutionGaps} expectedProgress={expectedProgress} pillarLabel={pillarLabel} />
+        <ExecutionGapPanel units={orderedExecutionGaps} expectedProgress={expectedProgress} pillarLabel={pillarLabel} />
       </section>
 
       {/* Section 3: Heatmap */}
@@ -320,15 +345,15 @@ function ExecutionGapPanel({ units, expectedProgress, pillarLabel }: { units: (U
                 <Tooltip><TooltipTrigger asChild><span className="text-xs font-medium text-foreground flex-1 truncate min-w-0 cursor-help">{getUnitDisplayLabel(unit.unitId)}</span></TooltipTrigger>
                   <TooltipContent className="text-xs space-y-1">
                     <p className="font-semibold">{getUnitDisplayName(unit.unitId)}</p>
-                    <p>Actual Progress: {unit.actualProgress}%</p>
+                     <p>Actual Progress: {roundPercent(unit.actualProgress)}%</p>
                     <p>Expected Progress: {expectedProgress}%</p>
-                    <p>Gap: {unit.gap >= 0 ? '+' : ''}{unit.gap}%</p>
+                     <p>Gap: {formatSignedPercent(unit.gap)}</p>
                   </TooltipContent>
                 </Tooltip>
                 <div className="w-20 h-2 rounded-full bg-muted overflow-hidden shrink-0 flex justify-end">
                   <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${barWidth}%` }} transition={{ delay: 0.1, duration: 0.5 }} style={{ backgroundColor: gapColor }} />
                 </div>
-                <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: gapColor }}>{unit.gap >= 0 ? '+' : ''}{unit.gap}%</span>
+                <span className="text-xs font-bold w-14 text-right shrink-0" style={{ color: gapColor }}>{formatSignedPercent(unit.gap)}</span>
               </motion.div>
             );
           })}
@@ -466,7 +491,7 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
 
 /* ─── Ranking Bars ────────────────────────────────────────────────── */
 
-function RankingBars({ title, subtitle, units, metricKey }: { title: string; subtitle: string; units: UnitAggregation[]; metricKey: 'riskIndex' | 'completionPct' }) {
+function RankingBars({ title, subtitle, units, metricKey, infoTip }: { title: string; subtitle: string; units: UnitAggregation[]; metricKey: 'riskIndex' | 'completionPct'; infoTip?: string }) {
   const INITIAL_COUNT = 10;
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? units : units.slice(0, INITIAL_COUNT);
@@ -474,7 +499,7 @@ function RankingBars({ title, subtitle, units, metricKey }: { title: string; sub
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
-      <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+      <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1.5">{title}{infoTip && <InfoTip text={infoTip} />}</span>
       <p className="text-xs text-muted-foreground mb-4 mt-0.5">{subtitle}</p>
       <div className="space-y-1.5">
         <AnimatePresence initial={false}>
