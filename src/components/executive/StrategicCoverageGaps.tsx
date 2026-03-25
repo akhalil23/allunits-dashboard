@@ -475,7 +475,6 @@ function computeCategories(
       const filled = forwardFill(pillarItems);
 
       filled.forEach(({ goal, action, actionStep, pillar, item }) => {
-        const status = getItemStatus(item, viewType, term, academicYear);
         const rawStatus = (getItemStatus(item, viewType, term, academicYear) || '').trim();
         if (!VALID_STATUSES.has(rawStatus)) return;
 
