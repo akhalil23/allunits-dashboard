@@ -890,7 +890,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Completion Rate</p>
+          <p className="text-[10px] text-foreground mb-1">Completion Rate</p>
           <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.completionPct}%</span>
           <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
             <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.completionPct)}%`, backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
