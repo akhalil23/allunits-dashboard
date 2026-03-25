@@ -1,7 +1,7 @@
 /**
  * Tab 1 — Executive Snapshot
- * SEEI + SSI + Progress + Budget Util + RI + Completion KPIs
- * Execution/Budget Focus + Alignment Insights
+ * SSI + Progress + Commitment/Spending Ratios + RI + Completion KPIs
+ * Execution/Budget Focus + Descriptive Alignment Insights
  * Pillar Execution Diagnostics (All/Single Pillar)
  */
 
@@ -9,7 +9,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   CheckCircle2, AlertTriangle, TrendingUp, DollarSign,
-  ShieldAlert, Lightbulb, Info, Gauge, Activity, Eye, BarChart3, Target,
+  ShieldAlert, Lightbulb, Info, Activity, Eye, BarChart3, Target,
 } from 'lucide-react';
 import {
   BarChart, Bar,
@@ -29,9 +29,9 @@ import { aggregateByPillar } from '@/lib/university-aggregation';
 import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth } from '@/lib/budget-data';
 import { useBudgetData } from '@/hooks/use-budget-data';
 import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
-import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
+import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
 import { isNotApplicableStatus } from '@/lib/types';
-import { PILLAR_COLORS, PILLAR_COLOR_LABELS, computeSSI, getAlignmentStatus, getAlignmentColor } from '@/lib/pillar-colors';
+import { PILLAR_COLORS, PILLAR_COLOR_LABELS, computeSSI } from '@/lib/pillar-colors';
 import PillarViewSelector, { type PillarViewMode } from './PillarViewSelector';
 import type { PillarId } from '@/lib/types';
 
@@ -86,6 +86,51 @@ function getProgressStatus(actual: number, expected: number, tolerance: number =
   return { label: 'Behind Plan', color: '#DC2626' };
 }
 
+/** Descriptive alignment insight for a pillar based on execution & budget ratios */
+function getAlignmentInsight(progress: number, commitmentRatio: number, spendingRatio: number, expectedProgress: number): {
+  label: string; color: string; badges: string[];
+} {
+  const commitPct = commitmentRatio * 100;
+  const spendPct = spendingRatio * 100;
+  const gap = progress - expectedProgress;
+  const badges: string[] = [];
+
+  if (gap > 5) badges.push('Ahead of schedule');
+  else if (gap < -5) badges.push('Behind schedule');
+
+  let label: string;
+  let color: string;
+
+  if (progress > 50 && spendPct < 30) {
+    label = 'High execution with low spending (efficient deployment)';
+    color = '#065F46';
+  } else if (spendPct > 50 && progress < 30) {
+    label = 'High spending with low execution (potential inefficiency)';
+    color = '#DC2626';
+    badges.push('Spending intensive');
+  } else if (Math.abs(progress - commitPct) < 20 && Math.abs(progress - spendPct) < 20) {
+    label = 'Balanced execution and funding';
+    color = '#3B82F6';
+    badges.push('Stable alignment');
+  } else if (progress > 40 && commitPct < 20) {
+    label = 'Under-resourced execution (progress high, funds low)';
+    color = '#D97706';
+    badges.push('Resource constrained');
+  } else if (commitPct > 50 && progress < commitPct - 20) {
+    label = 'Front-loaded spending (funds high, progress lagging)';
+    color = '#F97316';
+    badges.push('Spending intensive');
+  } else if (commitPct > 40 && progress < 20) {
+    label = 'High funding with limited output (delivery risk)';
+    color = '#DC2626';
+  } else {
+    label = 'Low activity on both dimensions';
+    color = '#6B7280';
+  }
+
+  return { label, color, badges };
+}
+
 export default function PresidentSnapshot({ aggregation }: Props) {
   const [focusMode, setFocusMode] = useState<FocusMode>('execution');
   const [pillarView, setPillarView] = useState<PillarViewMode>('all');
@@ -94,52 +139,31 @@ export default function PresidentSnapshot({ aggregation }: Props) {
   const { data: budgetResult } = useBudgetData();
   const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
 
-  // Budget Utilization
-  const budgetUtilization = useMemo(() => {
-    if (!budgetResult?.pillars) return 0;
+  // Budget totals
+  const budgetTotals = useMemo(() => {
+    if (!budgetResult?.pillars) return { committed: 0, spent: 0, allocation: 0, available: 0 };
     const pillars: PillarId[] = ['I','II','III','IV','V'];
-    let totalCommitted = 0, totalAllocation = 0;
+    let totalCommitted = 0, totalAllocation = 0, totalSpent = 0, totalAvailable = 0;
     pillars.forEach(p => {
       const b = getLivePillarBudget(budgetResult.pillars, p);
       totalCommitted += b.committed;
       totalAllocation += b.allocation;
+      totalSpent += b.spent;
+      totalAvailable += b.available;
     });
-    return totalAllocation > 0 ? parseFloat(((totalCommitted / totalAllocation) * 100).toFixed(1)) : 0;
+    return { committed: totalCommitted, spent: totalSpent, allocation: totalAllocation, available: totalAvailable };
   }, [budgetResult]);
+
+  const commitmentRatio = budgetTotals.allocation > 0 ? budgetTotals.committed / budgetTotals.allocation : 0;
+  const spendingRatio = budgetTotals.allocation > 0 ? budgetTotals.spent / budgetTotals.allocation : 0;
 
   // Budget health
   const budgetHealth = useMemo(() => {
-    if (!budgetResult?.pillars) return { label: 'N/A', color: '#6B7280' };
-    const pillars: PillarId[] = ['I','II','III','IV','V'];
-    let totalAvail = 0, totalAlloc = 0;
-    pillars.forEach(p => {
-      const b = getLivePillarBudget(budgetResult.pillars, p);
-      totalAvail += b.available;
-      totalAlloc += b.allocation;
-    });
-    return getBudgetHealthLabel(totalAvail, totalAlloc);
-  }, [budgetResult]);
+    return getBudgetHealthLabel(budgetTotals.available, budgetTotals.allocation);
+  }, [budgetTotals]);
 
   // Expected Progress
-  // Expected Progress based on academic year timelines (Sep–Aug), NOT terms
-  const expectedProgress = useMemo(() => {
-    if (viewType === 'cumulative') {
-      const windowStart = new Date(2025, 8, 1); // Sep 1, 2025
-      const windowEnd = new Date(2027, 7, 31);  // Aug 31, 2027
-      const now = new Date();
-      const totalMs = windowEnd.getTime() - windowStart.getTime();
-      const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
-      return Math.round((elapsedMs / totalMs) * 100);
-    }
-    const [startYearStr] = academicYear.split('-');
-    const startYear = parseInt(startYearStr);
-    const windowStart = new Date(startYear, 8, 1);    // Sep 1
-    const windowEnd = new Date(startYear + 1, 7, 31); // Aug 31
-    const now = new Date();
-    const totalMs = windowEnd.getTime() - windowStart.getTime();
-    const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
-    return Math.round((elapsedMs / totalMs) * 100);
-  }, [viewType, academicYear]);
+  const expectedProgress = useMemo(() => computeExpectedProgress(viewType, academicYear), [viewType, academicYear]);
 
   // Pillar-level data
   const pillarData = useMemo(() => {
@@ -173,27 +197,29 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       const applicableItems = totalItems - naCount;
 
       const b = getLivePillarBudget(budgetResult?.pillars, pillar);
-      const budgetUtil = b.allocation > 0 ? parseFloat(((b.committed / b.allocation) * 100).toFixed(1)) : 0;
+      const pCommitmentRatio = b.allocation > 0 ? b.committed / b.allocation : 0;
+      const pSpendingRatio = b.allocation > 0 ? b.spent / b.allocation : 0;
       const pa = pillarAgg.find(p => p.pillar === pillar);
       const riskIndex = pa?.riskIndex ?? 0;
       const completionPct = pa?.completionPct ?? 0;
 
       const riPct = parseFloat(((riskIndex / 3) * 100).toFixed(1));
-      const alignment = getAlignmentStatus(actualProgress, budgetUtil, riskIndex);
       const onTargetShare = applicableItems > 0 ? parseFloat((cotCount / applicableItems * 100).toFixed(1)) : 0;
       const belowTargetShare = applicableItems > 0 ? parseFloat((cbtCount / applicableItems * 100).toFixed(1)) : 0;
       const bHealth = getBudgetHealthLabel(b.available, b.allocation);
+      const executionGap = actualProgress - expectedProgress;
 
       return {
-        pillar, actualProgress, budgetUtil, riskIndex, riPct, completionPct,
+        pillar, actualProgress, commitmentRatio: pCommitmentRatio, spendingRatio: pSpendingRatio,
+        riskIndex, riPct, completionPct,
         applicableItems, hasItems,
-        gap: actualProgress - budgetUtil, alignment,
+        executionGap,
         totalItems, naCount, cotCount, cbtCount, inProgressCount, notStartedCount,
         onTargetShare, belowTargetShare, budgetHealth: bHealth,
-        allocated: b.allocation, spent: b.spent, available: b.available,
+        allocated: b.allocation, spent: b.spent, available: b.available, committed: b.committed,
       };
     });
-  }, [unitResults, budgetResult, pillarAgg, viewType, term, academicYear]);
+  }, [unitResults, budgetResult, pillarAgg, viewType, term, academicYear, expectedProgress]);
 
   // Overall Actual Progress
   const overallActualProgress = useMemo(() => {
@@ -212,27 +238,10 @@ export default function PresidentSnapshot({ aggregation }: Props) {
     return count > 0 ? parseFloat((sum / count).toFixed(1)) : 0;
   }, [unitResults, viewType, term, academicYear]);
 
-  // SEEI
-  const seei = useMemo(() => {
-    const effectiveUtil = budgetUtilization <= 0 ? 1 : budgetUtilization;
-    const raw = overallActualProgress / effectiveUtil;
-    const pct = Math.min(100, parseFloat((raw * 100).toFixed(1)));
-    let label: string, color: string;
-    if (raw >= 1.20) { label = 'Highly Efficient'; color = '#065F46'; }
-    else if (raw >= 0.90) { label = 'Balanced Execution'; color = '#16A34A'; }
-    else if (raw >= 0.60) { label = 'Efficiency Concern'; color = '#D97706'; }
-    else { label = 'Critical Inefficiency'; color = '#DC2626'; }
-    return { value: raw, percent: pct, label, color };
-  }, [overallActualProgress, budgetUtilization]);
-
   // SSI
   const riPctOverall = parseFloat(((aggregation.riskIndex / 3) * 100).toFixed(1));
-  const ssi = useMemo(() => computeSSI(overallActualProgress, budgetUtilization, riPctOverall), [overallActualProgress, budgetUtilization, riPctOverall]);
-
-  const avgBudgetUtil = useMemo(() => {
-    const vals = pillarData.map(d => d.budgetUtil);
-    return vals.length > 0 ? parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) : 0;
-  }, [pillarData]);
+  const commitmentRatioPct = parseFloat((commitmentRatio * 100).toFixed(1));
+  const ssi = useMemo(() => computeSSI(overallActualProgress, commitmentRatioPct, riPctOverall), [overallActualProgress, commitmentRatioPct, riPctOverall]);
 
   const riInfo = getRiskDisplayInfo(aggregation.riskIndex);
 
@@ -265,9 +274,9 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       const info = getRiskDisplayInfo(worstRisk.riskIndex);
       items.push({ title: 'Risk Concentration', insight: `Highest risk in ${PILLAR_ABBREV[worstRisk.pillar]} with RI ${formatRIPercent(worstRisk.riskIndex)} (${info.band}).`, icon: ShieldAlert, color: info.color });
     }
-    items.push({ title: 'Budget Position', insight: `Budget utilization at ${budgetUtilization}% — ${budgetHealth.label}. ${pillarData.filter(p => p.budgetUtil > 80).length > 0 ? 'Pressure detected in some pillars.' : 'Allocation balanced across pillars.'}`, icon: DollarSign, color: budgetHealth.color });
+    items.push({ title: 'Budget Position', insight: `Commitment ratio at ${(commitmentRatio * 100).toFixed(1)}% — ${budgetHealth.label}. Spending ratio at ${(spendingRatio * 100).toFixed(1)}%.`, icon: DollarSign, color: budgetHealth.color });
     return items.slice(0, 4);
-  }, [pillarData, budgetUtilization, expectedProgress, budgetHealth]);
+  }, [pillarData, commitmentRatio, spendingRatio, expectedProgress, budgetHealth]);
 
   const selectedPillarData = pillarView !== 'all' ? pillarData.find(p => p.pillar === pillarView) : null;
 
@@ -279,7 +288,6 @@ export default function PresidentSnapshot({ aggregation }: Props) {
       {/* KPI Cards */}
       <section>
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
-          <KPICard label="SEEI" value={`${seei.percent}%`} icon={Gauge} color={seei.color} subtitle={seei.label} tooltip="Measures execution output relative to financial deployment. Higher values indicate stronger efficiency in converting spending into progress." />
           <KPICard label="SSI" value={`${ssi.value}%`} icon={Activity} color={ssi.color} subtitle={ssi.label} tooltip="Integrated signal combining progress, budget alignment, and risk exposure to reflect overall strategic stability." />
           {/* Progress KPI with Expected Progress comparison */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
@@ -294,7 +302,10 @@ export default function PresidentSnapshot({ aggregation }: Props) {
               <p className="text-[10px] text-muted-foreground mt-1">Expected {expectedProgress}%</p>
             </div>
           </motion.div>
-          <KPICard label="Budget Utilization" value={`${budgetUtilization}%`} icon={DollarSign} color={budgetHealth.color} subtitle={budgetHealth.label} tooltip="Overall financial capacity. Healthy = ≥30% available. Watch = ≥15%. Critical = <15%. Reflects commitment level against total allocation." />
+          {/* Commitment Ratio KPI */}
+          <KPICard label="Commitment Ratio" value={`${(commitmentRatio * 100).toFixed(1)}%`} icon={DollarSign} color={budgetHealth.color} subtitle={budgetHealth.label} tooltip="Committed ÷ Allocated. Reflects total financial commitment against planned allocation." />
+          {/* Spending Ratio KPI */}
+          <KPICard label="Spending Ratio" value={`${(spendingRatio * 100).toFixed(1)}%`} icon={DollarSign} color={spendingRatio > 0.7 ? '#EF4444' : spendingRatio > 0.4 ? '#F59E0B' : '#16A34A'} subtitle="Spent ÷ Allocated" tooltip="Spent ÷ Allocated. Indicates proportion of budget actually disbursed." />
           <KPICard label="Risk Index" value={`${riInfo.percent}%`} icon={ShieldAlert} color={riInfo.color} subtitle={riInfo.band} tooltip="Risk Index reflects exposure to delivery risk based on emerging, critical, and realized signals." />
           {/* Completion with breakdown */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
@@ -322,9 +333,6 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             </div>
           </motion.div>
         </div>
-        <p className="text-xs text-muted-foreground italic mt-2.5 px-1">
-          SEEI and SSI provide complementary views: efficiency of execution (SEEI) and overall strategic stability (SSI).
-        </p>
       </section>
 
       {/* Executive Highlights */}
@@ -355,21 +363,21 @@ export default function PresidentSnapshot({ aggregation }: Props) {
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-muted-foreground" />
               <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Execution & Budget Alignment by Pillar</span>
-              <InfoTip text="View Progress or Budget Utilization per pillar. Alignment Insights provide per-pillar interpretation." />
+              <InfoTip text="View Progress or Commitment Ratio per pillar. Alignment Insights provide per-pillar interpretation." />
             </div>
-            <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
+            <div className="flex items-center rounded-xl border border-border bg-muted/30 p-1">
               {([
-                { key: 'execution' as FocusMode, label: 'Execution' },
-                { key: 'budget' as FocusMode, label: 'Budget' },
+                { key: 'execution' as FocusMode, label: '📊 Execution', icon: BarChart3 },
+                { key: 'budget' as FocusMode, label: '💰 Budget', icon: DollarSign },
               ]).map(m => (
-                <button key={m.key} onClick={() => setFocusMode(m.key)} className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 ${focusMode === m.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                <button key={m.key} onClick={() => setFocusMode(m.key)} className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${focusMode === m.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                   {m.label}
                 </button>
               ))}
             </div>
           </div>
           {focusMode === 'execution' && <ExecutionFocusChart pillarData={pillarData} expectedProgress={expectedProgress} />}
-          {focusMode === 'budget' && <BudgetFocusChart pillarData={pillarData} avgBudgetUtil={avgBudgetUtil} />}
+          {focusMode === 'budget' && <BudgetFocusChart pillarData={pillarData} />}
 
           {/* Execution–Budget Alignment Insights */}
           <AlignmentInsights pillarData={pillarData} expectedProgress={expectedProgress} />
@@ -437,27 +445,31 @@ function PillarReferencePanel() {
 
 /* ─── Alignment Insights Panel ────────────────────────────────────── */
 
-function getSEEIBand(progress: number, budgetUtil: number): { label: string; color: string; icon: string } {
-  if (budgetUtil < 1 && progress < 1) return { label: 'Under-Activated', color: '#1D4ED8', icon: '🔵' };
-  const effectiveUtil = budgetUtil <= 0 ? 1 : budgetUtil;
-  const seeiRaw = (progress / effectiveUtil) * 100;
-  if (seeiRaw >= 120) return { label: 'Highly Efficient', color: '#065F46', icon: '🟢' };
-  if (seeiRaw >= 90) return { label: 'Balanced', color: '#16A34A', icon: '🟡' };
-  if (seeiRaw >= 60) return { label: 'Concern', color: '#D97706', icon: '🟠' };
-  return { label: 'Critical', color: '#DC2626', icon: '🔴' };
-}
-
 function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]; expectedProgress: number }) {
-  // Generate summary
-  const categories = pillarData.map(p => ({ ...p, alignment: getSEEIBand(p.actualProgress, p.budgetUtil) }));
-  const healthy = categories.filter(c => c.alignment.label === 'Highly Efficient' || c.alignment.label === 'Balanced');
-  const atRisk = categories.filter(c => c.alignment.label === 'Critical' || c.alignment.label === 'Concern');
+  const categories = pillarData.map(p => {
+    const insight = getAlignmentInsight(p.actualProgress, p.commitmentRatio, p.spendingRatio, expectedProgress);
+    return { ...p, insight };
+  });
+
+  // Global alignment summary
+  const behindCount = categories.filter(c => c.actualProgress < expectedProgress - 5).length;
+  const highSpendLowExec = categories.filter(c => c.spendingRatio > 0.4 && c.actualProgress < 30).length;
 
   const summaryLines: string[] = [];
-  if (healthy.length === 5) summaryLines.push('All pillars show balanced or highly efficient execution relative to spending.');
-  else {
-    if (healthy.length > 0) summaryLines.push(`${healthy.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${healthy.length === 1 ? 'shows' : 'show'} healthy execution efficiency.`);
-    if (atRisk.length > 0) summaryLines.push(`${atRisk.map(c => PILLAR_ABBREV[c.pillar as PillarId]).join(', ')} ${atRisk.length === 1 ? 'requires' : 'require'} attention — execution efficiency is below expectations.`);
+  if (behindCount === 0) {
+    summaryLines.push('All pillars are tracking at or above expected execution pace relative to the academic timeline.');
+  } else {
+    summaryLines.push(`${behindCount} of 5 pillars are behind expected progress, indicating schedule pressure in those areas.`);
+  }
+  const avgCommitment = categories.reduce((s, c) => s + c.commitmentRatio, 0) / (categories.length || 1);
+  const avgSpending = categories.reduce((s, c) => s + c.spendingRatio, 0) / (categories.length || 1);
+  if (avgCommitment > 0.6 && behindCount > 2) {
+    summaryLines.push('High overall commitment levels combined with lagging execution suggest resource deployment is not translating into proportional progress.');
+  } else if (avgSpending < 0.2 && behindCount > 0) {
+    summaryLines.push('Low spending ratios alongside execution delays may indicate resource constraints or deployment bottlenecks.');
+  }
+  if (highSpendLowExec > 0) {
+    summaryLines.push(`${highSpendLowExec} pillar${highSpendLowExec > 1 ? 's show' : ' shows'} elevated spending with limited execution output, warranting efficiency review.`);
   }
 
   return (
@@ -466,6 +478,7 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
         <Target className="w-4 h-4 text-primary" />
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Execution–Budget Alignment Insights</span>
       </div>
+      {/* Global Alignment Diagnosis */}
       {summaryLines.length > 0 && (
         <div className="rounded-xl border border-border/40 bg-muted/10 p-3 space-y-1">
           {summaryLines.map((s, i) => (
@@ -475,10 +488,7 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map(p => {
-           const gap = p.actualProgress - p.budgetUtil;
-           const effectiveUtil = p.budgetUtil <= 0 ? 1 : p.budgetUtil;
-           const seeiRaw = Math.min(100, parseFloat(((p.actualProgress / effectiveUtil) * 100).toFixed(1)));
-           const seeiColor = seeiRaw >= 100 ? '#065F46' : seeiRaw >= 90 ? '#16A34A' : seeiRaw >= 60 ? '#D97706' : '#DC2626';
+           const gap = p.executionGap;
            return (
              <div key={p.pillar} className="rounded-xl border border-border/40 p-4 relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
@@ -487,16 +497,22 @@ function AlignmentInsights({ pillarData, expectedProgress }: { pillarData: any[]
                  <span className="text-xs font-semibold text-foreground">{PILLAR_SHORT[p.pillar as PillarId]}</span>
                </div>
                <div className="space-y-2 text-[11px]">
-                 <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span></div>
-                 <div className="flex justify-between"><span className="text-muted-foreground">Budget Util.</span><span className="font-bold text-foreground">{p.budgetUtil}%</span></div>
-                 <div className="flex justify-between"><span className="text-muted-foreground">Execution Gap</span><span className="font-bold" style={{ color: gap >= 0 ? '#16A34A' : '#DC2626' }}>{gap >= 0 ? '+' : ''}{gap.toFixed(1)}%</span></div>
-                 <div className="flex justify-between"><span className="text-muted-foreground">SEEI</span><span className="font-bold" style={{ color: seeiColor }}>{seeiRaw}%</span></div>
+                 <div className="flex justify-between"><span className="text-foreground">Progress</span><span className="font-bold text-foreground">{p.actualProgress}%</span></div>
+                 <div className="flex justify-between"><span className="text-foreground">Commitment Ratio</span><span className="font-bold text-foreground">{(p.commitmentRatio * 100).toFixed(1)}%</span></div>
+                 <div className="flex justify-between"><span className="text-foreground">Spending Ratio</span><span className="font-bold text-foreground">{(p.spendingRatio * 100).toFixed(1)}%</span></div>
+                 <div className="flex justify-between"><span className="text-foreground">vs Expected</span><span className="font-bold text-foreground">{expectedProgress}%</span></div>
+                 <div className="flex justify-between"><span className="text-foreground">Execution Gap</span><span className="font-bold" style={{ color: gap >= 0 ? '#16A34A' : '#DC2626' }}>{gap >= 0 ? '+' : ''}{gap}%</span></div>
               </div>
-              <div className="mt-3 pt-2 border-t border-border/30">
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1" style={{ backgroundColor: `${p.alignment.color}15`, color: p.alignment.color }}>
-                  <span>{p.alignment.icon}</span> {p.alignment.label}
-                </span>
-              </div>
+              {/* Diagnostic insight */}
+              <p className="text-[10px] text-foreground mt-3 leading-relaxed border-t border-border/30 pt-2">{p.insight.label}</p>
+              {/* Optional badges */}
+              {p.insight.badges.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {p.insight.badges.map((badge: string) => (
+                    <span key={badge} className="text-[9px] px-2 py-0.5 rounded-full font-semibold bg-muted/40 text-muted-foreground">{badge}</span>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -547,13 +563,15 @@ function ExecutionFocusChart({ pillarData, expectedProgress }: { pillarData: any
   );
 }
 
-/* ─── Budget Focus ────────────────────────────────────────────────── */
+/* ─── Budget Focus (no average line) ──────────────────────────────── */
 
-function BudgetFocusChart({ pillarData, avgBudgetUtil }: { pillarData: any[]; avgBudgetUtil: number }) {
+function BudgetFocusChart({ pillarData }: { pillarData: any[] }) {
   const chartData = pillarData.map(p => ({
-    label: PILLAR_ABBREV[p.pillar as PillarId], pillar: p.pillar, budgetUtil: p.budgetUtil,
-    fullLabel: PILLAR_FULL[p.pillar as PillarId], diff: parseFloat((p.budgetUtil - avgBudgetUtil).toFixed(1)),
-    allocated: p.allocated, spent: p.spent,
+    label: PILLAR_ABBREV[p.pillar as PillarId], pillar: p.pillar,
+    commitmentRatio: parseFloat((p.commitmentRatio * 100).toFixed(1)),
+    spendingRatio: parseFloat((p.spendingRatio * 100).toFixed(1)),
+    fullLabel: PILLAR_FULL[p.pillar as PillarId],
+    allocated: p.allocated, spent: p.spent, committed: p.committed,
   }));
   return (
     <>
@@ -562,30 +580,50 @@ function BudgetFocusChart({ pillarData, avgBudgetUtil }: { pillarData: any[]; av
           <BarChart data={chartData} margin={{ top: 25, right: 20, bottom: 25, left: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Budget Utilization %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
-            <ReferenceLine y={avgBudgetUtil} stroke="#6B7280" strokeWidth={2.5} strokeDasharray="10 5" label={{ value: `Avg Budget Util. (${avgBudgetUtil}%)`, position: 'top', offset: 8, style: { fontSize: 11, fill: '#6B7280', fontWeight: 700 } }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Ratio %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
             <ReTooltip content={({ payload }) => {
               if (!payload?.[0]) return null;
               const d = payload[0].payload;
               return (
                 <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs space-y-1">
                   <p className="font-semibold text-foreground">{d.fullLabel}</p>
-                  <p className="text-muted-foreground">Budget Utilization: <span className="text-foreground font-medium">{d.budgetUtil}%</span></p>
-                  <p className="text-muted-foreground">Average: <span className="text-foreground font-medium">{avgBudgetUtil}%</span></p>
-                  <p className="text-muted-foreground">Difference: <span className="font-medium" style={{ color: d.diff >= 0 ? '#D97706' : '#16A34A' }}>{d.diff >= 0 ? '+' : ''}{d.diff}%</span></p>
+                  <p className="text-muted-foreground">Commitment Ratio: <span className="text-foreground font-medium">{d.commitmentRatio}%</span></p>
+                  <p className="text-muted-foreground">Spending Ratio: <span className="text-foreground font-medium">{d.spendingRatio}%</span></p>
                   <p className="text-muted-foreground">Allocated: <span className="text-foreground font-medium">{formatCurrencyFull(d.allocated)}</span></p>
+                  <p className="text-muted-foreground">Committed: <span className="text-foreground font-medium">{formatCurrencyFull(d.committed)}</span></p>
                   <p className="text-muted-foreground">Spent: <span className="text-foreground font-medium">{formatCurrencyFull(d.spent)}</span></p>
                 </div>
               );
             }} />
-            <Bar dataKey="budgetUtil" radius={[4, 4, 0, 0]} maxBarSize={50}>
-              <LabelList dataKey="budgetUtil" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 700, fill: 'hsl(var(--foreground))' }} />
+            <Bar dataKey="commitmentRatio" name="Commitment Ratio" radius={[4, 4, 0, 0]} maxBarSize={24}>
+              <LabelList dataKey="commitmentRatio" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 10, fontWeight: 700, fill: 'hsl(var(--foreground))' }} />
               {chartData.map((d, i) => (<Cell key={i} fill={PILLAR_COLORS[d.pillar as PillarId]} fillOpacity={0.85} />))}
+            </Bar>
+            <Bar dataKey="spendingRatio" name="Spending Ratio" radius={[4, 4, 0, 0]} maxBarSize={24}>
+              <LabelList dataKey="spendingRatio" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 10, fontWeight: 700, fill: 'hsl(var(--foreground))' }} />
+              {chartData.map((d, i) => (<Cell key={i} fill={PILLAR_COLORS[d.pillar as PillarId]} fillOpacity={0.45} />))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <PillarLegendStrip showAvgLine />
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Pillars:</span>
+        {(['I','II','III','IV','V'] as PillarId[]).map(p => (
+          <div key={p} className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p] }} />
+            <span className="text-xs text-muted-foreground">{PILLAR_ABBREV[p]}</span>
+          </div>
+        ))}
+        <span className="text-[10px] text-muted-foreground ml-2">|</span>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm shrink-0 opacity-85" style={{ backgroundColor: '#6B7280' }} />
+          <span className="text-xs text-muted-foreground">Commitment (solid)</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm shrink-0 opacity-45" style={{ backgroundColor: '#6B7280' }} />
+          <span className="text-xs text-muted-foreground">Spending (lighter)</span>
+        </div>
+      </div>
     </>
   );
 }
@@ -729,7 +767,6 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
   const bHealth = p.budgetHealth;
   const execStatus = getExecutiveStatusLabel(p.completionPct, p.riPct, bHealth.label);
   const execColor = getExecStatusColor(execStatus);
-  const total = p.applicableItems || 1;
   const pStatus = getProgressStatus(p.actualProgress, expectedProgress);
 
   const progressDonut = [
@@ -760,7 +797,6 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
 
       {/* Row 1: Donut Charts + RI Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Progress Distribution Donut */}
         <div className="rounded-xl border border-border/40 p-4">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Progress Distribution</h4>
           <div className="flex items-center gap-3">
@@ -782,7 +818,6 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
 
-        {/* Applicability Donut */}
         <div className="rounded-xl border border-border/40 p-4">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Applicability</h4>
           <div className="flex items-center gap-3">
@@ -803,7 +838,6 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
 
-        {/* Risk Index — Horizontal Bar */}
         <div className="rounded-xl border border-border/40 p-4">
           <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Risk Index</h4>
           <p className="text-2xl font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</p>
@@ -842,16 +876,14 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Budget Health</p>
-          <span className="text-lg font-bold" style={{ color: bHealth.color }}>{bHealth.label}</span>
-          {p.allocated > 0 && <p className="text-[10px] text-muted-foreground mt-1">{((p.available / p.allocated) * 100).toFixed(1)}% available</p>}
+          <p className="text-[10px] text-muted-foreground mb-1">Commitment Ratio</p>
+          <span className="text-lg font-bold text-foreground">{(p.commitmentRatio * 100).toFixed(1)}%</span>
+          <p className="text-[10px] text-muted-foreground mt-1">Committed ÷ Allocated</p>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Budget Utilization</p>
-          <span className="text-lg font-bold text-foreground">{p.budgetUtil}%</span>
-          <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
-            <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.budgetUtil)}%`, backgroundColor: PILLAR_COLORS[p.pillar as PillarId], opacity: 0.5 }} />
-          </div>
+          <p className="text-[10px] text-muted-foreground mb-1">Spending Ratio</p>
+          <span className="text-lg font-bold text-foreground">{(p.spendingRatio * 100).toFixed(1)}%</span>
+          <p className="text-[10px] text-muted-foreground mt-1">Spent ÷ Allocated</p>
         </div>
       </div>
 
@@ -868,25 +900,6 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
 
 /* ─── Helper Components ──────────────────────────────────────────── */
 
-function MiniStat({ label, value, color, subtitle }: { label: string; value: string | number; color?: string; subtitle?: string }) {
-  return (
-    <div className="flex flex-col items-center">
-      <span className="text-[10px] text-muted-foreground mb-0.5">{label}</span>
-      <span className="text-sm font-bold" style={{ color }}>{value}</span>
-      {subtitle && <span className="text-[9px] text-muted-foreground">{subtitle}</span>}
-    </div>
-  );
-}
-
-function MiniCard({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <div className="rounded-lg border border-border/40 p-3 text-center">
-      <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm font-bold" style={{ color }}>{value}</p>
-    </div>
-  );
-}
-
 function StatusLegend({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -896,7 +909,7 @@ function StatusLegend({ label, value, color }: { label: string; value: number; c
   );
 }
 
-function PillarLegendStrip({ showExpectedLine, showAvgLine }: { showExpectedLine?: boolean; showAvgLine?: boolean } = {}) {
+function PillarLegendStrip({ showExpectedLine }: { showExpectedLine?: boolean } = {}) {
   const pillarIds: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
@@ -911,12 +924,6 @@ function PillarLegendStrip({ showExpectedLine, showAvgLine }: { showExpectedLine
         <>
           <span className="text-[10px] text-muted-foreground ml-2">|</span>
           <div className="flex items-center gap-1.5"><span className="w-5 border-t-2 border-dashed" style={{ borderColor: '#DC2626' }} /><span className="text-xs text-muted-foreground">Expected Progress</span></div>
-        </>
-      )}
-      {showAvgLine && (
-        <>
-          <span className="text-[10px] text-muted-foreground ml-2">|</span>
-          <div className="flex items-center gap-1.5"><span className="w-5 border-t-2 border-dashed" style={{ borderColor: '#6B7280' }} /><span className="text-xs text-muted-foreground">Average Utilization</span></div>
         </>
       )}
     </div>
