@@ -354,10 +354,10 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
 
           {/* Col 4: Execution context */}
           <div className="md:w-[160px] shrink-0 space-y-1 text-[10px]">
-            <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: pillarColor }}>{actualProgress}%</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Risk Index</span><span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Exec. Gap</span><span className="font-bold" style={{ color: executionGap >= 0 ? '#16A34A' : '#DC2626' }}>{formatSignedPercent(executionGap)}</span></div>
-            <p className="text-[9px] text-muted-foreground mt-1 leading-relaxed">{insight}</p>
+            <div className="flex justify-between"><span className="text-foreground">Progress</span><span className="font-bold" style={{ color: pillarColor }}>{actualProgress}%</span></div>
+            <div className="flex justify-between"><span className="text-foreground">Risk Index</span><span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span></div>
+            <div className="flex justify-between"><span className="text-foreground">Exec. Gap</span><span className="font-bold" style={{ color: executionGap >= 0 ? '#16A34A' : '#DC2626' }}>{formatSignedPercent(executionGap)}</span></div>
+            <p className="text-[9px] text-foreground mt-1 leading-relaxed">{insight}</p>
           </div>
         </div>
       </div>
