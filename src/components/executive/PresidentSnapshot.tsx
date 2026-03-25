@@ -742,8 +742,8 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
                 </ResponsiveContainer>
               </div>
               <div className="flex-1 space-y-0.5 text-[10px]">
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pillarColor }} /><span className="text-muted-foreground">App: <span className="font-bold text-foreground">{p.applicableItems}</span></span></div>
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6B7280] shrink-0" /><span className="text-muted-foreground">N/A: <span className="font-bold text-foreground">{p.naCount}</span></span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pillarColor }} /><span className="text-foreground">App: <span className="font-bold">{p.applicableItems}</span></span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6B7280] shrink-0" /><span className="text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
               </div>
             </div>
           </div>
