@@ -475,11 +475,11 @@ function CompletionDonut({ aggregation, pillarView, unitResults }: { aggregation
         </div>
         <div className="flex-1 space-y-2 min-w-0 overflow-hidden">
           {data.map(d => (
-            <div key={d.name} className="flex items-center gap-2 min-w-0">
-              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-              <span className="text-xs text-foreground truncate min-w-0">{d.name}</span>
+            <div key={d.name} className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+              <span className="text-xs text-foreground whitespace-nowrap">{d.name}</span>
               <span className="text-xs font-bold text-foreground tabular-nums shrink-0 ml-auto">{d.value}</span>
-              <span className="text-xs text-muted-foreground tabular-nums shrink-0 w-[3.5rem] text-right">({((d.value / total) * 100).toFixed(1)}%)</span>
+              <span className="text-xs text-muted-foreground tabular-nums shrink-0">({((d.value / total) * 100).toFixed(1)}%)</span>
             </div>
           ))}
         </div>
