@@ -864,7 +864,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
         </div>
 
         <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Risk Index</h4>
+          <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Risk Index</h4>
           <p className="text-2xl font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</p>
           <p className="text-[10px] font-semibold mt-0.5" style={{ color: riInfo.color }}>{riInfo.band}</p>
           <div className="h-3 rounded-full bg-muted overflow-hidden mt-3">
