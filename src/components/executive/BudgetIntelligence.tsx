@@ -347,8 +347,8 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
               </div>
             </div>
             <div className="flex gap-4 text-[10px]">
-              <div><span className="text-muted-foreground">Capacity</span><p className="font-bold" style={{ color: health.color }}>{availPct}%</p></div>
-              <div><span className="text-muted-foreground">Allocation</span><p className="font-bold text-foreground">{formatCurrency(r.allocation)}</p></div>
+              <div><span className="text-foreground">Capacity</span><p className="font-bold" style={{ color: health.color }}>{availPct}%</p></div>
+              <div><span className="text-foreground">Allocation</span><p className="font-bold text-foreground">{formatCurrency(r.allocation)}</p></div>
             </div>
           </div>
 
