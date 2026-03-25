@@ -339,7 +339,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
             </div>
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Spending Ratio</span>
+                <span className="text-foreground font-medium">Spending Ratio</span>
                 <span className="font-bold text-foreground">{spendingPct}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
