@@ -1,6 +1,6 @@
 /**
  * Dashboard Guide — Comprehensive Help Center for the Executive Command Center.
- * Updated to reflect: SSI, SEEI (as %), Focus Mode, Pillar Colors, Execution Gap, Tab roles.
+ * Updated: Removed SEEI. Reflects Commitment/Spending Ratios, Dynamic RI, Descriptive Alignment.
  */
 
 import { useState } from 'react';
@@ -37,15 +37,15 @@ export default function DashboardGuide() {
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
               <p className="text-xs font-semibold text-foreground">Tab 1 — Executive Snapshot</p>
-              <p className="text-[10px] text-muted-foreground mt-1">What is happening overall. Strategic synthesis and executive interpretation.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Overall strategic synthesis with SSI, descriptive alignment insights, commitment/spending ratios, and pillar diagnostics.</p>
             </div>
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
               <p className="text-xs font-semibold text-foreground">Tab 2 — Strategic Risk & Priority</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Where the risks and execution concerns are concentrated.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Where the risks and execution concerns are concentrated. Unit rankings and coverage gaps.</p>
             </div>
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
               <p className="text-xs font-semibold text-foreground">Tab 3 — Budget Intelligence</p>
-              <p className="text-[10px] text-muted-foreground mt-1">How funding patterns influence progress, efficiency, and stability.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Financial governance with commitment/spending ratios, per-pillar analytics, and budget health.</p>
             </div>
           </div>
           <div className="mt-5 p-4 rounded-xl bg-muted/30 border border-border/50">
@@ -89,15 +89,15 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><Info className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Key Metrics Explained</span></div>
           <div className="space-y-4">
-            <MetricExplainer title="SEEI (Strategic Execution Efficiency Index)" definition="Headline efficiency metric expressed as 0–100% (capped at 100). Measures execution output relative to financial deployment." calculation="SEEI = (Actual Progress % ÷ Budget Utilization %) × 100, capped at 100%." interpretation="High SEEI means progress exceeds or matches resource consumption. Low SEEI signals spending outpacing delivery." />
-            <MetricExplainer title="SSI (Strategic Stability Index)" definition="Executive signal combining progress, budget alignment, and risk exposure into a single 0–100% score." calculation="SSI = 0.4 × Progress + 0.3 × (100 − |Progress − Budget Util.|) + 0.3 × (100 − RI%). If any input is unavailable, displays N/A." interpretation="85–100 = Highly Stable. 70–84 = Stable. 50–69 = Watch. Below 50 = Unstable." />
-            <MetricExplainer title="Expected Progress" definition="Timeline-based benchmark representing how far execution should be at the current point in the reporting window. Same value used across all tabs." calculation="Based on elapsed time within the academic reporting window (Mid-Year: Jul–Dec, End-of-Year: Jul–Jun)." interpretation="Used as the horizontal reference line in Tab 1 and as the benchmark for Execution Gap in Tab 2." />
-            <MetricExplainer title="Execution Gap" definition="Difference between actual progress and expected progress for each unit." calculation="Execution Gap = Actual Progress % − Expected Progress %. Negative values mean behind schedule." interpretation="Units with the largest negative gaps need the most urgent attention." />
-            <MetricExplainer title="Risk Index (RI)" definition="Weighted score measuring structural risk (0–3, displayed as 0–100%)." calculation="RI = (0×NoRisk + 1×Emerging + 2×Critical + 3×Realized) ÷ Applicable Items." interpretation="Below 25% = Low. 26–50% = Moderate. 51–75% = High. Above 75% = Critical." />
-            <MetricExplainer title="Completion %" definition="Weighted average completion. COT → 100%, CBT → 100%, In Progress → actual %, Not Started → 0%." calculation="Weighted average across all applicable items." interpretation="Higher = more items executed. Quality assessed via On-Track % and Risk Index." />
-            <MetricExplainer title="Allocation / Committed / Available" definition="Budget metrics from the live Finance spreadsheet. Allocation = total planned. Committed = spent + unspent obligations. Available = allocation − committed." calculation="Read from specific subtotal cells per pillar." interpretation="Compare utilization levels across pillars to assess deployment patterns." />
-            <MetricExplainer title="Budget Health" definition="Overall financial capacity: Healthy (≥30% available), Watch (≥15%), Critical (<15%)." calculation="Derived from Available ÷ Allocation ratio." interpretation="Critical health signals that most funds are committed with limited flexibility." />
-            <MetricExplainer title="Alignment Status" definition="Per-pillar label describing the relationship between progress, budget, and risk." calculation="Derived from progress-budget gap and risk index level." interpretation="Labels include: Efficient, Budget-Constrained, Cost-Heavy, High-Risk Delivery, Intervention Required." />
+            <MetricExplainer title="SSI (Strategic Stability Index)" definition="Executive signal combining progress, budget alignment, and risk exposure into a single 0–100% score." calculation="SSI = 0.4 × Progress + 0.3 × (100 − |Progress − Commitment Ratio|) + 0.3 × (100 − RI%). If any input is unavailable, displays N/A." interpretation="85–100 = Highly Stable. 70–84 = Stable. 50–69 = Watch. Below 50 = Unstable." />
+            <MetricExplainer title="Commitment Ratio" definition="Proportion of planned budget that has been formally committed." calculation="Commitment Ratio = Committed (Spent + Unspent) ÷ Allocated." interpretation="Under-Deployed (<10%), Active (10–40%), Advanced (40–70%), Constrained (≥70%)." />
+            <MetricExplainer title="Spending Ratio" definition="Proportion of allocated budget that has been actually disbursed." calculation="Spending Ratio = Spent ÷ Allocated." interpretation="Lower than commitment ratio indicates significant contractual but not-yet-disbursed obligations." />
+            <MetricExplainer title="Expected Progress" definition="Timeline-based benchmark representing how far execution should be at the current point in the academic year window (Sep–Aug)." calculation="Based on elapsed time within the academic reporting window." interpretation="Used as the reference for Execution Gap across all tabs." />
+            <MetricExplainer title="Execution Gap" definition="Difference between actual progress and expected progress." calculation="Execution Gap = Actual Progress % − Expected Progress %. Negative values mean behind schedule." interpretation="The primary alignment signal. Only this value is color-highlighted in alignment cards." />
+            <MetricExplainer title="Risk Index (RI)" definition="Weighted score measuring structural risk (0–3, displayed as 0–100%). In-Progress items use dynamic risk based on execution gap." calculation="RI = (0×NoRisk + 1×Emerging + 2×Critical + 3×Realized) ÷ Applicable Items. In-Progress: Gap >50%→Critical, 20–50%→Emerging, <20%→No Risk." interpretation="Below 25% = Low. 26–50% = Moderate. 51–75% = High. Above 75% = Critical." />
+            <MetricExplainer title="Completion %" definition="Weighted average completion. COT → 100%, CBT → 100%, In Progress → actual %, Not Started → 0% (forced)." calculation="Weighted average across all applicable items." interpretation="Higher = more items executed. Quality assessed via On-Track % and Risk Index." />
+            <MetricExplainer title="Budget Health" definition="Financial capacity based on Commitment Ratio." calculation="Under-Deployed (<10%), Active (10–40%), Advanced (40–70%), Constrained (≥70%)." interpretation="Constrained health signals most funds are committed with limited flexibility." />
+            <MetricExplainer title="Alignment Insights" definition="Per-pillar descriptive interpretation of execution-budget relationship." calculation="Derived from Progress %, Commitment Ratio, Spending Ratio, and Expected Progress." interpretation="Each pillar receives a neutral diagnostic sentence (e.g., 'High execution with low spending') plus optional contextual badges." />
           </div>
         </motion.div>
       </section>
@@ -107,9 +107,9 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><LayoutDashboard className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">How to Read Each Tab</span></div>
           <div className="space-y-3">
-            <TabGuide icon={LayoutDashboard} title="Tab 1 — Executive Snapshot" description="Start with the Pillar Reference to understand the fixed color system. Review SEEI (execution efficiency) and SSI (strategic stability) KPI cards. The 'Execution & Budget Alignment by Pillar' scatter chart is the main strategic visual — use Focus Mode to inspect execution progress or budget utilization independently. The Pillar Execution Diagnostics panel explains why each pillar is positioned where it is." />
-            <TabGuide icon={ShieldAlert} title="Tab 2 — Strategic Risk & Priority" description="Risk Exposure by Pillar shows severity bands (Low/Moderate/High/Critical). Risk Signal Distribution reveals concentration alerts. The Execution Gap panel ranks units by how far behind expected progress they are. The heatmap provides unit-by-pillar risk detail. Critical Strategic Items lists actions needing immediate attention. Coverage Gaps highlights items not being addressed." />
-            <TabGuide icon={DollarSign} title="Tab 3 — Budget Intelligence" description="Budget KPI cards show allocation, commitment, availability, and health. The Budget Effectiveness Overview provides decision-oriented financial insights. Composition by Pillar uses fixed pillar colors. Per-Pillar Analytics now includes progress, risk, and funding status alongside budget figures. The Deployment Effectiveness scatter is a financial diagnostic view. Financial Contribution to SSI explains how funding supports stability." />
+            <TabGuide icon={LayoutDashboard} title="Tab 1 — Executive Snapshot" description="Start with the Pillar Reference to understand the fixed color system. Review SSI (strategic stability) and Progress KPI cards. Commitment Ratio and Spending Ratio replace the single Budget Utilization metric. The Execution & Budget Alignment chart supports Focus Mode (Execution or Budget views). Alignment Insights provide per-pillar diagnostic sentences with execution gap as the primary signal. Pillar Execution Diagnostics explain why each pillar is positioned where it is." />
+            <TabGuide icon={ShieldAlert} title="Tab 2 — Strategic Risk & Priority" description="Risk Exposure by Pillar shows severity bands (Low/Moderate/High/Critical). Risk Signal Distribution reveals concentration alerts. Ranking lists show ALL units even when filtering by pillar (units without data appear last). The Execution Gap panel ranks units by how far behind expected progress they are. The heatmap provides unit-by-pillar risk detail. Critical Strategic Items lists actions needing immediate attention. Coverage Gaps highlights items not being addressed." />
+            <TabGuide icon={DollarSign} title="Tab 3 — Budget Intelligence" description="Budget KPI cards show allocation, commitment, available, and dual Commitment/Spending ratio bars. Budget Health uses Commitment Ratio bands (Under-Deployed, Active, Advanced, Constrained). Per-Pillar Analytics includes progress, risk, execution gap, and funding status alongside budget figures. Tooltips explain each metric in context." />
             <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles." />
             <TabGuide icon={GitCompare} title="Unit Comparison" description="Side-by-side comparison of multiple units across performance dimensions." />
             <TabGuide icon={Brain} title="AI Executive Insights" description="AI-generated strategic interpretation aligned to each tab's role." />
@@ -122,19 +122,15 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><Eye className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Focus Mode (Tab 1)</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>The master alignment chart in Tab 1 supports <span className="font-semibold text-foreground">Focus Mode</span> — a segmented control that isolates individual metrics for detailed inspection.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
-              <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
-                <p className="text-xs font-semibold text-foreground">Combined</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Full quadrant scatter showing both budget and progress.</p>
-              </div>
+            <p>The alignment chart in Tab 1 supports <span className="font-semibold text-foreground">Focus Mode</span> — a toggle that isolates individual metrics for detailed inspection.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
                 <p className="text-xs font-semibold text-foreground">Execution</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Bar chart showing progress vs expected progress per pillar.</p>
               </div>
               <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
                 <p className="text-xs font-semibold text-foreground">Budget</p>
-                <p className="text-[10px] text-muted-foreground mt-1">Bar chart showing budget utilization vs average per pillar.</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Bar chart showing commitment and spending ratios per pillar.</p>
               </div>
             </div>
           </div>
@@ -164,12 +160,12 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><HelpCircle className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">FAQ</span></div>
           <div className="space-y-1">
-            <FAQItem question="What is the difference between SEEI and SSI?" answer="SEEI measures execution efficiency relative to budget deployment. SSI is a broader stability index combining progress, budget alignment, and risk. They complement each other: SEEI answers 'Are we efficient?' while SSI answers 'Are we stable?'" />
-            <FAQItem question="Why use Expected Progress as a benchmark?" answer="Expected Progress represents the proportional time elapsed in the reporting window. It provides a time-based anchor to evaluate whether execution is on schedule, independent of budget or risk." />
-            <FAQItem question="What does Focus Mode do?" answer="Focus Mode in Tab 1 lets you inspect execution progress or budget utilization independently, without the combined view's complexity. It shows one dimension at a time with clear reference lines." />
+            <FAQItem question="Why are there two budget ratios instead of one?" answer="The Commitment Ratio (Committed ÷ Allocated) reflects total financial obligation, while the Spending Ratio (Spent ÷ Allocated) shows actual disbursement. Together they reveal whether budget commitment translates to actual spending, and help identify contractual obligations not yet paid." />
+            <FAQItem question="Why use Expected Progress as a benchmark?" answer="Expected Progress represents the proportional time elapsed in the academic year window (Sep–Aug). It provides a time-based anchor to evaluate whether execution is on schedule, independent of budget or risk." />
+            <FAQItem question="How is alignment communicated?" answer="Alignment is expressed through descriptive analytics — each pillar receives a neutral diagnostic sentence derived from Progress, Commitment Ratio, Spending Ratio, and Expected Progress. Only the Execution Gap value is color-highlighted. Optional contextual badges (e.g., 'Ahead of schedule', 'Resource constrained') provide additional context." />
             <FAQItem question="How are pillar colors assigned?" answer="Each pillar has a fixed color (PI=Blue, PII=Green, PIII=Amber, PIV=Red, PV=Purple). These never change regardless of performance values. Risk is conveyed through separate semantic colors." />
-            <FAQItem question="What is the Execution Gap?" answer="Execution Gap = Actual Progress − Expected Progress. A negative gap means the unit is behind schedule. This metric appears in Tab 2 to identify which units need urgent attention." />
-            <FAQItem question="How does SSI use budget data?" answer="SSI includes a 30% weight for alignment (how close progress and budget utilization are). High alignment gaps reduce SSI. Tab 3's Financial Contribution panel explains this relationship." />
+            <FAQItem question="What is the Execution Gap?" answer="Execution Gap = Actual Progress − Expected Progress. A negative gap means the unit is behind schedule. This metric appears across all tabs to identify where attention is needed." />
+            <FAQItem question="How does dynamic RI work for In-Progress items?" answer="Instead of a fixed risk mapping, In-Progress items are assigned risk dynamically: if the gap between expected and actual progress exceeds 50%, it's Critical Risk; between 20-50% it's Emerging Risk; below 20% it's No Risk." />
           </div>
         </motion.div>
       </section>
@@ -179,9 +175,9 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><Lightbulb className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Reading Tips</span></div>
           <div className="space-y-4">
-            <TipStep step={1} title="Start with Executive Snapshot" description="Check SEEI and SSI for overall health. Use the master alignment chart and Focus Mode to understand pillar positioning. Review Pillar Execution Diagnostics for root causes." />
-            <TipStep step={2} title="Investigate in Strategic Risk" description="Check execution gaps to identify units behind schedule. Review the risk heatmap and critical strategic items." />
-            <TipStep step={3} title="Analyze Budget Intelligence" description="Review budget effectiveness insights. Check per-pillar analytics for progress, risk, and funding status. Use the Financial Contribution panel to understand SSI drivers." />
+            <TipStep step={1} title="Start with Executive Snapshot" description="Check SSI for overall stability. Review Progress vs Expected and the Commitment/Spending Ratios. Use the alignment chart Focus Mode to inspect execution or budget independently. Read Alignment Insights for per-pillar diagnostics." />
+            <TipStep step={2} title="Investigate in Strategic Risk" description="Check execution gaps to identify units behind schedule. Review the risk heatmap and critical strategic items. Note that ranking lists show ALL units even when filtering by pillar." />
+            <TipStep step={3} title="Analyze Budget Intelligence" description="Review commitment and spending ratios. Check per-pillar analytics for progress, risk, execution gap, and funding status. Budget Health reflects commitment-based deployment levels." />
             <TipStep step={4} title="Track and Compare" description="Use snapshots for longitudinal tracking and unit comparison for structural analysis." />
           </div>
         </motion.div>

@@ -1,8 +1,8 @@
 /**
  * Tab 3 — Budget Intelligence (CFO-Grade)
  * Financial governance with Budget Scope selector and Per-Pillar pillar filter.
- * Removed: quadrant scatter, standalone Budget Composition, Strategic Resource Effectiveness.
- * Unified Per-Pillar Budget Analytics section.
+ * Updated: Split Budget Utilization into Commitment + Spending Ratios.
+ * Removed SEEI. Uses descriptive alignment insights.
  */
 
 import { useState, useMemo } from 'react';
@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, AlertTriangle, Target, BarChart3, ShieldCheck, Loader2, Lightbulb } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
-  ResponsiveContainer, Cell, ReferenceLine, PieChart, Pie,
+  ResponsiveContainer, Cell, PieChart, Pie,
 } from 'recharts';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoTip } from '@/components/ui/info-tip';
@@ -21,8 +21,8 @@ import { aggregateByPillar, type UniversityAggregation } from '@/lib/university-
 import { formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, type PillarBudgetRow } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
-import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
-import { PILLAR_COLORS, computeSSI } from '@/lib/pillar-colors';
+import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
+import { PILLAR_COLORS } from '@/lib/pillar-colors';
 import PillarViewSelector, { type PillarViewMode } from './PillarViewSelector';
 import type { PillarId } from '@/lib/types';
 
@@ -30,24 +30,15 @@ interface Props { aggregation: UniversityAggregation; }
 
 type BudgetScope = 'total' | '2025-2026' | '2026-2027';
 
-function getBudgetEffectivenessLabel(budgetUtil: number, progress: number): { label: string; color: string } {
-  const gap = progress - budgetUtil;
-  if (gap > 20) return { label: 'Efficient Deployment', color: '#065F46' };
-  if (gap > 5) return { label: 'Balanced Deployment', color: '#16A34A' };
-  if (budgetUtil < 20 && progress < 20) return { label: 'Delayed Deployment', color: '#D97706' };
-  if (gap < -20) return { label: 'Over-Extended', color: '#DC2626' };
-  if (budgetUtil > 70 && progress < 40) return { label: 'Cost Pressure', color: '#EF4444' };
-  return { label: 'Under-Utilized', color: '#F59E0B' };
-}
-
-function getBudgetInsight(r: any, prog: number): string {
-  const util = r.utilization * 100;
-  if (prog > util + 20) return 'Strong progress achieved with conservative spending.';
-  if (prog > util + 5) return 'Spending and progress are well-aligned with room for growth.';
-  if (util > 70 && prog < 40) return 'High spending with limited delivery indicates inefficiency.';
-  if (util < 20) return 'Significant funds remain undeployed relative to execution.';
-  if (prog > 60) return 'Spending is active with reasonable completion conversion.';
-  return 'Spending is active, but completion conversion remains moderate.';
+function getBudgetInsight(commitmentRatio: number, spendingRatio: number, prog: number): string {
+  const commitPct = commitmentRatio * 100;
+  const spendPct = spendingRatio * 100;
+  if (prog > commitPct + 20) return 'Strong progress achieved with conservative commitment levels.';
+  if (prog > spendPct + 10) return 'Execution is outpacing actual spending, indicating efficient resource use.';
+  if (spendPct > 50 && prog < 30) return 'High spending with limited delivery indicates potential inefficiency.';
+  if (commitPct < 20) return 'Significant funds remain uncommitted relative to execution needs.';
+  if (prog > 60) return 'Active commitment with reasonable completion conversion.';
+  return 'Commitment is active, but completion conversion remains moderate.';
 }
 
 export default function BudgetIntelligence({ aggregation }: Props) {
@@ -65,7 +56,6 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     return pillarIds.map(p => {
       const b = getLivePillarBudget(budgetResult.pillars, p);
       const raw = budgetResult.pillars[p];
-      // Apply budget scope: use year-specific allocation from columns Q/R
       let allocation = b.allocation;
       if (budgetScope === '2025-2026' && raw) allocation = raw.year4;
       if (budgetScope === '2026-2027' && raw) allocation = raw.year5;
@@ -85,8 +75,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     const committed = allRows.reduce((s, r) => s + r.committed, 0);
     const available = allRows.reduce((s, r) => s + r.available, 0);
     const utilization = allocation > 0 ? committed / allocation : 0;
+    const spendingRatio = allocation > 0 ? spent / allocation : 0;
     const health = computeBudgetHealth(available, allocation);
-    return { allocation, spent, unspent, committed, available, utilization, health };
+    return { allocation, spent, unspent, committed, available, utilization, spendingRatio, health };
   }, [allRows]);
 
   const pillarProgressData = useMemo(() => {
@@ -107,56 +98,23 @@ export default function BudgetIntelligence({ aggregation }: Props) {
     });
   }, [unitResults, pillarAgg, viewType, term, academicYear]);
 
-  // Expected Progress based on academic year timelines (Sep–Aug), NOT terms
-  const expectedProgress = useMemo(() => {
-    if (viewType === 'cumulative') {
-      const windowStart = new Date(2025, 8, 1); // Sep 1, 2025
-      const windowEnd = new Date(2027, 7, 31);  // Aug 31, 2027
-      const now = new Date();
-      const totalMs = windowEnd.getTime() - windowStart.getTime();
-      const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
-      return Math.round((elapsedMs / totalMs) * 100);
-    }
-    const [startYearStr] = academicYear.split('-');
-    const startYear = parseInt(startYearStr);
-    const windowStart = new Date(startYear, 8, 1);    // Sep 1
-    const windowEnd = new Date(startYear + 1, 7, 31); // Aug 31
-    const now = new Date();
-    const totalMs = windowEnd.getTime() - windowStart.getTime();
-    const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
-    return Math.round((elapsedMs / totalMs) * 100);
-  }, [viewType, academicYear]);
+  const expectedProgress = useMemo(() => computeExpectedProgress(viewType, academicYear), [viewType, academicYear]);
 
   const budgetEffectiveness = useMemo(() => {
     const insights: string[] = [];
-    const utilPct = (totals.utilization * 100).toFixed(0);
-    insights.push(`Overall budget utilization stands at ${utilPct}%.`);
+    const commitPct = (totals.utilization * 100).toFixed(0);
+    const spendPct = (totals.spendingRatio * 100).toFixed(0);
+    insights.push(`Overall commitment ratio stands at ${commitPct}%, spending ratio at ${spendPct}%.`);
     const highUtil = allRows.filter(r => r.utilization >= 0.80);
-    if (highUtil.length > 0) insights.push(`${highUtil.map(r => PILLAR_ABBREV[r.pillar]).join(', ')} ${highUtil.length === 1 ? 'has' : 'have'} utilization above 80%.`);
+    if (highUtil.length > 0) insights.push(`${highUtil.map(r => PILLAR_ABBREV[r.pillar]).join(', ')} ${highUtil.length === 1 ? 'has' : 'have'} commitment above 80%.`);
     const pressure = allRows.filter(r => r.budgetPressure);
-    if (pressure.length > 0) insights.push(`Budget pressure detected in ${pressure.map(r => PILLAR_ABBREV[r.pillar]).join(', ')} (high utilization + elevated risk).`);
+    if (pressure.length > 0) insights.push(`Budget pressure detected in ${pressure.map(r => PILLAR_ABBREV[r.pillar]).join(', ')} (high commitment + elevated risk).`);
     const lowUtil = allRows.filter(r => r.utilization < 0.30);
-    if (lowUtil.length > 0) insights.push(`${lowUtil.map(r => PILLAR_ABBREV[r.pillar]).join(', ')} show underdeployment (<30% utilized).`);
+    if (lowUtil.length > 0) insights.push(`${lowUtil.map(r => PILLAR_ABBREV[r.pillar]).join(', ')} show underdeployment (<30% committed).`);
     return insights;
   }, [allRows, totals]);
 
-  // SSI
-  const overallProgress = useMemo(() => {
-    const all = pillarProgressData.filter(p => p.inProgressCount > 0);
-    if (all.length === 0) return 0;
-    return parseFloat((all.reduce((s, p) => s + p.actualProgress, 0) / all.length).toFixed(1));
-  }, [pillarProgressData]);
-  const riPctOverall = parseFloat(((aggregation.riskIndex / 3) * 100).toFixed(1));
-  const budgetUtilPct = parseFloat((totals.utilization * 100).toFixed(1));
-  const ssi = computeSSI(overallProgress, budgetUtilPct, riPctOverall);
-
-  const utilColor = totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A';
   const hasPressure = allRows.some(r => r.budgetPressure);
-
-  const selectedRow = pillarView !== 'all' ? allRows.find(r => r.pillar === pillarView) : null;
-  const selectedProgress = pillarView !== 'all' ? pillarProgressData.find(p => p.pillar === pillarView) : null;
-
-  // Filtered rows for Per-Pillar section
   const displayRows = pillarView === 'all' ? allRows : allRows.filter(r => r.pillar === pillarView);
 
   if (budgetLoading) {
@@ -186,17 +144,44 @@ export default function BudgetIntelligence({ aggregation }: Props) {
 
       {hasPressure && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
-          <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive shrink-0" /><span className="text-xs font-medium text-foreground">Budget Pressure Detected — Utilization ≥ 80% and RI ≥ 50%</span></div>
+          <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive shrink-0" /><span className="text-xs font-medium text-foreground">Budget Pressure Detected — Commitment ≥ 80% and RI ≥ 50%</span></div>
         </motion.div>
       )}
 
-      {/* KPI Cards */}
+      {/* KPI Cards — Split into Commitment & Spending Ratios */}
       <section>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} fullValue={formatCurrencyFull(totals.allocation)} icon={DollarSign} color="hsl(var(--primary))" infoTip="Total approved budget across all pillars for the strategic plan period." />
           <CommittedKPICard committed={totals.committed} spent={totals.spent} unspent={totals.unspent} allocation={totals.allocation} />
           <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} fullValue={formatCurrencyFull(totals.available)} icon={DollarSign} color="hsl(var(--primary))" extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined} infoTip="Budget capacity not yet committed and still available for future initiatives." />
-          <BudgetKPICard label="Budget Health" subtitle="Financial Capacity" value={totals.health.health} icon={ShieldCheck} color={totals.health.color} showBar barPct={totals.utilization * 100} barColor={utilColor} extraText={`${(totals.utilization * 100).toFixed(1)}% utilized`} infoTip="Healthy = ≥30% available capacity. Watch = ≥15%. Critical = <15%. Reflects commitment level against total allocation." />
+          {/* Commitment & Spending Ratio dual card */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
+            <div className="h-1 w-full bg-gradient-to-r from-primary to-primary/50" />
+            <div className="relative p-4 sm:p-5">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Ratios <InfoTip text="Commitment Ratio = Committed ÷ Allocated. Spending Ratio = Spent ÷ Allocated." /></p>
+              <div className="mt-2 space-y-2">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] mb-0.5">
+                    <span className="text-muted-foreground font-medium">Commitment</span>
+                    <span className="font-bold text-foreground">{(totals.utilization * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.utilization * 100)}%` }} transition={{ delay: 0.3, duration: 0.5 }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between text-[10px] mb-0.5">
+                    <span className="text-muted-foreground font-medium">Spending</span>
+                    <span className="font-bold text-foreground">{(totals.spendingRatio * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.spendingRatio * 100)}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: '#16A34A' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+          <BudgetKPICard label="Budget Health" subtitle="Financial Capacity" value={totals.health.health} icon={ShieldCheck} color={totals.health.color} showBar barPct={totals.utilization * 100} barColor={totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A'} extraText={`${(totals.utilization * 100).toFixed(1)}% committed`} infoTip="Budget health based on Commitment Ratio. Under-Deployed (<10%), Active (10–40%), Advanced (40–70%), Constrained (≥70%)." />
         </div>
       </section>
 
@@ -219,6 +204,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-muted-foreground" />
               <span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Per-Pillar Budget Analytics</span>
+              <InfoTip text="Executive view of budget deployment, commitment and spending ratios, financial capacity, and execution alignment by pillar." />
             </div>
             <PillarViewSelector value={pillarView} onChange={setPillarView} />
           </div>
@@ -250,28 +236,29 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           {/* Per-pillar cards */}
           <div className="space-y-4">
             {displayRows.map((r, idx) => (
-              <BudgetPillarCard key={r.pillar} r={r} idx={idx} pillarProgressData={pillarProgressData} />
+              <BudgetPillarCard key={r.pillar} r={r} idx={idx} pillarProgressData={pillarProgressData} expectedProgress={expectedProgress} />
             ))}
           </div>
         </motion.div>
       </section>
-
     </div>
   );
 }
 
 
-/* ─── Budget Pillar Card (modernized) ────────────────────────────── */
+/* ─── Budget Pillar Card (updated — no SEEI) ────────────────────── */
 
-function BudgetPillarCard({ r, idx, pillarProgressData }: { r: any; idx: number; pillarProgressData: any[] }) {
-  const utilPct = (r.utilization * 100).toFixed(1);
+function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r: any; idx: number; pillarProgressData: any[]; expectedProgress: number }) {
+  const commitmentPct = (r.utilization * 100).toFixed(1);
+  const spendingPct = r.allocation > 0 ? ((r.spent / r.allocation) * 100).toFixed(1) : '0';
   const health = computeBudgetHealth(r.available, r.allocation);
   const prog = pillarProgressData.find((p: any) => p.pillar === r.pillar);
   const actualProgress = prog?.actualProgress ?? 0;
-  const eff = getBudgetEffectivenessLabel(parseFloat(utilPct), actualProgress);
   const riInfo = getRiskDisplayInfo(r.riskIndex);
   const pillarColor = PILLAR_COLORS[r.pillar];
   const availPct = r.allocation > 0 ? ((r.available / r.allocation) * 100).toFixed(1) : '0';
+  const executionGap = actualProgress - expectedProgress;
+  const insight = getBudgetInsight(r.utilization, r.allocation > 0 ? r.spent / r.allocation : 0, actualProgress);
 
   const budgetDonut = [
     { name: 'Spent', value: r.spent, fill: '#16A34A' },
@@ -283,10 +270,8 @@ function BudgetPillarCard({ r, idx, pillarProgressData }: { r: any; idx: number;
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 + idx * 0.04 }}
       className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-lg hover:border-border/70 transition-all duration-300 overflow-hidden"
     >
-      {/* Accent bar */}
       <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${pillarColor}, ${pillarColor}66)` }} />
       <div className="p-5">
-        {/* Full-width row layout */}
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
           {/* Col 1: Pillar identity + health badge */}
           <div className="flex items-center gap-3 md:w-[180px] shrink-0">
@@ -294,7 +279,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData }: { r: any; idx: number;
               <span className="text-xs font-bold" style={{ color: pillarColor }}>{r.pillar}</span>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{PILLAR_SHORT[r.pillar]}</p>
+              <Tooltip><TooltipTrigger asChild><p className="text-sm font-semibold text-foreground truncate cursor-help">{PILLAR_SHORT[r.pillar]}</p></TooltipTrigger><TooltipContent><p className="text-xs">{PILLAR_FULL[r.pillar]}</p></TooltipContent></Tooltip>
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg inline-block mt-1" style={{ backgroundColor: `${health.color}15`, color: health.color }}>{health.health}</span>
             </div>
           </div>
@@ -320,15 +305,24 @@ function BudgetPillarCard({ r, idx, pillarProgressData }: { r: any; idx: number;
             </div>
           </div>
 
-          {/* Col 3: Utilization + Capacity bars */}
+          {/* Col 3: Commitment & Spending Ratios + Capacity */}
           <div className="flex-1 min-w-0 space-y-2.5">
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Utilization</span>
-                <span className="font-bold" style={{ color: parseFloat(utilPct) >= 80 ? '#EF4444' : parseFloat(utilPct) >= 60 ? '#F59E0B' : '#16A34A' }}>{utilPct}%</span>
+                <span className="text-muted-foreground font-medium">Commitment Ratio</span>
+                <span className="font-bold text-foreground">{commitmentPct}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, parseFloat(utilPct))}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: parseFloat(utilPct) >= 80 ? '#EF4444' : parseFloat(utilPct) >= 60 ? '#F59E0B' : '#16A34A' }} />
+                <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, parseFloat(commitmentPct))}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: parseFloat(commitmentPct) >= 80 ? '#EF4444' : parseFloat(commitmentPct) >= 60 ? '#F59E0B' : '#16A34A' }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between text-[10px] mb-1">
+                <span className="text-muted-foreground font-medium">Spending Ratio</span>
+                <span className="font-bold text-foreground">{spendingPct}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, parseFloat(spendingPct))}%` }} transition={{ delay: 0.35, duration: 0.5 }} className="h-full rounded-full bg-[#16A34A]" />
               </div>
             </div>
             <div className="flex gap-4 text-[10px]">
@@ -338,15 +332,11 @@ function BudgetPillarCard({ r, idx, pillarProgressData }: { r: any; idx: number;
           </div>
 
           {/* Col 4: Execution context */}
-          <div className="md:w-[140px] shrink-0 space-y-1 text-[10px]">
+          <div className="md:w-[160px] shrink-0 space-y-1 text-[10px]">
             <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: pillarColor }}>{actualProgress}%</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Risk Index</span><span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span></div>
-          </div>
-
-          {/* Col 5: Effectiveness badge */}
-          <div className="md:w-[110px] shrink-0 flex md:flex-col items-center md:items-end gap-1">
-            <span className="text-[10px] text-muted-foreground font-medium">Effectiveness</span>
-            <span className="text-[9px] px-2 py-1 rounded-lg font-bold" style={{ backgroundColor: `${eff.color}15`, color: eff.color }}>{eff.label}</span>
+            <div className="flex justify-between"><span className="text-muted-foreground">Exec. Gap</span><span className="font-bold" style={{ color: executionGap >= 0 ? '#16A34A' : '#DC2626' }}>{executionGap >= 0 ? '+' : ''}{executionGap}%</span></div>
+            <p className="text-[9px] text-muted-foreground mt-1 leading-relaxed">{insight}</p>
           </div>
         </div>
       </div>

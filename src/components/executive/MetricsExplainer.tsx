@@ -1,13 +1,13 @@
 /**
  * "How Metrics Work" — Premium informational modal
- * Updated: SSI, SEEI as %, Focus Mode, Pillar Colors, Execution Gap, Alignment Status.
+ * Updated: Removed SEEI. Added Commitment/Spending Ratios, Dynamic RI, Descriptive Alignment.
  */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, BookOpen, CheckCircle2, AlertTriangle, ShieldAlert, Target,
-  ArrowRight, Info, BarChart3, Gauge, Activity, Eye,
+  ArrowRight, Info, BarChart3, Activity,
 } from 'lucide-react';
 
 interface Props {
@@ -15,15 +15,15 @@ interface Props {
   onClose: () => void;
 }
 
-type Section = 'progress' | 'risk' | 'mapping' | 'completion' | 'efficiency' | 'stability';
+type Section = 'progress' | 'risk' | 'mapping' | 'completion' | 'alignment' | 'stability';
 
 const SECTIONS: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: 'progress', label: 'Progress', icon: BarChart3 },
   { id: 'risk', label: 'Risk', icon: ShieldAlert },
   { id: 'mapping', label: 'Mapping', icon: ArrowRight },
   { id: 'completion', label: 'Completion', icon: Target },
-  { id: 'efficiency', label: 'Efficiency', icon: Gauge },
-  { id: 'stability', label: 'Stability & Alignment', icon: Activity },
+  { id: 'alignment', label: 'Alignment & Budget', icon: Activity },
+  { id: 'stability', label: 'Stability', icon: Activity },
 ];
 
 export default function MetricsExplainer({ open, onClose }: Props) {
@@ -41,7 +41,7 @@ export default function MetricsExplainer({ open, onClose }: Props) {
                 <div className="p-2.5 rounded-xl bg-primary/10"><BookOpen className="w-5 h-5 text-primary" /></div>
                 <div>
                   <h2 className="text-lg font-display font-bold text-foreground">How Metrics Work</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Progress, Risk, Completion, Efficiency, and Stability</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Progress, Risk, Completion, Alignment & Stability</p>
                 </div>
               </div>
               <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg hover:bg-muted/50 transition-colors"><X className="w-4 h-4 text-muted-foreground" /></button>
@@ -60,7 +60,7 @@ export default function MetricsExplainer({ open, onClose }: Props) {
                   {activeSection === 'risk' && <RiskSection />}
                   {activeSection === 'mapping' && <MappingSection />}
                   {activeSection === 'completion' && <CompletionSection />}
-                  {activeSection === 'efficiency' && <EfficiencySection />}
+                  {activeSection === 'alignment' && <AlignmentSection />}
                   {activeSection === 'stability' && <StabilitySection />}
                 </motion.div>
               </AnimatePresence>
@@ -74,7 +74,7 @@ export default function MetricsExplainer({ open, onClose }: Props) {
 
 function ProgressSection() {
   const qualifiers = [
-    { label: 'Not Started', desc: 'No measurable progress recorded.', color: '#EF4444', icon: AlertTriangle },
+    { label: 'Not Started', desc: 'No measurable progress recorded. Progress forced to 0%.', color: '#EF4444', icon: AlertTriangle },
     { label: 'In Progress (%)', desc: 'Work is underway. Percentage reflects estimated completion.', color: '#F59E0B', icon: BarChart3 },
     { label: 'Completed on Target', desc: 'Completed and target achieved.', color: '#16A34A', icon: CheckCircle2 },
     { label: 'Completed below Target', desc: 'Completed but target not achieved.', color: '#7F1D1D', icon: ShieldAlert },
@@ -93,6 +93,10 @@ function ProgressSection() {
           </div>
         ))}
       </div>
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">Progress % Calculation:</span> Includes In Progress, Completed – On Target, and Completed – Below Target items. Not Started items are forced to 0%.</p>
+        <p className="text-xs text-muted-foreground mt-1"><span className="font-semibold text-primary">Completion % Calculation:</span> Uses ONLY completed items (Completed – On Target and Completed – Below Target). Other statuses are excluded.</p>
+      </div>
     </div>
   );
 }
@@ -107,7 +111,7 @@ function RiskSection() {
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-primary" />Strategic Risk Classification</h3>
-      <p className="text-xs text-muted-foreground">Risk is derived from progress status, not completion % alone.</p>
+      <p className="text-xs text-muted-foreground">Risk is derived from progress status. In-Progress items use dynamic risk based on execution gap.</p>
       <div className="space-y-2.5">
         {risks.map(r => (
           <div key={r.label} className="flex items-center gap-4 rounded-xl border border-border/60 p-4 bg-card">
@@ -120,9 +124,17 @@ function RiskSection() {
           </div>
         ))}
       </div>
-      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
         <p className="text-xs font-semibold text-primary flex items-center gap-1.5"><Info className="w-3.5 h-3.5" />RI Formula</p>
-        <p className="text-xs text-muted-foreground font-mono mt-1">RI = (0×No Risk + 1×Emergent + 2×Critical + 3×Realized) / Applicable Items</p>
+        <p className="text-xs text-muted-foreground font-mono">RI = (0×No Risk + 1×Emergent + 2×Critical + 3×Realized) / Applicable Items</p>
+        <p className="text-xs font-semibold text-primary mt-2">Dynamic RI for In-Progress Items</p>
+        <p className="text-xs text-muted-foreground">For In-Progress items, risk is assigned dynamically based on progress gap:</p>
+        <div className="ml-2 space-y-1 text-xs text-muted-foreground">
+          <p>• Gap &gt; 50% → Critical Risk (weight 2)</p>
+          <p>• Gap 20–50% → Emerging Risk (weight 1)</p>
+          <p>• Gap &lt; 20% → No Risk (weight 0)</p>
+        </div>
+        <p className="text-xs text-muted-foreground">Where Gap = Expected Progress % − Actual Progress %</p>
       </div>
     </div>
   );
@@ -131,13 +143,14 @@ function RiskSection() {
 function MappingSection() {
   const mappings = [
     { progress: 'Completed on Target', risk: 'No Risk', ri: '0%', pc: '#16A34A', rc: '#16A34A' },
-    { progress: 'In Progress', risk: 'Emergent Risk', ri: '33%', pc: '#F59E0B', rc: '#F59E0B' },
+    { progress: 'In Progress', risk: 'Dynamic (see Risk tab)', ri: 'Varies', pc: '#F59E0B', rc: '#F59E0B' },
     { progress: 'Not Started', risk: 'Critical Risk', ri: '67%', pc: '#EF4444', rc: '#EF4444' },
     { progress: 'Completed below Target', risk: 'Realized Risk', ri: '100%', pc: '#7F1D1D', rc: '#7F1D1D' },
   ];
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><ArrowRight className="w-4 h-4 text-primary" />Progress → Risk → Risk Index</h3>
+      <p className="text-xs text-muted-foreground">In-Progress items use dynamic risk assignment based on execution gap rather than a fixed mapping.</p>
       <div className="space-y-2">
         {mappings.map(m => (
           <div key={m.progress} className="flex items-center gap-2 sm:gap-3 rounded-xl border border-border/60 bg-card p-3">
@@ -155,7 +168,7 @@ function MappingSection() {
 
 function CompletionSection() {
   const rules = [
-    { status: 'Not Started', completion: '0%', color: '#EF4444' },
+    { status: 'Not Started', completion: '0% (forced)', color: '#EF4444' },
     { status: 'In Progress', completion: '1–99%', color: '#F59E0B' },
     { status: 'Completed on Target', completion: '100%', color: '#16A34A' },
     { status: 'Completed below Target', completion: '100%', color: '#7F1D1D' },
@@ -163,7 +176,7 @@ function CompletionSection() {
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Target className="w-4 h-4 text-primary" />Understanding Completion %</h3>
-      <p className="text-xs text-muted-foreground">Both completed states count as 100% — the action was executed. Quality is assessed separately.</p>
+      <p className="text-xs text-muted-foreground">Both completed states count as 100% — the action was executed. Quality is assessed separately. Not Started items are forced to 0% regardless of entered values.</p>
       <div className="rounded-xl border border-border/60 overflow-hidden">
         <table className="w-full text-xs">
           <thead><tr className="bg-muted/30"><th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th><th className="text-center py-3 px-4 font-semibold text-muted-foreground">Completion %</th></tr></thead>
@@ -181,33 +194,39 @@ function CompletionSection() {
   );
 }
 
-function EfficiencySection() {
+function AlignmentSection() {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Gauge className="w-4 h-4 text-primary" />Efficiency & Execution Metrics</h3>
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Activity className="w-4 h-4 text-primary" />Execution–Budget Alignment</h3>
+      <p className="text-xs text-muted-foreground">Alignment is communicated through descriptive analytics rather than a composite efficiency index. Each pillar receives a neutral diagnostic interpretation based on its execution and budget metrics.</p>
 
-      <MetricCard label="SEEI (Strategic Execution Efficiency Index)" formula="SEEI = (Actual Progress % ÷ Budget Utilization %) × 100, capped at 100%" desc="Expressed as 0–100%. Measures execution output relative to financial deployment." color="#059669" bands={[
-        { range: '≥ 120%', label: 'Highly Efficient', color: '#065F46' },
-        { range: '90–119%', label: 'Balanced', color: '#16A34A' },
-        { range: '60–89%', label: 'Concern', color: '#D97706' },
-        { range: '< 60%', label: 'Critical', color: '#DC2626' },
+      <MetricCard label="Commitment Ratio" formula="Committed ÷ Allocated" desc="Measures the proportion of planned budget that has been formally committed (spent + unspent obligations)." color="#059669" bands={[
+        { range: '< 10%', label: 'Under-Deployed', color: '#3B82F6' },
+        { range: '10–40%', label: 'Active Deployment', color: '#16A34A' },
+        { range: '40–70%', label: 'Advanced Deployment', color: '#D97706' },
+        { range: '≥ 70%', label: 'Constrained', color: '#DC2626' },
       ]} />
 
-      <MetricCard label="Actual Progress % (In-Progress Items)" formula="Average completion % of all in-progress items" desc="Completed items excluded — they no longer reflect ongoing delivery performance." color="#2563EB" bands={[]} />
+      <MetricCard label="Spending Ratio" formula="Spent ÷ Allocated" desc="Proportion of allocated budget that has been actually disbursed." color="#16A34A" bands={[]} />
 
-      <MetricCard label="Expected Progress" formula="Proportional time elapsed within the reporting window" desc="Same timeline-based benchmark used across all tabs. Mid-Year: Jul–Dec. End-of-Year: Jul–Jun." color="#6B7280" bands={[]} />
+      <MetricCard label="Execution Gap" formula="Actual Progress % − Expected Progress %" desc="Negative values indicate units or pillars behind schedule. Highlighted with color — the primary signal in alignment analysis." color="#DC2626" bands={[]} />
 
-      <MetricCard label="Progress Ratio" formula="Actual Progress % ÷ Expected Progress %" desc="> 1.0 = ahead, < 1.0 = behind schedule." color="#D97706" bands={[]} />
-
-      <MetricCard label="IPS (Intervention Priority Score)" formula="IPS = (1 − Progress Ratio) × Budget Utilization %" desc="Identifies pillars where delay coincides with high spending." color="#DC2626" bands={[
-        { range: '> 25', label: '🔴 Critical', color: '#DC2626' },
-        { range: '> 15', label: '🟠 High', color: '#F97316' },
-        { range: '> 5', label: '🟡 Monitor', color: '#D97706' },
-        { range: '≤ 5', label: '🟢 Stable', color: '#16A34A' },
-      ]} />
+      <div className="rounded-xl border border-border/60 bg-card p-4">
+        <h4 className="text-xs font-semibold text-foreground mb-2">Alignment Insight Categories</h4>
+        <p className="text-xs text-muted-foreground mb-3">Each pillar is auto-assigned ONE neutral descriptive interpretation:</p>
+        <div className="space-y-1.5 text-xs text-muted-foreground">
+          <p>• <span className="font-medium text-foreground">High execution with low spending</span> — efficient deployment</p>
+          <p>• <span className="font-medium text-foreground">High spending with low execution</span> — potential inefficiency</p>
+          <p>• <span className="font-medium text-foreground">Balanced execution and funding</span> — aligned</p>
+          <p>• <span className="font-medium text-foreground">Under-resourced execution</span> — progress high, funds low</p>
+          <p>• <span className="font-medium text-foreground">Front-loaded spending</span> — funds high, progress lagging</p>
+          <p>• <span className="font-medium text-foreground">High funding with limited output</span> — delivery risk</p>
+          <p>• <span className="font-medium text-foreground">Low activity on both dimensions</span></p>
+        </div>
+      </div>
 
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-        <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">Note:</span> Completed items are excluded from execution pace analysis because they no longer reflect ongoing delivery performance.</p>
+        <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">Note:</span> Only the Execution Gap value is color-highlighted. All other metrics use default text color to maintain neutral analytical presentation.</p>
       </div>
     </div>
   );
@@ -216,30 +235,16 @@ function EfficiencySection() {
 function StabilitySection() {
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Activity className="w-4 h-4 text-primary" />Strategic Stability & Alignment</h3>
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Activity className="w-4 h-4 text-primary" />Strategic Stability</h3>
 
-      <MetricCard label="SSI (Strategic Stability Index)" formula="SSI = 0.4 × Progress + 0.3 × (100 − |Progress − Budget Util.|) + 0.3 × (100 − RI%)" desc="One executive signal combining progress, budget alignment, and risk. Range 0–100%. Higher = more stable." color="#059669" bands={[
+      <MetricCard label="SSI (Strategic Stability Index)" formula="SSI = 0.4 × Progress + 0.3 × (100 − |Progress − Commitment Ratio|) + 0.3 × (100 − RI%)" desc="One executive signal combining progress, budget alignment, and risk. Range 0–100%. Higher = more stable." color="#059669" bands={[
         { range: '85–100%', label: 'Highly Stable', color: '#065F46' },
         { range: '70–84%', label: 'Stable', color: '#16A34A' },
         { range: '50–69%', label: 'Watch', color: '#D97706' },
         { range: '< 50%', label: 'Unstable', color: '#DC2626' },
       ]} />
 
-      <MetricCard label="Execution Gap" formula="Actual Progress % − Expected Progress %" desc="Negative values indicate units behind schedule. Ranked by largest negative gap first in Tab 2." color="#DC2626" bands={[]} />
-
-      <MetricCard label="Alignment Status" formula="Derived from progress-budget gap and risk level" desc="Per-pillar label describing the relationship between progress, budget, and risk." color="#3B82F6" bands={[
-        { range: 'Gap > +20', label: 'Efficient', color: '#065F46' },
-        { range: 'Gap +10 to +20', label: 'Efficient but Monitor', color: '#16A34A' },
-        { range: 'Gap −10 to +10', label: 'Balanced', color: '#3B82F6' },
-        { range: 'Gap −10 to −20', label: 'Budget-Constrained', color: '#D97706' },
-        { range: 'Gap < −20', label: 'Cost-Heavy', color: '#F97316' },
-        { range: 'RI ≥ 50%', label: 'High-Risk / Intervention', color: '#DC2626' },
-      ]} />
-
-      <div className="rounded-xl border border-border/60 bg-card p-4">
-        <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2"><Eye className="w-3.5 h-3.5 text-primary" />Focus Mode (Tab 1)</h4>
-        <p className="text-xs text-muted-foreground leading-relaxed">The master alignment chart supports Focus Mode: Combined (full scatter), Execution (progress vs expected), and Budget (utilization vs average). Each view isolates one dimension for detailed inspection without noise from the other.</p>
-      </div>
+      <MetricCard label="Expected Progress" formula="Proportional time elapsed within the academic year window (Sep–Aug)" desc="Same timeline-based benchmark used across all tabs." color="#6B7280" bands={[]} />
 
       <div className="rounded-xl border border-border/60 bg-card p-4">
         <h4 className="text-xs font-semibold text-foreground mb-2">Pillar Color System</h4>
