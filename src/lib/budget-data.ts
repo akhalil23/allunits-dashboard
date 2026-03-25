@@ -1,6 +1,12 @@
 /**
  * Budget Data Utilities — Shared across executive dashboard components.
  * Now powered by live data from the Finance spreadsheet.
+ * 
+ * Budget Health uses Commitment Ratio bands:
+ *   <10% → Under-Deployed
+ *   10–40% → Active Deployment
+ *   40–70% → Advanced Deployment
+ *   ≥70% → Constrained
  */
 
 import type { PillarId } from './types';
@@ -26,19 +32,26 @@ export const PILLAR_LABELS: Record<PillarId, string> = {
   I: 'PI', II: 'PII', III: 'PIII', IV: 'PIV', V: 'PV',
 };
 
-export type BudgetHealth = 'Healthy' | 'Watch' | 'Critical';
+export type BudgetHealth = 'Under-Deployed' | 'Active Deployment' | 'Advanced Deployment' | 'Constrained';
 
+/**
+ * Budget Health based on Commitment Ratio (Committed / Allocated).
+ *   <10% → Under-Deployed
+ *   10–40% → Active Deployment
+ *   40–70% → Advanced Deployment
+ *   ≥70% → Constrained / Low Flexibility
+ */
 export function computeBudgetHealth(available: number, allocation: number): { health: BudgetHealth; color: string } {
-  if (allocation <= 0) return { health: 'Healthy', color: '#16A34A' };
-  const availPct = available / allocation;
-  if (availPct >= 0.30) return { health: 'Healthy', color: '#16A34A' };
-  if (availPct >= 0.15) return { health: 'Watch', color: '#F59E0B' };
-  return { health: 'Critical', color: '#EF4444' };
+  if (allocation <= 0) return { health: 'Under-Deployed', color: '#3B82F6' };
+  const commitmentRatio = 1 - (available / allocation); // committed / allocated
+  if (commitmentRatio < 0.10) return { health: 'Under-Deployed', color: '#3B82F6' };
+  if (commitmentRatio < 0.40) return { health: 'Active Deployment', color: '#16A34A' };
+  if (commitmentRatio < 0.70) return { health: 'Advanced Deployment', color: '#F59E0B' };
+  return { health: 'Constrained', color: '#EF4444' };
 }
 
 /**
  * Get budget for a specific pillar from live data.
- * Returns total (allocation/committed/available) from the live pillar data.
  */
 export function getLivePillarBudget(
   pillarData: Record<string, PillarBudgetLive> | undefined,

@@ -1,6 +1,6 @@
 import type { ActionItem, ViewType, AcademicYear, Term, PillarId } from './types';
 import { isNotApplicableStatus } from './types';
-import { getItemStatus, getItemCompletion, getApplicableItems, getTermData } from './intelligence';
+import { getItemStatus, getItemCompletion, getApplicableItems, getTermData, computeExpectedProgress } from './intelligence';
 import { riToPercent, getRiskDisplayInfo } from './risk-display';
 
 // ─── Risk Signal Types ───────────────────────────────────────────────────────
@@ -37,22 +37,42 @@ export const RISK_SIGNAL_ORDER: RiskSignal[] = [
 
 // ─── Item-Level Mapping ──────────────────────────────────────────────────────
 
+/**
+ * Map an item to a risk signal.
+ * 
+ * DYNAMIC RI FOR IN-PROGRESS ITEMS:
+ *   Difference = Expected Progress % − Actual Progress %
+ *   > 50% → Critical Risk
+ *   20–50% → Emerging Risk
+ *   < 20% → No Risk
+ * 
+ * NOT STARTED → always Critical Risk (progress forced to 0%)
+ * COMPLETED ON TARGET → No Risk
+ * COMPLETED BELOW TARGET → Realized Risk
+ */
 export function mapItemToRiskSignal(
   status: string,
   completion: number,
-  completionValid: boolean
+  completionValid: boolean,
+  expectedProgress?: number
 ): RiskSignal {
   if (isNotApplicableStatus(status)) return 'Not Applicable';
   if (status === 'Completed – Below Target') return 'Realized Risk (Needs Mitigation Strategy)';
   if (status === 'Completed – On Target') return 'No Risk (On Track)';
 
   if (status === 'In Progress') {
+    if (expectedProgress !== undefined && completionValid) {
+      const diff = expectedProgress - completion;
+      if (diff > 50) return 'Critical Risk (Needs Close Attention)';
+      if (diff >= 20) return 'Emerging Risk (Needs Attention)';
+      return 'No Risk (On Track)';
+    }
+    // Fallback when expectedProgress is not available
     if (completionValid && completion === 0) return 'Critical Risk (Needs Close Attention)';
     return 'Emerging Risk (Needs Attention)';
   }
 
   if (status === 'Not Started') {
-    if (completionValid && completion > 0) return 'Emerging Risk (Needs Attention)';
     return 'Critical Risk (Needs Close Attention)';
   }
 
@@ -75,6 +95,7 @@ export function computeRiskSignalDistribution(
   academicYear: AcademicYear
 ): RiskSignalDistItem[] {
   const applicable = getApplicableItems(items, viewType, term, academicYear);
+  const expectedProgress = computeExpectedProgress(viewType, academicYear);
 
   const counts: Record<RiskSignal, number> = {
     'No Risk (On Track)': 0,
@@ -88,7 +109,7 @@ export function computeRiskSignalDistribution(
     const status = getItemStatus(item, viewType, term, academicYear);
     const completion = getItemCompletion(item, viewType, term, academicYear);
     const completionValid = typeof completion === 'number' && completion >= 0 && completion <= 100;
-    const signal = mapItemToRiskSignal(status, completion, completionValid);
+    const signal = mapItemToRiskSignal(status, completion, completionValid, expectedProgress);
     counts[signal]++;
   });
 
@@ -112,13 +133,14 @@ export function computeNewRiskIndex(
 ): number {
   const applicable = getApplicableItems(items, viewType, term, academicYear);
   if (applicable.length === 0) return 0;
+  const expectedProgress = computeExpectedProgress(viewType, academicYear);
 
   let weightedSum = 0;
   applicable.forEach(item => {
     const status = getItemStatus(item, viewType, term, academicYear);
     const completion = getItemCompletion(item, viewType, term, academicYear);
     const completionValid = typeof completion === 'number' && completion >= 0 && completion <= 100;
-    const signal = mapItemToRiskSignal(status, completion, completionValid);
+    const signal = mapItemToRiskSignal(status, completion, completionValid, expectedProgress);
     weightedSum += RISK_SIGNAL_WEIGHTS[signal];
   });
 
@@ -180,6 +202,7 @@ export function getEnrichedItems(
   term: Term,
   academicYear: AcademicYear
 ): RiskSignalItem[] {
+  const expectedProgress = computeExpectedProgress(viewType, academicYear);
   return items.map(item => {
     const status = getItemStatus(item, viewType, term, academicYear);
     const completion = getItemCompletion(item, viewType, term, academicYear);
@@ -192,7 +215,7 @@ export function getEnrichedItems(
       pillar: item.pillar,
       status,
       completion,
-      riskSignal: mapItemToRiskSignal(status, completion, completionValid),
+      riskSignal: mapItemToRiskSignal(status, completion, completionValid, expectedProgress),
       supportingDoc: td.supportingDoc || '',
       sheetRow: item.sheetRow,
     };
