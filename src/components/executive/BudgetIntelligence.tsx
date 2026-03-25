@@ -307,7 +307,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
 
           {/* Col 2: Budget Composition donut */}
           <div className="md:w-[200px] shrink-0">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Composition</p>
+            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Composition</p>
             <div className="flex items-center gap-2">
               <div className="w-[48px] h-[48px] shrink-0">
                 <ResponsiveContainer>
@@ -319,9 +319,9 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
                 </ResponsiveContainer>
               </div>
               <div className="flex-1 space-y-0.5 text-[10px]">
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#16A34A] shrink-0" /><span className="text-muted-foreground">Spent</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.spent)}</span></div>
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F59E0B] shrink-0" /><span className="text-muted-foreground">Unspent</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.unspent)}</span></div>
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#D1D5DB] shrink-0" /><span className="text-muted-foreground">Available</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.available)}</span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#16A34A] shrink-0" /><span className="text-foreground">Spent</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.spent)}</span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F59E0B] shrink-0" /><span className="text-foreground">Unspent</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.unspent)}</span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#D1D5DB] shrink-0" /><span className="text-foreground">Available</span><span className="font-bold text-foreground ml-auto">{formatCurrency(r.available)}</span></div>
               </div>
             </div>
           </div>
@@ -330,7 +330,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
           <div className="flex-1 min-w-0 space-y-2.5">
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Commitment Ratio</span>
+                <span className="text-foreground font-medium">Commitment Ratio</span>
                 <span className="font-bold text-foreground">{commitmentPct}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -339,7 +339,7 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
             </div>
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Spending Ratio</span>
+                <span className="text-foreground font-medium">Spending Ratio</span>
                 <span className="font-bold text-foreground">{spendingPct}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -347,17 +347,17 @@ function BudgetPillarCard({ r, idx, pillarProgressData, expectedProgress }: { r:
               </div>
             </div>
             <div className="flex gap-4 text-[10px]">
-              <div><span className="text-muted-foreground">Capacity</span><p className="font-bold" style={{ color: health.color }}>{availPct}%</p></div>
-              <div><span className="text-muted-foreground">Allocation</span><p className="font-bold text-foreground">{formatCurrency(r.allocation)}</p></div>
+              <div><span className="text-foreground">Capacity</span><p className="font-bold" style={{ color: health.color }}>{availPct}%</p></div>
+              <div><span className="text-foreground">Allocation</span><p className="font-bold text-foreground">{formatCurrency(r.allocation)}</p></div>
             </div>
           </div>
 
           {/* Col 4: Execution context */}
           <div className="md:w-[160px] shrink-0 space-y-1 text-[10px]">
-            <div className="flex justify-between"><span className="text-muted-foreground">Progress</span><span className="font-bold" style={{ color: pillarColor }}>{actualProgress}%</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Risk Index</span><span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Exec. Gap</span><span className="font-bold" style={{ color: executionGap >= 0 ? '#16A34A' : '#DC2626' }}>{formatSignedPercent(executionGap)}</span></div>
-            <p className="text-[9px] text-muted-foreground mt-1 leading-relaxed">{insight}</p>
+            <div className="flex justify-between"><span className="text-foreground">Progress</span><span className="font-bold" style={{ color: pillarColor }}>{actualProgress}%</span></div>
+            <div className="flex justify-between"><span className="text-foreground">Risk Index</span><span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</span></div>
+            <div className="flex justify-between"><span className="text-foreground">Exec. Gap</span><span className="font-bold" style={{ color: executionGap >= 0 ? '#16A34A' : '#DC2626' }}>{formatSignedPercent(executionGap)}</span></div>
+            <p className="text-[9px] text-foreground mt-1 leading-relaxed">{insight}</p>
           </div>
         </div>
       </div>
@@ -395,7 +395,7 @@ function SinglePillarBudgetAnalytics({
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">Expanded View — {PILLAR_FULL[row.pillar]}</p>
-            <p className="text-[10px] text-muted-foreground">Focused budget-to-execution analysis for selected pillar</p>
+            <p className="text-[10px] text-foreground">Focused budget-to-execution analysis for selected pillar</p>
           </div>
         </div>
         <span className="text-[10px] px-2.5 py-1 rounded-full font-bold" style={{ backgroundColor: `${health.color}15`, color: health.color }}>{health.health}</span>
@@ -416,12 +416,12 @@ function SinglePillarBudgetAnalytics({
       </div>
 
       <div className="rounded-xl border border-border/40 p-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Pillar Diagnosis</p>
+        <p className="text-xs font-semibold text-foreground uppercase mb-2">Pillar Diagnosis</p>
         <p className="text-xs text-foreground leading-relaxed">{insight}</p>
       </div>
 
       <div className="rounded-xl border border-border/40 p-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Other Pillars Context</p>
+        <p className="text-xs font-semibold text-foreground uppercase mb-2">Other Pillars Context</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
           {comparisonRows.map((other) => {
             const otherProgress = pillarProgressData.find((p: any) => p.pillar === other.pillar)?.actualProgress ?? 0;
@@ -430,8 +430,8 @@ function SinglePillarBudgetAnalytics({
             return (
               <div key={other.pillar} className="rounded-lg border border-border/30 p-2.5">
                 <p className="text-[10px] font-semibold text-foreground">P{other.pillar}</p>
-                <p className="text-[10px] text-muted-foreground">Commit {(other.utilization * 100).toFixed(1)}%</p>
-                <p className="text-[10px] text-muted-foreground">Spend {(other.allocation > 0 ? (other.spent / other.allocation) * 100 : 0).toFixed(1)}%</p>
+                <p className="text-[10px] text-foreground">Commit {(other.utilization * 100).toFixed(1)}%</p>
+                <p className="text-[10px] text-foreground">Spend {(other.allocation > 0 ? (other.spent / other.allocation) * 100 : 0).toFixed(1)}%</p>
                 <p className={`text-[10px] font-semibold ${otherHasValue ? '' : 'text-muted-foreground'}`} style={otherHasValue ? { color: otherGap >= 0 ? '#16A34A' : '#DC2626' } : undefined}>
                   Gap {otherHasValue ? formatSignedPercent(otherGap) : '—'}
                 </p>
@@ -447,7 +447,7 @@ function SinglePillarBudgetAnalytics({
 function MetricBox({ label, value, valueClass, valueStyle }: { label: string; value: string; valueClass?: string; valueStyle?: React.CSSProperties }) {
   return (
     <div className="rounded-lg border border-border/40 p-3">
-      <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
+      <p className="text-[10px] text-foreground mb-1">{label}</p>
       <p className={`text-sm font-bold text-foreground ${valueClass ?? ''}`} style={valueStyle}>{value}</p>
     </div>
   );

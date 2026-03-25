@@ -708,7 +708,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
 
           {/* Col 2: Status Distribution donut */}
           <div className="md:w-[180px] shrink-0">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Status Distribution</p>
+            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Status Distribution</p>
             <div className="flex items-center gap-2">
               <div className="w-[48px] h-[48px] shrink-0">
                 <ResponsiveContainer>
@@ -730,7 +730,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
 
           {/* Col 3: Applicability donut */}
           <div className="md:w-[150px] shrink-0">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Applicability</p>
+            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Applicability</p>
             <div className="flex items-center gap-2">
               <div className="w-[48px] h-[48px] shrink-0">
                 <ResponsiveContainer>
@@ -742,8 +742,8 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
                 </ResponsiveContainer>
               </div>
               <div className="flex-1 space-y-0.5 text-[10px]">
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pillarColor }} /><span className="text-muted-foreground">App: <span className="font-bold text-foreground">{p.applicableItems}</span></span></div>
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6B7280] shrink-0" /><span className="text-muted-foreground">N/A: <span className="font-bold text-foreground">{p.naCount}</span></span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pillarColor }} /><span className="text-foreground">App: <span className="font-bold">{p.applicableItems}</span></span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6B7280] shrink-0" /><span className="text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
               </div>
             </div>
           </div>
@@ -752,7 +752,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
           <div className="flex-1 min-w-0 space-y-2.5">
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Risk Index</span>
+                <span className="text-foreground font-medium">Risk Index</span>
                 <span className="font-bold" style={{ color: riInfo.color }}>{riInfo.percent}% — {riInfo.band}</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -761,10 +761,10 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
             </div>
             <div>
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="text-muted-foreground font-medium">Progress</span>
+                <span className="text-foreground font-medium">Progress</span>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold" style={{ color: pillarColor }}>{p.actualProgress}%</span>
-                  <span className="text-muted-foreground/70">/ {expectedProgress}%</span>
+                  <span className="text-foreground/70">/ {expectedProgress}%</span>
                 </div>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden relative">
@@ -776,7 +776,7 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
 
           {/* Col 5: Budget Health */}
           <div className="md:w-[100px] shrink-0 flex md:flex-col items-center md:items-end gap-1">
-            <span className="text-[10px] text-muted-foreground font-medium">Budget</span>
+            <span className="text-[10px] text-foreground font-medium">Budget</span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg" style={{ backgroundColor: `${bHealth.color}15`, color: bHealth.color }}>{bHealth.label}</span>
           </div>
         </div>
@@ -823,7 +823,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
       {/* Row 1: Donut Charts + RI Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Progress Distribution</h4>
+          <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Progress Distribution</h4>
           <div className="flex items-center gap-3">
             <div className="w-24 h-24 shrink-0">
               <ResponsiveContainer>
@@ -844,7 +844,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
         </div>
 
         <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Applicability</h4>
+          <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Applicability</h4>
           <div className="flex items-center gap-3">
             <div className="w-24 h-24 shrink-0">
               <ResponsiveContainer>
@@ -856,32 +856,32 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
               </ResponsiveContainer>
             </div>
             <div className="flex-1 space-y-1.5">
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} /><span className="text-[10px] text-muted-foreground">Applicable: <span className="font-bold text-foreground">{p.applicableItems}</span></span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6B7280] shrink-0" /><span className="text-[10px] text-muted-foreground">N/A: <span className="font-bold text-foreground">{p.naCount}</span></span></div>
-              <p className="text-[10px] text-muted-foreground mt-1">Total: {p.totalItems}</p>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} /><span className="text-[10px] text-foreground">Applicable: <span className="font-bold">{p.applicableItems}</span></span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6B7280] shrink-0" /><span className="text-[10px] text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
+              <p className="text-[10px] text-foreground mt-1">Total: {p.totalItems}</p>
             </div>
           </div>
         </div>
 
         <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Risk Index</h4>
+          <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Risk Index</h4>
           <p className="text-2xl font-bold" style={{ color: riInfo.color }}>{riInfo.percent}%</p>
           <p className="text-[10px] font-semibold mt-0.5" style={{ color: riInfo.color }}>{riInfo.band}</p>
           <div className="h-3 rounded-full bg-muted overflow-hidden mt-3">
             <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, riInfo.percent)}%` }} transition={{ delay: 0.3, duration: 0.5 }} className="h-full rounded-full" style={{ backgroundColor: riInfo.color }} />
           </div>
           <div className="mt-3"><RIMeter ri={p.riskIndex} compact /></div>
-          <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{riInfo.insight}</p>
+          <p className="text-[10px] text-foreground mt-2 leading-relaxed">{riInfo.insight}</p>
         </div>
       </div>
 
       {/* Row 2: Key Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Progress vs Expected</p>
+          <p className="text-[10px] text-foreground mb-1">Progress vs Expected</p>
           <div className="flex items-center gap-1.5">
             <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.actualProgress}%</span>
-            <span className="text-[10px] text-muted-foreground">/ {expectedProgress}%</span>
+            <span className="text-[10px] text-foreground/70">/ {expectedProgress}%</span>
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${pStatus.color}15`, color: pStatus.color }}>{pStatus.label}</span>
           <div className="h-2 rounded-full bg-muted overflow-hidden mt-2 relative">
@@ -890,7 +890,7 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Completion Rate</p>
+          <p className="text-[10px] text-foreground mb-1">Completion Rate</p>
           <span className="text-lg font-bold" style={{ color: PILLAR_COLORS[p.pillar as PillarId] }}>{p.completionPct}%</span>
           <div className="h-2 rounded-full bg-muted overflow-hidden mt-2">
             <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.completionPct)}%`, backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} />
@@ -901,21 +901,21 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
           </div>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Commitment Ratio</p>
+          <p className="text-[10px] text-foreground mb-1">Commitment Ratio</p>
           <span className="text-lg font-bold text-foreground">{(p.commitmentRatio * 100).toFixed(1)}%</span>
-          <p className="text-[10px] text-muted-foreground mt-1">Committed ÷ Allocated</p>
+          <p className="text-[10px] text-foreground mt-1">Committed ÷ Allocated</p>
         </div>
         <div className="rounded-lg border border-border/40 p-3">
-          <p className="text-[10px] text-muted-foreground mb-1">Spending Ratio</p>
+          <p className="text-[10px] text-foreground mb-1">Spending Ratio</p>
           <span className="text-lg font-bold text-foreground">{(p.spendingRatio * 100).toFixed(1)}%</span>
-          <p className="text-[10px] text-muted-foreground mt-1">Spent ÷ Allocated</p>
+          <p className="text-[10px] text-foreground mt-1">Spent ÷ Allocated</p>
         </div>
       </div>
 
       {/* Row 3: Executive Narrative */}
       <div className="rounded-xl border border-border/40 p-4">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Executive Summary</h4>
-        <p className="text-xs text-muted-foreground leading-relaxed">
+        <h4 className="text-xs font-semibold text-foreground uppercase mb-2">Executive Summary</h4>
+        <p className="text-xs text-foreground leading-relaxed">
           {getMicroInsight(p, bHealth.label)} {p.belowTargetShare > 15 ? ` Below-target share at ${p.belowTargetShare}% warrants quality review.` : ''} {p.notStartedCount > p.applicableItems * 0.3 ? ` ${p.notStartedCount} items remain unstarted.` : ''}
         </p>
       </div>
@@ -929,7 +929,7 @@ function StatusLegend({ label, value, color }: { label: string; value: number; c
   return (
     <div className="flex items-center gap-1.5">
       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-      <span className="text-[10px] text-muted-foreground">{label}: <span className="font-bold text-foreground">{value}</span></span>
+      <span className="text-[10px] text-foreground">{label}: <span className="font-bold">{value}</span></span>
     </div>
   );
 }
