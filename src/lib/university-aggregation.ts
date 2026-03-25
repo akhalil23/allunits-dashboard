@@ -113,6 +113,7 @@ function countRiskSignals(
   academicYear: AcademicYear
 ): RiskCounts {
   const counts: RiskCounts = { noRisk: 0, emerging: 0, critical: 0, realized: 0, notApplicable: 0 };
+  const expectedProgress = computeExpectedProgress(viewType, academicYear);
 
   items.forEach(item => {
     const status = getItemStatus(item, viewType, term, academicYear);
@@ -122,7 +123,7 @@ function countRiskSignals(
     }
     const completion = getItemCompletion(item, viewType, term, academicYear);
     const completionValid = typeof completion === 'number' && completion >= 0 && completion <= 100;
-    const signal = mapItemToRiskSignal(status, completion, completionValid);
+    const signal = mapItemToRiskSignal(status, completion, completionValid, expectedProgress);
 
     switch (signal) {
       case 'No Risk (On Track)': counts.noRisk++; break;
