@@ -32,7 +32,8 @@ export default function Sidebar() {
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
-      setIsTablet(w >= 768 && w < 1280);
+      const isTouchLike = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+      setIsTablet(isTouchLike && w >= 768 && w < 1280);
     };
     check();
     window.addEventListener('resize', check);

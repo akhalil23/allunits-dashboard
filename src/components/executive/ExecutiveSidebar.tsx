@@ -41,16 +41,13 @@ export default function ExecutiveSidebar({ activeTab, onTabChange }: Props) {
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
-      setIsTablet(w >= 768 && w < 1280);
+      const isTouchLike = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+      setIsTablet(isTouchLike && w >= 768 && w < 1280);
     };
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-
-  useEffect(() => {
-    setDrawerOpen(false);
-  }, [activeTab]);
 
   const navItems = [
     ...tabs.map(t => ({
