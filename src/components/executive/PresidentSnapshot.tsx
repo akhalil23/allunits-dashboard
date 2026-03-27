@@ -823,6 +823,26 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
       {/* Row 1: Donut Charts + RI Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-xl border border-border/40 p-4">
+          <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Applicability</h4>
+          <div className="flex items-center gap-3">
+            <div className="w-24 h-24 shrink-0">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={applicabilityDonut} innerRadius="40%" outerRadius="85%" dataKey="value" strokeWidth={0}>
+                    {applicabilityDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} /><span className="text-[10px] text-foreground">Applicable: <span className="font-bold">{p.applicableItems}</span></span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6B7280] shrink-0" /><span className="text-[10px] text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
+              <p className="text-[10px] text-foreground mt-1">Total: {p.totalItems}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/40 p-4">
           <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Progress Distribution</h4>
           <div className="flex items-center gap-3">
             <div className="w-24 h-24 shrink-0">
@@ -839,26 +859,6 @@ function SinglePillarDiagnostics({ data: p, pillarAgg, expectedProgress }: { dat
               <StatusLegend label="Below Target" value={p.cbtCount} color="#7F1D1D" />
               <StatusLegend label="In Progress" value={p.inProgressCount} color="#F59E0B" />
               <StatusLegend label="Not Started" value={p.notStartedCount} color="#EF4444" />
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border/40 p-4">
-          <h4 className="text-xs font-semibold text-foreground uppercase mb-3">Applicability</h4>
-          <div className="flex items-center gap-3">
-            <div className="w-24 h-24 shrink-0">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={applicabilityDonut} innerRadius="40%" outerRadius="85%" dataKey="value" strokeWidth={0}>
-                    {applicabilityDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex-1 space-y-1.5">
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PILLAR_COLORS[p.pillar as PillarId] }} /><span className="text-[10px] text-foreground">Applicable: <span className="font-bold">{p.applicableItems}</span></span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#6B7280] shrink-0" /><span className="text-[10px] text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
-              <p className="text-[10px] text-foreground mt-1">Total: {p.totalItems}</p>
             </div>
           </div>
         </div>
