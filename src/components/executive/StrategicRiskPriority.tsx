@@ -49,16 +49,7 @@ export default function StrategicRiskPriority({ aggregation }: Props) {
   const pillarAgg = useMemo(() => unitResults ? aggregateByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
   const heatCells = useMemo(() => unitResults ? aggregateUnitByPillar(unitResults, viewType, term, academicYear) : [], [unitResults, viewType, term, academicYear]);
   const unitsByRisk = useMemo(() => [...aggregation.unitAggregations].sort((a, b) => b.riskIndex - a.riskIndex), [aggregation]);
-  const expectedProgress = useMemo(() => {
-    const [startYearStr] = academicYear.split('-');
-    const startYear = parseInt(startYearStr);
-    const windowStart = new Date(startYear, 6, 1);
-    const windowEnd = term === 'mid' ? new Date(startYear, 11, 31) : new Date(startYear + 1, 5, 30);
-    const now = new Date();
-    const totalMs = windowEnd.getTime() - windowStart.getTime();
-    const elapsedMs = Math.max(0, Math.min(now.getTime() - windowStart.getTime(), totalMs));
-    return Math.round((elapsedMs / totalMs) * 100);
-  }, [academicYear, term]);
+  const expectedProgress = useMemo(() => computeExpectedProgress(viewType, academicYear), [viewType, academicYear]);
 
   const unitExecutionGaps = useMemo(() => {
     if (!unitResults) return [];
