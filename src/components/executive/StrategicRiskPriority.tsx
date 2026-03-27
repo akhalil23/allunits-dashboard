@@ -24,7 +24,7 @@ import { getUnitDisplayLabel, getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_LABELS } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL } from '@/lib/pillar-labels';
 import { RISK_SIGNAL_TOOLTIPS } from '@/lib/metric-definitions';
-import { getItemStatus, getItemCompletion } from '@/lib/intelligence';
+import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
 import { PILLAR_COLORS } from '@/lib/pillar-colors';
 import PillarViewSelector, { type PillarViewMode } from './PillarViewSelector';
 import type { PillarId } from '@/lib/types';
