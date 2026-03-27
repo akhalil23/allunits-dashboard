@@ -27,12 +27,12 @@ export const PILLAR_LABELS: Record<PillarId, string> = {
 
 export const AY_BOUNDARIES = {
   '2025-2026': {
-    start: new Date('2025-07-01T00:00:00Z'),
-    end: new Date('2026-06-30T23:59:59Z'),
+    start: new Date('2025-09-01T00:00:00Z'),
+    end: new Date('2026-08-31T23:59:59Z'),
   },
   '2026-2027': {
-    start: new Date('2026-07-01T00:00:00Z'),
-    end: new Date('2027-06-30T23:59:59Z'),
+    start: new Date('2026-09-01T00:00:00Z'),
+    end: new Date('2027-08-31T23:59:59Z'),
   },
 };
 
