@@ -706,7 +706,27 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
             </div>
           </div>
 
-          {/* Col 2: Status Distribution donut */}
+          {/* Col 2: Applicability donut */}
+          <div className="md:w-[150px] shrink-0">
+            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Applicability</p>
+            <div className="flex items-center gap-2">
+              <div className="w-[48px] h-[48px] shrink-0">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={applicabilityDonut} innerRadius="42%" outerRadius="92%" dataKey="value" strokeWidth={0}>
+                      {applicabilityDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-0.5 text-[10px]">
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pillarColor }} /><span className="text-foreground">App: <span className="font-bold">{p.applicableItems}</span></span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6B7280] shrink-0" /><span className="text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Col 3: Status Distribution donut */}
           <div className="md:w-[180px] shrink-0">
             <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Status Distribution</p>
             <div className="flex items-center gap-2">
@@ -724,26 +744,6 @@ function PillarDiagCard({ p, idx, expectedProgress }: { p: any; idx: number; exp
                 <StatusLegend label="BT" value={p.cbtCount} color="#7F1D1D" />
                 <StatusLegend label="IP" value={p.inProgressCount} color="#F59E0B" />
                 <StatusLegend label="NS" value={p.notStartedCount} color="#EF4444" />
-              </div>
-            </div>
-          </div>
-
-          {/* Col 3: Applicability donut */}
-          <div className="md:w-[150px] shrink-0">
-            <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider mb-1.5">Applicability</p>
-            <div className="flex items-center gap-2">
-              <div className="w-[48px] h-[48px] shrink-0">
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie data={applicabilityDonut} innerRadius="42%" outerRadius="92%" dataKey="value" strokeWidth={0}>
-                      {applicabilityDonut.map((d, i) => <Cell key={i} fill={d.fill} />)}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex-1 space-y-0.5 text-[10px]">
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pillarColor }} /><span className="text-foreground">App: <span className="font-bold">{p.applicableItems}</span></span></div>
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6B7280] shrink-0" /><span className="text-foreground">N/A: <span className="font-bold">{p.naCount}</span></span></div>
               </div>
             </div>
           </div>
