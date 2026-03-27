@@ -590,6 +590,14 @@ function ExecutionFocusChart({ pillarData, expectedProgress }: { pillarData: any
 
 /* ─── Budget Focus (no average line) ──────────────────────────────── */
 
+function computeDynamicYMax(values: number[]): number {
+  const maxVal = Math.max(...values, 0);
+  if (maxVal === 0) return 10;
+  const scaled = maxVal * 1.25;
+  const steps = [5, 10, 15, 20, 25, 30, 40, 50, 60, 75, 100];
+  return steps.find(s => s >= scaled) ?? 100;
+}
+
 function BudgetFocusChart({ pillarData }: { pillarData: any[] }) {
   const chartData = pillarData.map(p => ({
     label: PILLAR_ABBREV[p.pillar as PillarId], pillar: p.pillar,
@@ -598,6 +606,7 @@ function BudgetFocusChart({ pillarData }: { pillarData: any[] }) {
     fullLabel: PILLAR_FULL[p.pillar as PillarId],
     allocated: p.allocated, spent: p.spent, committed: p.committed,
   }));
+  const yMax = computeDynamicYMax(chartData.flatMap(d => [d.commitmentRatio, d.spendingRatio]));
   return (
     <>
       <div className="h-72 sm:h-80">
@@ -605,7 +614,7 @@ function BudgetFocusChart({ pillarData }: { pillarData: any[] }) {
           <BarChart data={chartData} margin={{ top: 25, right: 20, bottom: 25, left: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Ratio %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
+            <YAxis domain={[0, yMax]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} label={{ value: 'Ratio %', angle: -90, position: 'insideLeft', style: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' } }} />
             <ReTooltip content={({ payload }) => {
               if (!payload?.[0]) return null;
               const d = payload[0].payload;
