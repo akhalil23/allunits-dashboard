@@ -165,7 +165,7 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
         onTrack: METRIC_TOOLTIPS.onTrack,
         belowTarget: METRIC_TOOLTIPS.belowTarget,
         applicableItems: METRIC_TOOLTIPS.applicableItems,
-        budgetHealth: "Budget Health is based on Commitment Ratio: <10% Under-Deployed, 10-40% Active Deployment, 40-70% Advanced Deployment, ≥70% Constrained / Low Flexibility.",
+        budgetHealth: "Budget Health is based on Commitment Ratio: 0–10% No Commitment Yet, 10–30% Light Commitment, 30–60% Mild Commitment, 60–80% Healthy Commitment, ≥80% Strong Commitment. Spending Health: 0% No Spending Yet, 0–20% Light, 20–50% Mild, 50–75% Healthy, ≥75% Strong. Both should be interpreted together but are intentionally not combined.",
         ssi: "SSI (Strategic Stability Index) = 0.4 × Progress + 0.3 × (100 − |Progress − Commitment Ratio|) + 0.3 × (100 − RI%). Bands: 85–100% Highly Stable · 70–84% Stable · 50–69% Watch · <50% Unstable.",
         expectedProgress: "Expected Progress is the percentage of time elapsed in the reporting window. Cumulative: Sep 2025 – Aug 2027. Yearly: Sep [year] – Aug [year+1].",
         executionGapFormula: "Execution Gap = Actual Completion % − Expected Progress %. Negative means behind schedule.",

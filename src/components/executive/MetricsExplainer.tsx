@@ -200,14 +200,25 @@ function AlignmentSection() {
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Activity className="w-4 h-4 text-primary" />Execution–Budget Alignment</h3>
       <p className="text-xs text-muted-foreground">Alignment is communicated through descriptive analytics rather than a composite efficiency index. Each pillar receives a neutral diagnostic interpretation based on its execution and budget metrics.</p>
 
-      <MetricCard label="Commitment Ratio" formula="Committed ÷ Allocated" desc="Measures the proportion of planned budget that has been formally committed (spent + unspent obligations)." color="#059669" bands={[
-        { range: '< 10%', label: 'Under-Deployed', color: '#3B82F6' },
-        { range: '10–40%', label: 'Active Deployment', color: '#16A34A' },
-        { range: '40–70%', label: 'Advanced Deployment', color: '#D97706' },
-        { range: '≥ 70%', label: 'Constrained', color: '#DC2626' },
+      <MetricCard label="Commitment Ratio" formula="Committed ÷ Allocated" desc="Reflects the proportion of budget that has been formally committed (spent + contractual obligations). Commitment reflects planning and engagement of budget." color="#059669" bands={[
+        { range: '0–10%', label: 'No Commitment Yet', color: '#94A3B8' },
+        { range: '10–30%', label: 'Light Commitment', color: '#3B82F6' },
+        { range: '30–60%', label: 'Mild Commitment', color: '#D97706' },
+        { range: '60–80%', label: 'Healthy Commitment', color: '#16A34A' },
+        { range: '≥ 80%', label: 'Strong Commitment', color: '#059669' },
       ]} />
 
-      <MetricCard label="Spending Ratio" formula="Spent ÷ Allocated" desc="Proportion of allocated budget that has been actually disbursed." color="#16A34A" bands={[]} />
+      <MetricCard label="Spending Ratio" formula="Spent ÷ Allocated" desc="Reflects the proportion of budget that has been actually disbursed. Spending reflects actual execution of budget." color="#16A34A" bands={[
+        { range: '0%', label: 'No Spending Yet', color: '#94A3B8' },
+        { range: '0–20%', label: 'Light Spending', color: '#3B82F6' },
+        { range: '20–50%', label: 'Mild Spending', color: '#D97706' },
+        { range: '50–75%', label: 'Healthy Spending', color: '#16A34A' },
+        { range: '≥ 75%', label: 'Strong Spending', color: '#059669' },
+      ]} />
+
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <p className="text-xs text-muted-foreground"><span className="font-semibold text-primary">Important:</span> Commitment reflects planning and engagement of budget. Spending reflects actual execution. Both should be interpreted together but are intentionally not combined into a single metric.</p>
+      </div>
 
       <MetricCard label="Execution Gap" formula="Actual Progress % − Expected Progress %" desc="Negative values indicate units or pillars behind schedule. Highlighted with color — the primary signal in alignment analysis." color="#DC2626" bands={[]} />
 
