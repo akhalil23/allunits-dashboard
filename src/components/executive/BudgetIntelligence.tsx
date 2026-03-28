@@ -19,7 +19,7 @@ import { useUniversityData } from '@/hooks/use-university-data';
 import { useBudgetData } from '@/hooks/use-budget-data';
 import { aggregateByPillar, type UniversityAggregation } from '@/lib/university-aggregation';
 import { formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
-import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, type PillarBudgetRow } from '@/lib/budget-data';
+import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, computeSpendingHealth, type PillarBudgetRow } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
 import { PILLAR_COLORS } from '@/lib/pillar-colors';
