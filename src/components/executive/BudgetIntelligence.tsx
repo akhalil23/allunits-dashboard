@@ -185,8 +185,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                     <span className="font-bold text-foreground">{(totals.spendingRatio * 100).toFixed(1)}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.spendingRatio * 100)}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: '#16A34A' }} />
+                    <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.spendingRatio * 100)}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: computeSpendingHealth(totals.spendingRatio * totals.allocation, totals.allocation).color }} />
                   </div>
+                  <p className="text-[9px] mt-0.5 font-medium" style={{ color: computeSpendingHealth(totals.spendingRatio * totals.allocation, totals.allocation).color }}>{computeSpendingHealth(totals.spendingRatio * totals.allocation, totals.allocation).health}</p>
                 </div>
               </div>
             </div>
