@@ -26,7 +26,7 @@ import { formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar } from '@/lib/university-aggregation';
-import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth } from '@/lib/budget-data';
+import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, computeSpendingHealth } from '@/lib/budget-data';
 import { useBudgetData } from '@/hooks/use-budget-data';
 import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
