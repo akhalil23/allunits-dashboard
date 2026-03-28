@@ -3,10 +3,11 @@
  * Now powered by live data from the Finance spreadsheet.
  * 
  * Budget Health uses Commitment Ratio bands:
- *   <10% → Under-Deployed
- *   10–40% → Active Deployment
- *   40–70% → Advanced Deployment
- *   ≥70% → Constrained
+ *   0–10% → No Commitment Yet
+ *   10–30% → Light Commitment
+ *   30–60% → Mild Commitment
+ *   60–80% → Healthy Commitment
+ *   ≥80% → Strong Commitment
  */
 
 import type { PillarId } from './types';

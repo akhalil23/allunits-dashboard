@@ -191,7 +191,7 @@ export default function BudgetIntelligence({ aggregation }: Props) {
               </div>
             </div>
           </motion.div>
-          <BudgetKPICard label="Budget Health" subtitle="Financial Capacity" value={totals.health.health} color={totals.health.color} showBar barPct={totals.utilization * 100} barColor={totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A'} extraText={`${(totals.utilization * 100).toFixed(1)}% committed`} infoTip="Budget health based on Commitment Ratio. Under-Deployed (<10%), Active (10–40%), Advanced (40–70%), Constrained (≥70%)." />
+          <BudgetKPICard label="Budget Health" subtitle="Financial Capacity" value={totals.health.health} color={totals.health.color} showBar barPct={totals.utilization * 100} barColor={totals.utilization >= 0.80 ? '#EF4444' : totals.utilization >= 0.60 ? '#F59E0B' : '#16A34A'} extraText={`${(totals.utilization * 100).toFixed(1)}% committed`} infoTip="Budget health based on Commitment Ratio. No Commitment Yet (0–10%), Light (10–30%), Mild (30–60%), Healthy (60–80%), Strong (≥80%). Commitment reflects planning/engagement; Spending reflects actual execution — both are interpreted together but not combined." />
         </div>
       </section>
 
