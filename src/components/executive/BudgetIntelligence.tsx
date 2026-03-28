@@ -19,7 +19,7 @@ import { useUniversityData } from '@/hooks/use-university-data';
 import { useBudgetData } from '@/hooks/use-budget-data';
 import { aggregateByPillar, type UniversityAggregation } from '@/lib/university-aggregation';
 import { formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
-import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, type PillarBudgetRow } from '@/lib/budget-data';
+import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, computeSpendingHealth, type PillarBudgetRow } from '@/lib/budget-data';
 import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
 import { PILLAR_COLORS } from '@/lib/pillar-colors';
@@ -176,8 +176,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                     <span className="font-bold text-foreground">{(totals.utilization * 100).toFixed(1)}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.utilization * 100)}%` }} transition={{ delay: 0.3, duration: 0.5 }} />
+                    <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.utilization * 100)}%` }} transition={{ delay: 0.3, duration: 0.5 }} style={{ backgroundColor: totals.health.color }} />
                   </div>
+                  <p className="text-[9px] mt-0.5 font-medium" style={{ color: totals.health.color }}>{totals.health.health}</p>
                 </div>
                 <div>
                   <div className="flex items-center justify-between text-[10px] mb-0.5">
@@ -185,8 +186,9 @@ export default function BudgetIntelligence({ aggregation }: Props) {
                     <span className="font-bold text-foreground">{(totals.spendingRatio * 100).toFixed(1)}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.spendingRatio * 100)}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: '#16A34A' }} />
+                    <motion.div className="h-full rounded-full" initial={{ width: 0 }} animate={{ width: `${Math.min(100, totals.spendingRatio * 100)}%` }} transition={{ delay: 0.4, duration: 0.5 }} style={{ backgroundColor: computeSpendingHealth(totals.spendingRatio * totals.allocation, totals.allocation).color }} />
                   </div>
+                  <p className="text-[9px] mt-0.5 font-medium" style={{ color: computeSpendingHealth(totals.spendingRatio * totals.allocation, totals.allocation).color }}>{computeSpendingHealth(totals.spendingRatio * totals.allocation, totals.allocation).health}</p>
                 </div>
               </div>
             </div>
