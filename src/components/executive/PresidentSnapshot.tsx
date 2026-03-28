@@ -26,7 +26,7 @@ import { formatRIPercent, getRiskDisplayInfo } from '@/lib/risk-display';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { aggregateByPillar } from '@/lib/university-aggregation';
-import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth } from '@/lib/budget-data';
+import { PILLAR_LABELS, getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, computeSpendingHealth } from '@/lib/budget-data';
 import { useBudgetData } from '@/hooks/use-budget-data';
 import { PILLAR_SHORT, PILLAR_FULL, PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
@@ -313,7 +313,7 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           {/* Commitment Ratio KPI */}
           <KPICard label="Commitment Ratio" value={`${(commitmentRatio * 100).toFixed(1)}%`} color={budgetHealth.color} subtitle={budgetHealth.label} tooltip="Committed ÷ Allocated. Reflects total financial commitment against planned allocation." />
           {/* Spending Ratio KPI */}
-          <KPICard label="Spending Ratio" value={`${(spendingRatio * 100).toFixed(1)}%`} color={spendingRatio > 0.7 ? '#EF4444' : spendingRatio > 0.4 ? '#F59E0B' : '#16A34A'} subtitle="Spent ÷ Allocated" tooltip="Spent ÷ Allocated. Indicates proportion of budget actually disbursed." />
+          <KPICard label="Spending Ratio" value={`${(spendingRatio * 100).toFixed(1)}%`} color={computeSpendingHealth(spendingRatio * 1, 1).color} subtitle={computeSpendingHealth(spendingRatio * 1, 1).health} tooltip="Spent ÷ Allocated. Indicates proportion of budget actually disbursed." />
           <KPICard label="Risk Index" value={`${riInfo.percent}%`} color={riInfo.color} subtitle={riInfo.band} tooltip="Risk Index reflects exposure to delivery risk based on emerging, critical, and realized signals." />
           {/* Completion with breakdown */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
