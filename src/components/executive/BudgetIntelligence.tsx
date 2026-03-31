@@ -164,11 +164,15 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} fullValue={formatCurrencyFull(totals.allocation)} color="hsl(var(--primary))" infoTip="Total approved budget across all pillars for the strategic plan period." />
           <CommittedKPICard committed={totals.committed} spent={totals.spent} unspent={totals.unspent} allocation={totals.allocation} />
           <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} fullValue={formatCurrencyFull(totals.available)} color="hsl(var(--primary))" extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined} infoTip="Budget capacity not yet committed and still available for future initiatives." />
-          {/* Commitment & Spending Ratio dual card */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-            <div className="h-1 w-full bg-gradient-to-r from-primary to-primary/50" />
+         {/* Commitment & Spending Ratio dual card */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2, transition: { duration: 0.2 } }} className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+            <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.53))' }} />
+            <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: 'hsl(var(--primary))' }} />
             <div className="relative p-4 sm:p-5">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Ratios <InfoTip text="Commitment Ratio = Committed ÷ Allocated. Spending Ratio = Spent ÷ Allocated." /></p>
+              <div className="flex items-center gap-1">
+                <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest">Ratios</p>
+                <InfoTip text="Commitment Ratio = Committed ÷ Allocated. Spending Ratio = Spent ÷ Allocated." />
+              </div>
               <div className="mt-2 space-y-2">
                 <div>
                   <div className="flex items-center justify-between text-[10px] mb-0.5">
@@ -478,14 +482,15 @@ function BudgetKPICard({ label, subtitle, value, fullValue, color, showBar, barP
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2, transition: { duration: 0.2 } }} className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: color }} />
-      <div className="relative p-5 sm:p-6 flex flex-col h-full">
+      <div className="relative p-4 sm:p-5 flex flex-col h-full">
         <div className="flex-1 min-w-0 flex flex-col">
-          <div className="min-h-[32px] sm:min-h-[36px] flex flex-col justify-start">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}{infoTip && <InfoTip text={infoTip} />}</p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
+          <div className="flex items-center gap-1">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}</p>
+            {infoTip && <InfoTip text={infoTip} />}
           </div>
+          {subtitle && <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>}
           <Tooltip><TooltipTrigger asChild>
-            <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight cursor-help" style={{ color }}>{value}</p>
+            <p className="text-xl sm:text-2xl font-display font-extrabold mt-1.5 tracking-tight cursor-help" style={{ color }}>{value}</p>
           </TooltipTrigger>{fullValue && <TooltipContent><p className="text-xs font-mono">{fullValue}</p></TooltipContent>}</Tooltip>
           {extraText && <p className="text-[10px] text-muted-foreground mt-1">{extraText}</p>}
           {showBar && barPct !== undefined && barColor && (
@@ -508,13 +513,14 @@ function CommittedKPICard({ committed, spent, unspent, allocation }: { committed
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2, transition: { duration: 0.2 } }} className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: color }} />
-      <div className="relative p-5 sm:p-6 flex flex-col h-full">
+      <div className="relative p-4 sm:p-5 flex flex-col h-full">
         <div className="flex-1 min-w-0 flex flex-col">
-          <div className="min-h-[32px] sm:min-h-[36px] flex flex-col justify-start">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">Committed <InfoTip text="Funds formally committed. Includes Spent (disbursed) and Unspent (contractual obligations)." /></p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">Funds in Use</p>
+          <div className="flex items-center gap-1">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">Committed</p>
+            <InfoTip text="Funds formally committed. Includes Spent (disbursed) and Unspent (contractual obligations)." />
           </div>
-          <Tooltip><TooltipTrigger asChild><p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight cursor-help" style={{ color }}>{formatCurrency(committed)}</p></TooltipTrigger><TooltipContent><p className="text-xs font-mono">{formatCurrencyFull(committed)}</p></TooltipContent></Tooltip>
+          <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">Funds in Use</p>
+          <Tooltip><TooltipTrigger asChild><p className="text-xl sm:text-2xl font-display font-extrabold mt-1.5 tracking-tight cursor-help" style={{ color }}>{formatCurrency(committed)}</p></TooltipTrigger><TooltipContent><p className="text-xs font-mono">{formatCurrencyFull(committed)}</p></TooltipContent></Tooltip>
           <div className="space-y-1 mt-2">
             <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Spent</span><span className="text-[10px] font-semibold" style={{ color: '#16A34A' }}>{formatCurrency(spent)}</span></div>
             <div className="flex items-center justify-between"><span className="text-[10px] text-muted-foreground">Unspent</span><span className="text-[10px] font-semibold" style={{ color: '#F59E0B' }}>{formatCurrency(unspent)}</span></div>
