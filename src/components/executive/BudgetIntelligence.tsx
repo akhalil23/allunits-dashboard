@@ -482,14 +482,15 @@ function BudgetKPICard({ label, subtitle, value, fullValue, color, showBar, barP
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2, transition: { duration: 0.2 } }} className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
       <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: color }} />
-      <div className="relative p-5 sm:p-6 flex flex-col h-full">
+      <div className="relative p-4 sm:p-5 flex flex-col h-full">
         <div className="flex-1 min-w-0 flex flex-col">
-          <div className="min-h-[32px] sm:min-h-[36px] flex flex-col justify-start">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}{infoTip && <InfoTip text={infoTip} />}</p>
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>
+          <div className="flex items-center gap-1">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest leading-tight">{label}</p>
+            {infoTip && <InfoTip text={infoTip} />}
           </div>
+          {subtitle && <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>}
           <Tooltip><TooltipTrigger asChild>
-            <p className="text-xl sm:text-2xl font-display font-extrabold mt-2 tracking-tight cursor-help" style={{ color }}>{value}</p>
+            <p className="text-xl sm:text-2xl font-display font-extrabold mt-1.5 tracking-tight cursor-help" style={{ color }}>{value}</p>
           </TooltipTrigger>{fullValue && <TooltipContent><p className="text-xs font-mono">{fullValue}</p></TooltipContent>}</Tooltip>
           {extraText && <p className="text-[10px] text-muted-foreground mt-1">{extraText}</p>}
           {showBar && barPct !== undefined && barColor && (
