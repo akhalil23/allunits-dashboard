@@ -164,11 +164,15 @@ export default function BudgetIntelligence({ aggregation }: Props) {
           <BudgetKPICard label="Allocation" subtitle="Total Planned" value={formatCurrency(totals.allocation)} fullValue={formatCurrencyFull(totals.allocation)} color="hsl(var(--primary))" infoTip="Total approved budget across all pillars for the strategic plan period." />
           <CommittedKPICard committed={totals.committed} spent={totals.spent} unspent={totals.unspent} allocation={totals.allocation} />
           <BudgetKPICard label="Available" subtitle="Remaining" value={formatCurrency(totals.available)} fullValue={formatCurrencyFull(totals.available)} color="hsl(var(--primary))" extraText={totals.allocation > 0 ? `${((totals.available / totals.allocation) * 100).toFixed(1)}% of allocation` : undefined} infoTip="Budget capacity not yet committed and still available for future initiatives." />
-          {/* Commitment & Spending Ratio dual card */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-            <div className="h-1 w-full bg-gradient-to-r from-primary to-primary/50" />
+         {/* Commitment & Spending Ratio dual card */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2, transition: { duration: 0.2 } }} className="group relative rounded-2xl border border-border/60 bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+            <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.53))' }} />
+            <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-[0.07] blur-2xl pointer-events-none" style={{ backgroundColor: 'hsl(var(--primary))' }} />
             <div className="relative p-4 sm:p-5">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Ratios <InfoTip text="Commitment Ratio = Committed ÷ Allocated. Spending Ratio = Spent ÷ Allocated." /></p>
+              <div className="flex items-center gap-1">
+                <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest">Ratios</p>
+                <InfoTip text="Commitment Ratio = Committed ÷ Allocated. Spending Ratio = Spent ÷ Allocated." />
+              </div>
               <div className="mt-2 space-y-2">
                 <div>
                   <div className="flex items-center justify-between text-[10px] mb-0.5">
