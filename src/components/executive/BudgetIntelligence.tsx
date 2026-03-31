@@ -490,7 +490,7 @@ function BudgetKPICard({ label, subtitle, value, fullValue, color, showBar, barP
           </div>
           {subtitle && <p className="text-[10px] sm:text-[11px] text-muted-foreground/70 mt-0.5 font-medium">{subtitle}</p>}
           <Tooltip><TooltipTrigger asChild>
-            <p className="text-xl sm:text-2xl font-display font-extrabold mt-1.5 tracking-tight cursor-help" style={{ color }}>{value}</p>
+            <p className={`font-display font-extrabold mt-1.5 tracking-tight cursor-help ${value.length > 10 ? 'text-sm sm:text-base' : 'text-xl sm:text-2xl'}`} style={{ color }}>{value}</p>
           </TooltipTrigger>{fullValue && <TooltipContent><p className="text-xs font-mono">{fullValue}</p></TooltipContent>}</Tooltip>
           {extraText && <p className="text-[10px] text-muted-foreground mt-1">{extraText}</p>}
           {showBar && barPct !== undefined && barColor && (
