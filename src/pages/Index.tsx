@@ -73,7 +73,8 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} integrityAudit={integrityAudit} sheetLastModified={fetchResult.sheetLastModified} sheetLastModifiedBy={fetchResult.sheetLastModifiedBy} />
+      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} integrityAudit={integrityAudit} sheetLastModified={fetchResult.sheetLastModified} sheetLastModifiedBy={fetchResult.sheetLastModifiedBy} onOpenMetrics={() => setMetricsOpen(true)} />
+      <UnitMetricsExplainer open={metricsOpen} onClose={() => setMetricsOpen(false)} />
       {!isGuide && <FilterBar />}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-[1600px]">
