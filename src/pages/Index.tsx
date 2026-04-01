@@ -18,6 +18,7 @@ export default function Index() {
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
   const queryClient = useQueryClient();
+  const [metricsOpen, setMetricsOpen] = useState(false);
 
   const filteredItems = useMemo(() => {
     if (!fetchResult?.data) return [];
