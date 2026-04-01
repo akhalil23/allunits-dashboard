@@ -32,7 +32,7 @@ interface HeaderProps {
   onOpenMetrics?: () => void;
 }
 
-export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType, integrityAudit, sheetLastModified, sheetLastModifiedBy }: HeaderProps) {
+export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType, integrityAudit, sheetLastModified, sheetLastModifiedBy, onOpenMetrics }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
