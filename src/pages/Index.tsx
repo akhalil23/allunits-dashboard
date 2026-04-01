@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Header from '@/components/layout/Header';
@@ -7,6 +7,7 @@ import StatusOverview from '@/components/dashboard/StatusOverview';
 import PillarHealthGrid from '@/components/dashboard/PillarHealthGrid';
 import RiskSignalsStudio from '@/components/dashboard/RiskSignalsStudio';
 import UnitDashboardGuide from '@/components/dashboard/UnitDashboardGuide';
+import UnitMetricsExplainer from '@/components/dashboard/UnitMetricsExplainer';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useGSRData } from '@/hooks/use-gsr-data';
 import { PILLAR_LABELS } from '@/lib/constants';
@@ -17,6 +18,7 @@ export default function Index() {
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
   const queryClient = useQueryClient();
+  const [metricsOpen, setMetricsOpen] = useState(false);
 
   const filteredItems = useMemo(() => {
     if (!fetchResult?.data) return [];
@@ -71,7 +73,8 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} integrityAudit={integrityAudit} sheetLastModified={fetchResult.sheetLastModified} sheetLastModifiedBy={fetchResult.sheetLastModifiedBy} />
+      <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} integrityAudit={integrityAudit} sheetLastModified={fetchResult.sheetLastModified} sheetLastModifiedBy={fetchResult.sheetLastModifiedBy} onOpenMetrics={() => setMetricsOpen(true)} />
+      <UnitMetricsExplainer open={metricsOpen} onClose={() => setMetricsOpen(false)} />
       {!isGuide && <FilterBar />}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-[1600px]">
