@@ -7,6 +7,7 @@ import StatusOverview from '@/components/dashboard/StatusOverview';
 import PillarHealthGrid from '@/components/dashboard/PillarHealthGrid';
 import RiskSignalsStudio from '@/components/dashboard/RiskSignalsStudio';
 import UnitDashboardGuide from '@/components/dashboard/UnitDashboardGuide';
+import UnitMetricsExplainer from '@/components/dashboard/UnitMetricsExplainer';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useGSRData } from '@/hooks/use-gsr-data';
 import { PILLAR_LABELS } from '@/lib/constants';
