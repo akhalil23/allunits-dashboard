@@ -29,6 +29,7 @@ interface HeaderProps {
   integrityAudit?: IntegrityAuditResult | null;
   sheetLastModified?: string;
   sheetLastModifiedBy?: string;
+  onOpenMetrics?: () => void;
 }
 
 export default function Header({ observedAt, dataQuality, onRefresh, isRefreshing, items, term, academicYear, viewType, integrityAudit, sheetLastModified, sheetLastModifiedBy }: HeaderProps) {
