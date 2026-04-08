@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import EvolutionLab from "./pages/EvolutionLab";
 import Login from "./pages/Login";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import PillarChampionsDashboard from "./pages/PillarChampionsDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import LogoutPage from "./pages/Logout";
 import NotFound from "./pages/NotFound";
@@ -39,6 +40,14 @@ const App = () => (
                 <ProtectedRoute>
                   <DashboardProvider>
                     <ExecutiveDashboard />
+                  </DashboardProvider>
+                </ProtectedRoute>
+              } />
+              {/* Pillar Champions dashboard */}
+              <Route path="/pillars" element={
+                <ProtectedRoute>
+                  <DashboardProvider>
+                    <PillarChampionsDashboard />
                   </DashboardProvider>
                 </ProtectedRoute>
               } />
