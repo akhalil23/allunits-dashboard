@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface UserRole {
-  role: 'admin' | 'unit_user' | 'university_viewer';
+  role: 'admin' | 'unit_user' | 'university_viewer' | 'pillar_champion';
   unitId: string | null;
   isActive: boolean;
 }
@@ -16,7 +16,7 @@ async function fetchUserRole(userId: string): Promise<UserRole> {
   ]);
 
   return {
-    role: (roleData as string as 'admin' | 'unit_user' | 'university_viewer') || 'unit_user',
+    role: (roleData as string as 'admin' | 'unit_user' | 'university_viewer' | 'pillar_champion') || 'unit_user',
     unitId: unitData as string | null,
     isActive: isActiveData as boolean ?? true,
   };
