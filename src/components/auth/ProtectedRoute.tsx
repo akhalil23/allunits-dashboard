@@ -48,11 +48,13 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isUniversityRoute = location.pathname.startsWith('/university');
   const isUnitsRoute = location.pathname.startsWith('/units');
+  const isPillarsRoute = location.pathname.startsWith('/pillars');
 
   // ──── Role-based redirect from root ────
   if (location.pathname === '/') {
     if (userRole.role === 'admin') return <Navigate to="/admin" replace />;
     if (userRole.role === 'university_viewer') return <Navigate to="/university" replace />;
+    if (userRole.role === 'pillar_champion') return <Navigate to="/pillars" replace />;
     if (userRole.role === 'unit_user') {
       if (userRole.unitId) return <Navigate to={`/units/${userRole.unitId}`} replace />;
       // unit_user with no unitId — misconfigured
@@ -69,7 +71,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       return <Navigate to="/login" replace />;
     }
     // Forbidden routes
-    if (isUniversityRoute || isAdminRoute) {
+    if (isUniversityRoute || isAdminRoute || isPillarsRoute) {
       return <Navigate to={`/units/${userRole.unitId}`} replace />;
     }
     // Different unit
@@ -80,8 +82,15 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   // ──── Guard: university_viewer ────
   if (userRole.role === 'university_viewer') {
-    if (isUnitsRoute || isAdminRoute) {
+    if (isUnitsRoute || isAdminRoute || isPillarsRoute) {
       return <Navigate to="/university" replace />;
+    }
+  }
+
+  // ──── Guard: pillar_champion ────
+  if (userRole.role === 'pillar_champion') {
+    if (isUnitsRoute || isAdminRoute || isUniversityRoute) {
+      return <Navigate to="/pillars" replace />;
     }
   }
 
