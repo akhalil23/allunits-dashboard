@@ -237,7 +237,7 @@ function SinglePillarDetail({ stat, budgetResult }: { stat: any; budgetResult: B
         <div className="rounded-2xl border border-border/60 bg-card shadow-sm p-5 space-y-3">
           <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Risk Profile</h4>
           <div className="flex items-center gap-3">
-            <RIMeter value={stat.riskIndex} size={60} />
+            <RIMeter ri={stat.riskIndex} compact />
             <div>
               <p className="text-lg font-display font-extrabold" style={{ color: ri.color }}>{ri.percent}%</p>
               <p className="text-xs text-muted-foreground">{ri.band}</p>
