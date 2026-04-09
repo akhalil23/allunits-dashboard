@@ -16,6 +16,7 @@ interface Props {
   onPillarChange: (p: 'all' | PillarId) => void;
   selectedUnits: string[];
   onUnitsChange: (units: string[]) => void;
+  hideUnits?: boolean;
 }
 
 const PILLAR_IDS: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
