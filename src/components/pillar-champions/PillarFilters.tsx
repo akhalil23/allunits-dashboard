@@ -37,7 +37,7 @@ const Pill = ({ active, onClick, children }: { active: boolean; onClick: () => v
   </button>
 );
 
-export default function PillarFilters({ selectedPillar, onPillarChange, selectedUnits, onUnitsChange }: Props) {
+export default function PillarFilters({ selectedPillar, onPillarChange, selectedUnits, onUnitsChange, hideUnits }: Props) {
   const { viewType, setViewType, academicYear, setAcademicYear, term, setTerm } = useDashboard();
   const isMobile = useIsMobile();
   const [filtersOpen, setFiltersOpen] = useState(false);
