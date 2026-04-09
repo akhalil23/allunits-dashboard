@@ -80,9 +80,20 @@ export default function PillarFilters({ selectedPillar, onPillarChange, selected
           All Pillars
         </Pill>
         {PILLAR_IDS.map(p => (
-          <Pill key={p} active={selectedPillar === p} onClick={() => onPillarChange(p)}>
+          <button
+            key={p}
+            onClick={() => onPillarChange(p)}
+            className={`filter-pill ${selectedPillar === p ? 'filter-pill-active' : ''}`}
+            style={selectedPillar === p
+              ? { backgroundColor: PILLAR_COLORS[p], color: '#fff', borderColor: PILLAR_COLORS[p] }
+              : {}}
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: PILLAR_COLORS[p] }}
+            />
             P{p}
-          </Pill>
+          </button>
         ))}
       </FilterGroup>
 
