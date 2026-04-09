@@ -18,8 +18,14 @@ import PillarBudgetView from '@/components/pillar-champions/PillarBudgetView';
 import PillarRiskSignals from '@/components/pillar-champions/PillarRiskSignals';
 import DashboardGuide from '@/components/executive/DashboardGuide';
 import type { PillarId } from '@/lib/types';
-import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Moon, Sun, LogOut, ArrowLeft } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTheme } from '@/hooks/use-theme';
+import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserRole } from '@/hooks/use-user-role';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function PillarChampionsDashboard() {
   const [activeTab, setActiveTab] = useState<PillarChampionTab>('overview');
