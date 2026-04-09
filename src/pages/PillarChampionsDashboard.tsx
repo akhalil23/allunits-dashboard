@@ -246,6 +246,7 @@ export default function PillarChampionsDashboard() {
             onPillarChange={setSelectedPillar}
             selectedUnits={selectedUnits}
             onUnitsChange={setSelectedUnits}
+            hideUnits={activeTab === 'budget'}
           />
         )}
 

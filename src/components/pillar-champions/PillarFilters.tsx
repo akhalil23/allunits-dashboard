@@ -16,6 +16,7 @@ interface Props {
   onPillarChange: (p: 'all' | PillarId) => void;
   selectedUnits: string[];
   onUnitsChange: (units: string[]) => void;
+  hideUnits?: boolean;
 }
 
 const PILLAR_IDS: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
@@ -36,7 +37,7 @@ const Pill = ({ active, onClick, children }: { active: boolean; onClick: () => v
   </button>
 );
 
-export default function PillarFilters({ selectedPillar, onPillarChange, selectedUnits, onUnitsChange }: Props) {
+export default function PillarFilters({ selectedPillar, onPillarChange, selectedUnits, onUnitsChange, hideUnits }: Props) {
   const { viewType, setViewType, academicYear, setAcademicYear, term, setTerm } = useDashboard();
   const isMobile = useIsMobile();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -97,32 +98,34 @@ export default function PillarFilters({ selectedPillar, onPillarChange, selected
         ))}
       </FilterGroup>
 
-      {!isMobile && <div className="w-px h-6 bg-border" />}
+      {!hideUnits && !isMobile && <div className="w-px h-6 bg-border" />}
 
-      <FilterGroup label="Units">
-        <Pill active={allUnitsSelected} onClick={() => onUnitsChange(UNIT_IDS)}>
-          All ({UNIT_IDS.length})
-        </Pill>
-        {UNIT_IDS.map(id => (
-          <Pill
-            key={id}
-            active={!allUnitsSelected && selectedUnits.includes(id)}
-            onClick={() => {
-              if (allUnitsSelected) {
-                onUnitsChange([id]);
-              } else if (selectedUnits.includes(id) && selectedUnits.length === 1) {
-                onUnitsChange(UNIT_IDS);
-              } else if (selectedUnits.includes(id)) {
-                onUnitsChange(selectedUnits.filter(u => u !== id));
-              } else {
-                onUnitsChange([...selectedUnits, id]);
-              }
-            }}
-          >
-            {UNIT_CONFIGS[id].name}
+      {!hideUnits && (
+        <FilterGroup label="Units">
+          <Pill active={allUnitsSelected} onClick={() => onUnitsChange(UNIT_IDS)}>
+            All ({UNIT_IDS.length})
           </Pill>
-        ))}
-      </FilterGroup>
+          {UNIT_IDS.map(id => (
+            <Pill
+              key={id}
+              active={!allUnitsSelected && selectedUnits.includes(id)}
+              onClick={() => {
+                if (allUnitsSelected) {
+                  onUnitsChange([id]);
+                } else if (selectedUnits.includes(id) && selectedUnits.length === 1) {
+                  onUnitsChange(UNIT_IDS);
+                } else if (selectedUnits.includes(id)) {
+                  onUnitsChange(selectedUnits.filter(u => u !== id));
+                } else {
+                  onUnitsChange([...selectedUnits, id]);
+                }
+              }}
+            >
+              {UNIT_CONFIGS[id].name}
+            </Pill>
+          ))}
+        </FilterGroup>
+      )}
     </>
   );
 
