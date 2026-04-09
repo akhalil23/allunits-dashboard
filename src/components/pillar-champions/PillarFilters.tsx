@@ -1,11 +1,13 @@
 /**
- * Pillar Champions filter bar — pillar, unit, and reporting filters.
+ * Pillar Champions filter bar — pill-style filters matching Executive Command Center.
  */
 
+import { useState } from 'react';
 import { useDashboard } from '@/contexts/DashboardContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UNIT_IDS, UNIT_CONFIGS } from '@/lib/unit-config';
 import { PILLAR_SHORT } from '@/lib/pillar-labels';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { PillarId, ViewType, AcademicYear, Term } from '@/lib/types';
 
 interface Props {
@@ -17,79 +19,110 @@ interface Props {
 
 const PILLAR_IDS: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
+const FilterGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="flex items-center gap-2">
+    <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{label}</span>
+    <div className="flex flex-wrap gap-1">{children}</div>
+  </div>
+);
+
+const Pill = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
+  <button
+    onClick={onClick}
+    className={`filter-pill ${active ? 'filter-pill-active' : ''}`}
+  >
+    {children}
+  </button>
+);
+
 export default function PillarFilters({ selectedPillar, onPillarChange, selectedUnits, onUnitsChange }: Props) {
   const { viewType, setViewType, academicYear, setAcademicYear, term, setTerm } = useDashboard();
+  const isMobile = useIsMobile();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const allUnitsSelected = selectedUnits.length === UNIT_IDS.length;
+
+  const filterContent = (
+    <>
+      <FilterGroup label="Academic Year">
+        {(['2025-2026', '2026-2027'] as AcademicYear[]).map(y => (
+          <Pill key={y} active={academicYear === y} onClick={() => setAcademicYear(y)}>
+            {y}
+          </Pill>
+        ))}
+      </FilterGroup>
+
+      {!isMobile && <div className="w-px h-6 bg-border" />}
+
+      <FilterGroup label="Term">
+        {([['mid', 'Mid-Year'], ['end', 'End-of-Year']] as [Term, string][]).map(([t, l]) => (
+          <Pill key={t} active={term === t} onClick={() => setTerm(t)}>
+            {l}
+          </Pill>
+        ))}
+      </FilterGroup>
+
+      {!isMobile && <div className="w-px h-6 bg-border" />}
+
+      <FilterGroup label="View">
+        {([['cumulative', 'Cumulative (SP)'], ['yearly', 'Yearly']] as [ViewType, string][]).map(([v, l]) => (
+          <Pill key={v} active={viewType === v} onClick={() => setViewType(v)}>
+            {l}
+          </Pill>
+        ))}
+      </FilterGroup>
+
+      {!isMobile && <div className="w-px h-6 bg-border" />}
+
+      <FilterGroup label="Pillar">
+        <Pill active={selectedPillar === 'all'} onClick={() => onPillarChange('all')}>
+          All Pillars
+        </Pill>
+        {PILLAR_IDS.map(p => (
+          <Pill key={p} active={selectedPillar === p} onClick={() => onPillarChange(p)}>
+            P{p}
+          </Pill>
+        ))}
+      </FilterGroup>
+
+      {!isMobile && <div className="w-px h-6 bg-border" />}
+
+      <FilterGroup label="Units">
+        <Pill active={allUnitsSelected} onClick={() => onUnitsChange(UNIT_IDS)}>
+          All ({UNIT_IDS.length})
+        </Pill>
+      </FilterGroup>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="bg-card border-b border-border">
+        <button
+          onClick={() => setFiltersOpen(!filtersOpen)}
+          className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-foreground"
+        >
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+            <span>Filters</span>
+            <span className="text-[10px] text-muted-foreground">
+              {academicYear} • {term === 'mid' ? 'Mid' : 'End'} • {viewType === 'cumulative' ? 'SP' : 'Yearly'} • {selectedPillar === 'all' ? 'All Pillars' : `P${selectedPillar}`}
+            </span>
+          </div>
+          {filtersOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {filtersOpen && (
+          <div className="px-4 pb-3 space-y-2.5">
+            {filterContent}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-3 border-b border-border/40 bg-card/30 backdrop-blur-sm">
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        {/* Reporting Mode */}
-        <Select value={viewType} onValueChange={(v) => setViewType(v as ViewType)}>
-          <SelectTrigger className="w-[140px] h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cumulative">Cumulative (SP)</SelectItem>
-            <SelectItem value="yearly">Yearly</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Academic Year */}
-        <Select value={academicYear} onValueChange={(v) => setAcademicYear(v as AcademicYear)}>
-          <SelectTrigger className="w-[130px] h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2025-2026">AY 2025-2026</SelectItem>
-            <SelectItem value="2026-2027">AY 2026-2027</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Term */}
-        <Select value={term} onValueChange={(v) => setTerm(v as Term)}>
-          <SelectTrigger className="w-[120px] h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="mid">Mid-Year</SelectItem>
-            <SelectItem value="end">End-of-Year</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div className="w-px h-6 bg-border/40 hidden sm:block" />
-
-        {/* Pillar Filter */}
-        <Select value={selectedPillar} onValueChange={(v) => onPillarChange(v as 'all' | PillarId)}>
-          <SelectTrigger className="w-[180px] h-8 text-xs">
-            <SelectValue placeholder="All Pillars" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Pillars</SelectItem>
-            {PILLAR_IDS.map(p => (
-              <SelectItem key={p} value={p}>{PILLAR_SHORT[p]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Unit Filter */}
-        <Select
-          value={selectedUnits.length === UNIT_IDS.length ? 'all' : selectedUnits[0] || 'all'}
-          onValueChange={(v) => {
-            if (v === 'all') onUnitsChange(UNIT_IDS);
-            else onUnitsChange([v]);
-          }}
-        >
-          <SelectTrigger className="w-[160px] h-8 text-xs">
-            <SelectValue placeholder="All Units" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Units ({UNIT_IDS.length})</SelectItem>
-            {UNIT_IDS.map(id => (
-              <SelectItem key={id} value={id}>{UNIT_CONFIGS[id].name} — {UNIT_CONFIGS[id].fullName}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="flex flex-wrap items-center gap-4 px-6 py-3 bg-card border-b border-border">
+      {filterContent}
     </div>
   );
 }
