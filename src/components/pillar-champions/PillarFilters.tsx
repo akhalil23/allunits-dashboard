@@ -91,6 +91,25 @@ export default function PillarFilters({ selectedPillar, onPillarChange, selected
         <Pill active={allUnitsSelected} onClick={() => onUnitsChange(UNIT_IDS)}>
           All ({UNIT_IDS.length})
         </Pill>
+        {UNIT_IDS.map(id => (
+          <Pill
+            key={id}
+            active={!allUnitsSelected && selectedUnits.includes(id)}
+            onClick={() => {
+              if (allUnitsSelected) {
+                onUnitsChange([id]);
+              } else if (selectedUnits.includes(id) && selectedUnits.length === 1) {
+                onUnitsChange(UNIT_IDS);
+              } else if (selectedUnits.includes(id)) {
+                onUnitsChange(selectedUnits.filter(u => u !== id));
+              } else {
+                onUnitsChange([...selectedUnits, id]);
+              }
+            }}
+          >
+            {UNIT_CONFIGS[id].name}
+          </Pill>
+        ))}
       </FilterGroup>
     </>
   );
