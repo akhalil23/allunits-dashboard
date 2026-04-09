@@ -16,7 +16,7 @@ import PillarPerformanceAnalysis from '@/components/pillar-champions/PillarPerfo
 import ActionExplorer from '@/components/pillar-champions/ActionExplorer';
 import PillarBudgetView from '@/components/pillar-champions/PillarBudgetView';
 import PillarRiskSignals from '@/components/pillar-champions/PillarRiskSignals';
-import DashboardGuide from '@/components/executive/DashboardGuide';
+import PillarChampionsGuide from '@/components/pillar-champions/PillarChampionsGuide';
 import type { PillarId } from '@/lib/types';
 import { Loader2, AlertCircle, RefreshCw, Moon, Sun, LogOut, ArrowLeft } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -318,7 +318,7 @@ export default function PillarChampionsDashboard() {
               />
             )}
 
-            {activeTab === 'guide' && <DashboardGuide />}
+            {activeTab === 'guide' && <PillarChampionsGuide />}
           </div>
         </main>
       </div>
