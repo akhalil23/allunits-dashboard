@@ -45,7 +45,7 @@ export default function PillarFilters({ selectedPillar, onPillarChange, selected
   const allUnitsSelected = selectedUnits.length === UNIT_IDS.length;
 
   const filterContent = (
-    <>
+    </>
       <FilterGroup label="Academic Year">
         {(['2025-2026', '2026-2027'] as AcademicYear[]).map(y => (
           <Pill key={y} active={academicYear === y} onClick={() => setAcademicYear(y)}>
