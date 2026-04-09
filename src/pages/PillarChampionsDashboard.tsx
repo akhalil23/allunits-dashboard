@@ -33,6 +33,11 @@ export default function PillarChampionsDashboard() {
   const [selectedUnits, setSelectedUnits] = useState<string[]>(UNIT_IDS);
   const mainRef = useRef<HTMLElement>(null);
   const queryClient = useQueryClient();
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const { data: userRole } = useUserRole();
+  const isAdmin = userRole?.role === 'admin';
 
   const handleTabChange = useCallback((tab: PillarChampionTab) => {
     setActiveTab(tab);
