@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { UNIT_IDS, UNIT_CONFIGS } from '@/lib/unit-config';
 import { PILLAR_SHORT } from '@/lib/pillar-labels';
+import { PILLAR_COLORS } from '@/lib/pillar-colors';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import type { PillarId, ViewType, AcademicYear, Term } from '@/lib/types';
