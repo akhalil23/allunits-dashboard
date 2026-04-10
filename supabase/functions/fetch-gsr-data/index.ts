@@ -700,20 +700,33 @@ serve(async (req) => {
     console.error('fetch-gsr-data error:', error);
     const msg = error instanceof Error ? error.message : 'Unknown error';
     const isRateLimited = RATE_LIMIT_PATTERN.test(msg);
+    const isServiceUnavailable = /SERVICE_UNAVAILABLE/i.test(msg);
 
-    if (isRateLimited) {
+    if (isRateLimited || isServiceUnavailable) {
       const staleCache = getGsrCache(requestedUnitId);
       if (staleCache) {
         return new Response(JSON.stringify({
           ...staleCache.data,
           stale: true,
-          warning: `Unit ${requestedUnitId} is temporarily using a cached snapshot due to source rate limits.`,
+          warning: isServiceUnavailable
+            ? `Unit ${requestedUnitId} is temporarily using a cached snapshot because the data source is unavailable.`
+            : `Unit ${requestedUnitId} is temporarily using a cached snapshot due to source rate limits.`,
           cache: {
             hit: true,
             stale: true,
             cachedAt: new Date(staleCache.cachedAt).toISOString(),
           },
         }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (isServiceUnavailable) {
+        return new Response(JSON.stringify({
+          error: 'Data source is temporarily unavailable. Please retry in a few minutes.',
+          code: 'SERVICE_UNAVAILABLE',
+        }), {
+          status: 503,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
