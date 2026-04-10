@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { ChevronRight, ChevronDown, DollarSign } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getItemStatus, getItemCompletion, computeExpectedProgress } from '@/lib/intelligence';
 import { mapItemToRiskSignal, RISK_SIGNAL_COLORS } from '@/lib/risk-signals';
@@ -12,8 +12,6 @@ import { isNotApplicableStatus } from '@/lib/types';
 import { PILLAR_COLORS } from '@/lib/pillar-colors';
 import { PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getUnitDisplayName } from '@/lib/unit-config';
-import { formatCurrency } from '@/lib/budget-data';
-import { useBudgetData, type PillarBudgetLive } from '@/hooks/use-budget-data';
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 import type { PillarId, ViewType, Term, AcademicYear } from '@/lib/types';
 
@@ -39,10 +37,6 @@ interface UnitEntry {
 interface ActionStepNode {
   actionStep: string;
   units: UnitEntry[];
-  /** Proportional budget allocation (pillar allocation / # of distinct action steps in pillar) */
-  budgetAllocation: number;
-  budgetCommitted: number;
-  budgetSpent: number;
 }
 
 interface ObjectiveNode {
@@ -64,25 +58,10 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: budgetResult } = useBudgetData();
+  
 
   const expectedProgress = useMemo(() => computeExpectedProgress(viewType, academicYear), [viewType, academicYear]);
 
-  // Count distinct action steps per pillar for proportional budget
-  const pillarStepCounts = useMemo(() => {
-    const counts: Record<string, Set<string>> = {};
-    const filtered = unitResults.filter(u => selectedUnits.includes(u.unitId) && u.result);
-    filtered.forEach(ur => {
-      ur.result!.data.forEach(item => {
-        const key = item.pillar;
-        if (!counts[key]) counts[key] = new Set();
-        counts[key].add(`${item.goal}||${item.objective}||${item.actionStep}`);
-      });
-    });
-    const result: Record<string, number> = {};
-    for (const [k, v] of Object.entries(counts)) result[k] = v.size;
-    return result;
-  }, [unitResults, selectedUnits]);
 
   const goalNodes = useMemo(() => {
     const filtered = unitResults.filter(u => selectedUnits.includes(u.unitId) && u.result);
@@ -139,19 +118,9 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
         goalNode.objectives.push(objNode);
       }
 
-      // Budget: proportional allocation
-      const pillarBudget = budgetResult?.pillars?.[entry.pillar] as PillarBudgetLive | undefined;
-      const stepCount = pillarStepCounts[entry.pillar] || 1;
-      const budgetAllocation = pillarBudget ? pillarBudget.allocation / stepCount : 0;
-      const budgetCommitted = pillarBudget ? pillarBudget.committed / stepCount : 0;
-      const budgetSpent = pillarBudget ? pillarBudget.spent / stepCount : 0;
-
       objNode.actionSteps.push({
         actionStep: entry.actionStep,
         units: entry.units,
-        budgetAllocation,
-        budgetCommitted,
-        budgetSpent,
       });
 
       goalNode.totalActionSteps++;
@@ -170,7 +139,7 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
       if (pi !== 0) return pi;
       return a.goal.localeCompare(b.goal);
     });
-  }, [unitResults, selectedUnits, selectedPillar, viewType, term, academicYear, expectedProgress, budgetResult, pillarStepCounts]);
+  }, [unitResults, selectedUnits, selectedPillar, viewType, term, academicYear, expectedProgress]);
 
   const filteredGoals = useMemo(() => {
     if (!searchTerm.trim()) return goalNodes;
@@ -193,7 +162,6 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
   };
 
   const totalDistinctSteps = filteredGoals.reduce((s, g) => s + g.totalActionSteps, 0);
-  const hasBudget = !!budgetResult?.pillars;
 
   return (
     <div className="space-y-4">
@@ -210,12 +178,6 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
           <span>{filteredGoals.length} goals</span>
           <span>•</span>
           <span>{totalDistinctSteps} action steps</span>
-          {hasBudget && (
-            <>
-              <span>•</span>
-              <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />Budget enabled</span>
-            </>
-          )}
         </div>
       </div>
 
@@ -294,12 +256,6 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
                                             <div className="flex-1 min-w-0 flex items-center gap-3">
                                               <p className="text-xs text-foreground truncate flex-1">{step.actionStep}</p>
                                               <div className="flex items-center gap-2 shrink-0">
-                                                {/* Budget mini-tag */}
-                                                {hasBudget && step.budgetAllocation > 0 && (
-                                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium whitespace-nowrap">
-                                                    {formatCurrency(step.budgetAllocation)}
-                                                  </span>
-                                                )}
                                                 {!multiUnit && <StatusBadge status={step.units[0]?.status || ''} />}
                                                 {!multiUnit && !isNotApplicableStatus(step.units[0]?.status) && (
                                                   <span className="text-[10px] font-semibold text-foreground">{step.units[0]?.completion}%</span>
@@ -310,14 +266,6 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
                                             </div>
                                           </button>
 
-                                          {/* Budget detail row */}
-                                          {hasBudget && step.budgetAllocation > 0 && (stepExpanded || !multiUnit) && (
-                                            <div className="px-3 pb-1.5 flex gap-3 text-[9px] text-muted-foreground">
-                                              <span>Allocated: <span className="text-foreground font-medium">{formatCurrency(step.budgetAllocation)}</span></span>
-                                              <span>Committed: <span className="text-foreground font-medium">{formatCurrency(step.budgetCommitted)}</span></span>
-                                              <span>Spent: <span className="text-foreground font-medium">{formatCurrency(step.budgetSpent)}</span></span>
-                                            </div>
-                                          )}
 
                                           {/* Unit breakdown table (for multi-unit steps) */}
                                           <AnimatePresence>
