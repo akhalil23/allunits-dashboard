@@ -56,6 +56,9 @@ async function fetchUnitData(unitId: string): Promise<FetchResult> {
     if (/(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(data.error)) {
       throw new Error('Data source is temporarily rate-limited. Please retry in about a minute.');
     }
+    if (/(SERVICE_UNAVAILABLE|temporarily unavailable|\b503\b)/i.test(data.error)) {
+      throw new Error('Data source is temporarily unavailable. Please retry in a few minutes.');
+    }
     throw new Error(data.error);
   }
 
@@ -80,7 +83,7 @@ export function useGSRData() {
     enabled: !!hasAccess,
     staleTime: 2 * 60 * 1000,
     retry: (failureCount, err) => {
-      if (/(rate-limited|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(err.message)) {
+      if (/(rate-limited|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|SERVICE_UNAVAILABLE|temporarily unavailable|\b429\b|\b503\b)/i.test(err.message)) {
         return false;
       }
       return failureCount < 1;
