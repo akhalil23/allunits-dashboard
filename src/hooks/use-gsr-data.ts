@@ -56,6 +56,9 @@ async function fetchUnitData(unitId: string): Promise<FetchResult> {
     if (/(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(data.error)) {
       throw new Error('Data source is temporarily rate-limited. Please retry in about a minute.');
     }
+    if (/(SERVICE_UNAVAILABLE|temporarily unavailable|\b503\b)/i.test(data.error)) {
+      throw new Error('Data source is temporarily unavailable. Please retry in a few minutes.');
+    }
     throw new Error(data.error);
   }
 
