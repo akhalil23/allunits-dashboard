@@ -584,7 +584,10 @@ serve(async (req) => {
     let coreOnly = false;
     if (!sheetsResp.ok) {
       const errText = await sheetsResp.text();
-      if (sheetsResp.status === 400 && errText.includes('exceeds grid limits')) {
+      if (sheetsResp.status >= 500) {
+        // Google API is temporarily unavailable (503, 500, etc.) — use cache or graceful error
+        throw new Error(`SERVICE_UNAVAILABLE: Google Sheets API error: ${sheetsResp.status} ${errText}`);
+      } else if (sheetsResp.status === 400 && errText.includes('exceeds grid limits')) {
         console.warn(`Unit ${requestedUnitId}: BX:CY exceeds grid limits, retrying with core-only ranges`);
         const { ranges: coreRanges } = buildCoreOnlyRanges(pillarConfig);
         const coreParams = coreRanges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
@@ -592,6 +595,9 @@ serve(async (req) => {
         sheetsResp = await fetchWithRateLimitRetry(coreUrl, accessToken);
         if (!sheetsResp.ok) {
           const coreErrText = await sheetsResp.text();
+          if (sheetsResp.status >= 500) {
+            throw new Error(`SERVICE_UNAVAILABLE: Google Sheets API error: ${sheetsResp.status} ${coreErrText}`);
+          }
           throw new Error(`Google Sheets API error: ${sheetsResp.status} ${coreErrText}`);
         }
         coreOnly = true;
