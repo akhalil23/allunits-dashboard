@@ -1,6 +1,6 @@
 /**
  * Multi-unit data fetcher for University Executive Dashboard.
- * Fetches all 22 units in parallel with coverage tracking.
+ * Fetches all units in parallel with coverage tracking.
  */
 
 import { useQuery } from '@tanstack/react-query';

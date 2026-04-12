@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { UNIT_IDS } from '@/lib/unit-config';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
@@ -31,7 +32,7 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><BookOpen className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dashboard Overview</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>The <span className="font-semibold text-foreground">University Executive Command Center</span> monitors Strategic Plan IV (2025–2027) across 22 units and five pillars.</p>
+            <p>The <span className="font-semibold text-foreground">University Executive Command Center</span> monitors Strategic Plan IV (2025–2027) across {UNIT_IDS.length} units and five pillars.</p>
             <p>The three main tabs form a coherent executive system:</p>
           </div>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -51,7 +52,7 @@ export default function DashboardGuide() {
           <div className="mt-5 p-4 rounded-xl bg-muted/30 border border-border/50">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Data Flow</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <FlowNode label="22 Units" sublabel="Report progress" />
+              <FlowNode label={`${UNIT_IDS.length} Units`} sublabel="Report progress" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
               <FlowNode label="5 Strategic Pillars" sublabel="Aggregate performance" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
