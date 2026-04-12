@@ -117,6 +117,8 @@ const UNIT_SPREADSHEETS: Record<string, string> = {
   Provost: '1cVGQZz1GGuoyEv0kljKJY4jCqauvR6K8IM_FIfYwkqE',
   PwD: '1TEr6TeZ_rfHewK7_Pozl3DgHyK6Y1LTfyIt-P139T58',
   OfS: '1vzHWVOOL02qwdSX4RnT3rvECGcB0FSvXCgxPRKbha1Q',
+  HR: '1OsPfYkNQ1gVqBbFyGkulNFwfRR1WvyHYWMX1hLPAkGY',
+  Procurement: '1bmH7Y_yKEOFJmo6hXB1WPNpkG15x673ai9DVjLbXMLA',
 };
 
 // ============================================================
