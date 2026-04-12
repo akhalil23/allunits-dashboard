@@ -54,7 +54,7 @@ export default function PillarChampionsDashboard() {
   }, [queryClient]);
 
   const loadedCount = unitResults?.filter(u => u.result).length ?? 0;
-  const totalCount = unitResults?.length ?? 22;
+  const totalCount = unitResults?.length ?? UNIT_IDS.length;
 
   const TAB_TITLES: Record<PillarChampionTab, string> = {
     overview: 'Pillar Overview Snapshot',
@@ -72,7 +72,7 @@ export default function PillarChampionsDashboard() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-            <p className="text-sm text-muted-foreground">Loading data from all 22 units…</p>
+            <p className="text-sm text-muted-foreground">Loading data from all {UNIT_IDS.length} units…</p>
             <p className="text-xs text-muted-foreground/60">This may take a moment</p>
           </div>
         </div>
