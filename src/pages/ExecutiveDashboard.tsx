@@ -6,6 +6,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUniversityData } from '@/hooks/use-university-data';
+import { UNIT_IDS } from '@/lib/unit-config';
 import { aggregateUniversity, type UniversityAggregation } from '@/lib/university-aggregation';
 import ExecutiveSidebar, { type ExecutiveTab } from '@/components/executive/ExecutiveSidebar';
 import ExecutiveHeader from '@/components/executive/ExecutiveHeader';

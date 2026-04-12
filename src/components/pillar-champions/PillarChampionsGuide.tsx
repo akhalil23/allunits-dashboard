@@ -33,7 +33,7 @@ export default function PillarChampionsGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><BookOpen className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dashboard Overview</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>The <span className="font-semibold text-foreground">Pillar Champions Command Center</span> provides a unified operational view of Strategic Plan IV (2025–2027) organized by the five strategic pillars across all 22 units.</p>
+            <p>The <span className="font-semibold text-foreground">Pillar Champions Command Center</span> provides a unified operational view of Strategic Plan IV (2025–2027) organized by the five strategic pillars across all {UNIT_IDS.length} units.</p>
             <p>The five main tabs form a coherent pillar-based analysis system:</p>
           </div>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -63,7 +63,7 @@ export default function PillarChampionsGuide() {
           <div className="mt-5 p-4 rounded-xl bg-muted/30 border border-border/50">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Data Flow</p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <FlowNode label="22 Units" sublabel="Report progress" />
+              <FlowNode label={`${UNIT_IDS.length} Units`} sublabel="Report progress" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
               <FlowNode label="5 Strategic Pillars" sublabel="Cross-unit aggregation" />
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -134,7 +134,7 @@ export default function PillarChampionsGuide() {
           <div className="flex items-center gap-2 mb-4"><Eye className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Pillar & Unit Filtering</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>The filter bar allows you to <span className="font-semibold text-foreground">isolate a single pillar</span> or view all five simultaneously. Selecting a pillar scopes all tabs to show only data relevant to that pillar.</p>
-            <p>The <span className="font-semibold text-foreground">unit filter</span> lets you narrow analysis to specific units. When "All" is active, all 22 units contribute to aggregations. Click individual unit pills to isolate or combine specific units.</p>
+            <p>The <span className="font-semibold text-foreground">unit filter</span> lets you narrow analysis to specific units. When "All" is active, all {UNIT_IDS.length} units contribute to aggregations. Click individual unit pills to isolate or combine specific units.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div className="p-3 rounded-xl bg-muted/20 border border-border/30">
                 <p className="text-xs font-semibold text-foreground">Pillar Filter</p>
