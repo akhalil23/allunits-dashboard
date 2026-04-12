@@ -56,7 +56,7 @@ const SARD_PILLARS: PillarRange[] = [
 const STANDARD_UNITS = new Set([
   'AKSOB', 'BDGA', 'CIL', 'DIRA', 'Facilities', 'Finance', 'IT',
   'Advancement', 'PwD', 'Provost', 'SAS', 'SDEM', 'SOE', 'SOM',
-  'SON', 'SOP', 'StratCom_Alumni', 'UGRC', 'OfS',
+  'SON', 'SOP', 'StratCom_Alumni', 'UGRC', 'OfS', 'HR', 'Procurement',
 ]);
 
 function getPillarConfig(unitId: string): PillarRange[] {
