@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { UNIT_IDS } from '@/lib/unit-config';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
