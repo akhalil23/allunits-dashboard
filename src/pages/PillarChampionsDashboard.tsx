@@ -17,6 +17,7 @@ import ActionExplorer from '@/components/pillar-champions/ActionExplorer';
 import PillarBudgetView from '@/components/pillar-champions/PillarBudgetView';
 import PillarRiskSignals from '@/components/pillar-champions/PillarRiskSignals';
 import PillarChampionsGuide from '@/components/pillar-champions/PillarChampionsGuide';
+import ReportsTab from '@/components/executive/ReportsTab';
 import type { PillarId } from '@/lib/types';
 import { Loader2, AlertCircle, RefreshCw, Moon, Sun, LogOut, ArrowLeft } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -62,8 +63,12 @@ export default function PillarChampionsDashboard() {
     actions: 'Action Explorer',
     budget: 'Budget Intelligence',
     risk: 'Risk & Attention Signals',
+    reports: 'Reports',
     guide: 'Dashboard Guide',
   };
+
+  // Determine the user's assigned pillar for reports access
+  const userPillar = userRole?.unitId || undefined;
 
   if (isLoading) {
     return (
@@ -240,7 +245,7 @@ export default function PillarChampionsDashboard() {
         </header>
 
         {/* Filters — hide on guide tab */}
-        {activeTab !== 'guide' && (
+        {activeTab !== 'guide' && activeTab !== 'reports' && (
           <PillarFilters
             selectedPillar={selectedPillar}
             onPillarChange={setSelectedPillar}
@@ -316,6 +321,13 @@ export default function PillarChampionsDashboard() {
                 academicYear={academicYear}
                 selectedPillar={selectedPillar}
                 selectedUnits={selectedUnits}
+              />
+            )}
+
+            {activeTab === 'reports' && (
+              <ReportsTab
+                lockedPillar={userPillar}
+                hiddenUniversityScope
               />
             )}
 
