@@ -65,6 +65,48 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_path: string
+          id: string
+          pillar: string | null
+          report_type: Database["public"]["Enums"]["report_type"]
+          reporting_period: Database["public"]["Enums"]["reporting_period"]
+          scope: Database["public"]["Enums"]["report_scope"]
+          title: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_path: string
+          id?: string
+          pillar?: string | null
+          report_type: Database["public"]["Enums"]["report_type"]
+          reporting_period: Database["public"]["Enums"]["reporting_period"]
+          scope: Database["public"]["Enums"]["report_scope"]
+          title: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          id?: string
+          pillar?: string | null
+          report_type?: Database["public"]["Enums"]["report_type"]
+          reporting_period?: Database["public"]["Enums"]["reporting_period"]
+          scope?: Database["public"]["Enums"]["report_scope"]
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       strategic_snapshots: {
         Row: {
           academic_year: string
@@ -171,6 +213,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "unit_user" | "university_viewer" | "pillar_champion"
+      report_scope: "university" | "per_pillar"
+      report_type: "executive" | "full"
+      reporting_period: "mid_year" | "end_of_year"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -299,6 +344,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "unit_user", "university_viewer", "pillar_champion"],
+      report_scope: ["university", "per_pillar"],
+      report_type: ["executive", "full"],
+      reporting_period: ["mid_year", "end_of_year"],
     },
   },
 } as const
