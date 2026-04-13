@@ -3,7 +3,7 @@
  * Tab-based executive dashboard aggregating all units.
  */
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { UNIT_IDS } from '@/lib/unit-config';
@@ -20,6 +20,7 @@ import ExecutiveAIAdvisor from '@/components/executive/ExecutiveAIAdvisor';
 import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
 import MetricsExplainer from '@/components/executive/MetricsExplainer';
 import FilterBar from '@/components/dashboard/FilterBar';
+import ReportsTab from '@/components/executive/ReportsTab';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { Loader2, AlertCircle, BookOpen } from 'lucide-react';
 
@@ -85,6 +86,7 @@ export default function ExecutiveDashboard() {
     'budget': 'Budget Intelligence',
     'comparison': 'Unit Comparison',
     'ai-insights': 'AI Executive Insights',
+    'reports': 'Reports',
     'guide': 'Dashboard Guide',
   };
 
@@ -100,7 +102,7 @@ export default function ExecutiveDashboard() {
           observedAt={observedAt}
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
-        {activeTab !== 'budget' && activeTab !== 'guide' && <FilterBar />}
+        {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && <FilterBar />}
         {/* How Metrics Work button */}
         <div className="px-4 sm:px-6 lg:px-8 pt-3">
           <button
@@ -117,7 +119,7 @@ export default function ExecutiveDashboard() {
               <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">
                 {TAB_TITLES[activeTab]}
               </h2>
-              {activeTab !== 'budget' && activeTab !== 'guide' && (
+              {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && (
                 <span className="text-xs text-muted-foreground">
                   {viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly'} • AY {academicYear} • {term === 'mid' ? 'Mid-Year' : 'End-of-Year'}
                 </span>
@@ -129,6 +131,7 @@ export default function ExecutiveDashboard() {
             {activeTab === 'budget' && <BudgetIntelligence aggregation={aggregation} />}
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
+            {activeTab === 'reports' && <ReportsTab />}
             {activeTab === 'guide' && <DashboardGuide />}
           </div>
         </main>
