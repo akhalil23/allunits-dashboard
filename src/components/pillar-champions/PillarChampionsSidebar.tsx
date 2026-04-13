@@ -5,14 +5,14 @@
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, TableProperties, DollarSign,
-  ShieldAlert, ChevronRight, Menu, X, LogOut, BookOpen,
+  ShieldAlert, ChevronRight, Menu, X, LogOut, BookOpen, FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo-white.png';
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-export type PillarChampionTab = 'overview' | 'performance' | 'actions' | 'budget' | 'risk' | 'guide';
+export type PillarChampionTab = 'overview' | 'performance' | 'actions' | 'budget' | 'risk' | 'reports' | 'guide';
 
 interface Props {
   activeTab: PillarChampionTab;
@@ -25,6 +25,7 @@ const tabs: { id: PillarChampionTab; label: string; icon: React.ElementType }[] 
   { id: 'actions', label: 'Action Explorer', icon: TableProperties },
   { id: 'budget', label: 'Budget Intelligence', icon: DollarSign },
   { id: 'risk', label: 'Risk & Attention', icon: ShieldAlert },
+  { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'guide', label: 'Dashboard Guide', icon: BookOpen },
 ];
 
