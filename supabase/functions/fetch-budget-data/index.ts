@@ -12,15 +12,14 @@ const FINANCE_SPREADSHEET_ID = '1SWb0okdTuFZub8XFS6tclitCv-FRaSXbcvx6kagvvu4';
 
 // Pillar subtotal rows and sheet names — STRICT, no auto-detection
 const PILLAR_BUDGET_CONFIG = [
-  { id: 'I', sheetName: 'Pillar I GSR', subtotalRow: 62 },
-  { id: 'II', sheetName: 'Pillar II SAS', subtotalRow: 81 },
-  { id: 'III', sheetName: 'Pillar III SOM', subtotalRow: 101 },
-  { id: 'IV', sheetName: 'Pillar IV Development', subtotalRow: 225 },
-  { id: 'V', sheetName: 'Pillar V ', subtotalRow: 157 }, // trailing space required
+  { id: 'I', sheetName: 'Pillar I GSR', subtotalRow: 62, dataStartRow: 5 },
+  { id: 'II', sheetName: 'Pillar II SAS', subtotalRow: 81, dataStartRow: 5 },
+  { id: 'III', sheetName: 'Pillar III SOM', subtotalRow: 101, dataStartRow: 5 },
+  { id: 'IV', sheetName: 'Pillar IV Development', subtotalRow: 225, dataStartRow: 5 },
+  { id: 'V', sheetName: 'Pillar V ', subtotalRow: 157, dataStartRow: 5 }, // trailing space required
 ];
 
 // Column mapping within Q:AC range (0-indexed):
-// Q=0(Year4), R=1(Year5), S=2, T=3, U=4, V=5(Allocation), W=6, X=7, Y=8(Unspent), Z=9(Spent), AA=10(TotalCommitted), AB=11, AC=12(Available)
 const COL_YEAR4 = 0; // Q - Year 4 (2025-2026)
 const COL_YEAR5 = 1; // R - Year 5 (2026-2027)
 const COL_ALLOCATION = 5; // V - Total Budget (Allocation)
@@ -29,8 +28,28 @@ const COL_SPENT = 9; // Z - Spent Commitment
 const COL_COMMITTED = 10; // AA - Total Committed
 const COL_AVAILABLE = 12; // AC - Available Balance
 
+// Core columns for action step identification (A:G, 0-indexed)
+const CORE_GOAL = 0;       // A - Goal
+const CORE_ACTION = 1;     // B - Action / Objective
+const CORE_ACTION_STEP = 3; // D - Action Step
+
 const RATE_LIMIT_PATTERN = /(RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|RATE_LIMITED|\b429\b)/i;
 const BUDGET_CACHE_TTL_MS = 2 * 60 * 1000;
+
+interface ActionStepBudget {
+  pillar: string;
+  goal: string;
+  objective: string;
+  actionStep: string;
+  sheetRow: number;
+  year4: number;
+  year5: number;
+  allocation: number;
+  spent: number;
+  unspent: number;
+  committed: number;
+  available: number;
+}
 
 type BudgetDataPayload = {
   pillars: Record<string, {
@@ -42,6 +61,7 @@ type BudgetDataPayload = {
     year4: number;
     year5: number;
   }>;
+  actionStepBudgets: ActionStepBudget[];
   observedAt: string;
   validationErrors: string[];
   stale?: boolean;
@@ -145,12 +165,27 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   return data.access_token;
 }
 
+function cleanCellText(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  let text = String(value);
+  text = text.replace(/\u00A0/g, ' ');
+  text = text.replace(/\t/g, ' ');
+  text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  text = text.trim();
+  return text;
+}
+
 function parseNumber(raw: unknown): number {
   if (raw === null || raw === undefined) return 0;
   const s = String(raw).replace(/[,$\s]/g, '').replace(/\u00A0/g, '').trim();
   if (s === '' || s === '-' || s === '—') return 0;
   const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
+}
+
+function isRowFullyBlank(row: any[]): boolean {
+  if (!row || row.length === 0) return true;
+  return row.every((c: any) => cleanCellText(c) === '');
 }
 
 serve(async (req) => {
@@ -200,11 +235,19 @@ serve(async (req) => {
     const serviceAccount = JSON.parse(serviceAccountRaw);
     const accessToken = await getAccessToken(serviceAccount);
 
-    // Build ranges: one row per pillar, columns Q:AC
-    const ranges = PILLAR_BUDGET_CONFIG.map((p) => {
+    // Build ranges: 
+    // For each pillar: subtotal row Q:AC (for pillar totals) + core A:G rows + budget Q:AC rows (for action steps)
+    const ranges: string[] = [];
+    for (const p of PILLAR_BUDGET_CONFIG) {
       const escaped = `'${p.sheetName}'`;
-      return `${escaped}!Q${p.subtotalRow}:AC${p.subtotalRow}`;
-    });
+      // Subtotal row for pillar totals
+      ranges.push(`${escaped}!Q${p.subtotalRow}:AC${p.subtotalRow}`);
+      // Core data (A:G) for action step identification — rows dataStartRow to subtotalRow-1
+      const lastDataRow = p.subtotalRow - 1;
+      ranges.push(`${escaped}!A${p.dataStartRow}:G${lastDataRow}`);
+      // Budget data (Q:AC) for each action step row
+      ranges.push(`${escaped}!Q${p.dataStartRow}:AC${lastDataRow}`);
+    }
 
     const rangeParams = ranges.map((r) => `ranges=${encodeURIComponent(r)}`).join('&');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${FINANCE_SPREADSHEET_ID}/values:batchGet?${rangeParams}&valueRenderOption=UNFORMATTED_VALUE`;
@@ -230,32 +273,95 @@ serve(async (req) => {
     }> = {};
 
     const validationErrors: string[] = [];
+    const allActionStepBudgets: ActionStepBudget[] = [];
 
     for (let i = 0; i < PILLAR_BUDGET_CONFIG.length; i++) {
       const config = PILLAR_BUDGET_CONFIG[i];
-      const row = valueRanges[i]?.values?.[0] || [];
+      // Each pillar has 3 ranges: subtotal, core, budget
+      const subtotalRow = valueRanges[i * 3]?.values?.[0] || [];
+      const coreRows: any[][] = valueRanges[i * 3 + 1]?.values || [];
+      const budgetRows: any[][] = valueRanges[i * 3 + 2]?.values || [];
 
-      const allocation = parseNumber(row[COL_ALLOCATION]);
-      const spent = parseNumber(row[COL_SPENT]);
-      const unspent = parseNumber(row[COL_UNSPENT]);
-      const committed = parseNumber(row[COL_COMMITTED]);
-      const available = parseNumber(row[COL_AVAILABLE]);
-      const year4 = parseNumber(row[COL_YEAR4]);
-      const year5 = parseNumber(row[COL_YEAR5]);
+      // --- Pillar subtotals ---
+      const allocation = parseNumber(subtotalRow[COL_ALLOCATION]);
+      const spent = parseNumber(subtotalRow[COL_SPENT]);
+      const unspent = parseNumber(subtotalRow[COL_UNSPENT]);
+      const committed = parseNumber(subtotalRow[COL_COMMITTED]);
+      const available = parseNumber(subtotalRow[COL_AVAILABLE]);
+      const year4 = parseNumber(subtotalRow[COL_YEAR4]);
+      const year5 = parseNumber(subtotalRow[COL_YEAR5]);
 
-      // Validation: Spent + Unspent = Committed (with tolerance)
+      // Validation
       const commitSum = spent + unspent;
       if (Math.abs(commitSum - committed) > 1) {
         validationErrors.push(`Pillar ${config.id}: Spent(${spent}) + Unspent(${unspent}) = ${commitSum} ≠ Committed(${committed})`);
       }
-
-      // Validation: Committed + Available = Allocation (with tolerance)
       const totalCheck = committed + available;
       if (Math.abs(totalCheck - allocation) > 1) {
         validationErrors.push(`Pillar ${config.id}: Committed(${committed}) + Available(${available}) = ${totalCheck} ≠ Allocation(${allocation})`);
       }
 
       pillars[config.id] = { allocation, spent, unspent, committed, available, year4, year5 };
+
+      // --- Per-action-step budget data ---
+      const maxRows = Math.max(coreRows.length, budgetRows.length);
+      let lastGoal = '';
+      let lastAction = '';
+      let consecutiveBlanks = 0;
+      const BLANK_THRESHOLD = 10;
+
+      for (let r = 0; r < maxRows; r++) {
+        const core = coreRows[r] || [];
+        const budget = budgetRows[r] || [];
+
+        if (isRowFullyBlank(core) && isRowFullyBlank(budget)) {
+          consecutiveBlanks++;
+          if (consecutiveBlanks >= BLANK_THRESHOLD) break;
+          continue;
+        }
+        consecutiveBlanks = 0;
+
+        const rawGoal = cleanCellText(core[CORE_GOAL]);
+        const rawAction = cleanCellText(core[CORE_ACTION]);
+        const rawActionStep = cleanCellText(core[CORE_ACTION_STEP]);
+
+        // Forward-fill
+        if (rawGoal !== '') lastGoal = rawGoal;
+        if (rawAction !== '') lastAction = rawAction;
+
+        const goal = rawGoal || lastGoal;
+        const objective = rawAction || lastAction;
+        const actionStep = rawActionStep || objective || `Action ${config.id}.${r + 1}`;
+
+        // Skip rows with no meaningful content
+        if (!actionStep && !goal && !objective) continue;
+
+        const rowYear4 = parseNumber(budget[COL_YEAR4]);
+        const rowYear5 = parseNumber(budget[COL_YEAR5]);
+        const rowAllocation = parseNumber(budget[COL_ALLOCATION]);
+        const rowSpent = parseNumber(budget[COL_SPENT]);
+        const rowUnspent = parseNumber(budget[COL_UNSPENT]);
+        const rowCommitted = parseNumber(budget[COL_COMMITTED]);
+        const rowAvailable = parseNumber(budget[COL_AVAILABLE]);
+
+        // Only include rows that have some budget data OR have an action step name
+        if (rowAllocation > 0 || rowCommitted > 0 || rowSpent > 0 || rawActionStep !== '') {
+          allActionStepBudgets.push({
+            pillar: config.id,
+            goal,
+            objective,
+            actionStep,
+            sheetRow: config.dataStartRow + r,
+            year4: rowYear4,
+            year5: rowYear5,
+            allocation: rowAllocation,
+            spent: rowSpent,
+            unspent: rowUnspent,
+            committed: rowCommitted,
+            available: rowAvailable,
+          });
+        }
+      }
     }
 
     if (validationErrors.length > 0) {
@@ -264,6 +370,7 @@ serve(async (req) => {
 
     const result: BudgetDataPayload = {
       pillars,
+      actionStepBudgets: allActionStepBudgets,
       observedAt: new Date().toISOString(),
       validationErrors,
     };

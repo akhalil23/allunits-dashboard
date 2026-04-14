@@ -15,8 +15,24 @@ export interface PillarBudgetLive {
   year5: number;
 }
 
+export interface ActionStepBudget {
+  pillar: string;
+  goal: string;
+  objective: string;
+  actionStep: string;
+  sheetRow: number;
+  year4: number;
+  year5: number;
+  allocation: number;
+  spent: number;
+  unspent: number;
+  committed: number;
+  available: number;
+}
+
 export interface BudgetDataResult {
   pillars: Record<string, PillarBudgetLive>;
+  actionStepBudgets: ActionStepBudget[];
   observedAt: string;
   validationErrors: string[];
 }
