@@ -17,7 +17,7 @@ import { Plus, Trash2, Loader2, Pencil, FileText, Upload, ExternalLink } from 'l
 import { toast } from 'sonner';
 
 const PILLARS = ['PI', 'PII', 'PIII', 'PIV', 'PV'] as const;
-const ACADEMIC_YEARS = ['2025-2026', '2026-2027', '2027-2028'];
+const ACADEMIC_YEARS = ['2025-2026', '2026-2027'];
 
 const PERIOD_LABELS: Record<string, string> = { mid_year: 'Mid-Year', end_of_year: 'End-of-Year' };
 const SCOPE_LABELS: Record<string, string> = { university: 'University', per_pillar: 'Per Pillar' };

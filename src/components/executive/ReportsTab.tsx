@@ -14,7 +14,7 @@ const PILLARS = ['PI', 'PII', 'PIII', 'PIV', 'PV'] as const;
 const PILLAR_LABELS: Record<string, string> = { PI: 'Pillar 1', PII: 'Pillar 2', PIII: 'Pillar 3', PIV: 'Pillar 4', PV: 'Pillar 5' };
 const PERIOD_LABELS: Record<string, string> = { mid_year: 'Mid-Year', end_of_year: 'End-of-Year' };
 const TYPE_LABELS: Record<string, string> = { executive: 'Exec. Summary', full: 'Full Report' };
-const ACADEMIC_YEARS = ['2025-2026', '2026-2027', '2027-2028'];
+const ACADEMIC_YEARS = ['2025-2026', '2026-2027'];
 
 interface Props {
   lockedPillar?: string;
