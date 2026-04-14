@@ -377,6 +377,10 @@ function processPillarData(
   let consecutiveBlanks = 0;
   const BLANK_THRESHOLD = 10;
 
+  // Forward-fill state: carry forward last non-empty goal and action/objective
+  let lastGoal = '';
+  let lastAction = '';
+
   for (let i = 0; i < maxRows; i++) {
     const core = coreRows[i] || [];
     const term = termRows[i] || [];
@@ -391,8 +395,16 @@ function processPillarData(
     if (!isValidItemRow(core, term)) continue;
 
     const actionStep = safeGet(core, CORE_ACTION_STEP);
-    const goal = safeGet(core, CORE_GOAL);
-    const action = safeGet(core, CORE_ACTION);
+    const rawGoal = safeGet(core, CORE_GOAL);
+    const rawAction = safeGet(core, CORE_ACTION);
+
+    // Forward-fill: use last non-empty value if current is blank
+    if (rawGoal !== '') lastGoal = rawGoal;
+    if (rawAction !== '') lastAction = rawAction;
+
+    const goal = rawGoal || lastGoal;
+    const action = rawAction || lastAction;
+
     const rowId = `P${pillarId}-R${i + 5}`;
 
     const terms: Record<string, TermData> = {};
