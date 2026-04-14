@@ -17,6 +17,7 @@ import { Plus, Trash2, Loader2, Pencil, FileText, Upload, ExternalLink } from 'l
 import { toast } from 'sonner';
 
 const PILLARS = ['PI', 'PII', 'PIII', 'PIV', 'PV'] as const;
+const ACADEMIC_YEARS = ['2025-2026', '2026-2027', '2027-2028'];
 
 const PERIOD_LABELS: Record<string, string> = { mid_year: 'Mid-Year', end_of_year: 'End-of-Year' };
 const SCOPE_LABELS: Record<string, string> = { university: 'University', per_pillar: 'Per Pillar' };
@@ -34,6 +35,7 @@ export default function ImportCenter() {
 
   // Form state
   const [title, setTitle] = useState('');
+  const [academicYear, setAcademicYear] = useState<string>('2025-2026');
   const [period, setPeriod] = useState<'mid_year' | 'end_of_year'>('mid_year');
   const [scope, setScope] = useState<'university' | 'per_pillar'>('university');
   const [reportType, setReportType] = useState<'executive' | 'full'>('executive');
@@ -44,6 +46,7 @@ export default function ImportCenter() {
 
   function resetForm() {
     setTitle('');
+    setAcademicYear('2025-2026');
     setPeriod('mid_year');
     setScope('university');
     setReportType('executive');
@@ -62,6 +65,7 @@ export default function ImportCenter() {
   function openEdit(r: Report) {
     setEditingReport(r);
     setTitle(r.title);
+    setAcademicYear(r.academic_year);
     setPeriod(r.reporting_period);
     setScope(r.scope);
     setReportType(r.report_type);
@@ -92,6 +96,7 @@ export default function ImportCenter() {
         await updateMutation.mutateAsync({
           id: editingReport.id,
           title: title.trim(),
+          academic_year: academicYear,
           reporting_period: period,
           scope,
           report_type: reportType,
@@ -112,6 +117,7 @@ export default function ImportCenter() {
         await uploadMutation.mutateAsync({
           file,
           title: title.trim(),
+          academic_year: academicYear,
           reporting_period: period,
           scope,
           report_type: reportType,
@@ -165,23 +171,25 @@ export default function ImportCenter() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Title</TableHead>
+                    <TableHead>Year</TableHead>
                     <TableHead>Period</TableHead>
                     <TableHead>Scope</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Pillar</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>Uploaded</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {reports.map(r => (
                     <TableRow key={r.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">{r.title}</TableCell>
+                      <TableCell className="font-medium max-w-[180px] truncate">{r.title}</TableCell>
+                      <TableCell className="text-xs">{r.academic_year}</TableCell>
                       <TableCell><Badge variant="outline">{PERIOD_LABELS[r.reporting_period]}</Badge></TableCell>
                       <TableCell><Badge variant={r.scope === 'university' ? 'default' : 'secondary'}>{SCOPE_LABELS[r.scope]}</Badge></TableCell>
                       <TableCell><Badge variant={r.report_type === 'executive' ? 'default' : 'outline'}>{TYPE_LABELS[r.report_type]}</Badge></TableCell>
                       <TableCell>{r.pillar || '—'}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right space-x-1">
                         <Button variant="outline" size="sm" asChild>
                           <a href={getReportFileUrl(r.file_path)} target="_blank" rel="noopener noreferrer" title="View PDF">
@@ -218,6 +226,15 @@ export default function ImportCenter() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label>Academic Year</Label>
+                <Select value={academicYear} onValueChange={setAcademicYear}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ACADEMIC_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Period</Label>
                 <Select value={period} onValueChange={v => setPeriod(v as any)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -227,6 +244,9 @@ export default function ImportCenter() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Scope</Label>
                 <Select value={scope} onValueChange={v => { setScope(v as any); if (v === 'university') setPillar(''); }}>
@@ -237,9 +257,6 @@ export default function ImportCenter() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Report Type</Label>
                 <Select value={reportType} onValueChange={v => setReportType(v as any)}>
@@ -250,20 +267,21 @@ export default function ImportCenter() {
                   </SelectContent>
                 </Select>
               </div>
-              {scope === 'per_pillar' && (
-                <div className="space-y-2">
-                  <Label>Pillar</Label>
-                  <Select value={pillar} onValueChange={setPillar}>
-                    <SelectTrigger><SelectValue placeholder="Select pillar" /></SelectTrigger>
-                    <SelectContent>
-                      {PILLARS.map(p => (
-                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
             </div>
+
+            {scope === 'per_pillar' && (
+              <div className="space-y-2">
+                <Label>Pillar</Label>
+                <Select value={pillar} onValueChange={setPillar}>
+                  <SelectTrigger><SelectValue placeholder="Select pillar" /></SelectTrigger>
+                  <SelectContent>
+                    {PILLARS.map(p => (
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>PDF File {editingReport ? '(leave empty to keep current)' : ''}</Label>

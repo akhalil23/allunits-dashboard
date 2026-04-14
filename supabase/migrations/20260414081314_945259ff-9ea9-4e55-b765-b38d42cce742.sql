@@ -1,0 +1,1 @@
+ALTER TABLE public.reports ADD COLUMN academic_year text NOT NULL DEFAULT '2025-2026';

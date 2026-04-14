@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface Report {
   id: string;
+  academic_year: string;
   reporting_period: 'mid_year' | 'end_of_year';
   scope: 'university' | 'per_pillar';
   report_type: 'executive' | 'full';
@@ -21,6 +22,7 @@ export interface Report {
 }
 
 export interface ReportFilters {
+  academicYear?: string;
   period?: 'mid_year' | 'end_of_year';
   scope?: 'university' | 'per_pillar';
   reportType?: 'executive' | 'full';
@@ -36,6 +38,7 @@ export function useReports(filters?: ReportFilters) {
         .select('*')
         .order('created_at', { ascending: false });
 
+      if (filters?.academicYear) query = query.eq('academic_year', filters.academicYear);
       if (filters?.period) query = query.eq('reporting_period', filters.period);
       if (filters?.scope) query = query.eq('scope', filters.scope);
       if (filters?.reportType) query = query.eq('report_type', filters.reportType);
@@ -52,10 +55,8 @@ export function useDeleteReport() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (report: Report) => {
-      // Delete file from storage
       const { error: storageError } = await supabase.storage.from('reports').remove([report.file_path]);
       if (storageError) console.warn('Storage delete error:', storageError);
-      // Delete record
       const { error } = await supabase.from('reports').delete().eq('id', report.id);
       if (error) throw error;
     },
@@ -71,6 +72,7 @@ export function useUploadReport() {
     mutationFn: async (params: {
       file: File;
       title: string;
+      academic_year: string;
       reporting_period: 'mid_year' | 'end_of_year';
       scope: 'university' | 'per_pillar';
       report_type: 'executive' | 'full';
@@ -85,6 +87,7 @@ export function useUploadReport() {
 
       const { error } = await supabase.from('reports').insert({
         title: params.title,
+        academic_year: params.academic_year,
         reporting_period: params.reporting_period,
         scope: params.scope,
         report_type: params.report_type,
@@ -106,6 +109,7 @@ export function useUpdateReport() {
     mutationFn: async (params: {
       id: string;
       title: string;
+      academic_year: string;
       reporting_period: 'mid_year' | 'end_of_year';
       scope: 'university' | 'per_pillar';
       report_type: 'executive' | 'full';
@@ -117,7 +121,6 @@ export function useUpdateReport() {
       let filePath = params.oldFilePath;
 
       if (params.file && params.oldFilePath) {
-        // Replace file
         await supabase.storage.from('reports').remove([params.oldFilePath]);
         filePath = `${Date.now()}-${params.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
         const { error: uploadError } = await supabase.storage.from('reports').upload(filePath!, params.file, {
@@ -128,6 +131,7 @@ export function useUpdateReport() {
 
       const { error } = await supabase.from('reports').update({
         title: params.title,
+        academic_year: params.academic_year,
         reporting_period: params.reporting_period,
         scope: params.scope,
         report_type: params.report_type,
