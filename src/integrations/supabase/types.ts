@@ -67,6 +67,7 @@ export type Database = {
       }
       reports: {
         Row: {
+          academic_year: string
           created_at: string
           description: string | null
           file_path: string
@@ -80,6 +81,7 @@ export type Database = {
           uploaded_by: string
         }
         Insert: {
+          academic_year?: string
           created_at?: string
           description?: string | null
           file_path: string
@@ -93,6 +95,7 @@ export type Database = {
           uploaded_by: string
         }
         Update: {
+          academic_year?: string
           created_at?: string
           description?: string | null
           file_path?: string
