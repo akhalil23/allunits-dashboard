@@ -1,5 +1,6 @@
 import { useMemo, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Header from '@/components/layout/Header';
 import FilterBar from '@/components/dashboard/FilterBar';
@@ -16,6 +17,7 @@ import { runIntegrityAudit } from '@/lib/intelligence';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function Index() {
+  const { unitCode } = useParams<{ unitCode: string }>();
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
   const queryClient = useQueryClient();
@@ -90,7 +92,7 @@ export default function Index() {
           </div>
 
           {isReports ? (
-            <ReportsTab />
+            <ReportsTab unitId={unitCode} />
           ) : isGuide ? (
             <UnitDashboardGuide />
           ) : (

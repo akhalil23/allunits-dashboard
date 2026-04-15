@@ -1,6 +1,6 @@
 /**
- * Reports Tab — Executive Command Center & Pillar Champions
- * Matrix layout: University section (table rows) + Pillars section (availability matrix).
+ * Reports Tab — Executive Command Center, Pillar Champions, and Unit Dashboards
+ * Three sections: Unit (optional, for unit dashboards), University, Pillars
  */
 
 import { useState, useMemo } from 'react';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Eye, Loader2, X, Filter } from 'lucide-react';
+import { getUnitDisplayName } from '@/lib/unit-config';
 
 const PILLARS = ['PI', 'PII', 'PIII', 'PIV', 'PV'] as const;
 const PILLAR_LABELS: Record<string, string> = { PI: 'Pillar 1', PII: 'Pillar 2', PIII: 'Pillar 3', PIV: 'Pillar 4', PV: 'Pillar 5' };
@@ -19,9 +20,11 @@ const ACADEMIC_YEARS = ['2025-2026', '2026-2027'];
 interface Props {
   lockedPillar?: string;
   hiddenUniversityScope?: boolean;
+  /** When set, shows a "Unit" section filtered to this unit (appears first for unit dashboards) */
+  unitId?: string;
 }
 
-export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Props) {
+export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId }: Props) {
   const [academicYear, setAcademicYear] = useState<string>('all');
   const [period, setPeriod] = useState<string>('all');
   const [reportType, setReportType] = useState<string>('all');
@@ -46,8 +49,12 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
     if (lockedPillar) pr = pr.filter(r => r.pillar === lockedPillar);
     return pr;
   }, [filtered, lockedPillar]);
+  const unitReports = useMemo(() => {
+    if (!unitId) return [];
+    return filtered.filter(r => r.scope === 'per_unit' && r.unit_id === unitId);
+  }, [filtered, unitId]);
 
-  // Build pillar matrix rows: group by academic_year + period + report_type
+  // Build pillar matrix rows
   const pillarMatrix = useMemo(() => {
     const map = new Map<string, { academic_year: string; period: string; report_type: string; byPillar: Record<string, Report> }>();
     pillarReports.forEach(r => {
@@ -57,7 +64,6 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
       }
       if (r.pillar) map.get(key)!.byPillar[r.pillar] = r;
     });
-    // Sort by year desc, then period, then type
     return Array.from(map.values()).sort((a, b) => {
       if (a.academic_year !== b.academic_year) return b.academic_year.localeCompare(a.academic_year);
       if (a.period !== b.period) return a.period.localeCompare(b.period);
@@ -66,6 +72,10 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
   }, [pillarReports]);
 
   const displayPillars = lockedPillar ? [lockedPillar] : [...PILLARS];
+  const unitDisplayName = unitId ? getUnitDisplayName(unitId) : '';
+
+  // For unit dashboards, show Unit section first, then University, then Pillars
+  const isUnitDashboard = !!unitId;
 
   return (
     <div className="space-y-6">
@@ -112,52 +122,23 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : (
         <>
+          {/* ── Unit Section (unit dashboards only, shown first) ── */}
+          {isUnitDashboard && (
+            <ReportTableSection
+              title="Unit"
+              reports={unitReports}
+              onView={setViewingReport}
+              unitLabel={unitDisplayName}
+            />
+          )}
+
           {/* ── University Section ── */}
           {!hiddenUniversityScope && (
-            <section className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h2 className="text-base font-semibold tracking-tight">University</h2>
-                <Badge variant="outline" className="text-[10px]">{universityReports.length} report{universityReports.length !== 1 ? 's' : ''}</Badge>
-              </div>
-              <div className="border rounded-lg overflow-hidden">
-                {universityReports.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">No university reports found.</div>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-muted/40">
-                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Year</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Period</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Scope</th>
-                        <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Uploaded On</th>
-                        <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {universityReports.map(r => (
-                        <tr key={r.id} className="border-b last:border-b-0 hover:bg-muted/20 transition-colors">
-                          <td className="px-4 py-2.5 font-medium">{r.academic_year}</td>
-                          <td className="px-4 py-2.5">{PERIOD_LABELS[r.reporting_period]}</td>
-                          <td className="px-4 py-2.5">{TYPE_LABELS[r.report_type]}</td>
-                          <td className="px-4 py-2.5">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded border text-xs font-medium">University</span>
-                          </td>
-                          <td className="px-4 py-2.5 text-muted-foreground text-xs">
-                            {new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                            {' '}
-                            <span className="text-muted-foreground/60">{new Date(r.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                          </td>
-                          <td className="px-4 py-2.5 text-right">
-                            <ReportAction report={r} onView={() => setViewingReport(r)} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </section>
+            <ReportTableSection
+              title="University"
+              reports={universityReports}
+              onView={setViewingReport}
+            />
           )}
 
           {/* ── Pillars Section ── */}
@@ -225,6 +206,7 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
                     <Badge variant="outline" className="text-[10px]">{PERIOD_LABELS[viewingReport.reporting_period]}</Badge>
                     <Badge variant="secondary" className="text-[10px]">{TYPE_LABELS[viewingReport.report_type]}</Badge>
                     {viewingReport.pillar && <Badge className="text-[10px]">{viewingReport.pillar}</Badge>}
+                    {viewingReport.unit_id && <Badge className="text-[10px]">{getUnitDisplayName(viewingReport.unit_id)}</Badge>}
                   </div>
                 </div>
               </div>
@@ -250,6 +232,58 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
         </div>
       )}
     </div>
+  );
+}
+
+/** Reusable table section for University and Unit reports */
+function ReportTableSection({ title, reports, onView, unitLabel }: { title: string; reports: Report[]; onView: (r: Report) => void; unitLabel?: string }) {
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center gap-3">
+        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+        <Badge variant="outline" className="text-[10px]">{reports.length} report{reports.length !== 1 ? 's' : ''}</Badge>
+      </div>
+      <div className="border rounded-lg overflow-hidden">
+        {reports.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">No {title.toLowerCase()} reports found.</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Year</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Period</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Scope</th>
+                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Uploaded On</th>
+                <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reports.map(r => (
+                <tr key={r.id} className="border-b last:border-b-0 hover:bg-muted/20 transition-colors">
+                  <td className="px-4 py-2.5 font-medium">{r.academic_year}</td>
+                  <td className="px-4 py-2.5">{PERIOD_LABELS[r.reporting_period]}</td>
+                  <td className="px-4 py-2.5">{TYPE_LABELS[r.report_type]}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded border text-xs font-medium">
+                      {r.scope === 'per_unit' ? (unitLabel || getUnitDisplayName(r.unit_id || '')) : 'University'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-muted-foreground text-xs">
+                    {new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    {' '}
+                    <span className="text-muted-foreground/60">{new Date(r.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <ReportAction report={r} onView={() => onView(r)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </section>
   );
 }
 
