@@ -92,7 +92,7 @@ export default function Index() {
           </div>
 
           {isReports ? (
-            <ReportsTab />
+            <ReportsTab unitId={unitCode} />
           ) : isGuide ? (
             <UnitDashboardGuide />
           ) : (
