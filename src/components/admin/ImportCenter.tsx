@@ -15,13 +15,16 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Loader2, Pencil, FileText, Upload, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { UNIT_CONFIGS } from '@/lib/unit-config';
 
 const PILLARS = ['PI', 'PII', 'PIII', 'PIV', 'PV'] as const;
 const ACADEMIC_YEARS = ['2025-2026', '2026-2027'];
 
 const PERIOD_LABELS: Record<string, string> = { mid_year: 'Mid-Year', end_of_year: 'End-of-Year' };
-const SCOPE_LABELS: Record<string, string> = { university: 'University', per_pillar: 'Per Pillar' };
+const SCOPE_LABELS: Record<string, string> = { university: 'University', per_pillar: 'Per Pillar', per_unit: 'Per Unit' };
 const TYPE_LABELS: Record<string, string> = { executive: 'Executive', full: 'Full' };
+
+const UNIT_OPTIONS = Object.values(UNIT_CONFIGS).map(u => ({ id: u.id, label: `${u.name} — ${u.fullName}` }));
 
 export default function ImportCenter() {
   const { data: reports = [], isLoading } = useReports();
@@ -37,9 +40,10 @@ export default function ImportCenter() {
   const [title, setTitle] = useState('');
   const [academicYear, setAcademicYear] = useState<string>('2025-2026');
   const [period, setPeriod] = useState<'mid_year' | 'end_of_year'>('mid_year');
-  const [scope, setScope] = useState<'university' | 'per_pillar'>('university');
+  const [scope, setScope] = useState<'university' | 'per_pillar' | 'per_unit'>('university');
   const [reportType, setReportType] = useState<'executive' | 'full'>('executive');
   const [pillar, setPillar] = useState<string>('');
+  const [unitId, setUnitId] = useState<string>('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -51,6 +55,7 @@ export default function ImportCenter() {
     setScope('university');
     setReportType('executive');
     setPillar('');
+    setUnitId('');
     setDescription('');
     setFile(null);
     setEditingReport(null);
@@ -70,6 +75,7 @@ export default function ImportCenter() {
     setScope(r.scope);
     setReportType(r.report_type);
     setPillar(r.pillar || '');
+    setUnitId(r.unit_id || '');
     setDescription(r.description || '');
     setFile(null);
     setDialogOpen(true);
@@ -88,8 +94,10 @@ export default function ImportCenter() {
   async function handleSubmit() {
     if (!title.trim()) { toast.error('Title is required'); return; }
     if (scope === 'per_pillar' && !pillar) { toast.error('Pillar is required for Per Pillar scope'); return; }
+    if (scope === 'per_unit' && !unitId) { toast.error('Unit is required for Per Unit scope'); return; }
 
-    const effectivePillar = scope === 'university' ? null : pillar;
+    const effectivePillar = scope === 'per_pillar' ? pillar : null;
+    const effectiveUnitId = scope === 'per_unit' ? unitId : null;
 
     if (editingReport) {
       try {
@@ -101,6 +109,7 @@ export default function ImportCenter() {
           scope,
           report_type: reportType,
           pillar: effectivePillar,
+          unit_id: effectiveUnitId,
           description: description.trim() || null,
           file: file || undefined,
           oldFilePath: file ? editingReport.file_path : undefined,
@@ -122,6 +131,7 @@ export default function ImportCenter() {
           scope,
           report_type: reportType,
           pillar: effectivePillar,
+          unit_id: effectiveUnitId,
           description: description.trim() || null,
         });
         toast.success('Report uploaded');
@@ -175,7 +185,7 @@ export default function ImportCenter() {
                     <TableHead>Period</TableHead>
                     <TableHead>Scope</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Pillar</TableHead>
+                    <TableHead>Pillar / Unit</TableHead>
                     <TableHead>Uploaded</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -188,7 +198,7 @@ export default function ImportCenter() {
                       <TableCell><Badge variant="outline">{PERIOD_LABELS[r.reporting_period]}</Badge></TableCell>
                       <TableCell><Badge variant={r.scope === 'university' ? 'default' : 'secondary'}>{SCOPE_LABELS[r.scope]}</Badge></TableCell>
                       <TableCell><Badge variant={r.report_type === 'executive' ? 'default' : 'outline'}>{TYPE_LABELS[r.report_type]}</Badge></TableCell>
-                      <TableCell>{r.pillar || '—'}</TableCell>
+                      <TableCell>{r.pillar || r.unit_id || '—'}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right space-x-1">
                         <Button variant="outline" size="sm" asChild>
@@ -249,11 +259,12 @@ export default function ImportCenter() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Scope</Label>
-                <Select value={scope} onValueChange={v => { setScope(v as any); if (v === 'university') setPillar(''); }}>
+                <Select value={scope} onValueChange={v => { setScope(v as any); if (v === 'university') { setPillar(''); setUnitId(''); } if (v === 'per_pillar') setUnitId(''); if (v === 'per_unit') setPillar(''); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="university">University</SelectItem>
                     <SelectItem value="per_pillar">Per Pillar</SelectItem>
+                    <SelectItem value="per_unit">Per Unit</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -277,6 +288,20 @@ export default function ImportCenter() {
                   <SelectContent>
                     {PILLARS.map(p => (
                       <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {scope === 'per_unit' && (
+              <div className="space-y-2">
+                <Label>Unit</Label>
+                <Select value={unitId} onValueChange={setUnitId}>
+                  <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
+                  <SelectContent>
+                    {UNIT_OPTIONS.map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
