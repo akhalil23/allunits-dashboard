@@ -38,10 +38,13 @@ export default function ExecutiveSummarySection({
     const period = PERIOD_MAP[term];
     const pillarsToShow = pillarFilter === 'all' ? PILLAR_IDS : [pillarFilter];
 
+    // Normalize academic year for matching (e.g. "2025-2026" → "2025-26")
+    const shortYear = academicYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1-$2');
+
     return pillarsToShow.map(pillarId => {
       const match = summaries.find(
         s =>
-          s.academicYear === academicYear &&
+          (s.academicYear === academicYear || s.academicYear === shortYear) &&
           s.period === period &&
           s.pillar === pillarId
       );
