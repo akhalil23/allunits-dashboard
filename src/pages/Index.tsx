@@ -1,5 +1,6 @@
 import { useMemo, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Header from '@/components/layout/Header';
 import FilterBar from '@/components/dashboard/FilterBar';
