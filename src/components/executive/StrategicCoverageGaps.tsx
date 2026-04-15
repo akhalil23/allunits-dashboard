@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, ChevronRight } from 'lucide-react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
-import { getItemStatus, hasTermData } from '@/lib/intelligence';
+import { getItemStatus } from '@/lib/intelligence';
 import { isNotApplicableStatus } from '@/lib/types';
 import { getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
