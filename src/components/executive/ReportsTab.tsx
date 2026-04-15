@@ -27,10 +27,8 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
   const [reportType, setReportType] = useState<string>('all');
   const [viewingReport, setViewingReport] = useState<Report | null>(null);
 
-  // Fetch all reports (we'll split them client-side into university / pillar)
-  const { data: allReports = [], isLoading } = useReports(
-    lockedPillar ? { pillar: lockedPillar, scope: 'per_pillar' } : undefined
-  );
+  // Fetch all reports — RLS handles visibility, we split client-side
+  const { data: allReports = [], isLoading } = useReports();
 
   // Client-side filtering
   const filtered = useMemo(() => {
@@ -43,7 +41,11 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
   }, [allReports, academicYear, period, reportType]);
 
   const universityReports = useMemo(() => filtered.filter(r => r.scope === 'university'), [filtered]);
-  const pillarReports = useMemo(() => filtered.filter(r => r.scope === 'per_pillar'), [filtered]);
+  const pillarReports = useMemo(() => {
+    let pr = filtered.filter(r => r.scope === 'per_pillar');
+    if (lockedPillar) pr = pr.filter(r => r.pillar === lockedPillar);
+    return pr;
+  }, [filtered, lockedPillar]);
 
   // Build pillar matrix rows: group by academic_year + period + report_type
   const pillarMatrix = useMemo(() => {
