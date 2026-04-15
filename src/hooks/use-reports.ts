@@ -10,9 +10,10 @@ export interface Report {
   id: string;
   academic_year: string;
   reporting_period: 'mid_year' | 'end_of_year';
-  scope: 'university' | 'per_pillar';
+  scope: 'university' | 'per_pillar' | 'per_unit';
   report_type: 'executive' | 'full';
   pillar: string | null;
+  unit_id: string | null;
   title: string;
   description: string | null;
   file_path: string;
@@ -24,9 +25,10 @@ export interface Report {
 export interface ReportFilters {
   academicYear?: string;
   period?: 'mid_year' | 'end_of_year';
-  scope?: 'university' | 'per_pillar';
+  scope?: 'university' | 'per_pillar' | 'per_unit';
   reportType?: 'executive' | 'full';
   pillar?: string;
+  unitId?: string;
 }
 
 export function useReports(filters?: ReportFilters) {
@@ -43,6 +45,7 @@ export function useReports(filters?: ReportFilters) {
       if (filters?.scope) query = query.eq('scope', filters.scope);
       if (filters?.reportType) query = query.eq('report_type', filters.reportType);
       if (filters?.pillar) query = query.eq('pillar', filters.pillar);
+      if (filters?.unitId) query = query.eq('unit_id', filters.unitId);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -74,9 +77,10 @@ export function useUploadReport() {
       title: string;
       academic_year: string;
       reporting_period: 'mid_year' | 'end_of_year';
-      scope: 'university' | 'per_pillar';
+      scope: 'university' | 'per_pillar' | 'per_unit';
       report_type: 'executive' | 'full';
       pillar: string | null;
+      unit_id: string | null;
       description: string | null;
     }) => {
       const filePath = `${Date.now()}-${params.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
@@ -92,10 +96,11 @@ export function useUploadReport() {
         scope: params.scope,
         report_type: params.report_type,
         pillar: params.pillar,
+        unit_id: params.unit_id,
         description: params.description,
         file_path: filePath,
         uploaded_by: user!.id,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports'] }),
@@ -111,9 +116,10 @@ export function useUpdateReport() {
       title: string;
       academic_year: string;
       reporting_period: 'mid_year' | 'end_of_year';
-      scope: 'university' | 'per_pillar';
+      scope: 'university' | 'per_pillar' | 'per_unit';
       report_type: 'executive' | 'full';
       pillar: string | null;
+      unit_id: string | null;
       description: string | null;
       file?: File;
       oldFilePath?: string;
@@ -136,9 +142,10 @@ export function useUpdateReport() {
         scope: params.scope,
         report_type: params.report_type,
         pillar: params.pillar,
+        unit_id: params.unit_id,
         description: params.description,
         ...(filePath ? { file_path: filePath } : {}),
-      }).eq('id', params.id);
+      } as any).eq('id', params.id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reports'] }),
