@@ -20,11 +20,13 @@ const ACADEMIC_YEARS = ['2025-2026', '2026-2027'];
 interface Props {
   lockedPillar?: string;
   hiddenUniversityScope?: boolean;
-  /** When set, shows a "Unit" section filtered to this unit (appears first for unit dashboards) */
+  /** When set, shows a "Unit" section filtered to this unit and places it first */
   unitId?: string;
+  /** When true, shows Unit section even without unitId (shows all unit reports) */
+  showUnitSection?: boolean;
 }
 
-export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId }: Props) {
+export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId, showUnitSection = true }: Props) {
   const [academicYear, setAcademicYear] = useState<string>('all');
   const [period, setPeriod] = useState<string>('all');
   const [reportType, setReportType] = useState<string>('all');
