@@ -77,8 +77,9 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
   const displayPillars = lockedPillar ? [lockedPillar] : [...PILLARS];
   const unitDisplayName = unitId ? getUnitDisplayName(unitId) : '';
 
-  // For unit dashboards, show Unit section first, then University, then Pillars
+  // For unit dashboards, show Unit section first; for others show it last
   const isUnitDashboard = !!unitId;
+  const shouldShowUnitSection = showUnitSection || !!unitId;
 
   return (
     <div className="space-y-6">
