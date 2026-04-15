@@ -437,6 +437,32 @@ function StepRow({ step, categoryKey }: { step: StepItem; categoryKey: CategoryK
   );
 }
 
+// ─── Canonical Key ───────────────────────────────────────────────────────────
+
+/**
+ * Normalize text for use as a matching key component.
+ * Trims, collapses whitespace, lowercases, strips trailing punctuation.
+ */
+function normalizeKey(raw: string): string {
+  return raw
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\t\r\n\f\v]/g, ' ')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .replace(/[.:;,]+$/, '')
+    .trim();
+}
+
+/**
+ * Build a deterministic canonical key for cross-unit matching.
+ * Key = pillar | normalized goal | normalized action | normalized action step
+ */
+function canonicalKey(pillar: PillarId, goal: string, action: string, actionStep: string): string {
+  return `${pillar}|${normalizeKey(goal)}|${normalizeKey(action)}|${normalizeKey(actionStep)}`;
+}
+
 // ─── Computation ─────────────────────────────────────────────────────────────
 
 function computeCategories(
@@ -447,17 +473,16 @@ function computeCategories(
 ): CategoryData[] {
   const loadedUnits = unitResults.filter(u => u.result && !u.error);
 
-  // Build step map: unique key → aggregated units
-  // Key = pillar|sheetRow (all forward-filled & cleaned)
+  // Build step map: canonical key → aggregated cross-unit data
   const stepMap = new Map<string, {
-    actionStep: string;
+    actionStep: string;     // display text (first encountered, cleaned)
     pillar: PillarId;
-    goal: string;
-    action: string;
-    nsUnits: string[];
-    naUnits: string[];
-    activeUnits: string[]; // units with valid non-NA status (NS, IP, COT, CBT)
-    validUnits: string[];  // units with any recognized status (including NA)
+    goal: string;           // display text (first encountered, cleaned)
+    action: string;         // display text (first encountered, cleaned)
+    nsUnits: Set<string>;
+    naUnits: Set<string>;
+    activeUnits: Set<string>; // units with valid non-NA status
+    validUnits: Set<string>;  // units with any recognized status (including NA)
   }>();
 
   loadedUnits.forEach(ur => {
@@ -470,6 +495,9 @@ function computeCategories(
       byPillar.get(item.pillar)!.push(item);
     });
 
+    // Track already-processed keys for this unit to prevent duplicate counting
+    const unitProcessedKeys = new Set<string>();
+
     // Forward-fill and process each pillar
     byPillar.forEach((pillarItems, _pillar) => {
       const filled = forwardFill(pillarItems);
@@ -478,48 +506,68 @@ function computeCategories(
         const rawStatus = (getItemStatus(item, viewType, term, academicYear) || '').trim();
         if (!VALID_STATUSES.has(rawStatus)) return;
 
-        const key = `${pillar}|${item.sheetRow}`;
+        // Skip rows with empty action step (non-data rows)
+        const cleanedStep = cleanText(actionStep);
+        if (!cleanedStep) return;
+
+        const key = canonicalKey(pillar, goal, action, actionStep);
+
+        // Prevent duplicate counting if same unit has multiple rows mapping to same canonical key
+        if (unitProcessedKeys.has(key)) return;
+        unitProcessedKeys.add(key);
 
         if (!stepMap.has(key)) {
           stepMap.set(key, {
-            actionStep,
+            actionStep: cleanedStep,
             pillar,
-            goal,
-            action,
-            nsUnits: [],
-            naUnits: [],
-            activeUnits: [],
-            validUnits: [],
+            goal: cleanText(goal) || '(Unspecified Goal)',
+            action: cleanText(action) || '(Unspecified Action)',
+            nsUnits: new Set(),
+            naUnits: new Set(),
+            activeUnits: new Set(),
+            validUnits: new Set(),
           });
         }
 
         const entry = stepMap.get(key)!;
 
         // Track all units with recognized status
-        if (!entry.validUnits.includes(ur.unitId)) entry.validUnits.push(ur.unitId);
+        entry.validUnits.add(ur.unitId);
 
         if (isNotApplicableStatus(rawStatus)) {
-          if (!entry.naUnits.includes(ur.unitId)) entry.naUnits.push(ur.unitId);
+          entry.naUnits.add(ur.unitId);
         } else {
           // Active = has a non-NA valid status
-          if (!entry.activeUnits.includes(ur.unitId)) entry.activeUnits.push(ur.unitId);
+          entry.activeUnits.add(ur.unitId);
           if (rawStatus === 'Not Started') {
-            if (!entry.nsUnits.includes(ur.unitId)) entry.nsUnits.push(ur.unitId);
+            entry.nsUnits.add(ur.unitId);
           }
         }
       });
     });
   });
 
-  // Categorize using per-step denominators (excluding blanks, missing, NA)
+  // Categorize using per-step denominators
   const majorityNS: StepItem[] = [];
   const absoluteNS: StepItem[] = [];
   const majorityNA: StepItem[] = [];
   const absoluteNA: StepItem[] = [];
 
-  stepMap.forEach(entry => {
-    const activeCount = entry.activeUnits.length; // non-NA units for this step
-    const validCount = entry.validUnits.length;   // all units with recognized status
+  // Deduplication check: track canonical keys to ensure no duplicate items
+  const processedKeys = new Set<string>();
+
+  stepMap.forEach((entry, key) => {
+    // Skip if somehow duplicated (should not happen with Map, but safety check)
+    if (processedKeys.has(key)) {
+      console.warn('[CoverageGaps] Duplicate canonical key detected and skipped:', key);
+      return;
+    }
+    processedKeys.add(key);
+
+    const activeCount = entry.activeUnits.size; // non-NA units for this step
+    const validCount = entry.validUnits.size;   // all units with recognized status
+    const nsCount = entry.nsUnits.size;
+    const naCount = entry.naUnits.size;
 
     // NS: denominator = active (non-NA) units for this specific step
     if (activeCount > 0) {
@@ -528,12 +576,12 @@ function computeCategories(
         pillar: entry.pillar,
         goal: entry.goal,
         action: entry.action,
-        nsUnits: entry.nsUnits,
-        naUnits: entry.naUnits,
+        nsUnits: Array.from(entry.nsUnits),
+        naUnits: Array.from(entry.naUnits),
         totalUnits: activeCount,
       };
-      if (entry.nsUnits.length === activeCount) absoluteNS.push(nsItem);
-      if (entry.nsUnits.length >= Math.ceil(activeCount * 0.75)) majorityNS.push(nsItem);
+      if (nsCount === activeCount) absoluteNS.push(nsItem);
+      if (nsCount >= Math.ceil(activeCount * 0.75)) majorityNS.push(nsItem);
     }
 
     // NA: denominator = all valid (reporting) units for this step
@@ -543,14 +591,23 @@ function computeCategories(
         pillar: entry.pillar,
         goal: entry.goal,
         action: entry.action,
-        nsUnits: entry.nsUnits,
-        naUnits: entry.naUnits,
+        nsUnits: Array.from(entry.nsUnits),
+        naUnits: Array.from(entry.naUnits),
         totalUnits: validCount,
       };
-      if (entry.naUnits.length === validCount) absoluteNA.push(naItem);
-      if (entry.naUnits.length >= Math.ceil(validCount * 0.75)) majorityNA.push(naItem);
+      if (naCount === validCount) absoluteNA.push(naItem);
+      if (naCount >= Math.ceil(validCount * 0.75)) majorityNA.push(naItem);
     }
   });
+
+  // ─── Validation checks ─────────────────────────────────────────────────
+  // Absolute must be a subset of Majority (absolute is stricter)
+  if (absoluteNA.length > majorityNA.length) {
+    console.error(`[CoverageGaps] VALIDATION FAIL: Absolute NA (${absoluteNA.length}) > Majority NA (${majorityNA.length})`);
+  }
+  if (absoluteNS.length > majorityNS.length) {
+    console.error(`[CoverageGaps] VALIDATION FAIL: Absolute NS (${absoluteNS.length}) > Majority NS (${majorityNS.length})`);
+  }
 
   return [
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks & N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
@@ -560,14 +617,24 @@ function computeCategories(
   ];
 }
 
-// ─── Grouping: Pillar → Goal → Action → Steps ───────────────────────────────
+// ─── Grouping: Pillar → Goal → Action → Steps (deduplicated) ────────────────
 
 function groupByPillar(items: StepItem[]): PillarGroup[] {
   const pillarMap = new Map<PillarId, Map<string, Map<string, StepItem[]>>>();
+  // Track seen keys to prevent duplicate rendering
+  const seenKeys = new Set<string>();
 
   items.forEach(item => {
     const goalLabel = item.goal || '(Unspecified Goal)';
     const actionLabel = item.action || '(Unspecified Action)';
+    const dedupKey = canonicalKey(item.pillar, goalLabel, actionLabel, item.actionStep);
+
+    // Skip duplicate items
+    if (seenKeys.has(dedupKey)) {
+      console.warn('[CoverageGaps] Duplicate item in groupByPillar skipped:', dedupKey);
+      return;
+    }
+    seenKeys.add(dedupKey);
 
     if (!pillarMap.has(item.pillar)) pillarMap.set(item.pillar, new Map());
     const goalMap = pillarMap.get(item.pillar)!;
