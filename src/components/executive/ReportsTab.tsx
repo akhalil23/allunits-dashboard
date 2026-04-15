@@ -281,7 +281,7 @@ function ReportTableSection({ title, reports, onView, unitLabel, showUnitColumn 
                   <td className="px-4 py-2.5">{TYPE_LABELS[r.report_type]}</td>
                   <td className="px-4 py-2.5">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded border text-xs font-medium">
-                      {r.scope === 'per_unit' ? (unitLabel || getUnitDisplayName(r.unit_id || '')) : 'University'}
+                      {showUnitColumn ? (unitLabel || getUnitDisplayName(r.unit_id || '')) : 'University'}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground text-xs">
