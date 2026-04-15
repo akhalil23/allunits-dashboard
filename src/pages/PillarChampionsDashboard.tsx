@@ -327,7 +327,6 @@ export default function PillarChampionsDashboard() {
             {activeTab === 'reports' && (
               <ReportsTab
                 lockedPillar={userPillar}
-                hiddenUniversityScope
               />
             )}
 
