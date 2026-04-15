@@ -251,7 +251,7 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
 }
 
 /** Reusable table section for University and Unit reports */
-function ReportTableSection({ title, reports, onView, unitLabel }: { title: string; reports: Report[]; onView: (r: Report) => void; unitLabel?: string }) {
+function ReportTableSection({ title, reports, onView, unitLabel, showUnitColumn }: { title: string; reports: Report[]; onView: (r: Report) => void; unitLabel?: string; showUnitColumn?: boolean }) {
   return (
     <section className="space-y-2">
       <div className="flex items-center gap-3">
