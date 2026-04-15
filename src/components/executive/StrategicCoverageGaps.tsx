@@ -609,29 +609,23 @@ function computeCategories(
     console.error(`[CoverageGaps] VALIDATION FAIL: Absolute NS (${absoluteNS.length}) > Majority NS (${majorityNS.length})`);
   }
 
-  // ─── Diagnostic: items in Majority NA but NOT in Absolute NA ──────────
-  const absoluteNAKeys = new Set(absoluteNA.map(i => canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
-  const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
-  if (majorityOnlyNA.length > 0) {
-    console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
-    majorityOnlyNA.forEach(item => {
-      const key = canonicalKey(item.pillar, item.goal, item.action, item.actionStep);
-      const entry = stepMap.get(key);
-      if (entry) {
-        const nonNAUnits = Array.from(entry.validUnits).filter(u => !entry.naUnits.has(u));
-        console.info(`  [${item.pillar}] "${item.actionStep}" — NA: ${entry.naUnits.size}/${entry.validUnits.size} units. Non-NA units: [${nonNAUnits.map(u => getUnitDisplayName(u)).join(', ')}]`);
-      }
-    });
+  // ─── Debug summary (dev only) ──────────────────────────────────────────
+  if (process.env.NODE_ENV === 'development') {
+    const absoluteNAKeys = new Set(absoluteNA.map(i => canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
+    const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
+    if (majorityOnlyNA.length > 0) {
+      console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
+      majorityOnlyNA.forEach(item => {
+        const key = canonicalKey(item.pillar, item.goal, item.action, item.actionStep);
+        const entry = stepMap.get(key);
+        if (entry) {
+          const nonNAUnits = Array.from(entry.validUnits).filter(u => !entry.naUnits.has(u));
+          console.info(`  [${item.pillar}] "${item.actionStep}" — NA: ${entry.naUnits.size}/${entry.validUnits.size}. Non-NA: [${nonNAUnits.map(u => getUnitDisplayName(u)).join(', ')}]`);
+        }
+      });
+    }
+    console.info(`[CoverageGaps] Majority NA: ${majorityNA.length}, Absolute NA: ${absoluteNA.length}, Majority NS: ${majorityNS.length}, Absolute NS: ${absoluteNS.length}, Items: ${stepMap.size}, Units: ${loadedUnits.length}`);
   }
-
-  // ─── Diagnostic: per-item valid unit count distribution ────────────────
-  const validCountDist = new Map<number, number>();
-  stepMap.forEach(entry => {
-    const vc = entry.validUnits.size;
-    validCountDist.set(vc, (validCountDist.get(vc) || 0) + 1);
-  });
-  console.info(`[CoverageGaps] Valid unit count distribution:`, Object.fromEntries(validCountDist));
-  console.info(`[CoverageGaps] Total loaded units: ${loadedUnits.length}, Total canonical items: ${stepMap.size}`);
 
   return [
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks & N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
