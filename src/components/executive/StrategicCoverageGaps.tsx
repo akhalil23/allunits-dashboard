@@ -446,11 +446,9 @@ function computeCategories(
   academicYear: '2025-2026' | '2026-2027'
 ): CategoryData[] {
   const loadedUnits = unitResults.filter(u => u.result && !u.error);
-  const actualUnitCount = loadedUnits.length;
-  const threshold75 = Math.ceil(actualUnitCount * 0.75);
 
   // Build step map: unique key → aggregated units
-  // Key = pillar|goal|action|actionStep (all forward-filled & cleaned)
+  // Key = pillar|sheetRow (all forward-filled & cleaned)
   const stepMap = new Map<string, {
     actionStep: string;
     pillar: PillarId;
@@ -458,6 +456,8 @@ function computeCategories(
     action: string;
     nsUnits: string[];
     naUnits: string[];
+    activeUnits: string[]; // units with valid non-NA status (NS, IP, COT, CBT)
+    validUnits: string[];  // units with any recognized status (including NA)
   }>();
 
   loadedUnits.forEach(ur => {
@@ -488,47 +488,75 @@ function computeCategories(
             action,
             nsUnits: [],
             naUnits: [],
+            activeUnits: [],
+            validUnits: [],
           });
         }
 
         const entry = stepMap.get(key)!;
-        if (rawStatus === 'Not Started') {
-          if (!entry.nsUnits.includes(ur.unitId)) entry.nsUnits.push(ur.unitId);
-        } else if (isNotApplicableStatus(rawStatus)) {
+
+        // Track all units with recognized status
+        if (!entry.validUnits.includes(ur.unitId)) entry.validUnits.push(ur.unitId);
+
+        if (isNotApplicableStatus(rawStatus)) {
           if (!entry.naUnits.includes(ur.unitId)) entry.naUnits.push(ur.unitId);
+        } else {
+          // Active = has a non-NA valid status
+          if (!entry.activeUnits.includes(ur.unitId)) entry.activeUnits.push(ur.unitId);
+          if (rawStatus === 'Not Started') {
+            if (!entry.nsUnits.includes(ur.unitId)) entry.nsUnits.push(ur.unitId);
+          }
         }
       });
     });
   });
 
-  // Categorize — always based on active units only
+  // Categorize using per-step denominators (excluding blanks, missing, NA)
   const majorityNS: StepItem[] = [];
   const absoluteNS: StepItem[] = [];
   const majorityNA: StepItem[] = [];
   const absoluteNA: StepItem[] = [];
 
   stepMap.forEach(entry => {
-    const item: StepItem = {
-      actionStep: entry.actionStep,
-      pillar: entry.pillar,
-      goal: entry.goal,
-      action: entry.action,
-      nsUnits: entry.nsUnits,
-      naUnits: entry.naUnits,
-      totalUnits: actualUnitCount,
-    };
+    const activeCount = entry.activeUnits.length; // non-NA units for this step
+    const validCount = entry.validUnits.length;   // all units with recognized status
 
-    if (actualUnitCount > 0 && entry.nsUnits.length >= threshold75) majorityNS.push(item);
-    if (actualUnitCount > 0 && entry.nsUnits.length === actualUnitCount) absoluteNS.push(item);
-    if (actualUnitCount > 0 && entry.naUnits.length >= threshold75) majorityNA.push(item);
-    if (actualUnitCount > 0 && entry.naUnits.length === actualUnitCount) absoluteNA.push(item);
+    // NS: denominator = active (non-NA) units for this specific step
+    if (activeCount > 0) {
+      const nsItem: StepItem = {
+        actionStep: entry.actionStep,
+        pillar: entry.pillar,
+        goal: entry.goal,
+        action: entry.action,
+        nsUnits: entry.nsUnits,
+        naUnits: entry.naUnits,
+        totalUnits: activeCount,
+      };
+      if (entry.nsUnits.length === activeCount) absoluteNS.push(nsItem);
+      if (entry.nsUnits.length >= Math.ceil(activeCount * 0.75)) majorityNS.push(nsItem);
+    }
+
+    // NA: denominator = all valid (reporting) units for this step
+    if (validCount > 0) {
+      const naItem: StepItem = {
+        actionStep: entry.actionStep,
+        pillar: entry.pillar,
+        goal: entry.goal,
+        action: entry.action,
+        nsUnits: entry.nsUnits,
+        naUnits: entry.naUnits,
+        totalUnits: validCount,
+      };
+      if (entry.naUnits.length === validCount) absoluteNA.push(naItem);
+      if (entry.naUnits.length >= Math.ceil(validCount * 0.75)) majorityNA.push(naItem);
+    }
   });
 
   return [
-    { key: 'majority-ns', title: 'Majority Not Started', definition: `Not Started by ≥ 75% of units (≥ ${threshold75})`, count: majorityNS.length, accent: 'ns', items: majorityNS },
-    { key: 'absolute-ns', title: 'Absolute Not Started', definition: `Not Started by all ${actualUnitCount} active units`, count: absoluteNS.length, accent: 'ns', items: absoluteNS },
-    { key: 'majority-na', title: 'Majority Not Applicable', definition: `Not Applicable by ≥ 75% of units (≥ ${threshold75})`, count: majorityNA.length, accent: 'na', items: majorityNA },
-    { key: 'absolute-na', title: 'Absolute Not Applicable', definition: `Not Applicable by all ${actualUnitCount} active units`, count: absoluteNA.length, accent: 'na', items: absoluteNA },
+    { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks & N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
+    { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks & N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
+    { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Not Applicable by all reporting units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
   ];
 }
 

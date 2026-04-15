@@ -4,7 +4,7 @@ import { PILLAR_LABELS } from '@/lib/constants';
 import { getUnitConfig } from '@/lib/unit-config';
 import type { PillarId } from '@/lib/types';
 import {
-  LayoutDashboard, FlaskConical, ChevronRight, Menu, X, Shield, BookOpen,
+  LayoutDashboard, FlaskConical, ChevronRight, Menu, X, Shield, BookOpen, FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo-white.png';
@@ -75,6 +75,13 @@ export default function Sidebar() {
       icon: BookOpen,
       active: !isEvolutionLab && selectedPillar === 'guide',
       onClick: () => { navigate(basePath); setSelectedPillar('guide' as any); },
+    },
+    {
+      id: 'reports',
+      label: 'Reports',
+      icon: FileText,
+      active: !isEvolutionLab && selectedPillar === ('reports' as any),
+      onClick: () => { navigate(basePath); setSelectedPillar('reports' as any); },
     },
     ...(isAdmin ? [{
       id: 'admin',
