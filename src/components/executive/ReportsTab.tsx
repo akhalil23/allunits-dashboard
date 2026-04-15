@@ -194,6 +194,16 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
               )}
             </div>
           </section>
+
+          {/* ── Unit Section (shown last for university/pillar dashboards) ── */}
+          {!isUnitDashboard && shouldShowUnitSection && (
+            <ReportTableSection
+              title="Unit"
+              reports={unitReports}
+              onView={setViewingReport}
+              showUnitColumn
+            />
+          )}
         </>
       )}
 
