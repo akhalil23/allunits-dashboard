@@ -17,6 +17,7 @@ import { aggregateByPillar, computeRiskIndexFromCounts } from '@/lib/university-
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 import type { PillarId, ViewType, Term, AcademicYear } from '@/lib/types';
 import type { BudgetDataResult } from '@/hooks/use-budget-data';
+import ExecutiveSummarySection from '@/components/shared/ExecutiveSummarySection';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
   ResponsiveContainer, Cell, PieChart, Pie,
@@ -200,6 +201,13 @@ export default function PillarOverviewSnapshot({ unitResults, budgetResult, view
           </div>
         </div>
       )}
+      {/* Executive Summary Section */}
+      <ExecutiveSummarySection
+        academicYear={academicYear}
+        term={term}
+        pillarFilter={selectedPillar}
+        title="Pillar Executive Summary"
+      />
     </div>
   );
 }

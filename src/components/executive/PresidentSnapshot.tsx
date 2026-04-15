@@ -34,6 +34,7 @@ import { isNotApplicableStatus } from '@/lib/types';
 import { PILLAR_COLORS, PILLAR_COLOR_LABELS, computeSSI } from '@/lib/pillar-colors';
 import PillarViewSelector, { type PillarViewMode } from './PillarViewSelector';
 import type { PillarId } from '@/lib/types';
+import ExecutiveSummarySection from '@/components/shared/ExecutiveSummarySection';
 
 interface Props {
   aggregation: UniversityAggregation;

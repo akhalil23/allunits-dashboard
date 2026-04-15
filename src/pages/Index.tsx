@@ -8,6 +8,7 @@ import PillarHealthGrid from '@/components/dashboard/PillarHealthGrid';
 import RiskSignalsStudio from '@/components/dashboard/RiskSignalsStudio';
 import UnitDashboardGuide from '@/components/dashboard/UnitDashboardGuide';
 import UnitMetricsExplainer from '@/components/dashboard/UnitMetricsExplainer';
+import ReportsTab from '@/components/executive/ReportsTab';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useGSRData } from '@/hooks/use-gsr-data';
 import { PILLAR_LABELS } from '@/lib/constants';
@@ -36,12 +37,15 @@ export default function Index() {
   }, [queryClient]);
 
   const isGuide = selectedPillar === 'guide';
+  const isReports = selectedPillar === ('reports' as any);
 
-  const sectionTitle = isGuide
-    ? 'Dashboard Guide'
-    : selectedPillar === 'all'
-      ? 'All Pillars'
-      : `Pillar ${selectedPillar} — ${PILLAR_LABELS[selectedPillar]}`;
+  const sectionTitle = isReports
+    ? 'Reports'
+    : isGuide
+      ? 'Dashboard Guide'
+      : selectedPillar === 'all'
+        ? 'All Pillars'
+        : `Pillar ${selectedPillar} — ${PILLAR_LABELS[selectedPillar]}`;
 
   if (isLoading) {
     return (
@@ -75,17 +79,19 @@ export default function Index() {
     <DashboardLayout>
       <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} integrityAudit={integrityAudit} sheetLastModified={fetchResult.sheetLastModified} sheetLastModifiedBy={fetchResult.sheetLastModifiedBy} onOpenMetrics={() => setMetricsOpen(true)} />
       <UnitMetricsExplainer open={metricsOpen} onClose={() => setMetricsOpen(false)} />
-      {!isGuide && <FilterBar />}
+      {!isGuide && !isReports && <FilterBar />}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-[1600px]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">{sectionTitle}</h2>
-            {!isGuide && (
+            {!isGuide && !isReports && (
               <span className="text-xs text-muted-foreground">{viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly'} • AY {academicYear} • {term === 'mid' ? 'Mid-Year' : 'End-of-Year'}</span>
             )}
           </div>
 
-          {isGuide ? (
+          {isReports ? (
+            <ReportsTab />
+          ) : isGuide ? (
             <UnitDashboardGuide />
           ) : (
             <>

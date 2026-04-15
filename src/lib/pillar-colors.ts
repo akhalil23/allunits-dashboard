@@ -6,22 +6,22 @@
 
 import type { PillarId } from './types';
 
-/** Fixed pillar identity colors — strong, professional, high-contrast */
+/** Fixed pillar identity colors — categorical, non-evaluative palette */
 export const PILLAR_COLORS: Record<PillarId, string> = {
-  I: '#1D4ED8',   // Deep Blue
-  II: '#047857',  // Emerald Green
-  III: '#D97706', // Amber / Orange
-  IV: '#DC2626',  // Red
-  V: '#7C3AED',   // Purple
+  I: '#3B82F6',   // Blue
+  II: '#06B6D4',  // Cyan
+  III: '#8B5CF6', // Violet
+  IV: '#EC4899',  // Pink
+  V: '#6366F1',   // Indigo
 };
 
 /** Pillar color labels for reference panel */
 export const PILLAR_COLOR_LABELS: Record<PillarId, string> = {
-  I: 'Deep Blue',
-  II: 'Emerald Green',
-  III: 'Amber',
-  IV: 'Red',
-  V: 'Purple',
+  I: 'Blue',
+  II: 'Cyan',
+  III: 'Violet',
+  IV: 'Pink',
+  V: 'Indigo',
 };
 
 /**
