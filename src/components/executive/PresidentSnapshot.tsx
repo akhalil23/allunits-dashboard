@@ -413,6 +413,13 @@ export default function PresidentSnapshot({ aggregation }: Props) {
           )}
         </motion.div>
       </section>
+
+      {/* Strategic Executive Summaries */}
+      <ExecutiveSummarySection
+        academicYear={academicYear}
+        term={term}
+        pillarFilter="all"
+      />
     </div>
   );
 }
