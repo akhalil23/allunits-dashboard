@@ -52,8 +52,9 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
     return pr;
   }, [filtered, lockedPillar]);
   const unitReports = useMemo(() => {
-    if (!unitId) return [];
-    return filtered.filter(r => r.scope === 'per_unit' && r.unit_id === unitId);
+    const ur = filtered.filter(r => r.scope === 'per_unit');
+    if (unitId) return ur.filter(r => r.unit_id === unitId);
+    return ur;
   }, [filtered, unitId]);
 
   // Build pillar matrix rows
