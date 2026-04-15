@@ -126,13 +126,14 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : (
         <>
-          {/* ── Unit Section (unit dashboards only, shown first) ── */}
-          {isUnitDashboard && (
+          {/* ── Unit Section (shown first for unit dashboards) ── */}
+          {isUnitDashboard && shouldShowUnitSection && (
             <ReportTableSection
               title="Unit"
               reports={unitReports}
               onView={setViewingReport}
               unitLabel={unitDisplayName}
+              showUnitColumn
             />
           )}
 
