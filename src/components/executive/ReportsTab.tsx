@@ -41,7 +41,11 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope }: Prop
   }, [allReports, academicYear, period, reportType]);
 
   const universityReports = useMemo(() => filtered.filter(r => r.scope === 'university'), [filtered]);
-  const pillarReports = useMemo(() => filtered.filter(r => r.scope === 'per_pillar'), [filtered]);
+  const pillarReports = useMemo(() => {
+    let pr = filtered.filter(r => r.scope === 'per_pillar');
+    if (lockedPillar) pr = pr.filter(r => r.pillar === lockedPillar);
+    return pr;
+  }, [filtered, lockedPillar]);
 
   // Build pillar matrix rows: group by academic_year + period + report_type
   const pillarMatrix = useMemo(() => {
