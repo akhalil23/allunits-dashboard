@@ -503,6 +503,10 @@ function computeCategories(
       const filled = forwardFill(pillarItems);
 
       filled.forEach(({ goal, action, actionStep, pillar, item }) => {
+        // Skip items that have no actual data for this term window (falling back to defaults)
+        // These are NOT explicitly "Not Applicable" — they simply have no data yet
+        if (!hasTermData(item, term, academicYear)) return;
+
         const rawStatus = (getItemStatus(item, viewType, term, academicYear) || '').trim();
         if (!VALID_STATUSES.has(rawStatus)) return;
 
