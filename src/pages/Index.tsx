@@ -17,6 +17,7 @@ import { runIntegrityAudit } from '@/lib/intelligence';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function Index() {
+  const { unitCode } = useParams<{ unitCode: string }>();
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
   const queryClient = useQueryClient();
