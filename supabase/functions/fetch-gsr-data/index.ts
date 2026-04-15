@@ -436,7 +436,7 @@ function processPillarData(
 // ============================================================
 
 const RATE_LIMIT_PATTERN = /(RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|RATE_LIMITED|\b429\b)/i;
-const GSR_CACHE_TTL_MS = 2 * 60 * 1000;
+const GSR_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type GsrCacheEntry = {
   data: any;
