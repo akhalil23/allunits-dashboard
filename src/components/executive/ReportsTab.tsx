@@ -20,11 +20,13 @@ const ACADEMIC_YEARS = ['2025-2026', '2026-2027'];
 interface Props {
   lockedPillar?: string;
   hiddenUniversityScope?: boolean;
-  /** When set, shows a "Unit" section filtered to this unit (appears first for unit dashboards) */
+  /** When set, shows a "Unit" section filtered to this unit and places it first */
   unitId?: string;
+  /** When true, shows Unit section even without unitId (shows all unit reports) */
+  showUnitSection?: boolean;
 }
 
-export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId }: Props) {
+export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId, showUnitSection = true }: Props) {
   const [academicYear, setAcademicYear] = useState<string>('all');
   const [period, setPeriod] = useState<string>('all');
   const [reportType, setReportType] = useState<string>('all');
@@ -50,8 +52,9 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
     return pr;
   }, [filtered, lockedPillar]);
   const unitReports = useMemo(() => {
-    if (!unitId) return [];
-    return filtered.filter(r => r.scope === 'per_unit' && r.unit_id === unitId);
+    const ur = filtered.filter(r => r.scope === 'per_unit');
+    if (unitId) return ur.filter(r => r.unit_id === unitId);
+    return ur;
   }, [filtered, unitId]);
 
   // Build pillar matrix rows
@@ -74,8 +77,9 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
   const displayPillars = lockedPillar ? [lockedPillar] : [...PILLARS];
   const unitDisplayName = unitId ? getUnitDisplayName(unitId) : '';
 
-  // For unit dashboards, show Unit section first, then University, then Pillars
+  // For unit dashboards, show Unit section first; for others show it last
   const isUnitDashboard = !!unitId;
+  const shouldShowUnitSection = showUnitSection || !!unitId;
 
   return (
     <div className="space-y-6">
@@ -122,13 +126,14 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : (
         <>
-          {/* ── Unit Section (unit dashboards only, shown first) ── */}
-          {isUnitDashboard && (
+          {/* ── Unit Section (shown first for unit dashboards) ── */}
+          {isUnitDashboard && shouldShowUnitSection && (
             <ReportTableSection
               title="Unit"
               reports={unitReports}
               onView={setViewingReport}
               unitLabel={unitDisplayName}
+              showUnitColumn
             />
           )}
 
@@ -189,6 +194,16 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
               )}
             </div>
           </section>
+
+          {/* ── Unit Section (shown last for university/pillar dashboards) ── */}
+          {!isUnitDashboard && shouldShowUnitSection && (
+            <ReportTableSection
+              title="Unit"
+              reports={unitReports}
+              onView={setViewingReport}
+              showUnitColumn
+            />
+          )}
         </>
       )}
 
@@ -236,7 +251,7 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
 }
 
 /** Reusable table section for University and Unit reports */
-function ReportTableSection({ title, reports, onView, unitLabel }: { title: string; reports: Report[]; onView: (r: Report) => void; unitLabel?: string }) {
+function ReportTableSection({ title, reports, onView, unitLabel, showUnitColumn }: { title: string; reports: Report[]; onView: (r: Report) => void; unitLabel?: string; showUnitColumn?: boolean }) {
   return (
     <section className="space-y-2">
       <div className="flex items-center gap-3">
@@ -266,7 +281,7 @@ function ReportTableSection({ title, reports, onView, unitLabel }: { title: stri
                   <td className="px-4 py-2.5">{TYPE_LABELS[r.report_type]}</td>
                   <td className="px-4 py-2.5">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded border text-xs font-medium">
-                      {r.scope === 'per_unit' ? (unitLabel || getUnitDisplayName(r.unit_id || '')) : 'University'}
+                      {showUnitColumn ? (unitLabel || getUnitDisplayName(r.unit_id || '')) : 'University'}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground text-xs">
