@@ -609,6 +609,24 @@ function computeCategories(
     console.error(`[CoverageGaps] VALIDATION FAIL: Absolute NS (${absoluteNS.length}) > Majority NS (${majorityNS.length})`);
   }
 
+  // ─── Debug summary (dev only) ──────────────────────────────────────────
+  if (process.env.NODE_ENV === 'development') {
+    const absoluteNAKeys = new Set(absoluteNA.map(i => canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
+    const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
+    if (majorityOnlyNA.length > 0) {
+      console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
+      majorityOnlyNA.forEach(item => {
+        const key = canonicalKey(item.pillar, item.goal, item.action, item.actionStep);
+        const entry = stepMap.get(key);
+        if (entry) {
+          const nonNAUnits = Array.from(entry.validUnits).filter(u => !entry.naUnits.has(u));
+          console.info(`  [${item.pillar}] "${item.actionStep}" — NA: ${entry.naUnits.size}/${entry.validUnits.size}. Non-NA: [${nonNAUnits.map(u => getUnitDisplayName(u)).join(', ')}]`);
+        }
+      });
+    }
+    console.info(`[CoverageGaps] Majority NA: ${majorityNA.length}, Absolute NA: ${absoluteNA.length}, Majority NS: ${majorityNS.length}, Absolute NS: ${absoluteNS.length}, Items: ${stepMap.size}, Units: ${loadedUnits.length}`);
+  }
+
   return [
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks & N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
     { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks & N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },

@@ -83,6 +83,12 @@ export function getTermData(item: ActionItem, term: Term, academicYear: Academic
   return item.terms?.[key] ?? DEFAULT_TERM_DATA;
 }
 
+/** Check if an item has actual (non-default) data for the given term window. */
+export function hasTermData(item: ActionItem, term: Term, academicYear: AcademicYear): boolean {
+  const key = getTermWindowKey(term, academicYear);
+  return !!(item.terms && item.terms[key]);
+}
+
 export function getItemStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): string {
   const td = getTermData(item, term, academicYear);
   return viewType === 'cumulative' ? td.spStatus : td.yearlyStatus;
