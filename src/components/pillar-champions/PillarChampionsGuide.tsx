@@ -81,11 +81,11 @@ export default function PillarChampionsGuide() {
           <p className="text-xs text-muted-foreground mb-3">Each strategic pillar has a fixed identity color used consistently across all charts, markers, legends, and badges. Pillar colors represent identity, NOT performance. Risk is conveyed through separate semantic colors.</p>
           <div className="grid grid-cols-5 gap-2">
             {[
-              { label: 'PI', color: '#1D4ED8', name: 'Deep Blue' },
-              { label: 'PII', color: '#047857', name: 'Emerald' },
-              { label: 'PIII', color: '#D97706', name: 'Amber' },
-              { label: 'PIV', color: '#DC2626', name: 'Red' },
-              { label: 'PV', color: '#7C3AED', name: 'Purple' },
+              { label: 'PI', color: '#3B82F6', name: 'Blue' },
+              { label: 'PII', color: '#06B6D4', name: 'Cyan' },
+              { label: 'PIII', color: '#8B5CF6', name: 'Violet' },
+              { label: 'PIV', color: '#EC4899', name: 'Pink' },
+              { label: 'PV', color: '#6366F1', name: 'Indigo' },
             ].map(p => (
               <div key={p.label} className="text-center p-2.5 rounded-lg border border-border/40">
                 <div className="w-6 h-6 rounded-full mx-auto" style={{ backgroundColor: p.color }} />
