@@ -10,6 +10,13 @@ import type { FetchResult } from '@/lib/types';
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
+interface UseUniversityDataOptions {
+  enabled?: boolean;
+}
+
+const UNIVERSITY_DATA_STALE_TIME_MS = 60 * 1000;
+const UNIVERSITY_DATA_GC_TIME_MS = 5 * 60 * 1000;
+
 function isUnauthorizedFunctionError(error: unknown): error is FunctionsHttpError {
   return error instanceof FunctionsHttpError && error.context?.status === 401;
 }
@@ -72,15 +79,16 @@ async function fetchAllUnits(): Promise<UnitFetchResult[]> {
   return results;
 }
 
-export function useUniversityData() {
+export function useUniversityData({ enabled = true }: UseUniversityDataOptions = {}) {
   return useQuery<UnitFetchResult[]>({
     queryKey: ['university-data'],
     queryFn: fetchAllUnits,
-    staleTime: 0,
-    gcTime: 5 * 60 * 1000,
+    enabled,
+    staleTime: UNIVERSITY_DATA_STALE_TIME_MS,
+    gcTime: UNIVERSITY_DATA_GC_TIME_MS,
     retry: 1,
-    refetchOnMount: 'always',
-    refetchOnReconnect: true,
-    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 }

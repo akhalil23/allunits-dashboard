@@ -48,8 +48,8 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { messages, isLoading, sendMessage, clearMessages } = useExecutiveAdvisor();
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
-  const { data: unitResults } = useUniversityData();
-  const { data: budgetResult } = useBudgetData();
+  const { data: unitResults } = useUniversityData({ enabled: isOpen });
+  const { data: budgetResult } = useBudgetData({ enabled: isOpen });
 
   // Build FULL structured context payload
   const dashboardContext = useMemo<DashboardContextPayload>(() => {
