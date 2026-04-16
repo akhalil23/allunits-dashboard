@@ -620,12 +620,7 @@ function computeCategories(
         totalUnits: reportingCount,
       };
 
-      const absoluteNaItem: StepItem = {
-        ...majorityNaItem,
-        totalUnits: totalConfiguredUnits,
-      };
-
-      if (naCount === totalConfiguredUnits) absoluteNA.push(absoluteNaItem);
+      if (naCount === reportingCount) absoluteNA.push(majorityNaItem);
       if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(majorityNaItem);
     }
   });
