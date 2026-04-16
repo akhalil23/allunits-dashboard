@@ -13,7 +13,7 @@ import { useUniversityData } from '@/hooks/use-university-data';
 import { isNotApplicableStatus, getTermWindowKey } from '@/lib/types';
 import { getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
-import { getActionItemSourceKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
+import { buildSourceRowKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import {
   Popover,
   PopoverContent,
@@ -471,8 +471,8 @@ function computeCategories(
     console.warn(`[CoverageGaps] ${failedUnits.length} unit(s) failed to load:`, failedUnits.map(u => u.unitId).join(', '));
   }
 
-  // Build step map using forward-filled hierarchy keys so blank carried cells
-  // still resolve to the same logical strategic item across all units.
+  // Build step map using strict row-based source keys.
+  // Forward-filled hierarchy labels are kept for display only.
   const stepMap = new Map<string, {
     sourceKey: string;
     sheetRow: number;
@@ -512,14 +512,7 @@ function computeCategories(
         const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
         if (!isProvided || !VALID_STATUSES.has(status)) return;
 
-        const key = getActionItemSourceKey({
-          pillar,
-          goal,
-          objective: action,
-          actionStep: cleanedStep,
-          sheetRow: item.sheetRow,
-          sourceKey: item.sourceKey,
-        });
+        const key = item.sourceKey || buildSourceRowKey(pillar, item.sheetRow);
 
         // Prevent duplicate counting if same unit has multiple rows mapping to the same source row.
         if (unitProcessedKeys.has(key)) return;
@@ -620,7 +613,12 @@ function computeCategories(
         totalUnits: reportingCount,
       };
 
-      if (naCount === reportingCount) absoluteNA.push(majorityNaItem);
+      const absoluteNaItem: StepItem = {
+        ...majorityNaItem,
+        totalUnits: totalConfiguredUnits,
+      };
+
+      if (naCount === totalConfiguredUnits) absoluteNA.push(absoluteNaItem);
       if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(majorityNaItem);
     }
   });
