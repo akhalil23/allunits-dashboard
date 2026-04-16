@@ -613,12 +613,7 @@ function computeCategories(
         totalUnits: reportingCount,
       };
 
-      const absoluteNaItem: StepItem = {
-        ...majorityNaItem,
-        totalUnits: totalConfiguredUnits,
-      };
-
-      if (naCount === totalConfiguredUnits) absoluteNA.push(absoluteNaItem);
+      if (naCount === reportingCount) absoluteNA.push(majorityNaItem);
       if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(majorityNaItem);
     }
   });
@@ -661,7 +656,7 @@ function computeCategories(
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks, missing rows, and N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
     { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks, missing rows, and N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
     { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Explicitly marked Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
-    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by 100% of configured units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by 100% of reporting units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
   ];
 }
 
