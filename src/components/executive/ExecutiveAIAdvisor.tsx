@@ -15,13 +15,16 @@ import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { useBudgetData } from '@/hooks/use-budget-data';
+import { useReports } from '@/hooks/use-reports';
 import { aggregateByPillar } from '@/lib/university-aggregation';
 import { getLivePillarBudget, computeBudgetHealth } from '@/lib/budget-data';
 import { computeExpectedProgress } from '@/lib/intelligence';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
 import { METRIC_TOOLTIPS } from '@/lib/metric-definitions';
 import type { PillarId } from '@/lib/types';
+import { PILLAR_COLORS, PILLAR_COLOR_LABELS } from '@/lib/pillar-colors';
 import { cn } from '@/lib/utils';
+import { getUnitDisplayName } from '@/lib/unit-config';
 
 interface Props {
   aggregation: UniversityAggregation;
@@ -32,8 +35,10 @@ const SUGGESTED_QUESTIONS = [
   'What requires urgent attention?',
   'Which units are at highest risk?',
   'Summarize performance by pillar',
+  'What do the pillar colors mean?',
   'Explain the Risk Index',
-  'What is Pillar I budget utilization?',
+  'What are Pillar I commitment and spending ratios?',
+  'What reports are available?',
   'Show top performing units',
   'Prepare a briefing summary',
 ];
@@ -50,6 +55,7 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
   const { data: unitResults } = useUniversityData({ enabled: isOpen });
   const { data: budgetResult } = useBudgetData({ enabled: isOpen });
+  const { data: allReports = [] } = useReports(undefined, { enabled: isOpen });
 
   // Build FULL structured context payload
   const dashboardContext = useMemo<DashboardContextPayload>(() => {
@@ -114,6 +120,11 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
       };
     }
 
+    const reportsByYear = new Map<string, number>();
+    allReports.forEach(report => {
+      reportsByYear.set(report.academic_year, (reportsByYear.get(report.academic_year) ?? 0) + 1);
+    });
+
     return {
       filters: {
         academicYear,
@@ -122,6 +133,12 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
         selectedPillar: selectedPillar === 'all' ? 'All Pillars' : `Pillar ${selectedPillar}`,
         expectedProgress,
       },
+      pillarColorSystem: PILLAR_IDS.map(pid => ({
+        pillarId: `Pillar ${pid}`,
+        shortLabel: `P${pid}`,
+        colorName: PILLAR_COLOR_LABELS[pid],
+        hex: PILLAR_COLORS[pid],
+      })),
       universityMetrics: {
         totalUnits: aggregation.totalUnits,
         loadedUnits: aggregation.loadedUnits,
@@ -144,6 +161,30 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
         },
       },
       pillarMetrics,
+      reportsSummary: {
+        totalReports: allReports.length,
+        byScope: {
+          university: allReports.filter(report => report.scope === 'university').length,
+          perPillar: allReports.filter(report => report.scope === 'per_pillar').length,
+          perUnit: allReports.filter(report => report.scope === 'per_unit').length,
+        },
+        byType: {
+          executive: allReports.filter(report => report.report_type === 'executive').length,
+          full: allReports.filter(report => report.report_type === 'full').length,
+        },
+        byAcademicYear: Array.from(reportsByYear.entries())
+          .map(([academicYearValue, count]) => ({ academicYear: academicYearValue, count }))
+          .sort((a, b) => b.academicYear.localeCompare(a.academicYear)),
+        recentReports: allReports.slice(0, 8).map(report => ({
+          title: report.title,
+          scope: report.scope,
+          academicYear: report.academic_year,
+          reportingPeriod: report.reporting_period === 'mid_year' ? 'Mid-Year' : 'End-of-Year',
+          reportType: report.report_type === 'executive' ? 'Executive Summary' : 'Full Report',
+          pillar: report.pillar,
+          unitName: report.unit_id ? getUnitDisplayName(report.unit_id) : null,
+        })),
+      },
       budgetOverall,
       unitRankings: aggregation.unitAggregations
         .map(u => ({
@@ -171,7 +212,7 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
         executionGapFormula: "Execution Gap = Actual Completion % − Expected Progress %. Negative means behind schedule.",
       },
     };
-  }, [aggregation, viewType, academicYear, term, selectedPillar, unitResults, budgetResult]);
+  }, [aggregation, viewType, academicYear, term, selectedPillar, unitResults, budgetResult, allReports]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -262,7 +303,7 @@ export default function ExecutiveAIAdvisor({ aggregation }: Props) {
                   <div className="text-center py-4">
                     <Sparkles className="w-8 h-8 text-primary/40 mx-auto mb-3" />
                     <p className="text-xs text-muted-foreground leading-relaxed max-w-[280px] mx-auto">
-                      Ask me anything about the Strategic Plan execution, risks, budget, or performance.
+                      Ask me anything about the Strategic Plan execution, risks, budget, reports, pillar colors, or performance.
                       You can request explanations, comparisons, or executive summaries.
                     </p>
                   </div>

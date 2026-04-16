@@ -6,11 +6,21 @@
 import { useState } from 'react';
 import { UNIT_IDS } from '@/lib/unit-config';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PILLAR_COLORS, PILLAR_COLOR_LABELS } from '@/lib/pillar-colors';
+import type { PillarId } from '@/lib/types';
 import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
   LayoutDashboard, ShieldAlert, Target, DollarSign, GitCompare, Brain, Camera,
-  HelpCircle, Lightbulb, FileDown, Moon, RefreshCw, Activity, Eye, TrendingDown,
+  HelpCircle, Lightbulb, FileDown, FileText, Moon, RefreshCw, Activity, Eye, TrendingDown,
 } from 'lucide-react';
+
+const GUIDE_PILLARS: { id: PillarId; label: string }[] = [
+  { id: 'I', label: 'PI' },
+  { id: 'II', label: 'PII' },
+  { id: 'III', label: 'PIII' },
+  { id: 'IV', label: 'PIV' },
+  { id: 'V', label: 'PV' },
+];
 
 export default function DashboardGuide() {
   return (
@@ -33,9 +43,9 @@ export default function DashboardGuide() {
           <div className="flex items-center gap-2 mb-4"><BookOpen className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dashboard Overview</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>The <span className="font-semibold text-foreground">University Executive Command Center</span> monitors Strategic Plan IV (2025–2027) across {UNIT_IDS.length} units and five pillars.</p>
-            <p>The three main tabs form a coherent executive system:</p>
+            <p>The executive workspace is organized into six working tabs plus a dedicated reference guide:</p>
           </div>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
               <p className="text-xs font-semibold text-foreground">Tab 1 — Executive Snapshot</p>
               <p className="text-[10px] text-muted-foreground mt-1">Overall strategic synthesis with SSI, descriptive alignment insights, commitment/spending ratios, and pillar diagnostics.</p>
@@ -47,6 +57,18 @@ export default function DashboardGuide() {
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
               <p className="text-xs font-semibold text-foreground">Tab 3 — Budget Intelligence</p>
               <p className="text-[10px] text-muted-foreground mt-1">Financial governance with commitment/spending ratios, per-pillar analytics, and budget health.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">Tab 4 — Unit Comparison</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Side-by-side comparison of multiple units across execution, risk, and delivery signals.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">Tab 5 — AI Executive Insights</p>
+              <p className="text-[10px] text-muted-foreground mt-1">AI-generated strategic interpretation of the currently selected dashboard context.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">Tab 6 — Reports</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Central repository for university, pillar, and unit PDF reports with metadata filters.</p>
             </div>
           </div>
           <div className="mt-5 p-4 rounded-xl bg-muted/30 border border-border/50">
@@ -68,17 +90,11 @@ export default function DashboardGuide() {
           <div className="flex items-center gap-2 mb-4"><Eye className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Fixed Pillar Color System</span></div>
           <p className="text-xs text-muted-foreground mb-3">Each strategic pillar has a fixed identity color used consistently across all charts, markers, legends, and badges. Pillar colors represent identity, NOT performance. Risk is conveyed through separate semantic colors.</p>
           <div className="grid grid-cols-5 gap-2">
-            {[
-              { label: 'PI', color: '#3B82F6', name: 'Blue' },
-              { label: 'PII', color: '#06B6D4', name: 'Cyan' },
-              { label: 'PIII', color: '#8B5CF6', name: 'Violet' },
-              { label: 'PIV', color: '#EC4899', name: 'Pink' },
-              { label: 'PV', color: '#6366F1', name: 'Indigo' },
-            ].map(p => (
-              <div key={p.label} className="text-center p-2.5 rounded-lg border border-border/40">
-                <div className="w-6 h-6 rounded-full mx-auto" style={{ backgroundColor: p.color }} />
-                <p className="text-[11px] font-bold text-foreground mt-1.5">{p.label}</p>
-                <p className="text-[10px] text-muted-foreground">{p.name}</p>
+            {GUIDE_PILLARS.map((pillar) => (
+              <div key={pillar.id} className="text-center p-2.5 rounded-lg border border-border/40">
+                <div className="w-6 h-6 rounded-full mx-auto" style={{ backgroundColor: PILLAR_COLORS[pillar.id] }} />
+                <p className="text-[11px] font-bold text-foreground mt-1.5">{pillar.label}</p>
+                <p className="text-[10px] text-muted-foreground">{PILLAR_COLOR_LABELS[pillar.id]}</p>
               </div>
             ))}
           </div>
@@ -110,10 +126,11 @@ export default function DashboardGuide() {
           <div className="space-y-3">
             <TabGuide icon={LayoutDashboard} title="Tab 1 — Executive Snapshot" description="Start with the Pillar Reference to understand the fixed color system. Review SSI (strategic stability) and Progress KPI cards. Commitment Ratio and Spending Ratio replace the single Budget Utilization metric. The Execution & Budget Alignment chart supports Focus Mode (Execution or Budget views). Alignment Insights provide per-pillar diagnostic sentences with execution gap as the primary signal. Pillar Execution Diagnostics explain why each pillar is positioned where it is." />
             <TabGuide icon={ShieldAlert} title="Tab 2 — Strategic Risk & Priority" description="Risk Exposure by Pillar shows severity bands (Low/Moderate/High/Critical). Risk Signal Distribution reveals concentration alerts. Ranking lists show ALL units even when filtering by pillar (units without data appear last). The Execution Gap panel ranks units by how far behind expected progress they are. The heatmap provides unit-by-pillar risk detail. Critical Strategic Items lists actions needing immediate attention. Coverage Gaps now uses strict row-based matching, exact selected year/term/view columns, and excludes blanks or missing statuses from NA denominators." />
-            <TabGuide icon={DollarSign} title="Tab 3 — Budget Intelligence" description="Budget KPI cards show allocation, commitment, available, and dual Commitment/Spending ratio bars. Budget Health uses Commitment Ratio bands (Under-Deployed, Active, Advanced, Constrained). Per-Pillar Analytics includes progress, risk, execution gap, and funding status alongside budget figures. Tooltips explain each metric in context." />
+            <TabGuide icon={DollarSign} title="Tab 3 — Budget Intelligence" description="Budget KPI cards show allocation, commitment, available, and dual Commitment/Spending ratio bars. Budget Health uses the No Commitment Yet → Strong Commitment scale. Per-Pillar Analytics includes progress, risk, execution gap, and funding status alongside budget figures. Tooltips explain each metric in context." />
+            <TabGuide icon={GitCompare} title="Tab 4 — Unit Comparison" description="Side-by-side comparison of multiple units across performance dimensions, helping leadership identify outliers, anchors, and shared patterns." />
+            <TabGuide icon={Brain} title="Tab 5 — AI Executive Insights" description="AI-generated strategic interpretation aligned to the current dashboard filters and executive context." />
+            <TabGuide icon={FileText} title="Tab 6 — Reports" description="Browse uploaded PDF reports by scope (University, Pillars, Units), then filter by academic year, reporting period, and report type. Open reports inline or download them directly." />
             <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles." />
-            <TabGuide icon={GitCompare} title="Unit Comparison" description="Side-by-side comparison of multiple units across performance dimensions." />
-            <TabGuide icon={Brain} title="AI Executive Insights" description="AI-generated strategic interpretation aligned to each tab's role." />
           </div>
         </motion.div>
       </section>
@@ -143,7 +160,8 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><FileDown className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Export & Reporting</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>Use the download icon in the header for <span className="font-semibold text-foreground">PDF</span> (A4 landscape, branded) or <span className="font-semibold text-foreground">CSV</span> (raw data) exports.</p>
+            <p>Use the download icon in the header for <span className="font-semibold text-foreground">PDF</span> (A4 landscape, branded) or <span className="font-semibold text-foreground">CSV</span> (raw data) exports of the current live dashboard view.</p>
+            <p>The <span className="font-semibold text-foreground">Reports</span> tab is separate: it stores uploaded PDF reports for university-wide, per-pillar, and per-unit reporting workflows.</p>
           </div>
         </motion.div>
       </section>
@@ -162,6 +180,7 @@ export default function DashboardGuide() {
           <div className="flex items-center gap-2 mb-4"><HelpCircle className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">FAQ</span></div>
           <div className="space-y-1">
             <FAQItem question="Why are there two budget ratios instead of one?" answer="The Commitment Ratio (Committed ÷ Allocated) reflects total financial obligation, while the Spending Ratio (Spent ÷ Allocated) shows actual disbursement. Together they reveal whether budget commitment translates to actual spending, and help identify contractual obligations not yet paid." />
+            <FAQItem question="What is the Reports tab for?" answer="The Reports tab is the dashboard's document library. It organizes uploaded PDF reports by scope (University, Pillars, Units) and lets you filter by Academic Year, reporting period, and report type before viewing or downloading files." />
             <FAQItem question="Why use Expected Progress as a benchmark?" answer="Expected Progress represents the proportional time elapsed in the academic year window (Sep–Aug). It provides a time-based anchor to evaluate whether execution is on schedule, independent of budget or risk." />
             <FAQItem question="How is alignment communicated?" answer="Alignment is expressed through descriptive analytics — each pillar receives a neutral diagnostic sentence derived from Progress, Commitment Ratio, Spending Ratio, and Expected Progress. Only the Execution Gap value is color-highlighted. Optional contextual badges (e.g., 'Ahead of schedule', 'Resource constrained') provide additional context." />
             <FAQItem question="How are pillar colors assigned?" answer="Each pillar has a fixed color (PI=Blue, PII=Cyan, PIII=Violet, PIV=Pink, PV=Indigo). These never change regardless of performance values. Risk is conveyed through separate semantic colors." />

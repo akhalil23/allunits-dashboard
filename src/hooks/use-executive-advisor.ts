@@ -56,6 +56,37 @@ interface DashboardContextPayload {
       budgetHealth: string;
     };
   }[];
+  pillarColorSystem: {
+    pillarId: string;
+    shortLabel: string;
+    colorName: string;
+    hex: string;
+  }[];
+  reportsSummary?: {
+    totalReports: number;
+    byScope: {
+      university: number;
+      perPillar: number;
+      perUnit: number;
+    };
+    byType: {
+      executive: number;
+      full: number;
+    };
+    byAcademicYear: {
+      academicYear: string;
+      count: number;
+    }[];
+    recentReports: {
+      title: string;
+      scope: string;
+      academicYear: string;
+      reportingPeriod: string;
+      reportType: string;
+      pillar: string | null;
+      unitName: string | null;
+    }[];
+  };
   budgetOverall?: {
     totalAllocation: number;
     totalSpent: number;
@@ -118,7 +149,9 @@ export function useExecutiveAdvisor() {
         console.log('[AI Advisor] Context payload:', {
           filters: dashboardContext.filters,
           pillarCount: dashboardContext.pillarMetrics.length,
+          pillarColorCount: dashboardContext.pillarColorSystem.length,
           hasBudget: !!dashboardContext.budgetOverall,
+          reportCount: dashboardContext.reportsSummary?.totalReports ?? 0,
           unitCount: dashboardContext.unitRankings.length,
         });
       }

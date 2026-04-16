@@ -31,9 +31,14 @@ export interface ReportFilters {
   unitId?: string;
 }
 
-export function useReports(filters?: ReportFilters) {
+interface UseReportsOptions {
+  enabled?: boolean;
+}
+
+export function useReports(filters?: ReportFilters, options?: UseReportsOptions) {
   return useQuery<Report[]>({
     queryKey: ['reports', filters],
+    enabled: options?.enabled ?? true,
     queryFn: async () => {
       let query = supabase
         .from('reports')
