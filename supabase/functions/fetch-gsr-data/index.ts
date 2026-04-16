@@ -738,7 +738,7 @@ serve(async (req) => {
           error: 'Data source is temporarily unavailable. Please retry in a few minutes.',
           code: 'SERVICE_UNAVAILABLE',
         }), {
-          status: 503,
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -747,13 +747,13 @@ serve(async (req) => {
         error: 'Data source is temporarily rate-limited. Please retry in about a minute.',
         code: 'RATE_LIMITED',
       }), {
-        status: 429,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
