@@ -12,6 +12,7 @@ import { isNotApplicableStatus } from '@/lib/types';
 import { PILLAR_COLORS } from '@/lib/pillar-colors';
 import { PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getUnitDisplayName } from '@/lib/unit-config';
+import { getActionItemSourceKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 import type { PillarId, ViewType, Term, AcademicYear } from '@/lib/types';
 
@@ -35,18 +36,22 @@ interface UnitEntry {
 }
 
 interface ActionStepNode {
+  sourceKey: string;
   actionStep: string;
+  sheetRow: number;
   units: UnitEntry[];
 }
 
 interface ObjectiveNode {
   objective: string;
+  firstRow: number;
   actionSteps: ActionStepNode[];
 }
 
 interface GoalNode {
   goal: string;
   pillar: PillarId;
+  firstRow: number;
   objectives: ObjectiveNode[];
   totalActionSteps: number;
   atRiskCount: number;
@@ -66,31 +71,57 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
   const goalNodes = useMemo(() => {
     const filtered = unitResults.filter(u => selectedUnits.includes(u.unitId) && u.result);
 
-    // Step 1: Build a map keyed by pillar+goal+objective+actionStep → unit entries
+    // Step 1: Build a map keyed by stable source row → unit entries
     const stepMap = new Map<string, {
-      pillar: PillarId; goal: string; objective: string; actionStep: string; units: UnitEntry[];
+      sourceKey: string;
+      sheetRow: number;
+      pillar: PillarId;
+      goal: string;
+      objective: string;
+      actionStep: string;
+      units: UnitEntry[];
     }>();
 
     filtered.forEach(ur => {
+      const processedKeys = new Set<string>();
+
       ur.result!.data.forEach(item => {
         if (selectedPillar !== 'all' && item.pillar !== selectedPillar) return;
+
         const status = getItemStatus(item, viewType, term, academicYear);
         const completion = getItemCompletion(item, viewType, term, academicYear);
         const completionValid = typeof completion === 'number' && completion >= 0 && completion <= 100;
         const signal = isNotApplicableStatus(status) ? 'Not Applicable' : mapItemToRiskSignal(status, completion, completionValid, expectedProgress);
         const gap = expectedProgress - completion;
 
-        const stepKey = `${item.pillar}||${item.goal}||${item.objective}||${item.actionStep}`;
+        const stepKey = getActionItemSourceKey(item);
+        if (processedKeys.has(stepKey)) return;
+        processedKeys.add(stepKey);
+
         if (!stepMap.has(stepKey)) {
           stepMap.set(stepKey, {
+            sourceKey: stepKey,
+            sheetRow: item.sheetRow,
             pillar: item.pillar,
-            goal: item.goal,
-            objective: item.objective,
-            actionStep: item.actionStep,
+            goal: normalizeHierarchyText(item.goal) || '(Unspecified Goal)',
+            objective: normalizeHierarchyText(item.objective) || '(Unspecified Action)',
+            actionStep: normalizeHierarchyText(item.actionStep) || '(Unnamed Step)',
             units: [],
           });
         }
-        stepMap.get(stepKey)!.units.push({
+
+        const entry = stepMap.get(stepKey)!;
+        if (entry.goal === '(Unspecified Goal)') {
+          entry.goal = normalizeHierarchyText(item.goal) || entry.goal;
+        }
+        if (entry.objective === '(Unspecified Action)') {
+          entry.objective = normalizeHierarchyText(item.objective) || entry.objective;
+        }
+        if (entry.actionStep === '(Unnamed Step)') {
+          entry.actionStep = normalizeHierarchyText(item.actionStep) || entry.actionStep;
+        }
+
+        entry.units.push({
           unit: getUnitDisplayName(ur.unitId),
           unitId: ur.unitId,
           status,
@@ -106,20 +137,32 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
     const goalMap = new Map<string, GoalNode>();
 
     for (const entry of stepMap.values()) {
-      const goalKey = `${entry.pillar}-${entry.goal}`;
+      const goalKey = `${entry.pillar}-${normalizeHierarchyGroupKey(entry.goal) || entry.sourceKey}`;
       if (!goalMap.has(goalKey)) {
-        goalMap.set(goalKey, { goal: entry.goal, pillar: entry.pillar, objectives: [], totalActionSteps: 0, atRiskCount: 0 });
+        goalMap.set(goalKey, {
+          goal: entry.goal,
+          pillar: entry.pillar,
+          firstRow: entry.sheetRow,
+          objectives: [],
+          totalActionSteps: 0,
+          atRiskCount: 0,
+        });
       }
       const goalNode = goalMap.get(goalKey)!;
+      goalNode.firstRow = Math.min(goalNode.firstRow, entry.sheetRow);
 
-      let objNode = goalNode.objectives.find(o => o.objective === entry.objective);
+      const objectiveKey = normalizeHierarchyGroupKey(entry.objective) || entry.sourceKey;
+      let objNode = goalNode.objectives.find(o => (normalizeHierarchyGroupKey(o.objective) || '') === objectiveKey);
       if (!objNode) {
-        objNode = { objective: entry.objective, actionSteps: [] };
+        objNode = { objective: entry.objective, firstRow: entry.sheetRow, actionSteps: [] };
         goalNode.objectives.push(objNode);
       }
+      objNode.firstRow = Math.min(objNode.firstRow, entry.sheetRow);
 
       objNode.actionSteps.push({
+        sourceKey: entry.sourceKey,
         actionStep: entry.actionStep,
+        sheetRow: entry.sheetRow,
         units: entry.units,
       });
 
@@ -127,16 +170,18 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
       goalNode.atRiskCount += entry.units.filter(u => u.riskSignal.includes('Critical') || u.riskSignal.includes('Realized')).length;
     }
 
-    // Sort objectives and action steps within each goal
+    // Sort goals, objectives, and action steps by source row for deterministic traceability.
     for (const g of goalMap.values()) {
-      g.objectives.sort((a, b) => a.objective.localeCompare(b.objective));
-      g.objectives.forEach(o => o.actionSteps.sort((a, b) => a.actionStep.localeCompare(b.actionStep)));
+      g.objectives.sort((a, b) => a.firstRow - b.firstRow || a.objective.localeCompare(b.objective));
+      g.objectives.forEach(o => o.actionSteps.sort((a, b) => a.sheetRow - b.sheetRow || a.actionStep.localeCompare(b.actionStep)));
     }
 
     return Array.from(goalMap.values()).sort((a, b) => {
       const pillarOrder = ['I', 'II', 'III', 'IV', 'V'];
       const pi = pillarOrder.indexOf(a.pillar) - pillarOrder.indexOf(b.pillar);
       if (pi !== 0) return pi;
+      const rowDiff = a.firstRow - b.firstRow;
+      if (rowDiff !== 0) return rowDiff;
       return a.goal.localeCompare(b.goal);
     });
   }, [unitResults, selectedUnits, selectedPillar, viewType, term, academicYear, expectedProgress]);
@@ -227,7 +272,7 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }}>
                                   <div className="pl-8 pr-4 pb-3 space-y-2">
                                     {obj.actionSteps.map((step, si) => {
-                                      const stepKey = `${objKey}||${step.actionStep}||${si}`;
+                                      const stepKey = step.sourceKey;
                                       const stepExpanded = expandedSteps.has(stepKey);
                                       const multiUnit = step.units.length > 1;
 
@@ -236,10 +281,6 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
                                         const order = ['Not Applicable', 'No Risk (On Track)', 'Emerging Risk (Needs Attention)', 'Critical Risk (Needs Close Attention)', 'Realized Risk (Needs Mitigation Strategy)'];
                                         return order.indexOf(u.riskSignal) > order.indexOf(worst.riskSignal) ? u : worst;
                                       }, step.units[0]);
-
-                                      const avgCompletion = step.units.filter(u => !isNotApplicableStatus(u.status)).length > 0
-                                        ? Math.round(step.units.filter(u => !isNotApplicableStatus(u.status)).reduce((s, u) => s + u.completion, 0) / step.units.filter(u => !isNotApplicableStatus(u.status)).length)
-                                        : 0;
 
                                       return (
                                         <div key={stepKey} className="rounded-lg border border-border/40 bg-muted/10 overflow-hidden">

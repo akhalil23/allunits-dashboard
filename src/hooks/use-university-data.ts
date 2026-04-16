@@ -54,8 +54,8 @@ async function fetchSingleUnit(unitId: string): Promise<UnitFetchResult> {
 
 /** Fetch units in staggered batches to avoid Google Sheets API rate limits (60 reads/min). */
 async function fetchAllUnits(): Promise<UnitFetchResult[]> {
-  const BATCH_SIZE = 6;
-  const BATCH_DELAY_MS = 2500; // pause between batches
+  const BATCH_SIZE = 4;
+  const BATCH_DELAY_MS = 4000; // paced to stay within the Google Sheets per-minute quota
   const results: UnitFetchResult[] = [];
 
   for (let i = 0; i < UNIT_IDS.length; i += BATCH_SIZE) {
@@ -76,9 +76,11 @@ export function useUniversityData() {
   return useQuery<UnitFetchResult[]>({
     queryKey: ['university-data'],
     queryFn: fetchAllUnits,
-    staleTime: 3 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
     retry: 1,
-    refetchOnWindowFocus: false,
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true,
   });
 }

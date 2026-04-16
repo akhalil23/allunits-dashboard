@@ -10,16 +10,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, ChevronRight } from 'lucide-react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
-import { getItemStatus } from '@/lib/intelligence';
-import { isNotApplicableStatus } from '@/lib/types';
+import { isNotApplicableStatus, getTermWindowKey } from '@/lib/types';
 import { getUnitDisplayName } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
+import { getActionItemSourceKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import type { PillarId, ActionItem } from '@/lib/types';
+import type { PillarId, ActionItem, ViewType, Term, AcademicYear } from '@/lib/types';
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -27,6 +27,8 @@ import type { UnitFetchResult } from '@/lib/university-aggregation';
 type CategoryKey = 'majority-ns' | 'absolute-ns' | 'majority-na' | 'absolute-na';
 
 interface StepItem {
+  sourceKey: string;
+  sheetRow: number;
   actionStep: string;
   pillar: PillarId;
   goal: string;
@@ -38,11 +40,13 @@ interface StepItem {
 
 interface ActionGroup {
   action: string;
+  firstRow: number;
   steps: StepItem[];
 }
 
 interface GoalGroup {
   goal: string;
+  firstRow: number;
   actions: ActionGroup[];
 }
 
@@ -68,17 +72,6 @@ const VALID_STATUSES = new Set([
   'Completed – Below Target',
 ]);
 
-// ─── Text cleaning ──────────────────────────────────────────────────────────
-
-function cleanText(raw: string | null | undefined): string {
-  if (!raw) return '';
-  return raw
-    .replace(/\u00A0/g, ' ')
-    .replace(/[\t\r\n\f\v]/g, ' ')
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    .trim();
-}
-
 // ─── Forward-fill logic ─────────────────────────────────────────────────────
 
 /**
@@ -93,9 +86,9 @@ function forwardFill(items: ActionItem[]): { goal: string; action: string; actio
   let lastAction = '';
 
   return sorted.map(item => {
-    const rawGoal = cleanText(item.goal);
-    const rawAction = cleanText(item.objective);
-    const rawStep = cleanText(item.actionStep);
+    const rawGoal = normalizeHierarchyText(item.goal);
+    const rawAction = normalizeHierarchyText(item.objective);
+    const rawStep = normalizeHierarchyText(item.actionStep);
 
     if (rawGoal) lastGoal = rawGoal;
     if (rawAction) lastAction = rawAction;
@@ -437,44 +430,44 @@ function StepRow({ step, categoryKey }: { step: StepItem; categoryKey: CategoryK
   );
 }
 
-// ─── Canonical Key ───────────────────────────────────────────────────────────
+function getSelectedStatusMeta(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear) {
+  const termData = item.terms?.[getTermWindowKey(term, academicYear)];
 
-/**
- * Normalize text for use as a matching key component.
- * Trims, collapses whitespace, lowercases, strips trailing punctuation.
- */
-function normalizeKey(raw: string): string {
-  return raw
-    .replace(/\u00A0/g, ' ')
-    .replace(/[\t\r\n\f\v]/g, ' ')
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toLowerCase()
-    .replace(/[.:;,]+$/, '')
-    .trim();
-}
+  if (!termData) {
+    return { status: '', isProvided: false };
+  }
 
-/**
- * Build a deterministic canonical key for cross-unit matching.
- * Key = pillar | normalized goal | normalized action | normalized action step
- */
-function canonicalKey(pillar: PillarId, goal: string, action: string, actionStep: string): string {
-  return `${pillar}|${normalizeKey(goal)}|${normalizeKey(action)}|${normalizeKey(actionStep)}`;
+  const status = viewType === 'cumulative' ? termData.spStatus : termData.yearlyStatus;
+  const rawStatus = viewType === 'cumulative' ? termData.spStatusRaw : termData.yearlyStatusRaw;
+  const providedFlag = viewType === 'cumulative' ? termData.spStatusProvided : termData.yearlyStatusProvided;
+
+  const isProvided = typeof providedFlag === 'boolean'
+    ? providedFlag
+    : typeof rawStatus === 'string'
+      ? rawStatus.trim() !== ''
+      : status.trim() !== '';
+
+  return {
+    status: status.trim(),
+    isProvided,
+  };
 }
 
 // ─── Computation ─────────────────────────────────────────────────────────────
 
 function computeCategories(
   unitResults: UnitFetchResult[],
-  viewType: 'cumulative' | 'yearly',
-  term: 'mid' | 'end',
-  academicYear: '2025-2026' | '2026-2027'
+  viewType: ViewType,
+  term: Term,
+  academicYear: AcademicYear
 ): CategoryData[] {
   const loadedUnits = unitResults.filter(u => u.result && !u.error);
+  const loadedUnitIds = loadedUnits.map(u => u.unitId);
 
-  // Build step map: canonical key → aggregated cross-unit data
+  // Build step map using a strict source-row key, never text-only matching.
   const stepMap = new Map<string, {
+    sourceKey: string;
+    sheetRow: number;
     actionStep: string;     // display text (first encountered, cleaned)
     pillar: PillarId;
     goal: string;           // display text (first encountered, cleaned)
@@ -482,7 +475,8 @@ function computeCategories(
     nsUnits: Set<string>;
     naUnits: Set<string>;
     activeUnits: Set<string>; // units with valid non-NA status
-    validUnits: Set<string>;  // units with any recognized status (including NA)
+    reportingUnits: Set<string>;  // units with explicit status in the selected column
+    statusByUnit: Map<string, string>;
   }>();
 
   loadedUnits.forEach(ur => {
@@ -503,43 +497,54 @@ function computeCategories(
       const filled = forwardFill(pillarItems);
 
       filled.forEach(({ goal, action, actionStep, pillar, item }) => {
-        const rawStatus = (getItemStatus(item, viewType, term, academicYear) || '').trim();
-        if (!VALID_STATUSES.has(rawStatus)) return;
-
         // Skip rows with empty action step (non-data rows)
-        const cleanedStep = cleanText(actionStep);
+        const cleanedStep = normalizeHierarchyText(actionStep);
         if (!cleanedStep) return;
 
-        const key = canonicalKey(pillar, goal, action, actionStep);
+        const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
+        if (!isProvided || !VALID_STATUSES.has(status)) return;
 
-        // Prevent duplicate counting if same unit has multiple rows mapping to same canonical key
+        const key = getActionItemSourceKey(item);
+
+        // Prevent duplicate counting if same unit has multiple rows mapping to the same source row.
         if (unitProcessedKeys.has(key)) return;
         unitProcessedKeys.add(key);
 
         if (!stepMap.has(key)) {
           stepMap.set(key, {
+            sourceKey: key,
+            sheetRow: item.sheetRow,
             actionStep: cleanedStep,
             pillar,
-            goal: cleanText(goal) || '(Unspecified Goal)',
-            action: cleanText(action) || '(Unspecified Action)',
+            goal: normalizeHierarchyText(goal) || '(Unspecified Goal)',
+            action: normalizeHierarchyText(action) || '(Unspecified Action)',
             nsUnits: new Set(),
             naUnits: new Set(),
             activeUnits: new Set(),
-            validUnits: new Set(),
+            reportingUnits: new Set(),
+            statusByUnit: new Map(),
           });
         }
 
         const entry = stepMap.get(key)!;
 
-        // Track all units with recognized status
-        entry.validUnits.add(ur.unitId);
+        if (entry.goal === '(Unspecified Goal)') {
+          entry.goal = normalizeHierarchyText(goal) || entry.goal;
+        }
+        if (entry.action === '(Unspecified Action)') {
+          entry.action = normalizeHierarchyText(action) || entry.action;
+        }
 
-        if (isNotApplicableStatus(rawStatus)) {
+        // Track only units with an explicit status in the selected year/term/view.
+        entry.reportingUnits.add(ur.unitId);
+        entry.statusByUnit.set(ur.unitId, status);
+
+        if (isNotApplicableStatus(status)) {
           entry.naUnits.add(ur.unitId);
         } else {
           // Active = has a non-NA valid status
           entry.activeUnits.add(ur.unitId);
-          if (rawStatus === 'Not Started') {
+          if (status === 'Not Started') {
             entry.nsUnits.add(ur.unitId);
           }
         }
@@ -565,13 +570,15 @@ function computeCategories(
     processedKeys.add(key);
 
     const activeCount = entry.activeUnits.size; // non-NA units for this step
-    const validCount = entry.validUnits.size;   // all units with recognized status
+    const reportingCount = entry.reportingUnits.size;   // units with explicit status in the selected column
     const nsCount = entry.nsUnits.size;
     const naCount = entry.naUnits.size;
 
     // NS: denominator = active (non-NA) units for this specific step
     if (activeCount > 0) {
       const nsItem: StepItem = {
+        sourceKey: entry.sourceKey,
+        sheetRow: entry.sheetRow,
         actionStep: entry.actionStep,
         pillar: entry.pillar,
         goal: entry.goal,
@@ -585,18 +592,20 @@ function computeCategories(
     }
 
     // NA: denominator = all valid (reporting) units for this step
-    if (validCount > 0) {
+    if (reportingCount > 0) {
       const naItem: StepItem = {
+        sourceKey: entry.sourceKey,
+        sheetRow: entry.sheetRow,
         actionStep: entry.actionStep,
         pillar: entry.pillar,
         goal: entry.goal,
         action: entry.action,
         nsUnits: Array.from(entry.nsUnits),
         naUnits: Array.from(entry.naUnits),
-        totalUnits: validCount,
+        totalUnits: reportingCount,
       };
-      if (naCount === validCount) absoluteNA.push(naItem);
-      if (naCount >= Math.ceil(validCount * 0.75)) majorityNA.push(naItem);
+      if (naCount === reportingCount) absoluteNA.push(naItem);
+      if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(naItem);
     }
   });
 
@@ -610,17 +619,24 @@ function computeCategories(
   }
 
   // ─── Debug summary (dev only) ──────────────────────────────────────────
-  if (process.env.NODE_ENV === 'development') {
-    const absoluteNAKeys = new Set(absoluteNA.map(i => canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
-    const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(canonicalKey(i.pillar, i.goal, i.action, i.actionStep)));
+  if (import.meta.env.DEV) {
+    const absoluteNAKeys = new Set(absoluteNA.map(i => i.sourceKey));
+    const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
       majorityOnlyNA.forEach(item => {
-        const key = canonicalKey(item.pillar, item.goal, item.action, item.actionStep);
-        const entry = stepMap.get(key);
+        const entry = stepMap.get(item.sourceKey);
         if (entry) {
-          const nonNAUnits = Array.from(entry.validUnits).filter(u => !entry.naUnits.has(u));
-          console.info(`  [${item.pillar}] "${item.actionStep}" — NA: ${entry.naUnits.size}/${entry.validUnits.size}. Non-NA: [${nonNAUnits.map(u => getUnitDisplayName(u)).join(', ')}]`);
+          const nonNAUnits = Array.from(entry.reportingUnits)
+            .filter(u => !entry.naUnits.has(u))
+            .map(u => `${getUnitDisplayName(u)}=${entry.statusByUnit.get(u)}`);
+          const missingUnits = loadedUnitIds
+            .filter(unitId => !entry.reportingUnits.has(unitId))
+            .map(getUnitDisplayName);
+
+          console.info(
+            `  [${item.pillar}] row ${item.sheetRow} "${item.actionStep}" — NA: ${entry.naUnits.size}/${entry.reportingUnits.size}. Non-NA: [${nonNAUnits.join(', ')}]. Missing: [${missingUnits.join(', ')}]`
+          );
         }
       });
     }
@@ -628,40 +644,63 @@ function computeCategories(
   }
 
   return [
-    { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks & N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
-    { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks & N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
-    { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
-    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Not Applicable by all reporting units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
+    { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks, missing rows, and N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
+    { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks, missing rows, and N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
+    { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Explicitly marked Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by 100% of reporting units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
   ];
 }
 
 // ─── Grouping: Pillar → Goal → Action → Steps (deduplicated) ────────────────
 
 function groupByPillar(items: StepItem[]): PillarGroup[] {
-  const pillarMap = new Map<PillarId, Map<string, Map<string, StepItem[]>>>();
-  // Track seen keys to prevent duplicate rendering
+  const pillarMap = new Map<PillarId, Map<string, {
+    goal: string;
+    firstRow: number;
+    actions: Map<string, {
+      action: string;
+      firstRow: number;
+      steps: StepItem[];
+    }>;
+  }>>();
   const seenKeys = new Set<string>();
 
   items.forEach(item => {
     const goalLabel = item.goal || '(Unspecified Goal)';
     const actionLabel = item.action || '(Unspecified Action)';
-    const dedupKey = canonicalKey(item.pillar, goalLabel, actionLabel, item.actionStep);
+    const goalKey = normalizeHierarchyGroupKey(goalLabel) || `goal-${item.sourceKey}`;
+    const actionKey = normalizeHierarchyGroupKey(actionLabel) || `action-${item.sourceKey}`;
 
     // Skip duplicate items
-    if (seenKeys.has(dedupKey)) {
-      console.warn('[CoverageGaps] Duplicate item in groupByPillar skipped:', dedupKey);
+    if (seenKeys.has(item.sourceKey)) {
+      console.warn('[CoverageGaps] Duplicate item in groupByPillar skipped:', item.sourceKey);
       return;
     }
-    seenKeys.add(dedupKey);
+    seenKeys.add(item.sourceKey);
 
     if (!pillarMap.has(item.pillar)) pillarMap.set(item.pillar, new Map());
     const goalMap = pillarMap.get(item.pillar)!;
 
-    if (!goalMap.has(goalLabel)) goalMap.set(goalLabel, new Map());
-    const actionMap = goalMap.get(goalLabel)!;
+    if (!goalMap.has(goalKey)) {
+      goalMap.set(goalKey, {
+        goal: goalLabel,
+        firstRow: item.sheetRow,
+        actions: new Map(),
+      });
+    }
+    const goalEntry = goalMap.get(goalKey)!;
+    goalEntry.firstRow = Math.min(goalEntry.firstRow, item.sheetRow);
 
-    if (!actionMap.has(actionLabel)) actionMap.set(actionLabel, []);
-    actionMap.get(actionLabel)!.push(item);
+    if (!goalEntry.actions.has(actionKey)) {
+      goalEntry.actions.set(actionKey, {
+        action: actionLabel,
+        firstRow: item.sheetRow,
+        steps: [],
+      });
+    }
+    const actionEntry = goalEntry.actions.get(actionKey)!;
+    actionEntry.firstRow = Math.min(actionEntry.firstRow, item.sheetRow);
+    actionEntry.steps.push(item);
   });
 
   const order: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
@@ -670,13 +709,19 @@ function groupByPillar(items: StepItem[]): PillarGroup[] {
     .filter(p => pillarMap.has(p))
     .map(p => ({
       pillar: p,
-      goals: Array.from(pillarMap.get(p)!.entries()).map(([goal, actionMap]) => ({
-        goal,
-        actions: Array.from(actionMap.entries()).map(([action, steps]) => ({
-          action,
-          steps,
+      goals: Array.from(pillarMap.get(p)!.values())
+        .sort((a, b) => a.firstRow - b.firstRow || a.goal.localeCompare(b.goal))
+        .map(goalEntry => ({
+          goal: goalEntry.goal,
+          firstRow: goalEntry.firstRow,
+          actions: Array.from(goalEntry.actions.values())
+            .sort((a, b) => a.firstRow - b.firstRow || a.action.localeCompare(b.action))
+            .map(actionEntry => ({
+              action: actionEntry.action,
+              firstRow: actionEntry.firstRow,
+              steps: [...actionEntry.steps].sort((a, b) => a.sheetRow - b.sheetRow || a.actionStep.localeCompare(b.actionStep)),
+            })),
         })),
-      })),
     }))
     .filter(p => p.goals.length > 0);
 }

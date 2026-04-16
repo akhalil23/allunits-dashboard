@@ -24,13 +24,13 @@ export default function UnitDashboardGuide() {
           </div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
-              Dashboard data is refreshed from the official online reporting sheets on a <span className="font-semibold text-foreground">monthly schedule</span>.
+              Dashboard data is read directly from the official online reporting sheets whenever the dashboard loads or refetches.
             </p>
             <p>
-              As a result, updates made to the source sheets will <span className="font-semibold text-foreground">not appear immediately</span> in the dashboard.
+              Updates made to the source sheets should appear on the next live refresh — not on a monthly batch schedule.
             </p>
             <p>
-              Changes will be reflected only at the <span className="font-semibold text-foreground">beginning or end of each month</span>, depending on the reporting cycle.
+              If the source is temporarily rate-limited or unavailable, the dashboard may briefly show a clearly marked cached snapshot as a fallback.
             </p>
           </div>
         </motion.div>
@@ -252,7 +252,7 @@ export default function UnitDashboardGuide() {
             />
             <FAQItem
               question="How often is the dashboard updated?"
-              answer="Dashboard data is refreshed from the official online reporting sheets on a monthly schedule. Updates made to the source sheets will not appear immediately. Changes will be reflected only at the beginning or end of each month, depending on the reporting cycle."
+              answer="The dashboard reads the official online reporting sheets live whenever it loads or refetches. Source-sheet edits should appear on the next live refresh. If the source is temporarily rate-limited or unavailable, the dashboard may briefly fall back to a clearly marked cached snapshot."
             />
             <FAQItem
               question="How do I export a report?"
