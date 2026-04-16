@@ -61,8 +61,8 @@ async function fetchSingleUnit(unitId: string): Promise<UnitFetchResult> {
 
 /** Fetch units in staggered batches to avoid Google Sheets API rate limits (60 reads/min). */
 async function fetchAllUnits(): Promise<UnitFetchResult[]> {
-  const BATCH_SIZE = 4;
-  const BATCH_DELAY_MS = 4000; // paced to stay within the Google Sheets per-minute quota
+  const BATCH_SIZE = 2;
+  const BATCH_DELAY_MS = 6000; // 2 units every 6s ≈ 20 reads/min, safely under 60/min quota
   const results: UnitFetchResult[] = [];
 
   for (let i = 0; i < UNIT_IDS.length; i += BATCH_SIZE) {
