@@ -69,11 +69,11 @@ export default function DashboardGuide() {
           <p className="text-xs text-muted-foreground mb-3">Each strategic pillar has a fixed identity color used consistently across all charts, markers, legends, and badges. Pillar colors represent identity, NOT performance. Risk is conveyed through separate semantic colors.</p>
           <div className="grid grid-cols-5 gap-2">
             {[
-              { label: 'PI', color: '#1D4ED8', name: 'Deep Blue' },
-              { label: 'PII', color: '#047857', name: 'Emerald' },
-              { label: 'PIII', color: '#D97706', name: 'Amber' },
-              { label: 'PIV', color: '#DC2626', name: 'Red' },
-              { label: 'PV', color: '#7C3AED', name: 'Purple' },
+              { label: 'PI', color: '#3B82F6', name: 'Blue' },
+              { label: 'PII', color: '#06B6D4', name: 'Cyan' },
+              { label: 'PIII', color: '#8B5CF6', name: 'Violet' },
+              { label: 'PIV', color: '#EC4899', name: 'Pink' },
+              { label: 'PV', color: '#6366F1', name: 'Indigo' },
             ].map(p => (
               <div key={p.label} className="text-center p-2.5 rounded-lg border border-border/40">
                 <div className="w-6 h-6 rounded-full mx-auto" style={{ backgroundColor: p.color }} />
@@ -164,7 +164,7 @@ export default function DashboardGuide() {
             <FAQItem question="Why are there two budget ratios instead of one?" answer="The Commitment Ratio (Committed ÷ Allocated) reflects total financial obligation, while the Spending Ratio (Spent ÷ Allocated) shows actual disbursement. Together they reveal whether budget commitment translates to actual spending, and help identify contractual obligations not yet paid." />
             <FAQItem question="Why use Expected Progress as a benchmark?" answer="Expected Progress represents the proportional time elapsed in the academic year window (Sep–Aug). It provides a time-based anchor to evaluate whether execution is on schedule, independent of budget or risk." />
             <FAQItem question="How is alignment communicated?" answer="Alignment is expressed through descriptive analytics — each pillar receives a neutral diagnostic sentence derived from Progress, Commitment Ratio, Spending Ratio, and Expected Progress. Only the Execution Gap value is color-highlighted. Optional contextual badges (e.g., 'Ahead of schedule', 'Resource constrained') provide additional context." />
-            <FAQItem question="How are pillar colors assigned?" answer="Each pillar has a fixed color (PI=Blue, PII=Green, PIII=Amber, PIV=Red, PV=Purple). These never change regardless of performance values. Risk is conveyed through separate semantic colors." />
+            <FAQItem question="How are pillar colors assigned?" answer="Each pillar has a fixed color (PI=Blue, PII=Cyan, PIII=Violet, PIV=Pink, PV=Indigo). These never change regardless of performance values. Risk is conveyed through separate semantic colors." />
             <FAQItem question="What is the Execution Gap?" answer="Execution Gap = Actual Progress − Expected Progress. A negative gap means the unit is behind schedule. This metric appears across all tabs to identify where attention is needed." />
             <FAQItem question="How does dynamic RI work for In-Progress items?" answer="Instead of a fixed risk mapping, In-Progress items are assigned risk dynamically: if the gap between expected and actual progress exceeds 50%, it's Critical Risk; between 20-50% it's Emerging Risk; below 20% it's No Risk." />
           </div>

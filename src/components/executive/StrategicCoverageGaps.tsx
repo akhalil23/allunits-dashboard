@@ -462,7 +462,13 @@ function computeCategories(
   academicYear: AcademicYear
 ): CategoryData[] {
   const loadedUnits = unitResults.filter(u => u.result && !u.error);
+  const failedUnits = unitResults.filter(u => !u.result || u.error);
   const loadedUnitIds = loadedUnits.map(u => u.unitId);
+
+  // Warn about units that failed to load (likely rate-limited)
+  if (failedUnits.length > 0) {
+    console.warn(`[CoverageGaps] ${failedUnits.length} unit(s) failed to load:`, failedUnits.map(u => u.unitId).join(', '));
+  }
 
   // Build step map using a strict source-row key, never text-only matching.
   const stepMap = new Map<string, {
