@@ -23,9 +23,13 @@ export type TermWindowKey = 'mid-2025-2026' | 'end-2025-2026' | 'mid-2026-2027' 
 
 export interface TermData {
   spStatus: Status;
+  spStatusRaw?: string;
+  spStatusProvided?: boolean;
   spCompletion: number;
   spTarget: string;
   yearlyStatus: Status;
+  yearlyStatusRaw?: string;
+  yearlyStatusProvided?: boolean;
   yearlyCompletion: number;
   yearlyTarget: string;
   supportingDoc: string;
@@ -40,6 +44,7 @@ export interface ActionItem {
   owner: string;
   terms: Record<TermWindowKey, TermData>;
   sheetRow: number;
+  sourceKey?: string;
 }
 
 export interface DashboardFilters {

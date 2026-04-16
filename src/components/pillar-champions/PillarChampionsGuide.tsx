@@ -22,9 +22,9 @@ export default function PillarChampionsGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-amber-500/40 bg-amber-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><RefreshCw className="w-4 h-4 text-amber-500" /><span className="text-xs sm:text-sm font-medium text-amber-500 uppercase tracking-wider">Data Refresh Policy</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>Dashboard data is refreshed from the official online reporting sheets on a <span className="font-semibold text-foreground">monthly schedule</span>.</p>
-            <p>Updates made to the source sheets will <span className="font-semibold text-foreground">not appear immediately</span>.</p>
-            <p>Changes will be reflected only at the <span className="font-semibold text-foreground">beginning or end of each month</span>.</p>
+            <p>Dashboard data is read directly from the official online reporting sheets whenever the dashboard loads or refetches.</p>
+            <p>Updates made to the source sheets should appear on the next live refresh — not on a monthly batch schedule.</p>
+            <p>If the source is temporarily rate-limited or unavailable, the dashboard may briefly show a clearly marked cached snapshot as a fallback.</p>
           </div>
         </motion.div>
       </section>
@@ -121,7 +121,7 @@ export default function PillarChampionsGuide() {
           <div className="space-y-3">
             <TabGuide icon={LayoutDashboard} title="Tab 1 — Pillar Overview" description="Start with the KPI summary cards showing SSI, Progress, Completion, On-Track %, and Risk Index across all pillars or a selected pillar. The Pillar Health Grid provides a visual snapshot of each pillar's status. Use the pillar filter to drill into a specific pillar for focused metrics." />
             <TabGuide icon={BarChart3} title="Tab 2 — Performance Analysis" description="Examine unit-by-unit execution within each pillar. Progress bars, completion rates, and execution gap rankings help identify which units are leading or lagging for a given pillar. Switch between pillars to compare performance patterns." />
-            <TabGuide icon={Search} title="Tab 3 — Action Explorer" description="Track the full Goal → Objective → Action → Step hierarchy across all units. Filter by pillar, status, or unit to locate specific items. Expand actions to see detailed step-level progress. This is the primary operational tracking tool for monthly reviews." />
+            <TabGuide icon={Search} title="Tab 3 — Action Explorer" description="Track the full Goal → Objective → Action → Step hierarchy across all units. Items are deduplicated with strict source-row matching before unit aggregation, so each strategic step appears once with its exact cross-unit breakdown. Filter by pillar, status, or unit to locate specific items." />
             <TabGuide icon={DollarSign} title="Tab 4 — Budget Intelligence" description="Review financial allocation, commitment, and spending at the pillar level. Cross-unit budget comparisons reveal which units have committed or spent their pillar-specific budgets. Commitment and Spending Ratios are shown side-by-side for each unit." />
             <TabGuide icon={ShieldAlert} title="Tab 5 — Risk & Attention" description="Automated risk signals flag items that need immediate attention based on execution gaps, overdue timelines, and budget anomalies. Critical items are surfaced with severity levels. The risk concentration view shows where structural risks are clustering across units and pillars." />
             <TabGuide icon={BookOpen} title="Dashboard Guide" description="This reference page — explains metrics, tab functions, and reading strategies for the Pillar Champions Dashboard." />

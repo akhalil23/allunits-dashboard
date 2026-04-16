@@ -63,13 +63,15 @@ export function useBudgetData() {
   return useQuery<BudgetDataResult>({
     queryKey: ['budget-data'],
     queryFn: fetchBudgetData,
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
     retry: (failureCount, err) => {
       if (/(rate-limited|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(err.message)) {
         return false;
       }
       return failureCount < 1;
     },
-    refetchOnWindowFocus: false,
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true,
   });
 }

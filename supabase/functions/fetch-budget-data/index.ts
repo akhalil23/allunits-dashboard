@@ -215,20 +215,6 @@ serve(async (req) => {
       });
     }
 
-    const freshCache = getBudgetCache();
-    if (freshCache && freshCache.expiresAt > Date.now()) {
-      return new Response(JSON.stringify({
-        ...freshCache.data,
-        cache: {
-          hit: true,
-          stale: false,
-          cachedAt: new Date(freshCache.cachedAt).toISOString(),
-        },
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     // Get service account
     const serviceAccountRaw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
     if (!serviceAccountRaw) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY is not configured');

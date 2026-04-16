@@ -277,9 +277,13 @@ function isValidItemRow(coreRow: any[], termRow: any[]): boolean {
 
 interface TermData {
   spStatus: Status;
+  spStatusRaw?: string;
+  spStatusProvided?: boolean;
   spCompletion: number;
   spTarget: string;
   yearlyStatus: Status;
+  yearlyStatusRaw?: string;
+  yearlyStatusProvided?: boolean;
   yearlyCompletion: number;
   yearlyTarget: string;
   supportingDoc: string;
@@ -305,6 +309,8 @@ function extractTermData(
   const rawYearlyStatus = safeGet(termRow, offset + WIN_YEARLY_STATUS);
   const rawSpComp = safeGet(termRow, offset + WIN_SP_COMP);
   const rawYearlyComp = safeGet(termRow, offset + WIN_YEARLY_COMP);
+  const spStatusProvided = rawSpStatus.trim() !== '';
+  const yearlyStatusProvided = rawYearlyStatus.trim() !== '';
 
   if (termRow.length < offset + WINDOW_SIZE) {
     anomalies.missingTermColumns.push(`${rowId}:window-${windowIdx}`);
@@ -340,9 +346,13 @@ function extractTermData(
   return {
     td: {
       spStatus: resolvedSpStatus,
+      spStatusRaw: rawSpStatus,
+      spStatusProvided,
       spCompletion: spCompResult.value ?? 0,
       spTarget: safeGet(termRow, offset + WIN_SP_TARGET),
       yearlyStatus: resolvedYearlyStatus,
+      yearlyStatusRaw: rawYearlyStatus,
+      yearlyStatusProvided,
       yearlyCompletion: yearlyCompResult.value ?? 0,
       yearlyTarget: safeGet(termRow, offset + WIN_YEARLY_TARGET),
       supportingDoc: safeGet(termRow, offset + WIN_SUPPORTING_DOC),
@@ -361,6 +371,7 @@ interface ActionItem {
   owner: string;
   terms: Record<string, TermData>;
   sheetRow: number;
+  sourceKey: string;
 }
 
 function processPillarData(
@@ -425,6 +436,7 @@ function processPillarData(
       owner: safeGet(core, CORE_OWNER),
       terms,
       sheetRow: i + 5,
+      sourceKey: `${pillarId}|row-${i + 5}`,
     });
   }
 
@@ -557,20 +569,6 @@ serve(async (req) => {
     if (!spreadsheetId) {
       return new Response(JSON.stringify({ error: `Configuration error: unknown unit "${requestedUnitId}"` }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const freshCache = getGsrCache(requestedUnitId);
-    if (freshCache && freshCache.expiresAt > Date.now()) {
-      return new Response(JSON.stringify({
-        ...freshCache.data,
-        cache: {
-          hit: true,
-          stale: false,
-          cachedAt: new Date(freshCache.cachedAt).toISOString(),
-        },
-      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
