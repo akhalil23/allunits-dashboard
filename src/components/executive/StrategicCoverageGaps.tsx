@@ -461,16 +461,18 @@ function computeCategories(
   term: Term,
   academicYear: AcademicYear
 ): CategoryData[] {
+  const configuredUnitIds = unitResults.map(u => u.unitId);
+  const totalConfiguredUnits = configuredUnitIds.length;
   const loadedUnits = unitResults.filter(u => u.result && !u.error);
   const failedUnits = unitResults.filter(u => !u.result || u.error);
-  const loadedUnitIds = loadedUnits.map(u => u.unitId);
 
   // Warn about units that failed to load (likely rate-limited)
   if (failedUnits.length > 0) {
     console.warn(`[CoverageGaps] ${failedUnits.length} unit(s) failed to load:`, failedUnits.map(u => u.unitId).join(', '));
   }
 
-  // Build step map using a strict source-row key, never text-only matching.
+  // Build step map using forward-filled hierarchy keys so blank carried cells
+  // still resolve to the same logical strategic item across all units.
   const stepMap = new Map<string, {
     sourceKey: string;
     sheetRow: number;
@@ -510,7 +512,14 @@ function computeCategories(
         const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
         if (!isProvided || !VALID_STATUSES.has(status)) return;
 
-        const key = getActionItemSourceKey(item);
+        const key = getActionItemSourceKey({
+          pillar,
+          goal,
+          objective: action,
+          actionStep: cleanedStep,
+          sheetRow: item.sheetRow,
+          sourceKey: item.sourceKey,
+        });
 
         // Prevent duplicate counting if same unit has multiple rows mapping to the same source row.
         if (unitProcessedKeys.has(key)) return;
@@ -599,7 +608,7 @@ function computeCategories(
 
     // NA: denominator = all valid (reporting) units for this step
     if (reportingCount > 0) {
-      const naItem: StepItem = {
+      const majorityNaItem: StepItem = {
         sourceKey: entry.sourceKey,
         sheetRow: entry.sheetRow,
         actionStep: entry.actionStep,
@@ -610,8 +619,14 @@ function computeCategories(
         naUnits: Array.from(entry.naUnits),
         totalUnits: reportingCount,
       };
-      if (naCount === reportingCount) absoluteNA.push(naItem);
-      if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(naItem);
+
+      const absoluteNaItem: StepItem = {
+        ...majorityNaItem,
+        totalUnits: totalConfiguredUnits,
+      };
+
+      if (naCount === totalConfiguredUnits) absoluteNA.push(absoluteNaItem);
+      if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(majorityNaItem);
     }
   });
 
@@ -636,24 +651,24 @@ function computeCategories(
           const nonNAUnits = Array.from(entry.reportingUnits)
             .filter(u => !entry.naUnits.has(u))
             .map(u => `${getUnitDisplayName(u)}=${entry.statusByUnit.get(u)}`);
-          const missingUnits = loadedUnitIds
+          const missingUnits = configuredUnitIds
             .filter(unitId => !entry.reportingUnits.has(unitId))
             .map(getUnitDisplayName);
 
           console.info(
-            `  [${item.pillar}] row ${item.sheetRow} "${item.actionStep}" — NA: ${entry.naUnits.size}/${entry.reportingUnits.size}. Non-NA: [${nonNAUnits.join(', ')}]. Missing: [${missingUnits.join(', ')}]`
+            `  [${item.pillar}] row ${item.sheetRow} "${item.actionStep}" — NA: ${entry.naUnits.size}/${totalConfiguredUnits}. Non-NA: [${nonNAUnits.join(', ')}]. Missing: [${missingUnits.join(', ')}]`
           );
         }
       });
     }
-    console.info(`[CoverageGaps] Majority NA: ${majorityNA.length}, Absolute NA: ${absoluteNA.length}, Majority NS: ${majorityNS.length}, Absolute NS: ${absoluteNS.length}, Items: ${stepMap.size}, Units: ${loadedUnits.length}`);
+    console.info(`[CoverageGaps] Majority NA: ${majorityNA.length}, Absolute NA: ${absoluteNA.length}, Majority NS: ${majorityNS.length}, Absolute NS: ${absoluteNS.length}, Items: ${stepMap.size}, Loaded Units: ${loadedUnits.length}/${totalConfiguredUnits}`);
   }
 
   return [
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks, missing rows, and N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
     { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks, missing rows, and N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
     { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Explicitly marked Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
-    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by 100% of reporting units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by 100% of configured units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
   ];
 }
 
