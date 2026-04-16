@@ -19,6 +19,27 @@ export function buildSourceRowKey(pillar: PillarId, sheetRow: number): string {
   return `${pillar}|row-${sheetRow}`;
 }
 
-export function getActionItemSourceKey(item: Pick<ActionItem, 'pillar' | 'sheetRow' | 'sourceKey'>): string {
-  return item.sourceKey || buildSourceRowKey(item.pillar, item.sheetRow);
+function buildHierarchySourceKey(item: Pick<ActionItem, 'pillar' | 'goal' | 'objective' | 'actionStep'>): string {
+  const pillarKey = item.pillar;
+  const goalKey = normalizeHierarchyGroupKey(item.goal);
+  const actionKey = normalizeHierarchyGroupKey(item.objective);
+  const stepKey = normalizeHierarchyGroupKey(item.actionStep);
+
+  if (goalKey && actionKey && stepKey) {
+    return `${pillarKey}|goal:${goalKey}|action:${actionKey}|step:${stepKey}`;
+  }
+
+  if (actionKey && stepKey) {
+    return `${pillarKey}|action:${actionKey}|step:${stepKey}`;
+  }
+
+  if (stepKey) {
+    return `${pillarKey}|step:${stepKey}`;
+  }
+
+  return '';
+}
+
+export function getActionItemSourceKey(item: Pick<ActionItem, 'pillar' | 'goal' | 'objective' | 'actionStep' | 'sheetRow' | 'sourceKey'>): string {
+  return buildHierarchySourceKey(item) || item.sourceKey || buildSourceRowKey(item.pillar, item.sheetRow);
 }
