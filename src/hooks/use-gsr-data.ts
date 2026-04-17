@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/use-user-role';
+import { getValidAccessToken } from '@/lib/auth-session';
 import type { FetchResult } from '@/lib/types';
 
 function isUnauthorizedFunctionError(error: unknown): error is FunctionsHttpError {
@@ -18,21 +20,30 @@ function isRateLimitedFunctionError(error: unknown): boolean {
   return /(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(message);
 }
 
-async function invokeFetch(unitId: string) {
+async function invokeFetch(unitId: string, accessToken: string) {
   return supabase.functions.invoke('fetch-gsr-data', {
     body: { unitId },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 }
 
 async function fetchUnitData(unitId: string): Promise<FetchResult> {
-  let { data, error } = await invokeFetch(unitId);
+  const accessToken = await getValidAccessToken();
+  if (!accessToken) {
+    await supabase.auth.signOut();
+    throw new Error('Session expired. Please sign in again.');
+  }
+
+  let { data, error } = await invokeFetch(unitId, accessToken);
 
   // Recover from stale/invalid session on published domains.
   if (error && isUnauthorizedFunctionError(error)) {
-    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    const refreshedAccessToken = await getValidAccessToken({ refresh: true });
 
-    if (!refreshError && refreshed.session) {
-      const retryResult = await invokeFetch(unitId);
+    if (refreshedAccessToken) {
+      const retryResult = await invokeFetch(unitId, refreshedAccessToken);
       data = retryResult.data;
       error = retryResult.error;
     }
@@ -68,21 +79,25 @@ async function fetchUnitData(unitId: string): Promise<FetchResult> {
 export function useGSRData() {
   const { unitCode } = useParams<{ unitCode: string }>();
   const resolvedUnitId = unitCode || 'GSR';
+  const { isAuthenticated, isLoading: authLoading, session } = useAuth();
   const { data: userRole, isLoading: roleLoading } = useUserRole();
 
   // Don't fetch if role is still loading or if unit_user is on wrong unit
-  const hasAccess = !roleLoading && userRole && (
+  const hasAccess = !authLoading && !roleLoading && !!session?.access_token && userRole && (
     userRole.role === 'admin' ||
     !userRole.unitId ||
     userRole.unitId === resolvedUnitId
   );
 
   return useQuery<FetchResult>({
-    queryKey: ['gsr-data', resolvedUnitId],
+    queryKey: ['gsr-data', resolvedUnitId, session?.user.id ?? 'anonymous'],
     queryFn: () => fetchUnitData(resolvedUnitId),
-    enabled: !!hasAccess,
+    enabled: !!isAuthenticated && !!hasAccess,
     staleTime: 0,
     retry: (failureCount, err) => {
+      if (/session expired/i.test(err.message)) {
+        return false;
+      }
       if (/(rate-limited|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|SERVICE_UNAVAILABLE|temporarily unavailable|\b429\b|\b503\b)/i.test(err.message)) {
         return false;
       }
