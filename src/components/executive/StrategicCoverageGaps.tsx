@@ -11,7 +11,7 @@ import { ShieldCheck, ChevronRight } from 'lucide-react';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useUniversityData } from '@/hooks/use-university-data';
 import { isNotApplicableStatus, getTermWindowKey } from '@/lib/types';
-import { getUnitDisplayName } from '@/lib/unit-config';
+import { getUnitDisplayName, UNIT_IDS } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
 import { buildSourceRowKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import {
@@ -453,22 +453,38 @@ function getSelectedStatusMeta(item: ActionItem, viewType: ViewType, term: Term,
   };
 }
 
+function sortUnitIds(unitIds: Iterable<string>, configuredUnitIds: readonly string[]): string[] {
+  const unitOrder = new Map(configuredUnitIds.map((unitId, index) => [unitId, index]));
+
+  return Array.from(new Set(unitIds)).sort((left, right) => {
+    const leftOrder = unitOrder.get(left) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = unitOrder.get(right) ?? Number.MAX_SAFE_INTEGER;
+    return leftOrder - rightOrder || left.localeCompare(right);
+  });
+}
+
 // ─── Computation ─────────────────────────────────────────────────────────────
 
-function computeCategories(
+export function computeCategories(
   unitResults: UnitFetchResult[],
   viewType: ViewType,
   term: Term,
   academicYear: AcademicYear
 ): CategoryData[] {
-  const configuredUnitIds = unitResults.map(u => u.unitId);
+  const configuredUnitIds = [...UNIT_IDS];
   const totalConfiguredUnits = configuredUnitIds.length;
-  const loadedUnits = unitResults.filter(u => u.result && !u.error);
-  const failedUnits = unitResults.filter(u => !u.result || u.error);
+  const resultsByUnitId = new Map(unitResults.map(unitResult => [unitResult.unitId, unitResult]));
+  const loadedUnits = configuredUnitIds
+    .map(unitId => resultsByUnitId.get(unitId))
+    .filter((unitResult): unitResult is UnitFetchResult => Boolean(unitResult?.result) && !unitResult?.error);
+  const failedUnitIds = configuredUnitIds.filter(unitId => {
+    const unitResult = resultsByUnitId.get(unitId);
+    return !unitResult || !unitResult.result || Boolean(unitResult.error);
+  });
 
   // Warn about units that failed to load (likely rate-limited)
-  if (failedUnits.length > 0) {
-    console.warn(`[CoverageGaps] ${failedUnits.length} unit(s) failed to load:`, failedUnits.map(u => u.unitId).join(', '));
+  if (failedUnitIds.length > 0) {
+    console.warn(`[CoverageGaps] ${failedUnitIds.length} unit(s) failed to load:`, failedUnitIds.join(', '));
   }
 
   // Build step map using strict row-based source keys.
@@ -577,10 +593,12 @@ function computeCategories(
     }
     processedKeys.add(key);
 
+    const sortedNsUnits = sortUnitIds(entry.nsUnits, configuredUnitIds);
+    const sortedNaUnits = sortUnitIds(entry.naUnits, configuredUnitIds);
     const activeCount = entry.activeUnits.size; // non-NA units for this step
     const reportingCount = entry.reportingUnits.size;   // units with explicit status in the selected column
-    const nsCount = entry.nsUnits.size;
-    const naCount = entry.naUnits.size;
+    const nsCount = sortedNsUnits.length;
+    const naCount = sortedNaUnits.length;
 
     // NS: denominator = active (non-NA) units for this specific step
     if (activeCount > 0) {
@@ -591,8 +609,8 @@ function computeCategories(
         pillar: entry.pillar,
         goal: entry.goal,
         action: entry.action,
-        nsUnits: Array.from(entry.nsUnits),
-        naUnits: Array.from(entry.naUnits),
+        nsUnits: sortedNsUnits,
+        naUnits: sortedNaUnits,
         totalUnits: activeCount,
       };
       if (nsCount === activeCount) absoluteNS.push(nsItem);
@@ -608,20 +626,69 @@ function computeCategories(
         pillar: entry.pillar,
         goal: entry.goal,
         action: entry.action,
-        nsUnits: Array.from(entry.nsUnits),
-        naUnits: Array.from(entry.naUnits),
+        nsUnits: sortedNsUnits,
+        naUnits: sortedNaUnits,
         totalUnits: reportingCount,
       };
 
-      if (naCount === reportingCount) absoluteNA.push(majorityNaItem);
       if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(majorityNaItem);
     }
+
+    const missingUnitIds = configuredUnitIds.filter(unitId => !entry.reportingUnits.has(unitId));
+    const blockingUnitStatuses = configuredUnitIds
+      .filter(unitId => entry.reportingUnits.has(unitId) && !entry.naUnits.has(unitId))
+      .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)}`);
+    const isStrictAbsoluteNA = naCount === totalConfiguredUnits && reportingCount === totalConfiguredUnits;
+    const inclusionReason = isStrictAbsoluteNA
+      ? 'included: explicit Not Applicable in all 24 configured units'
+      : missingUnitIds.length > 0
+        ? `excluded: missing, blank, unmatched, or unloaded in ${missingUnitIds.length} unit(s)`
+        : `excluded: ${blockingUnitStatuses.length} unit(s) are present but not Not Applicable`;
+
+    if (import.meta.env.DEV) {
+      console.info('[CoverageGaps][Absolute NA candidate]', {
+        uniqueItemKey: entry.sourceKey,
+        matchedUnitsCount: naCount,
+        matchedUnits: sortedNaUnits.map(getUnitDisplayName),
+        missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
+        ...(blockingUnitStatuses.length > 0 ? { blockingUnits: blockingUnitStatuses } : {}),
+        finalReason: inclusionReason,
+      });
+    }
+
+    if (isStrictAbsoluteNA) {
+      absoluteNA.push({
+        sourceKey: entry.sourceKey,
+        sheetRow: entry.sheetRow,
+        actionStep: entry.actionStep,
+        pillar: entry.pillar,
+        goal: entry.goal,
+        action: entry.action,
+        nsUnits: sortedNsUnits,
+        naUnits: sortedNaUnits,
+        totalUnits: totalConfiguredUnits,
+      });
+    }
+  });
+
+  const strictAbsoluteNA = absoluteNA.filter(item => {
+    const isValid = item.naUnits.length === totalConfiguredUnits && item.totalUnits === totalConfiguredUnits;
+
+    if (!isValid) {
+      console.error('[CoverageGaps] Absolute NA item dropped by strict validator:', {
+        uniqueItemKey: item.sourceKey,
+        matchedUnitsCount: item.naUnits.length,
+        totalUnits: item.totalUnits,
+      });
+    }
+
+    return isValid;
   });
 
   // ─── Validation checks ─────────────────────────────────────────────────
   // Absolute must be a subset of Majority (absolute is stricter)
-  if (absoluteNA.length > majorityNA.length) {
-    console.error(`[CoverageGaps] VALIDATION FAIL: Absolute NA (${absoluteNA.length}) > Majority NA (${majorityNA.length})`);
+  if (strictAbsoluteNA.length > majorityNA.length) {
+    console.error(`[CoverageGaps] VALIDATION FAIL: Absolute NA (${strictAbsoluteNA.length}) > Majority NA (${majorityNA.length})`);
   }
   if (absoluteNS.length > majorityNS.length) {
     console.error(`[CoverageGaps] VALIDATION FAIL: Absolute NS (${absoluteNS.length}) > Majority NS (${majorityNS.length})`);
@@ -629,7 +696,7 @@ function computeCategories(
 
   // ─── Debug summary (dev only) ──────────────────────────────────────────
   if (import.meta.env.DEV) {
-    const absoluteNAKeys = new Set(absoluteNA.map(i => i.sourceKey));
+    const absoluteNAKeys = new Set(strictAbsoluteNA.map(i => i.sourceKey));
     const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
@@ -649,14 +716,14 @@ function computeCategories(
         }
       });
     }
-    console.info(`[CoverageGaps] Majority NA: ${majorityNA.length}, Absolute NA: ${absoluteNA.length}, Majority NS: ${majorityNS.length}, Absolute NS: ${absoluteNS.length}, Items: ${stepMap.size}, Loaded Units: ${loadedUnits.length}/${totalConfiguredUnits}`);
+    console.info(`[CoverageGaps] Majority NA: ${majorityNA.length}, Absolute NA: ${strictAbsoluteNA.length}, Majority NS: ${majorityNS.length}, Absolute NS: ${absoluteNS.length}, Items: ${stepMap.size}, Loaded Units: ${loadedUnits.length}/${totalConfiguredUnits}`);
   }
 
   return [
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks, missing rows, and N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
     { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks, missing rows, and N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
     { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Explicitly marked Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
-    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by 100% of reporting units', count: absoluteNA.length, accent: 'na' as const, items: absoluteNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by all 24 configured units; any missing, blank, unmatched, or non-NA unit excludes the item', count: strictAbsoluteNA.length, accent: 'na' as const, items: strictAbsoluteNA },
   ];
 }
 
