@@ -13,7 +13,7 @@ import { useUniversityData } from '@/hooks/use-university-data';
 import { isNotApplicableStatus, getTermWindowKey } from '@/lib/types';
 import { getUnitDisplayName, UNIT_IDS } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
-import { buildSourceRowKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
+import { getActionItemSourceKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import {
   Popover,
   PopoverContent,
@@ -463,6 +463,23 @@ function sortUnitIds(unitIds: Iterable<string>, configuredUnitIds: readonly stri
   });
 }
 
+function buildCoverageItemKey(
+  pillar: PillarId,
+  goal: string,
+  action: string,
+  actionStep: string,
+  item: Pick<ActionItem, 'sheetRow' | 'sourceKey'>,
+): string {
+  return getActionItemSourceKey({
+    pillar,
+    goal,
+    objective: action,
+    actionStep,
+    sheetRow: item.sheetRow,
+    sourceKey: item.sourceKey,
+  });
+}
+
 // ─── Computation ─────────────────────────────────────────────────────────────
 
 export function computeCategories(
@@ -487,8 +504,8 @@ export function computeCategories(
     console.warn(`[CoverageGaps] ${failedUnitIds.length} unit(s) failed to load:`, failedUnitIds.join(', '));
   }
 
-  // Build step map using strict row-based source keys.
-  // Forward-filled hierarchy labels are kept for display only.
+  // Build step map using a stable cross-unit hierarchy key.
+  // Row-based source keys remain only as a fallback when hierarchy fields are missing.
   const stepMap = new Map<string, {
     sourceKey: string;
     sheetRow: number;
@@ -525,12 +542,15 @@ export function computeCategories(
         const cleanedStep = normalizeHierarchyText(actionStep);
         if (!cleanedStep) return;
 
+        const normalizedGoal = normalizeHierarchyText(goal);
+        const normalizedAction = normalizeHierarchyText(action);
+
         const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
         if (!isProvided || !VALID_STATUSES.has(status)) return;
 
-        const key = item.sourceKey || buildSourceRowKey(pillar, item.sheetRow);
+        const key = buildCoverageItemKey(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
 
-        // Prevent duplicate counting if same unit has multiple rows mapping to the same source row.
+        // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
         if (unitProcessedKeys.has(key)) return;
         unitProcessedKeys.add(key);
 
@@ -540,8 +560,8 @@ export function computeCategories(
             sheetRow: item.sheetRow,
             actionStep: cleanedStep,
             pillar,
-            goal: normalizeHierarchyText(goal) || '(Unspecified Goal)',
-            action: normalizeHierarchyText(action) || '(Unspecified Action)',
+            goal: normalizedGoal || '(Unspecified Goal)',
+            action: normalizedAction || '(Unspecified Action)',
             nsUnits: new Set(),
             naUnits: new Set(),
             activeUnits: new Set(),
@@ -553,11 +573,12 @@ export function computeCategories(
         const entry = stepMap.get(key)!;
 
         if (entry.goal === '(Unspecified Goal)') {
-          entry.goal = normalizeHierarchyText(goal) || entry.goal;
+          entry.goal = normalizedGoal || entry.goal;
         }
         if (entry.action === '(Unspecified Action)') {
-          entry.action = normalizeHierarchyText(action) || entry.action;
+          entry.action = normalizedAction || entry.action;
         }
+        entry.sheetRow = Math.min(entry.sheetRow, item.sheetRow);
 
         // Track only units with an explicit status in the selected year/term/view.
         entry.reportingUnits.add(ur.unitId);
