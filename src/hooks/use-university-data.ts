@@ -26,6 +26,13 @@ async function fetchSingleUnit(unitId: string): Promise<UnitFetchResult> {
   const unitName = unitConfig?.fullName || unitId;
 
   try {
+    // Skip the request entirely if the user is no longer signed in (e.g. after logout)
+    // — this prevents the dashboard from surfacing a 401 toast for every unit still in flight.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      return { unitId, unitName, result: null, error: 'Session ended before request completed' };
+    }
+
     let { data, error } = await supabase.functions.invoke('fetch-gsr-data', {
       body: { unitId },
     });
@@ -38,6 +45,9 @@ async function fetchSingleUnit(unitId: string): Promise<UnitFetchResult> {
         });
         data = retryResult.data;
         error = retryResult.error;
+      } else {
+        // No active session anymore — treat as a soft failure so the rest of the dashboard keeps working.
+        return { unitId, unitName, result: null, error: 'Session expired' };
       }
     }
 
