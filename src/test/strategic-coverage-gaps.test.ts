@@ -21,7 +21,7 @@ function createTermData(status: Status): TermData {
   };
 }
 
-function createActionItem(status: Status): ActionItem {
+function createActionItem(status: Status, overrides: Partial<ActionItem> = {}): ActionItem {
   return {
     id: 'I-1',
     pillar: 'I',
@@ -37,6 +37,7 @@ function createActionItem(status: Status): ActionItem {
       'mid-2026-2027': createTermData(status),
       'end-2026-2027': createTermData(status),
     },
+    ...overrides,
   };
 }
 
@@ -79,6 +80,27 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items).toHaveLength(1);
     expect(absoluteNa?.items[0]?.totalUnits).toBe(24);
     expect(absoluteNa?.items[0]?.naUnits).toHaveLength(24);
+  });
+
+  it('matches the same logical item across units even when sheet rows differ', () => {
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => createUnitResult(unitId, {
+        items: [createActionItem('Not Applicable', {
+          id: `I-${index + 1}`,
+          sheetRow: 5 + index,
+          sourceKey: `I|row-${5 + index}`,
+        })],
+      })),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(24);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(24);
   });
 
   it('excludes the item when one unit has no matching row or explicit status', () => {
