@@ -277,7 +277,10 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.button
-                  onClick={() => { logout(); navigate('/login'); }}
+                  onClick={async () => {
+                    await logout();
+                    navigate('/login', { replace: true });
+                  }}
                   className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.95 }}
