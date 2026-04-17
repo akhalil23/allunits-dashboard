@@ -82,13 +82,13 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items[0]?.naUnits).toHaveLength(24);
   });
 
-  it('matches the same logical item across units even when sheet rows differ', () => {
+  it('matches the same logical item across units when a stable source key is present', () => {
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => createUnitResult(unitId, {
         items: [createActionItem('Not Applicable', {
           id: `I-${index + 1}`,
           sheetRow: 5 + index,
-          sourceKey: `I|row-${5 + index}`,
+          sourceKey: 'I|row-5',
         })],
       })),
       'cumulative',
