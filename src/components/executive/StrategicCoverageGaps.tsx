@@ -13,7 +13,7 @@ import { useUniversityData } from '@/hooks/use-university-data';
 import { isNotApplicableStatus, getTermWindowKey } from '@/lib/types';
 import { getUnitDisplayName, UNIT_IDS } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
-import { getActionItemSourceKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
+import { buildSourceRowKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import {
   Popover,
   PopoverContent,
@@ -465,19 +465,9 @@ function sortUnitIds(unitIds: Iterable<string>, configuredUnitIds: readonly stri
 
 function buildCoverageItemKey(
   pillar: PillarId,
-  goal: string,
-  action: string,
-  actionStep: string,
   item: Pick<ActionItem, 'sheetRow' | 'sourceKey'>,
 ): string {
-  return getActionItemSourceKey({
-    pillar,
-    goal,
-    objective: action,
-    actionStep,
-    sheetRow: item.sheetRow,
-    sourceKey: item.sourceKey,
-  });
+  return item.sourceKey || buildSourceRowKey(pillar, item.sheetRow);
 }
 
 // ─── Computation ─────────────────────────────────────────────────────────────
@@ -504,8 +494,8 @@ export function computeCategories(
     console.warn(`[CoverageGaps] ${failedUnitIds.length} unit(s) failed to load:`, failedUnitIds.join(', '));
   }
 
-  // Build step map using a stable cross-unit hierarchy key.
-  // Row-based source keys remain only as a fallback when hierarchy fields are missing.
+  // Build step map using the strict source row key coming from the ingestion pipeline.
+  // This is the only stable cross-unit identifier for Absolute NA in the current dataset.
   const stepMap = new Map<string, {
     sourceKey: string;
     sheetRow: number;
@@ -548,7 +538,7 @@ export function computeCategories(
         const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
         if (!isProvided || !VALID_STATUSES.has(status)) return;
 
-        const key = buildCoverageItemKey(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
+        const key = buildCoverageItemKey(pillar, item);
 
         // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
         if (unitProcessedKeys.has(key)) return;
