@@ -64,6 +64,31 @@ interface CategoryData {
   items: StepItem[];
 }
 
+interface CoverageAggregateEntry {
+  sourceKey: string;
+  sheetRow: number;
+  actionStep: string;
+  pillar: PillarId;
+  goal: string;
+  action: string;
+  aliases: Set<string>;
+  nsUnits: Set<string>;
+  naUnits: Set<string>;
+  activeUnits: Set<string>;
+  reportingUnits: Set<string>;
+  statusByUnit: Map<string, string>;
+}
+
+interface CoverageDebugRow {
+  itemKey: string;
+  matchedUnitsCount: number;
+  naCount: number;
+  nonNaCount: number;
+  missingCount: number;
+  included: boolean;
+  exclusionReason: string;
+}
+
 const VALID_STATUSES = new Set([
   'Not Applicable',
   'Not Started',
@@ -465,9 +490,85 @@ function sortUnitIds(unitIds: Iterable<string>, configuredUnitIds: readonly stri
 
 function buildCoverageItemKey(
   pillar: PillarId,
+  goal: string,
+  action: string,
+  actionStep: string,
   item: Pick<ActionItem, 'sheetRow' | 'sourceKey'>,
-): string {
-  return item.sourceKey || buildSourceRowKey(pillar, item.sheetRow);
+): string[] {
+  const rowKey = item.sourceKey || buildSourceRowKey(pillar, item.sheetRow);
+  const goalKey = normalizeHierarchyGroupKey(goal);
+  const actionKey = normalizeHierarchyGroupKey(action);
+  const stepKey = normalizeHierarchyGroupKey(actionStep);
+
+  const hierarchyKey = goalKey && actionKey && stepKey
+    ? `${pillar}|goal:${goalKey}|action:${actionKey}|step:${stepKey}`
+    : actionKey && stepKey
+      ? `${pillar}|action:${actionKey}|step:${stepKey}`
+      : stepKey
+        ? `${pillar}|step:${stepKey}`
+        : '';
+
+  return Array.from(new Set([hierarchyKey, rowKey].filter(Boolean)));
+}
+
+function mergeCoverageEntries(
+  stepMap: Map<string, CoverageAggregateEntry>,
+  aliasToCanonicalKey: Map<string, string>,
+  targetKey: string,
+  sourceKey: string,
+) {
+  if (targetKey === sourceKey) return targetKey;
+
+  const target = stepMap.get(targetKey);
+  const source = stepMap.get(sourceKey);
+  if (!target || !source) return targetKey;
+
+  source.aliases.forEach(alias => {
+    target.aliases.add(alias);
+    aliasToCanonicalKey.set(alias, targetKey);
+  });
+  source.nsUnits.forEach(unitId => target.nsUnits.add(unitId));
+  source.naUnits.forEach(unitId => target.naUnits.add(unitId));
+  source.activeUnits.forEach(unitId => target.activeUnits.add(unitId));
+  source.reportingUnits.forEach(unitId => target.reportingUnits.add(unitId));
+  source.statusByUnit.forEach((status, unitId) => target.statusByUnit.set(unitId, status));
+
+  target.sheetRow = Math.min(target.sheetRow, source.sheetRow);
+  if (target.goal === '(Unspecified Goal)' && source.goal !== '(Unspecified Goal)') target.goal = source.goal;
+  if (target.action === '(Unspecified Action)' && source.action !== '(Unspecified Action)') target.action = source.action;
+  if (!target.actionStep && source.actionStep) target.actionStep = source.actionStep;
+
+  stepMap.delete(sourceKey);
+  return targetKey;
+}
+
+function buildCoverageDebugRows(
+  stepMap: Map<string, CoverageAggregateEntry>,
+  configuredUnitIds: readonly string[],
+): CoverageDebugRow[] {
+  return Array.from(stepMap.entries())
+    .map(([itemKey, entry]) => {
+      const matchedUnitsCount = entry.reportingUnits.size;
+      const naCount = entry.naUnits.size;
+      const nonNaCount = matchedUnitsCount - naCount;
+      const missingCount = configuredUnitIds.length - matchedUnitsCount;
+      const included = matchedUnitsCount === configuredUnitIds.length && naCount === configuredUnitIds.length;
+
+      return {
+        itemKey,
+        matchedUnitsCount,
+        naCount,
+        nonNaCount,
+        missingCount,
+        included,
+        exclusionReason: included
+          ? 'included: explicit Not Applicable in all 24 configured units'
+          : missingCount > 0
+            ? `excluded: missing, blank, unmatched, or unloaded in ${missingCount} unit(s)`
+            : `excluded: ${nonNaCount} unit(s) are present but not Not Applicable`,
+      };
+    })
+    .sort((left, right) => right.naCount - left.naCount || left.itemKey.localeCompare(right.itemKey));
 }
 
 // ─── Computation ─────────────────────────────────────────────────────────────
@@ -494,21 +595,8 @@ export function computeCategories(
     console.warn(`[CoverageGaps] ${failedUnitIds.length} unit(s) failed to load:`, failedUnitIds.join(', '));
   }
 
-  // Build step map using the strict source row key coming from the ingestion pipeline.
-  // This is the only stable cross-unit identifier for Absolute NA in the current dataset.
-  const stepMap = new Map<string, {
-    sourceKey: string;
-    sheetRow: number;
-    actionStep: string;     // display text (first encountered, cleaned)
-    pillar: PillarId;
-    goal: string;           // display text (first encountered, cleaned)
-    action: string;         // display text (first encountered, cleaned)
-    nsUnits: Set<string>;
-    naUnits: Set<string>;
-    activeUnits: Set<string>; // units with valid non-NA status
-    reportingUnits: Set<string>;  // units with explicit status in the selected column
-    statusByUnit: Map<string, string>;
-  }>();
+  const stepMap = new Map<string, CoverageAggregateEntry>();
+  const aliasToCanonicalKey = new Map<string, string>();
 
   loadedUnits.forEach(ur => {
     const items = ur.result!.data;
@@ -538,20 +626,22 @@ export function computeCategories(
         const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
         if (!isProvided || !VALID_STATUSES.has(status)) return;
 
-        const key = buildCoverageItemKey(pillar, item);
+        const candidateKeys = buildCoverageItemKey(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
+        const existingCanonicalKeys = Array.from(new Set(candidateKeys
+          .map(candidateKey => aliasToCanonicalKey.get(candidateKey) ?? (stepMap.has(candidateKey) ? candidateKey : null))
+          .filter((candidateKey): candidateKey is string => Boolean(candidateKey))));
 
-        // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
-        if (unitProcessedKeys.has(key)) return;
-        unitProcessedKeys.add(key);
+        let canonicalKey = existingCanonicalKeys[0] ?? candidateKeys[0];
 
-        if (!stepMap.has(key)) {
-          stepMap.set(key, {
-            sourceKey: key,
+        if (!stepMap.has(canonicalKey)) {
+          stepMap.set(canonicalKey, {
+            sourceKey: canonicalKey,
             sheetRow: item.sheetRow,
             actionStep: cleanedStep,
             pillar,
             goal: normalizedGoal || '(Unspecified Goal)',
             action: normalizedAction || '(Unspecified Action)',
+            aliases: new Set(),
             nsUnits: new Set(),
             naUnits: new Set(),
             activeUnits: new Set(),
@@ -560,7 +650,19 @@ export function computeCategories(
           });
         }
 
-        const entry = stepMap.get(key)!;
+        existingCanonicalKeys.slice(1).forEach(existingKey => {
+          canonicalKey = mergeCoverageEntries(stepMap, aliasToCanonicalKey, canonicalKey, existingKey);
+        });
+
+        const entry = stepMap.get(canonicalKey)!;
+        candidateKeys.forEach(candidateKey => {
+          entry.aliases.add(candidateKey);
+          aliasToCanonicalKey.set(candidateKey, canonicalKey);
+        });
+
+        // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
+        if (unitProcessedKeys.has(canonicalKey)) return;
+        unitProcessedKeys.add(canonicalKey);
 
         if (entry.goal === '(Unspecified Goal)') {
           entry.goal = normalizedGoal || entry.goal;
@@ -682,6 +784,8 @@ export function computeCategories(
     }
   });
 
+  const debugRows = buildCoverageDebugRows(stepMap, configuredUnitIds);
+
   const strictAbsoluteNA = absoluteNA.filter(item => {
     const isValid = item.naUnits.length === totalConfiguredUnits && item.totalUnits === totalConfiguredUnits;
 
@@ -709,6 +813,7 @@ export function computeCategories(
   if (import.meta.env.DEV) {
     const absoluteNAKeys = new Set(strictAbsoluteNA.map(i => i.sourceKey));
     const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
+    console.table(debugRows.slice(0, 50));
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
       majorityOnlyNA.forEach(item => {
