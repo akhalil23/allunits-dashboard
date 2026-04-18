@@ -663,7 +663,37 @@ export function computeCategories(
   }
 
   const stepMap = new Map<string, CoverageAggregateEntry>();
-  const aliasToCanonicalKey = new Map<string, string>();
+  const aliasUsageByUnit = new Map<string, Set<string>>();
+
+  loadedUnits.forEach(ur => {
+    const items = ur.result!.data;
+    const byPillar = new Map<PillarId, ActionItem[]>();
+
+    items.forEach(item => {
+      if (!byPillar.has(item.pillar)) byPillar.set(item.pillar, []);
+      byPillar.get(item.pillar)!.push(item);
+    });
+
+    byPillar.forEach(pillarItems => {
+      forwardFill(pillarItems).forEach(({ goal, action, actionStep, pillar, item }) => {
+        const cleanedStep = normalizeHierarchyText(actionStep);
+        if (!cleanedStep) return;
+
+        buildCoverageAliasKeys(
+          pillar,
+          normalizeHierarchyText(goal),
+          normalizeHierarchyText(action),
+          cleanedStep,
+          item,
+        ).forEach(({ key }) => {
+          if (!aliasUsageByUnit.has(key)) {
+            aliasUsageByUnit.set(key, new Set());
+          }
+          aliasUsageByUnit.get(key)!.add(ur.unitId);
+        });
+      });
+    });
+  });
 
   loadedUnits.forEach(ur => {
     const items = ur.result!.data;
@@ -675,30 +705,23 @@ export function computeCategories(
       byPillar.get(item.pillar)!.push(item);
     });
 
-    // Track already-processed keys for this unit to prevent duplicate counting
     const unitProcessedKeys = new Set<string>();
 
-    // Forward-fill and process each pillar
     byPillar.forEach((pillarItems, _pillar) => {
       const filled = forwardFill(pillarItems);
 
       filled.forEach(({ goal, action, actionStep, pillar, item }) => {
-        // Skip rows with empty action step (non-data rows)
         const cleanedStep = normalizeHierarchyText(actionStep);
         if (!cleanedStep) return;
 
         const normalizedGoal = normalizeHierarchyText(goal);
         const normalizedAction = normalizeHierarchyText(action);
 
-        const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
-        if (!isProvided || !VALID_STATUSES.has(status)) return;
+        const statusMeta = classifyCoverageUnitStatus(item, viewType, term, academicYear);
+        const aliasKeys = buildCoverageAliasKeys(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
+        const canonicalKey = selectCanonicalCoverageKey(aliasKeys, aliasUsageByUnit, totalConfiguredUnits);
 
-        const candidateKeys = buildCoverageItemKey(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
-        const existingCanonicalKeys = Array.from(new Set(candidateKeys
-          .map(candidateKey => aliasToCanonicalKey.get(candidateKey) ?? (stepMap.has(candidateKey) ? candidateKey : null))
-          .filter((candidateKey): candidateKey is string => Boolean(candidateKey))));
-
-        let canonicalKey = existingCanonicalKeys[0] ?? candidateKeys[0];
+        if (!canonicalKey) return;
 
         if (!stepMap.has(canonicalKey)) {
           stepMap.set(canonicalKey, {
@@ -709,27 +732,14 @@ export function computeCategories(
             goal: normalizedGoal || '(Unspecified Goal)',
             action: normalizedAction || '(Unspecified Action)',
             aliases: new Set(),
-            nsUnits: new Set(),
-            naUnits: new Set(),
-            activeUnits: new Set(),
-            reportingUnits: new Set(),
             statusByUnit: new Map(),
           });
         }
 
-        existingCanonicalKeys.slice(1).forEach(existingKey => {
-          canonicalKey = mergeCoverageEntries(stepMap, aliasToCanonicalKey, canonicalKey, existingKey);
-        });
-
         const entry = stepMap.get(canonicalKey)!;
-        candidateKeys.forEach(candidateKey => {
-          entry.aliases.add(candidateKey);
-          aliasToCanonicalKey.set(candidateKey, canonicalKey);
+        aliasKeys.forEach(({ key }) => {
+          entry.aliases.add(key);
         });
-
-        // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
-        if (unitProcessedKeys.has(canonicalKey)) return;
-        unitProcessedKeys.add(canonicalKey);
 
         if (entry.goal === '(Unspecified Goal)') {
           entry.goal = normalizedGoal || entry.goal;
@@ -739,19 +749,15 @@ export function computeCategories(
         }
         entry.sheetRow = Math.min(entry.sheetRow, item.sheetRow);
 
-        // Track only units with an explicit status in the selected year/term/view.
-        entry.reportingUnits.add(ur.unitId);
-        entry.statusByUnit.set(ur.unitId, status);
+        const dedupeKey = `${canonicalKey}::${ur.unitId}`;
+        const currentStatus = entry.statusByUnit.get(ur.unitId);
+        const nextStatus = mergeCoverageUnitStatus(currentStatus, statusMeta);
+        entry.statusByUnit.set(ur.unitId, nextStatus);
 
-        if (isNotApplicableStatus(status)) {
-          entry.naUnits.add(ur.unitId);
-        } else {
-          // Active = has a non-NA valid status
-          entry.activeUnits.add(ur.unitId);
-          if (status === 'Not Started') {
-            entry.nsUnits.add(ur.unitId);
-          }
+        if (unitProcessedKeys.has(dedupeKey) && currentStatus?.classification === nextStatus.classification && currentStatus?.status === nextStatus.status) {
+          return;
         }
+        unitProcessedKeys.add(dedupeKey);
       });
     });
   });
@@ -773,14 +779,23 @@ export function computeCategories(
     }
     processedKeys.add(key);
 
-    const sortedNsUnits = sortUnitIds(entry.nsUnits, configuredUnitIds);
-    const sortedNaUnits = sortUnitIds(entry.naUnits, configuredUnitIds);
-    const activeCount = entry.activeUnits.size; // non-NA units for this step
-    const reportingCount = entry.reportingUnits.size;   // units with explicit status in the selected column
+    const sortedNsUnits = sortUnitIds(
+      configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na' && entry.statusByUnit.get(unitId)?.status === 'Not Started'),
+      configuredUnitIds,
+    );
+    const sortedNaUnits = sortUnitIds(
+      configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'na'),
+      configuredUnitIds,
+    );
+    const nonNaUnitIds = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na');
+    const blankUnitIds = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank');
+    const activeCount = nonNaUnitIds.length;
+    const reportingCount = configuredUnitIds.filter(unitId => entry.statusByUnit.has(unitId)).length;
     const nsCount = sortedNsUnits.length;
     const naCount = sortedNaUnits.length;
+    const nonNaCount = nonNaUnitIds.length;
+    const blankCount = blankUnitIds.length;
 
-    // NS: denominator = active (non-NA) units for this specific step
     if (activeCount > 0) {
       const nsItem: StepItem = {
         sourceKey: entry.sourceKey,
@@ -797,7 +812,6 @@ export function computeCategories(
       if (nsCount >= Math.ceil(activeCount * 0.75)) majorityNS.push(nsItem);
     }
 
-    // NA: denominator = all valid (reporting) units for this step
     if (reportingCount > 0) {
       const majorityNaItem: StepItem = {
         sourceKey: entry.sourceKey,
@@ -814,21 +828,30 @@ export function computeCategories(
       if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(majorityNaItem);
     }
 
-    const missingUnitIds = configuredUnitIds.filter(unitId => !entry.reportingUnits.has(unitId));
+    const missingUnitIds = configuredUnitIds.filter(unitId => !entry.statusByUnit.has(unitId));
     const blockingUnitStatuses = configuredUnitIds
-      .filter(unitId => entry.reportingUnits.has(unitId) && !entry.naUnits.has(unitId))
-      .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)}`);
-    const isStrictAbsoluteNA = naCount === totalConfiguredUnits && reportingCount === totalConfiguredUnits;
+      .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
+      .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
+    const isStrictAbsoluteNA = naCount === totalConfiguredUnits && nonNaCount === 0 && blankCount === 0 && missingUnitIds.length === 0;
     const inclusionReason = isStrictAbsoluteNA
       ? 'included: explicit Not Applicable in all 24 configured units'
+      : nonNaCount > 0
+        ? `excluded: ${nonNaCount} unit(s) are present but not Not Applicable`
+        : blankCount > 0
+          ? `excluded: blank status in ${blankCount} unit(s)`
       : missingUnitIds.length > 0
         ? `excluded: missing, blank, unmatched, or unloaded in ${missingUnitIds.length} unit(s)`
-        : `excluded: ${blockingUnitStatuses.length} unit(s) are present but not Not Applicable`;
+        : 'excluded: no item has NA_count = 24 out of 24 loaded units';
 
     if (import.meta.env.DEV) {
       console.info('[CoverageGaps][Absolute NA candidate]', {
         uniqueItemKey: entry.sourceKey,
-        matchedUnitsCount: naCount,
+        totalUnits: totalConfiguredUnits,
+        matchedUnitsCount: reportingCount,
+        naCount,
+        nonNaCount,
+        blankCount,
+        missingCount: missingUnitIds.length,
         matchedUnits: sortedNaUnits.map(getUnitDisplayName),
         missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
         ...(blockingUnitStatuses.length > 0 ? { blockingUnits: blockingUnitStatuses } : {}),
@@ -886,15 +909,18 @@ export function computeCategories(
       majorityOnlyNA.forEach(item => {
         const entry = stepMap.get(item.sourceKey);
         if (entry) {
-          const nonNAUnits = Array.from(entry.reportingUnits)
-            .filter(u => !entry.naUnits.has(u))
-            .map(u => `${getUnitDisplayName(u)}=${entry.statusByUnit.get(u)}`);
+          const nonNAUnits = configuredUnitIds
+            .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
+            .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
           const missingUnits = configuredUnitIds
-            .filter(unitId => !entry.reportingUnits.has(unitId))
+            .filter(unitId => !entry.statusByUnit.has(unitId))
+            .map(getUnitDisplayName);
+          const blankUnits = configuredUnitIds
+            .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank')
             .map(getUnitDisplayName);
 
           console.info(
-            `  [${item.pillar}] row ${item.sheetRow} "${item.actionStep}" — NA: ${entry.naUnits.size}/${totalConfiguredUnits}. Non-NA: [${nonNAUnits.join(', ')}]. Missing: [${missingUnits.join(', ')}]`
+            `  [${item.pillar}] row ${item.sheetRow} "${item.actionStep}" — NA: ${item.naUnits.length}/${totalConfiguredUnits}. Non-NA: [${nonNAUnits.join(', ')}]. Blank: [${blankUnits.join(', ')}]. Missing: [${missingUnits.join(', ')}]`
           );
         }
       });
