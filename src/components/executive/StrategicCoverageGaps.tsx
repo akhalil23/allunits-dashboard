@@ -718,6 +718,8 @@ export function computeCategories(
 
   const stepMap = new Map<string, CoverageAggregateEntry>();
   const aliasUsageByUnit = new Map<string, Set<string>>();
+  const aliasGroups: CoverageAliasKey[][] = [];
+  const aliasRankByKey = new Map<string, number>();
 
   loadedUnits.forEach(ur => {
     const items = ur.result!.data;
@@ -733,13 +735,20 @@ export function computeCategories(
         const cleanedStep = normalizeHierarchyText(actionStep);
         if (!cleanedStep) return;
 
-        buildCoverageAliasKeys(
+        const aliasKeys = buildCoverageAliasKeys(
           pillar,
           normalizeHierarchyText(goal),
           normalizeHierarchyText(action),
           cleanedStep,
           item,
-        ).forEach(({ key }) => {
+        );
+
+        aliasGroups.push(aliasKeys);
+        aliasKeys.forEach(({ key, rank }) => {
+          const existingRank = aliasRankByKey.get(key) ?? 0;
+          if (rank > existingRank) {
+            aliasRankByKey.set(key, rank);
+          }
           if (!aliasUsageByUnit.has(key)) {
             aliasUsageByUnit.set(key, new Set());
           }
@@ -747,6 +756,16 @@ export function computeCategories(
         });
       });
     });
+  });
+
+  const aliasComponentByKey = buildCoverageAliasComponentMap(aliasGroups);
+  const componentAliases = new Map<string, Set<string>>();
+
+  aliasComponentByKey.forEach((componentKey, aliasKey) => {
+    if (!componentAliases.has(componentKey)) {
+      componentAliases.set(componentKey, new Set());
+    }
+    componentAliases.get(componentKey)!.add(aliasKey);
   });
 
   loadedUnits.forEach(ur => {
@@ -773,7 +792,17 @@ export function computeCategories(
 
         const statusMeta = classifyCoverageUnitStatus(item, viewType, term, academicYear);
         const aliasKeys = buildCoverageAliasKeys(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
-        const canonicalKey = selectCanonicalCoverageKey(aliasKeys, aliasUsageByUnit, totalConfiguredUnits);
+        const aliasIds = aliasKeys.map(({ key }) => key);
+        const componentKey = aliasIds
+          .map(key => aliasComponentByKey.get(key) ?? key)
+          .sort((left, right) => left.localeCompare(right))
+          .at(0);
+        const canonicalKey = selectCanonicalCoverageKeyForComponent(
+          componentKey ? (componentAliases.get(componentKey) ?? aliasIds) : aliasIds,
+          aliasUsageByUnit,
+          aliasRankByKey,
+          totalConfiguredUnits,
+        );
 
         if (!canonicalKey) return;
 
