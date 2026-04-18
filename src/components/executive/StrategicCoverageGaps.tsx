@@ -595,21 +595,8 @@ export function computeCategories(
     console.warn(`[CoverageGaps] ${failedUnitIds.length} unit(s) failed to load:`, failedUnitIds.join(', '));
   }
 
-  // Build step map using the strict source row key coming from the ingestion pipeline.
-  // This is the only stable cross-unit identifier for Absolute NA in the current dataset.
-  const stepMap = new Map<string, {
-    sourceKey: string;
-    sheetRow: number;
-    actionStep: string;     // display text (first encountered, cleaned)
-    pillar: PillarId;
-    goal: string;           // display text (first encountered, cleaned)
-    action: string;         // display text (first encountered, cleaned)
-    nsUnits: Set<string>;
-    naUnits: Set<string>;
-    activeUnits: Set<string>; // units with valid non-NA status
-    reportingUnits: Set<string>;  // units with explicit status in the selected column
-    statusByUnit: Map<string, string>;
-  }>();
+  const stepMap = new Map<string, CoverageAggregateEntry>();
+  const aliasToCanonicalKey = new Map<string, string>();
 
   loadedUnits.forEach(ur => {
     const items = ur.result!.data;
@@ -639,20 +626,22 @@ export function computeCategories(
         const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
         if (!isProvided || !VALID_STATUSES.has(status)) return;
 
-        const key = buildCoverageItemKey(pillar, item);
+        const candidateKeys = buildCoverageItemKey(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
+        const existingCanonicalKeys = Array.from(new Set(candidateKeys
+          .map(candidateKey => aliasToCanonicalKey.get(candidateKey) ?? (stepMap.has(candidateKey) ? candidateKey : null))
+          .filter((candidateKey): candidateKey is string => Boolean(candidateKey))));
 
-        // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
-        if (unitProcessedKeys.has(key)) return;
-        unitProcessedKeys.add(key);
+        let canonicalKey = existingCanonicalKeys[0] ?? candidateKeys[0];
 
-        if (!stepMap.has(key)) {
-          stepMap.set(key, {
-            sourceKey: key,
+        if (!stepMap.has(canonicalKey)) {
+          stepMap.set(canonicalKey, {
+            sourceKey: canonicalKey,
             sheetRow: item.sheetRow,
             actionStep: cleanedStep,
             pillar,
             goal: normalizedGoal || '(Unspecified Goal)',
             action: normalizedAction || '(Unspecified Action)',
+            aliases: new Set(),
             nsUnits: new Set(),
             naUnits: new Set(),
             activeUnits: new Set(),
@@ -661,7 +650,19 @@ export function computeCategories(
           });
         }
 
-        const entry = stepMap.get(key)!;
+        existingCanonicalKeys.slice(1).forEach(existingKey => {
+          canonicalKey = mergeCoverageEntries(stepMap, aliasToCanonicalKey, canonicalKey, existingKey);
+        });
+
+        const entry = stepMap.get(canonicalKey)!;
+        candidateKeys.forEach(candidateKey => {
+          entry.aliases.add(candidateKey);
+          aliasToCanonicalKey.set(candidateKey, canonicalKey);
+        });
+
+        // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
+        if (unitProcessedKeys.has(canonicalKey)) return;
+        unitProcessedKeys.add(canonicalKey);
 
         if (entry.goal === '(Unspecified Goal)') {
           entry.goal = normalizedGoal || entry.goal;
@@ -783,6 +784,8 @@ export function computeCategories(
     }
   });
 
+  const debugRows = buildCoverageDebugRows(stepMap, configuredUnitIds);
+
   const strictAbsoluteNA = absoluteNA.filter(item => {
     const isValid = item.naUnits.length === totalConfiguredUnits && item.totalUnits === totalConfiguredUnits;
 
@@ -810,6 +813,7 @@ export function computeCategories(
   if (import.meta.env.DEV) {
     const absoluteNAKeys = new Set(strictAbsoluteNA.map(i => i.sourceKey));
     const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
+    console.table(debugRows.slice(0, 50));
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
       majorityOnlyNA.forEach(item => {
