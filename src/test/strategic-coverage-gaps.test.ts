@@ -143,4 +143,50 @@ describe('computeCategories Absolute NA', () => {
 
     expect(absoluteNa?.items).toHaveLength(0);
   });
+
+  it('merges alias-linked matches before applying the strict 24/24 NA rule', () => {
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => {
+        if (index < 8) {
+          return createUnitResult(unitId, {
+            items: [createActionItem('Not Applicable', {
+              sourceKey: 'I|row-5',
+              goal: 'Goal 1',
+              objective: 'Action 1',
+              actionStep: 'Action Step 1',
+            })],
+          });
+        }
+
+        if (index < 16) {
+          return createUnitResult(unitId, {
+            items: [createActionItem('Not Applicable', {
+              sourceKey: 'I|row-5',
+              goal: 'Goal 1',
+              objective: 'Action One',
+              actionStep: 'Action Step 1',
+            })],
+          });
+        }
+
+        return createUnitResult(unitId, {
+          items: [createActionItem('Not Applicable', {
+            sourceKey: 'I|row-9',
+            goal: 'Goal 1',
+            objective: 'Action One',
+            actionStep: 'Action Step 1',
+          })],
+        });
+      }),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(24);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(24);
+  });
 });
