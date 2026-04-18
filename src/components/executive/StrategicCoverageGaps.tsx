@@ -901,9 +901,15 @@ export function computeCategories(
 
   // ─── Debug summary (dev only) ──────────────────────────────────────────
   if (import.meta.env.DEV) {
+    const isMandatoryAbsoluteNaDebugFilter = viewType === 'cumulative' && term === 'mid' && academicYear === '2025-2026';
     const absoluteNAKeys = new Set(strictAbsoluteNA.map(i => i.sourceKey));
     const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
-    console.table(debugRows.slice(0, 50));
+    if (isMandatoryAbsoluteNaDebugFilter) {
+      console.table(debugRows);
+      if (strictAbsoluteNA.length === 0) {
+        console.info('[CoverageGaps] No item has NA_count = 24 out of 24 loaded units.');
+      }
+    }
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
       majorityOnlyNA.forEach(item => {
