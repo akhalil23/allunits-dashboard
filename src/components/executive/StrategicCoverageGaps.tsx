@@ -72,18 +72,28 @@ interface CoverageAggregateEntry {
   goal: string;
   action: string;
   aliases: Set<string>;
-  nsUnits: Set<string>;
-  naUnits: Set<string>;
-  activeUnits: Set<string>;
-  reportingUnits: Set<string>;
-  statusByUnit: Map<string, string>;
+  statusByUnit: Map<string, CoverageUnitStatus>;
+}
+
+type CoverageUnitClassification = 'na' | 'non-na' | 'blank';
+
+interface CoverageUnitStatus {
+  classification: CoverageUnitClassification;
+  status: string;
+}
+
+interface CoverageAliasKey {
+  key: string;
+  rank: number;
 }
 
 interface CoverageDebugRow {
   itemKey: string;
+  totalUnits: number;
   matchedUnitsCount: number;
   naCount: number;
   nonNaCount: number;
+  blankCount: number;
   missingCount: number;
   included: boolean;
   exclusionReason: string;
@@ -488,58 +498,109 @@ function sortUnitIds(unitIds: Iterable<string>, configuredUnitIds: readonly stri
   });
 }
 
-function buildCoverageItemKey(
+function buildCoverageAliasKeys(
   pillar: PillarId,
   goal: string,
   action: string,
   actionStep: string,
   item: Pick<ActionItem, 'sheetRow' | 'sourceKey'>,
-): string[] {
+): CoverageAliasKey[] {
   const rowKey = item.sourceKey || buildSourceRowKey(pillar, item.sheetRow);
   const goalKey = normalizeHierarchyGroupKey(goal);
   const actionKey = normalizeHierarchyGroupKey(action);
   const stepKey = normalizeHierarchyGroupKey(actionStep);
 
-  const hierarchyKey = goalKey && actionKey && stepKey
-    ? `${pillar}|goal:${goalKey}|action:${actionKey}|step:${stepKey}`
-    : actionKey && stepKey
-      ? `${pillar}|action:${actionKey}|step:${stepKey}`
-      : stepKey
-        ? `${pillar}|step:${stepKey}`
-        : '';
+  const aliases: CoverageAliasKey[] = [];
 
-  return Array.from(new Set([hierarchyKey, rowKey].filter(Boolean)));
+  if (goalKey && actionKey && stepKey) {
+    aliases.push({ key: `${pillar}|goal:${goalKey}|action:${actionKey}|step:${stepKey}`, rank: 4 });
+  }
+  if (actionKey && stepKey) {
+    aliases.push({ key: `${pillar}|action:${actionKey}|step:${stepKey}`, rank: 3 });
+  }
+  if (stepKey) {
+    aliases.push({ key: `${pillar}|step:${stepKey}`, rank: 2 });
+  }
+  if (rowKey) {
+    aliases.push({ key: rowKey, rank: 1 });
+  }
+
+  return Array.from(
+    aliases.reduce((map, alias) => {
+      const existing = map.get(alias.key);
+      if (!existing || alias.rank > existing.rank) {
+        map.set(alias.key, alias);
+      }
+      return map;
+    }, new Map<string, CoverageAliasKey>()).values(),
+  );
 }
 
-function mergeCoverageEntries(
-  stepMap: Map<string, CoverageAggregateEntry>,
-  aliasToCanonicalKey: Map<string, string>,
-  targetKey: string,
-  sourceKey: string,
-) {
-  if (targetKey === sourceKey) return targetKey;
+function classifyCoverageUnitStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): CoverageUnitStatus {
+  const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
 
-  const target = stepMap.get(targetKey);
-  const source = stepMap.get(sourceKey);
-  if (!target || !source) return targetKey;
+  if (!isProvided) {
+    return { classification: 'blank', status: '(blank)' };
+  }
 
-  source.aliases.forEach(alias => {
-    target.aliases.add(alias);
-    aliasToCanonicalKey.set(alias, targetKey);
-  });
-  source.nsUnits.forEach(unitId => target.nsUnits.add(unitId));
-  source.naUnits.forEach(unitId => target.naUnits.add(unitId));
-  source.activeUnits.forEach(unitId => target.activeUnits.add(unitId));
-  source.reportingUnits.forEach(unitId => target.reportingUnits.add(unitId));
-  source.statusByUnit.forEach((status, unitId) => target.statusByUnit.set(unitId, status));
+  if (!VALID_STATUSES.has(status)) {
+    return { classification: 'blank', status: status || '(blank)' };
+  }
 
-  target.sheetRow = Math.min(target.sheetRow, source.sheetRow);
-  if (target.goal === '(Unspecified Goal)' && source.goal !== '(Unspecified Goal)') target.goal = source.goal;
-  if (target.action === '(Unspecified Action)' && source.action !== '(Unspecified Action)') target.action = source.action;
-  if (!target.actionStep && source.actionStep) target.actionStep = source.actionStep;
+  return isNotApplicableStatus(status)
+    ? { classification: 'na', status }
+    : { classification: 'non-na', status };
+}
 
-  stepMap.delete(sourceKey);
-  return targetKey;
+function selectCanonicalCoverageKey(
+  aliasKeys: CoverageAliasKey[],
+  aliasUsageByUnit: Map<string, Set<string>>,
+  totalConfiguredUnits: number,
+): string {
+  return [...aliasKeys]
+    .sort((left, right) => {
+      const leftCoverage = aliasUsageByUnit.get(left.key)?.size ?? 0;
+      const rightCoverage = aliasUsageByUnit.get(right.key)?.size ?? 0;
+      const leftIsAllUnits = leftCoverage === totalConfiguredUnits ? 1 : 0;
+      const rightIsAllUnits = rightCoverage === totalConfiguredUnits ? 1 : 0;
+
+      return rightIsAllUnits - leftIsAllUnits
+        || rightCoverage - leftCoverage
+        || right.rank - left.rank
+        || left.key.localeCompare(right.key);
+    })
+    .at(0)?.key ?? aliasKeys[0]?.key ?? '';
+}
+
+function mergeCoverageUnitStatus(
+  current: CoverageUnitStatus | undefined,
+  incoming: CoverageUnitStatus,
+): CoverageUnitStatus {
+  if (!current) return incoming;
+
+  const priority: Record<CoverageUnitClassification, number> = {
+    'blank': 1,
+    'na': 2,
+    'non-na': 3,
+  };
+
+  if (priority[incoming.classification] > priority[current.classification]) {
+    return incoming;
+  }
+
+  if (priority[incoming.classification] < priority[current.classification]) {
+    return current;
+  }
+
+  if (
+    current.classification === 'non-na'
+    && current.status === 'Not Started'
+    && incoming.status !== 'Not Started'
+  ) {
+    return incoming;
+  }
+
+  return current;
 }
 
 function buildCoverageDebugRows(
@@ -548,24 +609,30 @@ function buildCoverageDebugRows(
 ): CoverageDebugRow[] {
   return Array.from(stepMap.entries())
     .map(([itemKey, entry]) => {
-      const matchedUnitsCount = entry.reportingUnits.size;
-      const naCount = entry.naUnits.size;
-      const nonNaCount = matchedUnitsCount - naCount;
+      const totalUnits = configuredUnitIds.length;
+      const matchedUnitsCount = configuredUnitIds.filter(unitId => entry.statusByUnit.has(unitId)).length;
+      const naCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'na').length;
+      const nonNaCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na').length;
+      const blankCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank').length;
       const missingCount = configuredUnitIds.length - matchedUnitsCount;
-      const included = matchedUnitsCount === configuredUnitIds.length && naCount === configuredUnitIds.length;
+      const included = naCount === totalUnits && nonNaCount === 0 && blankCount === 0 && missingCount === 0;
 
       return {
         itemKey,
+        totalUnits,
         matchedUnitsCount,
         naCount,
         nonNaCount,
+        blankCount,
         missingCount,
         included,
         exclusionReason: included
           ? 'included: explicit Not Applicable in all 24 configured units'
-          : missingCount > 0
-            ? `excluded: missing, blank, unmatched, or unloaded in ${missingCount} unit(s)`
-            : `excluded: ${nonNaCount} unit(s) are present but not Not Applicable`,
+          : [
+              nonNaCount > 0 ? `non-NA=${nonNaCount}` : null,
+              blankCount > 0 ? `blank=${blankCount}` : null,
+              missingCount > 0 ? `missing=${missingCount}` : null,
+            ].filter(Boolean).join(', '),
       };
     })
     .sort((left, right) => right.naCount - left.naCount || left.itemKey.localeCompare(right.itemKey));
@@ -596,7 +663,37 @@ export function computeCategories(
   }
 
   const stepMap = new Map<string, CoverageAggregateEntry>();
-  const aliasToCanonicalKey = new Map<string, string>();
+  const aliasUsageByUnit = new Map<string, Set<string>>();
+
+  loadedUnits.forEach(ur => {
+    const items = ur.result!.data;
+    const byPillar = new Map<PillarId, ActionItem[]>();
+
+    items.forEach(item => {
+      if (!byPillar.has(item.pillar)) byPillar.set(item.pillar, []);
+      byPillar.get(item.pillar)!.push(item);
+    });
+
+    byPillar.forEach(pillarItems => {
+      forwardFill(pillarItems).forEach(({ goal, action, actionStep, pillar, item }) => {
+        const cleanedStep = normalizeHierarchyText(actionStep);
+        if (!cleanedStep) return;
+
+        buildCoverageAliasKeys(
+          pillar,
+          normalizeHierarchyText(goal),
+          normalizeHierarchyText(action),
+          cleanedStep,
+          item,
+        ).forEach(({ key }) => {
+          if (!aliasUsageByUnit.has(key)) {
+            aliasUsageByUnit.set(key, new Set());
+          }
+          aliasUsageByUnit.get(key)!.add(ur.unitId);
+        });
+      });
+    });
+  });
 
   loadedUnits.forEach(ur => {
     const items = ur.result!.data;
@@ -608,30 +705,23 @@ export function computeCategories(
       byPillar.get(item.pillar)!.push(item);
     });
 
-    // Track already-processed keys for this unit to prevent duplicate counting
     const unitProcessedKeys = new Set<string>();
 
-    // Forward-fill and process each pillar
     byPillar.forEach((pillarItems, _pillar) => {
       const filled = forwardFill(pillarItems);
 
       filled.forEach(({ goal, action, actionStep, pillar, item }) => {
-        // Skip rows with empty action step (non-data rows)
         const cleanedStep = normalizeHierarchyText(actionStep);
         if (!cleanedStep) return;
 
         const normalizedGoal = normalizeHierarchyText(goal);
         const normalizedAction = normalizeHierarchyText(action);
 
-        const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
-        if (!isProvided || !VALID_STATUSES.has(status)) return;
+        const statusMeta = classifyCoverageUnitStatus(item, viewType, term, academicYear);
+        const aliasKeys = buildCoverageAliasKeys(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
+        const canonicalKey = selectCanonicalCoverageKey(aliasKeys, aliasUsageByUnit, totalConfiguredUnits);
 
-        const candidateKeys = buildCoverageItemKey(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
-        const existingCanonicalKeys = Array.from(new Set(candidateKeys
-          .map(candidateKey => aliasToCanonicalKey.get(candidateKey) ?? (stepMap.has(candidateKey) ? candidateKey : null))
-          .filter((candidateKey): candidateKey is string => Boolean(candidateKey))));
-
-        let canonicalKey = existingCanonicalKeys[0] ?? candidateKeys[0];
+        if (!canonicalKey) return;
 
         if (!stepMap.has(canonicalKey)) {
           stepMap.set(canonicalKey, {
@@ -642,27 +732,14 @@ export function computeCategories(
             goal: normalizedGoal || '(Unspecified Goal)',
             action: normalizedAction || '(Unspecified Action)',
             aliases: new Set(),
-            nsUnits: new Set(),
-            naUnits: new Set(),
-            activeUnits: new Set(),
-            reportingUnits: new Set(),
             statusByUnit: new Map(),
           });
         }
 
-        existingCanonicalKeys.slice(1).forEach(existingKey => {
-          canonicalKey = mergeCoverageEntries(stepMap, aliasToCanonicalKey, canonicalKey, existingKey);
-        });
-
         const entry = stepMap.get(canonicalKey)!;
-        candidateKeys.forEach(candidateKey => {
-          entry.aliases.add(candidateKey);
-          aliasToCanonicalKey.set(candidateKey, canonicalKey);
+        aliasKeys.forEach(({ key }) => {
+          entry.aliases.add(key);
         });
-
-        // Prevent duplicate counting if same unit has multiple rows mapping to the same logical item.
-        if (unitProcessedKeys.has(canonicalKey)) return;
-        unitProcessedKeys.add(canonicalKey);
 
         if (entry.goal === '(Unspecified Goal)') {
           entry.goal = normalizedGoal || entry.goal;
@@ -672,19 +749,15 @@ export function computeCategories(
         }
         entry.sheetRow = Math.min(entry.sheetRow, item.sheetRow);
 
-        // Track only units with an explicit status in the selected year/term/view.
-        entry.reportingUnits.add(ur.unitId);
-        entry.statusByUnit.set(ur.unitId, status);
+        const dedupeKey = `${canonicalKey}::${ur.unitId}`;
+        const currentStatus = entry.statusByUnit.get(ur.unitId);
+        const nextStatus = mergeCoverageUnitStatus(currentStatus, statusMeta);
+        entry.statusByUnit.set(ur.unitId, nextStatus);
 
-        if (isNotApplicableStatus(status)) {
-          entry.naUnits.add(ur.unitId);
-        } else {
-          // Active = has a non-NA valid status
-          entry.activeUnits.add(ur.unitId);
-          if (status === 'Not Started') {
-            entry.nsUnits.add(ur.unitId);
-          }
+        if (unitProcessedKeys.has(dedupeKey) && currentStatus?.classification === nextStatus.classification && currentStatus?.status === nextStatus.status) {
+          return;
         }
+        unitProcessedKeys.add(dedupeKey);
       });
     });
   });
@@ -706,14 +779,23 @@ export function computeCategories(
     }
     processedKeys.add(key);
 
-    const sortedNsUnits = sortUnitIds(entry.nsUnits, configuredUnitIds);
-    const sortedNaUnits = sortUnitIds(entry.naUnits, configuredUnitIds);
-    const activeCount = entry.activeUnits.size; // non-NA units for this step
-    const reportingCount = entry.reportingUnits.size;   // units with explicit status in the selected column
+    const sortedNsUnits = sortUnitIds(
+      configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na' && entry.statusByUnit.get(unitId)?.status === 'Not Started'),
+      configuredUnitIds,
+    );
+    const sortedNaUnits = sortUnitIds(
+      configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'na'),
+      configuredUnitIds,
+    );
+    const nonNaUnitIds = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na');
+    const blankUnitIds = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank');
+    const activeCount = nonNaUnitIds.length;
+    const reportingCount = configuredUnitIds.filter(unitId => entry.statusByUnit.has(unitId)).length;
     const nsCount = sortedNsUnits.length;
     const naCount = sortedNaUnits.length;
+    const nonNaCount = nonNaUnitIds.length;
+    const blankCount = blankUnitIds.length;
 
-    // NS: denominator = active (non-NA) units for this specific step
     if (activeCount > 0) {
       const nsItem: StepItem = {
         sourceKey: entry.sourceKey,
@@ -730,7 +812,6 @@ export function computeCategories(
       if (nsCount >= Math.ceil(activeCount * 0.75)) majorityNS.push(nsItem);
     }
 
-    // NA: denominator = all valid (reporting) units for this step
     if (reportingCount > 0) {
       const majorityNaItem: StepItem = {
         sourceKey: entry.sourceKey,
@@ -747,21 +828,30 @@ export function computeCategories(
       if (naCount >= Math.ceil(reportingCount * 0.75)) majorityNA.push(majorityNaItem);
     }
 
-    const missingUnitIds = configuredUnitIds.filter(unitId => !entry.reportingUnits.has(unitId));
+    const missingUnitIds = configuredUnitIds.filter(unitId => !entry.statusByUnit.has(unitId));
     const blockingUnitStatuses = configuredUnitIds
-      .filter(unitId => entry.reportingUnits.has(unitId) && !entry.naUnits.has(unitId))
-      .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)}`);
-    const isStrictAbsoluteNA = naCount === totalConfiguredUnits && reportingCount === totalConfiguredUnits;
+      .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
+      .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
+    const isStrictAbsoluteNA = naCount === totalConfiguredUnits && nonNaCount === 0 && blankCount === 0 && missingUnitIds.length === 0;
     const inclusionReason = isStrictAbsoluteNA
       ? 'included: explicit Not Applicable in all 24 configured units'
+      : nonNaCount > 0
+        ? `excluded: ${nonNaCount} unit(s) are present but not Not Applicable`
+        : blankCount > 0
+          ? `excluded: blank status in ${blankCount} unit(s)`
       : missingUnitIds.length > 0
         ? `excluded: missing, blank, unmatched, or unloaded in ${missingUnitIds.length} unit(s)`
-        : `excluded: ${blockingUnitStatuses.length} unit(s) are present but not Not Applicable`;
+        : 'excluded: no item has NA_count = 24 out of 24 loaded units';
 
     if (import.meta.env.DEV) {
       console.info('[CoverageGaps][Absolute NA candidate]', {
         uniqueItemKey: entry.sourceKey,
-        matchedUnitsCount: naCount,
+        totalUnits: totalConfiguredUnits,
+        matchedUnitsCount: reportingCount,
+        naCount,
+        nonNaCount,
+        blankCount,
+        missingCount: missingUnitIds.length,
         matchedUnits: sortedNaUnits.map(getUnitDisplayName),
         missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
         ...(blockingUnitStatuses.length > 0 ? { blockingUnits: blockingUnitStatuses } : {}),
@@ -811,23 +901,32 @@ export function computeCategories(
 
   // ─── Debug summary (dev only) ──────────────────────────────────────────
   if (import.meta.env.DEV) {
+    const isMandatoryAbsoluteNaDebugFilter = viewType === 'cumulative' && term === 'mid' && academicYear === '2025-2026';
     const absoluteNAKeys = new Set(strictAbsoluteNA.map(i => i.sourceKey));
     const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
-    console.table(debugRows.slice(0, 50));
+    if (isMandatoryAbsoluteNaDebugFilter) {
+      console.table(debugRows);
+      if (strictAbsoluteNA.length === 0) {
+        console.info('[CoverageGaps] No item has NA_count = 24 out of 24 loaded units.');
+      }
+    }
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
       majorityOnlyNA.forEach(item => {
         const entry = stepMap.get(item.sourceKey);
         if (entry) {
-          const nonNAUnits = Array.from(entry.reportingUnits)
-            .filter(u => !entry.naUnits.has(u))
-            .map(u => `${getUnitDisplayName(u)}=${entry.statusByUnit.get(u)}`);
+          const nonNAUnits = configuredUnitIds
+            .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
+            .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
           const missingUnits = configuredUnitIds
-            .filter(unitId => !entry.reportingUnits.has(unitId))
+            .filter(unitId => !entry.statusByUnit.has(unitId))
+            .map(getUnitDisplayName);
+          const blankUnits = configuredUnitIds
+            .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank')
             .map(getUnitDisplayName);
 
           console.info(
-            `  [${item.pillar}] row ${item.sheetRow} "${item.actionStep}" — NA: ${entry.naUnits.size}/${totalConfiguredUnits}. Non-NA: [${nonNAUnits.join(', ')}]. Missing: [${missingUnits.join(', ')}]`
+            `  [${item.pillar}] row ${item.sheetRow} "${item.actionStep}" — NA: ${item.naUnits.length}/${totalConfiguredUnits}. Non-NA: [${nonNAUnits.join(', ')}]. Blank: [${blankUnits.join(', ')}]. Missing: [${missingUnits.join(', ')}]`
           );
         }
       });
