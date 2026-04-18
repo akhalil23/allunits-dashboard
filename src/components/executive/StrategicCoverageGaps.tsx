@@ -518,11 +518,8 @@ function buildCoverageAliasKeys(
   if (actionKey && stepKey) {
     aliases.push({ key: `${pillar}|action:${actionKey}|step:${stepKey}`, rank: 3 });
   }
-  if (stepKey) {
-    aliases.push({ key: `${pillar}|step:${stepKey}`, rank: 2 });
-  }
   if (rowKey) {
-    aliases.push({ key: rowKey, rank: 1 });
+    aliases.push({ key: rowKey, rank: 2 });
   }
 
   return Array.from(
@@ -534,6 +531,60 @@ function buildCoverageAliasKeys(
       return map;
     }, new Map<string, CoverageAliasKey>()).values(),
   );
+}
+
+function buildCoverageAliasComponentMap(aliasGroups: CoverageAliasKey[][]): Map<string, string> {
+  const parentByKey = new Map<string, string>();
+  const weightByKey = new Map<string, number>();
+
+  const ensure = (key: string) => {
+    if (!parentByKey.has(key)) {
+      parentByKey.set(key, key);
+      weightByKey.set(key, 0);
+    }
+  };
+
+  const find = (key: string): string => {
+    ensure(key);
+    const parent = parentByKey.get(key)!;
+    if (parent === key) return key;
+    const root = find(parent);
+    parentByKey.set(key, root);
+    return root;
+  };
+
+  const union = (left: string, right: string) => {
+    const leftRoot = find(left);
+    const rightRoot = find(right);
+
+    if (leftRoot === rightRoot) return;
+
+    const leftWeight = weightByKey.get(leftRoot) ?? 0;
+    const rightWeight = weightByKey.get(rightRoot) ?? 0;
+
+    if (leftWeight < rightWeight) {
+      parentByKey.set(leftRoot, rightRoot);
+      return;
+    }
+
+    if (leftWeight > rightWeight) {
+      parentByKey.set(rightRoot, leftRoot);
+      return;
+    }
+
+    parentByKey.set(rightRoot, leftRoot);
+    weightByKey.set(leftRoot, leftWeight + 1);
+  };
+
+  aliasGroups.forEach(group => {
+    if (group.length === 0) return;
+
+    group.forEach(({ key }) => ensure(key));
+    const [first, ...rest] = group;
+    rest.forEach(({ key }) => union(first.key, key));
+  });
+
+  return new Map(Array.from(parentByKey.keys(), key => [key, find(key)]));
 }
 
 function classifyCoverageUnitStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): CoverageUnitStatus {
@@ -552,24 +603,27 @@ function classifyCoverageUnitStatus(item: ActionItem, viewType: ViewType, term: 
     : { classification: 'non-na', status };
 }
 
-function selectCanonicalCoverageKey(
-  aliasKeys: CoverageAliasKey[],
+function selectCanonicalCoverageKeyForComponent(
+  componentAliases: Iterable<string>,
   aliasUsageByUnit: Map<string, Set<string>>,
+  aliasRankByKey: Map<string, number>,
   totalConfiguredUnits: number,
 ): string {
-  return [...aliasKeys]
+  return Array.from(new Set(componentAliases))
     .sort((left, right) => {
-      const leftCoverage = aliasUsageByUnit.get(left.key)?.size ?? 0;
-      const rightCoverage = aliasUsageByUnit.get(right.key)?.size ?? 0;
+      const leftCoverage = aliasUsageByUnit.get(left)?.size ?? 0;
+      const rightCoverage = aliasUsageByUnit.get(right)?.size ?? 0;
       const leftIsAllUnits = leftCoverage === totalConfiguredUnits ? 1 : 0;
       const rightIsAllUnits = rightCoverage === totalConfiguredUnits ? 1 : 0;
+      const leftRank = aliasRankByKey.get(left) ?? 0;
+      const rightRank = aliasRankByKey.get(right) ?? 0;
 
       return rightIsAllUnits - leftIsAllUnits
         || rightCoverage - leftCoverage
-        || right.rank - left.rank
-        || left.key.localeCompare(right.key);
+        || rightRank - leftRank
+        || left.localeCompare(right);
     })
-    .at(0)?.key ?? aliasKeys[0]?.key ?? '';
+    .at(0) ?? '';
 }
 
 function mergeCoverageUnitStatus(
