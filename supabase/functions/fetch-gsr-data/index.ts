@@ -67,16 +67,30 @@ function getPillarConfig(unitId: string): PillarRange[] {
   throw new Error(`Unknown unit: ${unitId}. No range configuration exists.`);
 }
 
-// Term data columns: BX=col75 (0-indexed), 4 windows × 7 cols = 28 cols → BX:CY (cols 75-102)
-const TERM_START_COL = 75; // Column BX (0-indexed)
+// Term data columns:
+//   Default (23 units): BX:CY  → SP Status at BY/CF/CM/CT, Yearly Status at CB/CI/CP/CW
+//   Finance ONLY:       BY:CZ  → SP Status at BZ/CG/CN/CU, Yearly Status at CC/CJ/CQ/CX
+// Finance sheet is structured one column to the right of the standard template.
+const TERM_START_COL = 75; // Column BX (0-indexed) — kept for non-Finance units
 const TERM_TOTAL_COLS = 28; // 4 windows × 7 fields
 
-function buildRanges(pillars: PillarRange[]): { ranges: string[]; pillarMap: PillarRange[] } {
+// Units whose term-data block starts at column BY instead of BX.
+// DO NOT add other units here without explicit confirmation against the live sheet.
+const TERM_RANGE_OVERRIDES: Record<string, { startCol: string; endCol: string }> = {
+  Finance: { startCol: 'BY', endCol: 'CZ' },
+};
+
+function getTermRangeCols(unitId: string): { startCol: string; endCol: string } {
+  return TERM_RANGE_OVERRIDES[unitId] ?? { startCol: 'BX', endCol: 'CY' };
+}
+
+function buildRanges(pillars: PillarRange[], unitId: string): { ranges: string[]; pillarMap: PillarRange[] } {
+  const { startCol, endCol } = getTermRangeCols(unitId);
   const ranges: string[] = [];
   for (const p of pillars) {
     const escaped = `'${p.sheetName}'`;
     ranges.push(`${escaped}!A4:G${p.lastRow}`);
-    ranges.push(`${escaped}!BX4:CY${p.lastRow}`);
+    ranges.push(`${escaped}!${startCol}4:${endCol}${p.lastRow}`);
   }
   return { ranges, pillarMap: pillars };
 }
@@ -583,7 +597,7 @@ serve(async (req) => {
 
     // Determine pillar config and build ranges — NO auto-detection
     const pillarConfig = getPillarConfig(requestedUnitId);
-    const { ranges: RANGES, pillarMap } = buildRanges(pillarConfig);
+    const { ranges: RANGES, pillarMap } = buildRanges(pillarConfig, requestedUnitId);
 
     console.log(`Unit ${requestedUnitId}: fetching ${RANGES.length} ranges from spreadsheet`);
 
