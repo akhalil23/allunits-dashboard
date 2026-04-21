@@ -16,8 +16,8 @@ interface UseUniversityDataOptions {
   enabled?: boolean;
 }
 
-const UNIVERSITY_DATA_STALE_TIME_MS = 60 * 1000;
-const UNIVERSITY_DATA_GC_TIME_MS = 5 * 60 * 1000;
+const UNIVERSITY_DATA_STALE_TIME_MS = 10 * 60 * 1000; // 10 min — survives filter changes, matches edge cache TTL
+const UNIVERSITY_DATA_GC_TIME_MS = 30 * 60 * 1000;
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
