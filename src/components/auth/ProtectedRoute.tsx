@@ -54,6 +54,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   if (location.pathname === '/') {
     if (userRole.role === 'admin') return <Navigate to="/admin" replace />;
     if (userRole.role === 'university_viewer') return <Navigate to="/university" replace />;
+    if (userRole.role === 'board_member') return <Navigate to="/university" replace />;
     if (userRole.role === 'pillar_champion') return <Navigate to="/pillars" replace />;
     if (userRole.role === 'unit_user') {
       if (userRole.unitId) return <Navigate to={`/units/${userRole.unitId}`} replace />;
@@ -80,8 +81,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
   }
 
-  // ──── Guard: university_viewer ────
-  if (userRole.role === 'university_viewer') {
+  // ──── Guard: university_viewer & board_member ────
+  if (userRole.role === 'university_viewer' || userRole.role === 'board_member') {
     if (isUnitsRoute || isAdminRoute || isPillarsRoute) {
       return <Navigate to="/university" replace />;
     }

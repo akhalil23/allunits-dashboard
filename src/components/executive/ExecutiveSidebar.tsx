@@ -6,7 +6,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShieldAlert, DollarSign,
-  GitCompare, Brain, ChevronRight, Menu, X, Shield, LogOut, Camera, BookOpen, FileText,
+  GitCompare, Brain, ChevronRight, Menu, X, Shield, LogOut, Camera, BookOpen, FileText, History,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo-white.png';
@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
 
-export type ExecutiveTab = 'snapshot' | 'risk-priority' | 'budget' | 'comparison' | 'ai-insights' | 'reports' | 'guide';
+export type ExecutiveTab = 'snapshot' | 'risk-priority' | 'budget' | 'comparison' | 'ai-insights' | 'reports' | 'my-sessions' | 'guide';
 
 interface Props {
   activeTab: ExecutiveTab;
@@ -28,6 +28,7 @@ const tabs: { id: ExecutiveTab; label: string; icon: React.ElementType }[] = [
   { id: 'comparison', label: 'Unit Comparison', icon: GitCompare },
   { id: 'ai-insights', label: 'AI Executive Insights', icon: Brain },
   { id: 'reports', label: 'Reports', icon: FileText },
+  { id: 'my-sessions', label: 'My Sessions', icon: History },
   { id: 'guide', label: 'Dashboard Guide', icon: BookOpen },
 ];
 

@@ -21,6 +21,7 @@ import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
 import MetricsExplainer from '@/components/executive/MetricsExplainer';
 import FilterBar from '@/components/dashboard/FilterBar';
 import ReportsTab from '@/components/executive/ReportsTab';
+import MySessionsTab from '@/components/executive/MySessionsTab';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { Loader2, AlertCircle, BookOpen } from 'lucide-react';
 
@@ -87,6 +88,7 @@ export default function ExecutiveDashboard() {
     'comparison': 'Unit Comparison',
     'ai-insights': 'AI Executive Insights',
     'reports': 'Reports',
+    'my-sessions': 'My Sessions',
     'guide': 'Dashboard Guide',
   };
 
@@ -102,7 +104,7 @@ export default function ExecutiveDashboard() {
           observedAt={observedAt}
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
-        {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && <FilterBar />}
+        {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && activeTab !== 'my-sessions' && <FilterBar />}
         {/* How Metrics Work button */}
         <div className="px-4 sm:px-6 lg:px-8 pt-3">
           <button
@@ -119,7 +121,7 @@ export default function ExecutiveDashboard() {
               <h2 className="font-display text-base sm:text-lg font-semibold text-foreground">
                 {TAB_TITLES[activeTab]}
               </h2>
-              {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && (
+              {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && activeTab !== 'my-sessions' && (
                 <span className="text-xs text-muted-foreground">
                   {viewType === 'cumulative' ? 'Cumulative (SP)' : 'Yearly'} • AY {academicYear} • {term === 'mid' ? 'Mid-Year' : 'End-of-Year'}
                 </span>
@@ -132,6 +134,7 @@ export default function ExecutiveDashboard() {
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
             {activeTab === 'reports' && <ReportsTab />}
+            {activeTab === 'my-sessions' && <MySessionsTab aggregation={aggregation} />}
             {activeTab === 'guide' && <DashboardGuide />}
           </div>
         </main>

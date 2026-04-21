@@ -197,6 +197,78 @@ export type Database = {
         }
         Relationships: []
       }
+      user_session_snapshots: {
+        Row: {
+          academic_year: string
+          applicable_items: number
+          below_target_pct: number
+          budget_utilization: number
+          completion_pct: number
+          created_at: string
+          filters: Json
+          id: string
+          label: string
+          metrics: Json
+          notes: string | null
+          on_track_pct: number
+          pillar_data: Json
+          reporting_cycle: string
+          risk_index: number
+          term: string
+          total_items: number
+          unit_data: Json
+          updated_at: string
+          user_id: string
+          view_type: string
+        }
+        Insert: {
+          academic_year: string
+          applicable_items?: number
+          below_target_pct?: number
+          budget_utilization?: number
+          completion_pct?: number
+          created_at?: string
+          filters?: Json
+          id?: string
+          label?: string
+          metrics?: Json
+          notes?: string | null
+          on_track_pct?: number
+          pillar_data?: Json
+          reporting_cycle: string
+          risk_index?: number
+          term: string
+          total_items?: number
+          unit_data?: Json
+          updated_at?: string
+          user_id: string
+          view_type?: string
+        }
+        Update: {
+          academic_year?: string
+          applicable_items?: number
+          below_target_pct?: number
+          budget_utilization?: number
+          completion_pct?: number
+          created_at?: string
+          filters?: Json
+          id?: string
+          label?: string
+          metrics?: Json
+          notes?: string | null
+          on_track_pct?: number
+          pillar_data?: Json
+          reporting_cycle?: string
+          risk_index?: number
+          term?: string
+          total_items?: number
+          unit_data?: Json
+          updated_at?: string
+          user_id?: string
+          view_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -218,7 +290,12 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "unit_user" | "university_viewer" | "pillar_champion"
+      app_role:
+        | "admin"
+        | "unit_user"
+        | "university_viewer"
+        | "pillar_champion"
+        | "board_member"
       report_scope: "university" | "per_pillar" | "per_unit"
       report_type: "executive" | "full"
       reporting_period: "mid_year" | "end_of_year"
@@ -349,7 +426,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "unit_user", "university_viewer", "pillar_champion"],
+      app_role: [
+        "admin",
+        "unit_user",
+        "university_viewer",
+        "pillar_champion",
+        "board_member",
+      ],
       report_scope: ["university", "per_pillar", "per_unit"],
       report_type: ["executive", "full"],
       reporting_period: ["mid_year", "end_of_year"],
