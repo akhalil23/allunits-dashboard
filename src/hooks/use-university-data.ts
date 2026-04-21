@@ -16,8 +16,8 @@ interface UseUniversityDataOptions {
   enabled?: boolean;
 }
 
-const UNIVERSITY_DATA_STALE_TIME_MS = 60 * 1000;
-const UNIVERSITY_DATA_GC_TIME_MS = 5 * 60 * 1000;
+const UNIVERSITY_DATA_STALE_TIME_MS = 10 * 60 * 1000; // 10 min — survives filter changes, matches edge cache TTL
+const UNIVERSITY_DATA_GC_TIME_MS = 30 * 60 * 1000;
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
@@ -106,24 +106,28 @@ async function fetchSingleUnit(unitId: string, signal?: AbortSignal): Promise<Un
   }
 }
 
-/** Fetch units in staggered batches to avoid Google Sheets API rate limits (60 reads/min). */
+/**
+ * Fetch all units with high parallelism. Each unit hits a different spreadsheet,
+ * so the per-spreadsheet quota (60 reads/min) is not the bottleneck — the per-project
+ * quota is. We use a moderate concurrency cap to stay safe while loading fast.
+ * The edge function has its own 5-min server cache + exponential backoff on 429.
+ */
 async function fetchAllUnits(signal?: AbortSignal): Promise<UnitFetchResult[]> {
-  const BATCH_SIZE = 2;
-  const BATCH_DELAY_MS = 6000; // 2 units every 6s ≈ 20 reads/min, safely under 60/min quota
-  const results: UnitFetchResult[] = [];
+  const CONCURRENCY = 8; // 8 units in flight at once → ~3 waves, no artificial delay
+  const results: UnitFetchResult[] = new Array(UNIT_IDS.length);
+  let cursor = 0;
 
-  for (let i = 0; i < UNIT_IDS.length; i += BATCH_SIZE) {
-    throwIfAborted(signal);
-    const batch = UNIT_IDS.slice(i, i + BATCH_SIZE);
-    const batchResults = await Promise.all(batch.map(unitId => fetchSingleUnit(unitId, signal)));
-    results.push(...batchResults);
-
-    // Delay before next batch (skip after last batch)
-    if (i + BATCH_SIZE < UNIT_IDS.length) {
-      await delayWithAbort(BATCH_DELAY_MS, signal);
+  async function worker() {
+    while (true) {
+      throwIfAborted(signal);
+      const idx = cursor++;
+      if (idx >= UNIT_IDS.length) return;
+      results[idx] = await fetchSingleUnit(UNIT_IDS[idx], signal);
     }
   }
 
+  const workers = Array.from({ length: Math.min(CONCURRENCY, UNIT_IDS.length) }, () => worker());
+  await Promise.all(workers);
   return results;
 }
 
