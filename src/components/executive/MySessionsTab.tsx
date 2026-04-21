@@ -87,7 +87,7 @@ export default function MySessionsTab({ aggregation }: Props) {
               Live view of the dashboard you are currently exploring
             </p>
           </div>
-          <span className="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold tracking-wide">
+          <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold tracking-wide">
             LIVE
           </span>
         </header>
