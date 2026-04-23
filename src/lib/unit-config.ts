@@ -30,6 +30,7 @@ export const UNIT_CONFIGS: Record<string, UnitConfig> = {
   OfS: { id: 'OfS', name: 'OfS', fullName: 'Office of Sustainability', spreadsheetId: '1vzHWVOOL02qwdSX4RnT3rvECGcB0FSvXCgxPRKbha1Q' },
   HR: { id: 'HR', name: 'HR', fullName: 'Human Resources', spreadsheetId: '1OsPfYkNQ1gVqBbFyGkulNFwfRR1WvyHYWMX1hLPAkGY' },
   Procurement: { id: 'Procurement', name: 'Procurement', fullName: 'Procurement', spreadsheetId: '1bmH7Y_yKEOFJmo6hXB1WPNpkG15x673ai9DVjLbXMLA' },
+  ADM: { id: 'ADM', name: 'ADM', fullName: 'Administration', spreadsheetId: '1Uy1r2ZGzAB-Gb2uTfrd9heKkwBu75IDP1ME2sL5lrWs' },
 };
 
 export const UNIT_IDS = Object.keys(UNIT_CONFIGS);

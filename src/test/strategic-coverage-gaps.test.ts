@@ -67,7 +67,9 @@ function createUnitResult(unitId: string, options?: { items?: ActionItem[]; erro
 }
 
 describe('computeCategories Absolute NA', () => {
-  it('includes an item only when all 24 units explicitly report Not Applicable', () => {
+  const UNIT_COUNT = UNIT_IDS.length;
+
+  it('includes an item only when every loaded unit explicitly reports Not Applicable', () => {
     const categories = computeCategories(
       UNIT_IDS.map(unitId => createUnitResult(unitId)),
       'cumulative',
@@ -78,8 +80,8 @@ describe('computeCategories Absolute NA', () => {
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
     expect(absoluteNa?.items).toHaveLength(1);
-    expect(absoluteNa?.items[0]?.totalUnits).toBe(24);
-    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(24);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
+    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(UNIT_COUNT);
   });
 
   it('matches the same logical item across units when a stable source key is present', () => {
@@ -99,8 +101,8 @@ describe('computeCategories Absolute NA', () => {
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
     expect(absoluteNa?.items).toHaveLength(1);
-    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(24);
-    expect(absoluteNa?.items[0]?.totalUnits).toBe(24);
+    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(UNIT_COUNT);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
 
   it('excludes the item when one unit has no matching row or explicit status', () => {
@@ -186,7 +188,7 @@ describe('computeCategories Absolute NA', () => {
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
     expect(absoluteNa?.items).toHaveLength(1);
-    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(24);
-    expect(absoluteNa?.items[0]?.totalUnits).toBe(24);
+    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(UNIT_COUNT);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
 });

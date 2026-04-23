@@ -57,6 +57,7 @@ const STANDARD_UNITS = new Set([
   'AKSOB', 'BDGA', 'CIL', 'DIRA', 'Facilities', 'Finance', 'IT',
   'Advancement', 'PwD', 'Provost', 'SAS', 'SDEM', 'SOE', 'SOM',
   'SON', 'SOP', 'StratCom_Alumni', 'UGRC', 'OfS', 'HR', 'Procurement',
+  'ADM',
 ]);
 
 function getPillarConfig(unitId: string): PillarRange[] {
@@ -133,6 +134,7 @@ const UNIT_SPREADSHEETS: Record<string, string> = {
   OfS: '1vzHWVOOL02qwdSX4RnT3rvECGcB0FSvXCgxPRKbha1Q',
   HR: '1OsPfYkNQ1gVqBbFyGkulNFwfRR1WvyHYWMX1hLPAkGY',
   Procurement: '1bmH7Y_yKEOFJmo6hXB1WPNpkG15x673ai9DVjLbXMLA',
+  ADM: '1Uy1r2ZGzAB-Gb2uTfrd9heKkwBu75IDP1ME2sL5lrWs',
 };
 
 // ============================================================
