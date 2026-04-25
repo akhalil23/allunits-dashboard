@@ -30,6 +30,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useMySessions, useDeleteMySession } from '@/hooks/use-my-sessions';
+import { useMyProfile } from '@/hooks/use-my-profile';
 import type { UniversityAggregation } from '@/lib/university-aggregation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -40,15 +41,18 @@ interface Props {
 
 export default function MySessionsTab({ aggregation }: Props) {
   const { user } = useAuth();
+  const { data: profile } = useMyProfile();
   const { viewType, academicYear, term } = useDashboard();
   const { data: sessions, isLoading } = useMySessions();
   const deleteMutation = useDeleteMySession();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const accountLabel = useMemo(() => {
+    if (profile?.display_name?.trim()) return profile.display_name;
+    if (profile?.username) return profile.username;
     const email = user?.email ?? '';
     return email.split('@')[0] || 'Your account';
-  }, [user?.email]);
+  }, [profile?.display_name, profile?.username, user?.email]);
 
   const handleDelete = async (id: string) => {
     try {
