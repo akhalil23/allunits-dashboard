@@ -22,6 +22,7 @@ import MetricsExplainer from '@/components/executive/MetricsExplainer';
 import FilterBar from '@/components/dashboard/FilterBar';
 import ReportsTab from '@/components/executive/ReportsTab';
 import MySessionsTab from '@/components/executive/MySessionsTab';
+import WelcomeBanner from '@/components/executive/WelcomeBanner';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { Loader2, AlertCircle, BookOpen } from 'lucide-react';
 
@@ -104,6 +105,7 @@ export default function ExecutiveDashboard() {
           observedAt={observedAt}
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
+        <WelcomeBanner />
         {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && activeTab !== 'my-sessions' && <FilterBar />}
         {/* How Metrics Work button */}
         <div className="px-4 sm:px-6 lg:px-8 pt-3">
