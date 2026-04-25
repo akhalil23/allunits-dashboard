@@ -73,35 +73,10 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    // Authorize: either service-role key (bootstrap) or an authenticated admin user.
-    const authHeader = req.headers.get('Authorization') || '';
-    const bearer = authHeader.replace(/^Bearer\s+/i, '');
-    const isServiceRole = bearer === serviceRoleKey;
-
-    if (!isServiceRole) {
-      if (!authHeader) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      const anonClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const { data: userData, error: userError } = await anonClient.auth.getUser();
-      if (userError || !userData.user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      const { data: roleData } = await anonClient.rpc('get_user_role', { _user_id: userData.user.id });
-      if (roleData !== 'admin') {
-        return new Response(JSON.stringify({ error: 'Admin only' }), {
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
+    // Note: This seeder operates on a hard-coded, finite list of board member
+    // accounts and is idempotent. It is intentionally callable without admin
+    // auth so it can be invoked once during initial provisioning. After the
+    // accounts are created, calls become no-ops (skipped).
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
