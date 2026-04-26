@@ -37,7 +37,9 @@ export default function ExecutiveDashboard() {
   }, []);
   const [trackerOpen, setTrackerOpen] = useState(false);
   const [metricsOpen, setMetricsOpen] = useState(false);
-  const { viewType, academicYear, term } = useDashboard();
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<null | { tab: ExecutiveTab }>(null);
+  const { viewType, academicYear, term, selectedPillar, setViewType, setAcademicYear, setTerm, setSelectedPillar } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
   const queryClient = useQueryClient();
 
