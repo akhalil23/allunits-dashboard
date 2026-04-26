@@ -12,6 +12,9 @@ export default function WelcomeBanner() {
 
   if (isLoading || !profile) return null;
 
+  // Hide the welcome banner for the generic 'sp4' account.
+  if (profile.username?.toLowerCase() === 'sp4') return null;
+
   const name = profile.display_name?.trim() || profile.username;
 
   return (
