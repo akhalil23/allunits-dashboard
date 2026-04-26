@@ -110,8 +110,8 @@ export default function ExecutiveDashboard() {
         />
         <WelcomeBanner />
         {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && activeTab !== 'my-sessions' && <FilterBar />}
-        {/* How Metrics Work button */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-3">
+        {/* How Metrics Work + Save to My Sessions buttons */}
+        <div className="px-4 sm:px-6 lg:px-8 pt-3 flex flex-wrap items-center gap-2">
           <button
             onClick={() => setMetricsOpen(true)}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors border border-primary/20"
@@ -119,6 +119,16 @@ export default function ExecutiveDashboard() {
             <BookOpen className="w-3.5 h-3.5" />
             How Metrics Work
           </button>
+          {activeTab !== 'my-sessions' && activeTab !== 'guide' && (
+            <button
+              onClick={() => setSaveOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity shadow-sm"
+              title="Save the current dashboard view to your private My Sessions"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              Save to My Sessions
+            </button>
+          )}
         </div>
         <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
