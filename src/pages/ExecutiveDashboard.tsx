@@ -52,6 +52,28 @@ export default function ExecutiveDashboard() {
     return aggregateUniversity(unitResults, viewType, term, academicYear);
   }, [unitResults, viewType, term, academicYear]);
 
+  const handleRestoreSession = useCallback((s: {
+    academic_year: string;
+    term: string;
+    view_type: string;
+    filters: Record<string, unknown>;
+  }) => {
+    if (s.academic_year === '2025-2026' || s.academic_year === '2026-2027') {
+      setAcademicYear(s.academic_year);
+    }
+    if (s.term === 'mid' || s.term === 'end') setTerm(s.term);
+    if (s.view_type === 'cumulative' || s.view_type === 'yearly') setViewType(s.view_type);
+    const p = s.filters?.selectedPillar as string | undefined;
+    if (p === 'all' || p === 'I' || p === 'II' || p === 'III' || p === 'IV' || p === 'V') {
+      setSelectedPillar(p);
+    }
+    const tab = s.filters?.activeTab as ExecutiveTab | undefined;
+    const validTabs: ExecutiveTab[] = ['snapshot', 'risk-priority', 'budget', 'comparison', 'ai-insights', 'reports', 'my-sessions', 'guide'];
+    if (tab && validTabs.includes(tab)) {
+      handleTabChange(tab);
+    }
+  }, [setAcademicYear, setTerm, setViewType, setSelectedPillar, handleTabChange]);
+
   if (isLoading) {
     return (
       <div className="flex h-screen bg-background" style={{ overflow: 'clip' }}>
