@@ -148,6 +148,10 @@ export default function DashboardGuide() {
               <p className="text-xs font-semibold text-foreground">Tab 6 — Reports</p>
               <p className="text-[10px] text-muted-foreground mt-1">Central repository for university, pillar, and unit PDF reports with metadata filters.</p>
             </div>
+            <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/30">
+              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5"><Bookmark className="w-3 h-3 text-emerald-500" />My Sessions <span className="text-[9px] text-emerald-500 font-bold">NEW</span></p>
+              <p className="text-[10px] text-muted-foreground mt-1">Your private "Saved Views" — capture, restore, and compare dashboard snapshots.</p>
+            </div>
           </div>
           <div className="mt-5 p-4 rounded-xl bg-muted/30 border border-border/50">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Data Flow</p>
