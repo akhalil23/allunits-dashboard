@@ -171,7 +171,13 @@ export default function ExecutiveDashboard() {
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
             {activeTab === 'reports' && <ReportsTab />}
-            {activeTab === 'my-sessions' && <MySessionsTab aggregation={aggregation} />}
+            {activeTab === 'my-sessions' && (
+              <MySessionsTab
+                aggregation={aggregation}
+                onRestore={handleRestoreSession}
+                onSaveCurrent={() => setSaveOpen(true)}
+              />
+            )}
             {activeTab === 'guide' && <DashboardGuide />}
           </div>
         </main>
