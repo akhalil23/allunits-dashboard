@@ -193,6 +193,18 @@ export default function ExecutiveDashboard() {
         onClose={() => setMetricsOpen(false)}
       />
       <ExecutiveAIAdvisor aggregation={aggregation} />
+      <SaveSessionDialog
+        open={saveOpen}
+        onClose={() => setSaveOpen(false)}
+        context={{
+          activeTab,
+          academicYear,
+          term,
+          viewType,
+          selectedPillar: typeof selectedPillar === 'string' ? selectedPillar : 'all',
+        }}
+        aggregation={aggregation}
+      />
     </div>
   );
 }
