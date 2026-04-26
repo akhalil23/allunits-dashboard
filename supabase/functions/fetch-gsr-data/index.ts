@@ -174,8 +174,8 @@ async function createJWT(serviceAccount: any): Promise<string> {
   };
 
   const encoder = new TextEncoder();
-  const headerB64 = base64url(encoder.encode(JSON.stringify(header)));
-  const claimB64 = base64url(encoder.encode(JSON.stringify(claim)));
+  const headerB64 = base64url(encoder.encode(JSON.stringify(header)).buffer as ArrayBuffer);
+  const claimB64 = base64url(encoder.encode(JSON.stringify(claim)).buffer as ArrayBuffer);
   const unsignedToken = `${headerB64}.${claimB64}`;
 
   const pemContents = serviceAccount.private_key
@@ -199,7 +199,7 @@ async function createJWT(serviceAccount: any): Promise<string> {
     encoder.encode(unsignedToken)
   );
 
-  const signatureB64 = base64url(new Uint8Array(signature));
+  const signatureB64 = base64url(signature);
   return `${unsignedToken}.${signatureB64}`;
 }
 

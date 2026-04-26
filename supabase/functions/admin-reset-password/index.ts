@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { error } = await adminClient.auth.admin.updateUser(user_id, { password });
+      const { error } = await adminClient.auth.admin.updateUserById(user_id, { password });
       if (error) {
         return new Response(JSON.stringify({ error: error.message }), {
           status: 400,
@@ -342,7 +342,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
