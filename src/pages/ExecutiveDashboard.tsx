@@ -23,8 +23,9 @@ import FilterBar from '@/components/dashboard/FilterBar';
 import ReportsTab from '@/components/executive/ReportsTab';
 import MySessionsTab from '@/components/executive/MySessionsTab';
 import WelcomeBanner from '@/components/executive/WelcomeBanner';
+import SaveSessionDialog from '@/components/executive/SaveSessionDialog';
 import { useDashboard } from '@/contexts/DashboardContext';
-import { Loader2, AlertCircle, BookOpen } from 'lucide-react';
+import { Loader2, AlertCircle, BookOpen, Bookmark } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
