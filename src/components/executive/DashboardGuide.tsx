@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { UNIT_IDS } from '@/lib/unit-config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PILLAR_COLORS, PILLAR_COLOR_LABELS } from '@/lib/pillar-colors';
@@ -12,7 +13,13 @@ import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
   LayoutDashboard, ShieldAlert, Target, DollarSign, GitCompare, Brain, Camera,
   HelpCircle, Lightbulb, FileDown, FileText, Moon, RefreshCw, Activity, Eye, TrendingDown,
+  Sparkles, UserCircle, Bookmark, Download,
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { exportDashboardGuideBrief, exportDashboardGuideComprehensive } from '@/lib/dashboard-guide-export';
 
 const GUIDE_PILLARS: { id: PillarId; label: string }[] = [
   { id: 'I', label: 'PI' },
@@ -23,8 +30,79 @@ const GUIDE_PILLARS: { id: PillarId; label: string }[] = [
 ];
 
 export default function DashboardGuide() {
+  const handleDownload = (variant: 'brief' | 'comprehensive') => {
+    try {
+      if (variant === 'brief') exportDashboardGuideBrief();
+      else exportDashboardGuideComprehensive();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to open download window.');
+    }
+  };
+
   return (
     <div className="space-y-8">
+      {/* Header with download */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 to-transparent shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span className="text-xs sm:text-sm font-medium text-primary uppercase tracking-wider">Dashboard Guide</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">Executive Command Center — Reference</h2>
+              <p className="text-xs text-muted-foreground mt-1">Strategic Plan IV (2025–2027) · {UNIT_IDS.length} Units · 5 Pillars</p>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="w-3.5 h-3.5" />
+                  Download Guide
+                  <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Download as PDF</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleDownload('brief')} className="flex-col items-start gap-0.5 py-2">
+                  <span className="text-sm font-medium">Brief</span>
+                  <span className="text-[10px] text-muted-foreground">Executive cheat sheet — 1 page</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('comprehensive')} className="flex-col items-start gap-0.5 py-2">
+                  <span className="text-sm font-medium">Comprehensive</span>
+                  <span className="text-[10px] text-muted-foreground">Full reference — formulas, FAQ, glossary</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* What's New */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-emerald-500/40 bg-emerald-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4"><Sparkles className="w-4 h-4 text-emerald-500" /><span className="text-xs sm:text-sm font-medium text-emerald-500 uppercase tracking-wider">What's New</span></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">ADM — Administration unit</p>
+              <p className="text-[10px] text-muted-foreground mt-1">25th reporting unit, fully integrated into routing, auth, ingestion, filters, comparisons, and aggregations.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">Personalized board-member accounts</p>
+              <p className="text-[10px] text-muted-foreground mt-1">39 named logins (e.g. m.ahmar, f.nader). Each user gets a private workspace and welcome greeting.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">My Sessions — Saved Views</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Save current dashboard state, restore later, compare two snapshots, export PDF/CSV. Strict per-user privacy.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">Welcome Banner</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Personalized greeting on the Executive Dashboard. Suppressed for the shared sp4 account.</p>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Data Refresh Policy */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-amber-500/40 bg-amber-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
@@ -69,6 +147,10 @@ export default function DashboardGuide() {
             <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
               <p className="text-xs font-semibold text-foreground">Tab 6 — Reports</p>
               <p className="text-[10px] text-muted-foreground mt-1">Central repository for university, pillar, and unit PDF reports with metadata filters.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/30">
+              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5"><Bookmark className="w-3 h-3 text-emerald-500" />My Sessions <span className="text-[9px] text-emerald-500 font-bold">NEW</span></p>
+              <p className="text-[10px] text-muted-foreground mt-1">Your private "Saved Views" — capture, restore, and compare dashboard snapshots.</p>
             </div>
           </div>
           <div className="mt-5 p-4 rounded-xl bg-muted/30 border border-border/50">
@@ -130,6 +212,7 @@ export default function DashboardGuide() {
             <TabGuide icon={GitCompare} title="Tab 4 — Unit Comparison" description="Side-by-side comparison of multiple units across performance dimensions, helping leadership identify outliers, anchors, and shared patterns." />
             <TabGuide icon={Brain} title="Tab 5 — AI Executive Insights" description="AI-generated strategic interpretation aligned to the current dashboard filters and executive context." />
             <TabGuide icon={FileText} title="Tab 6 — Reports" description="Browse uploaded PDF reports by scope (University, Pillars, Units), then filter by academic year, reporting period, and report type. Open reports inline or download them directly." />
+            <TabGuide icon={Bookmark} title="My Sessions — Saved Views (NEW)" description="A user-controlled 'Saved Views' workspace. Click 'Save to My Sessions' in the header to capture the current view (tab, AY, term, filters, KPIs). Open the My Sessions tab to view your private list, restore any session, dive into Detail, or pick two for side-by-side Compare with Δ deltas. Export PDF or CSV per snapshot or per comparison. Strict per-user privacy — no cross-user visibility." />
             <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles." />
           </div>
         </motion.div>
@@ -166,9 +249,46 @@ export default function DashboardGuide() {
         </motion.div>
       </section>
 
+      {/* Personalization & Accounts */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4"><UserCircle className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Personalization & Accounts</span></div>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p><span className="font-semibold text-foreground">Welcome Banner</span> — Each authenticated user is greeted by their display name on the Executive Dashboard. The greeting is suppressed for the shared <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">sp4</code> account.</p>
+            <p><span className="font-semibold text-foreground">Board-member accounts</span> — 39 personal logins (e.g. <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">m.ahmar</code>, <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">f.nader</code>, <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">g.doumet</code>) with role <i>board_member</i> and a <i>display_name</i> stored on the profile.</p>
+            <p><span className="font-semibold text-foreground">Privacy</span> — My Sessions enforces strict per-user RLS isolation. No board member can see another's saved sessions under any condition.</p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* My Sessions detailed */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="relative rounded-2xl border border-emerald-500/30 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4"><Bookmark className="w-4 h-4 text-emerald-500" /><span className="text-xs sm:text-sm font-medium text-emerald-500 uppercase tracking-wider">My Sessions — Saved Views</span></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">1 · Capture</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Click <b>Save to My Sessions</b> in the dashboard header. The current tab, AY, term, view type, filters, and KPI snapshot are stored.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">2 · Browse</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Open the My Sessions tab to see your private, sortable list of saved views.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">3 · Restore / Detail</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Restore re-applies the saved AY, term, view, pillar, and tab. Detail opens a deep dive of KPIs, filters, and unit-level data.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">4 · Compare & Export</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Pick two sessions for side-by-side Compare with Δ (B − A) deltas. Export PDF or CSV for any single snapshot or comparison.</p>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Dark Mode */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><Moon className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dark Mode</span></div>
           <p className="text-sm text-muted-foreground">Toggle using the sun/moon icon in the header. Preference is saved automatically.</p>
         </motion.div>
@@ -186,6 +306,9 @@ export default function DashboardGuide() {
             <FAQItem question="How are pillar colors assigned?" answer="Each pillar has a fixed color (PI=Blue, PII=Cyan, PIII=Violet, PIV=Pink, PV=Indigo). These never change regardless of performance values. Risk is conveyed through separate semantic colors." />
             <FAQItem question="What is the Execution Gap?" answer="Execution Gap = Actual Progress − Expected Progress. A negative gap means the unit is behind schedule. This metric appears across all tabs to identify where attention is needed." />
             <FAQItem question="How does dynamic RI work for In-Progress items?" answer="Instead of a fixed risk mapping, In-Progress items are assigned risk dynamically: if the gap between expected and actual progress exceeds 50%, it's Critical Risk; between 20-50% it's Emerging Risk; below 20% it's No Risk." />
+            <FAQItem question="What is the ADM unit?" answer="ADM (Administration) is the 25th reporting unit, fully integrated into routing, authentication, data ingestion, filters, comparisons, and university-level aggregations. Its data is fetched live from its dedicated Google Sheet by the same pipeline as all other units." />
+            <FAQItem question="Can other users see my saved sessions?" answer="No. The user_session_snapshots table enforces strict Row-Level Security where user_id = auth.uid(). Each board member sees only their own private workspace under any condition." />
+            <FAQItem question="What's the difference between My Sessions and the Snapshot Tracker?" answer="My Sessions is your personal, user-controlled saved-views workspace (capture, restore, compare your own dashboard states). The Strategic Snapshot Tracker is the shared executive snapshot tool used to capture official performance snapshots across reporting cycles." />
           </div>
         </motion.div>
       </section>
