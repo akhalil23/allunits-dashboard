@@ -249,9 +249,46 @@ export default function DashboardGuide() {
         </motion.div>
       </section>
 
+      {/* Personalization & Accounts */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4"><UserCircle className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Personalization & Accounts</span></div>
+          <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p><span className="font-semibold text-foreground">Welcome Banner</span> — Each authenticated user is greeted by their display name on the Executive Dashboard. The greeting is suppressed for the shared <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">sp4</code> account.</p>
+            <p><span className="font-semibold text-foreground">Board-member accounts</span> — 39 personal logins (e.g. <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">m.ahmar</code>, <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">f.nader</code>, <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">g.doumet</code>) with role <i>board_member</i> and a <i>display_name</i> stored on the profile.</p>
+            <p><span className="font-semibold text-foreground">Privacy</span> — My Sessions enforces strict per-user RLS isolation. No board member can see another's saved sessions under any condition.</p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* My Sessions detailed */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="relative rounded-2xl border border-emerald-500/30 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4"><Bookmark className="w-4 h-4 text-emerald-500" /><span className="text-xs sm:text-sm font-medium text-emerald-500 uppercase tracking-wider">My Sessions — Saved Views</span></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">1 · Capture</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Click <b>Save to My Sessions</b> in the dashboard header. The current tab, AY, term, view type, filters, and KPI snapshot are stored.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">2 · Browse</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Open the My Sessions tab to see your private, sortable list of saved views.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">3 · Restore / Detail</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Restore re-applies the saved AY, term, view, pillar, and tab. Detail opens a deep dive of KPIs, filters, and unit-level data.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground">4 · Compare & Export</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Pick two sessions for side-by-side Compare with Δ (B − A) deltas. Export PDF or CSV for any single snapshot or comparison.</p>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Dark Mode */}
       <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }} className="relative rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><Moon className="w-4 h-4 text-primary" /><span className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Dark Mode</span></div>
           <p className="text-sm text-muted-foreground">Toggle using the sun/moon icon in the header. Preference is saved automatically.</p>
         </motion.div>
