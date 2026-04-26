@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { UNIT_IDS } from '@/lib/unit-config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PILLAR_COLORS, PILLAR_COLOR_LABELS } from '@/lib/pillar-colors';
@@ -12,7 +13,13 @@ import {
   BookOpen, ChevronDown, ChevronUp, Info, ArrowRight,
   LayoutDashboard, ShieldAlert, Target, DollarSign, GitCompare, Brain, Camera,
   HelpCircle, Lightbulb, FileDown, FileText, Moon, RefreshCw, Activity, Eye, TrendingDown,
+  Sparkles, UserCircle, Bookmark, Download,
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { exportDashboardGuideBrief, exportDashboardGuideComprehensive } from '@/lib/dashboard-guide-export';
 
 const GUIDE_PILLARS: { id: PillarId; label: string }[] = [
   { id: 'I', label: 'PI' },
