@@ -24,16 +24,8 @@ export function buildSnapshotInput(
 ): CreateMySessionInput {
   const reportingCycle = `${ctx.academicYear} • ${ctx.term === 'mid' ? 'Mid-Year' : 'End-of-Year'}`;
 
-  // Slim pillar payload — only fields needed for compare + restore.
-  const pillarData = (agg.pillarAggregations ?? []).map(p => ({
-    id: (p as { id?: string }).id,
-    name: (p as { name?: string }).name,
-    totalItems: (p as { totalItems?: number }).totalItems,
-    applicableItems: (p as { applicableItems?: number }).applicableItems,
-    completionPct: (p as { completionPct?: number }).completionPct,
-    onTrackPct: (p as { onTrackPct?: number }).onTrackPct,
-    riskIndex: (p as { riskIndex?: number }).riskIndex,
-  }));
+  // Pillar-level capture not yet exposed on UniversityAggregation; keep empty for now.
+  const pillarData: unknown[] = [];
 
   const unitData = (agg.unitAggregations ?? []).map(u => ({
     unitId: u.unitId,
