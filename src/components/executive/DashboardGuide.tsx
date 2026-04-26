@@ -30,8 +30,79 @@ const GUIDE_PILLARS: { id: PillarId; label: string }[] = [
 ];
 
 export default function DashboardGuide() {
+  const handleDownload = (variant: 'brief' | 'comprehensive') => {
+    try {
+      if (variant === 'brief') exportDashboardGuideBrief();
+      else exportDashboardGuideComprehensive();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to open download window.');
+    }
+  };
+
   return (
     <div className="space-y-8">
+      {/* Header with download */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 to-transparent shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span className="text-xs sm:text-sm font-medium text-primary uppercase tracking-wider">Dashboard Guide</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">Executive Command Center — Reference</h2>
+              <p className="text-xs text-muted-foreground mt-1">Strategic Plan IV (2025–2027) · {UNIT_IDS.length} Units · 5 Pillars</p>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="w-3.5 h-3.5" />
+                  Download Guide
+                  <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Download as PDF</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleDownload('brief')} className="flex-col items-start gap-0.5 py-2">
+                  <span className="text-sm font-medium">Brief</span>
+                  <span className="text-[10px] text-muted-foreground">Executive cheat sheet — 1 page</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('comprehensive')} className="flex-col items-start gap-0.5 py-2">
+                  <span className="text-sm font-medium">Comprehensive</span>
+                  <span className="text-[10px] text-muted-foreground">Full reference — formulas, FAQ, glossary</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* What's New */}
+      <section>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-emerald-500/40 bg-emerald-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
+          <div className="flex items-center gap-2 mb-4"><Sparkles className="w-4 h-4 text-emerald-500" /><span className="text-xs sm:text-sm font-medium text-emerald-500 uppercase tracking-wider">What's New</span></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">ADM — Administration unit</p>
+              <p className="text-[10px] text-muted-foreground mt-1">25th reporting unit, fully integrated into routing, auth, ingestion, filters, comparisons, and aggregations.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">Personalized board-member accounts</p>
+              <p className="text-[10px] text-muted-foreground mt-1">39 named logins (e.g. m.ahmar, f.nader). Each user gets a private workspace and welcome greeting.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">My Sessions — Saved Views</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Save current dashboard state, restore later, compare two snapshots, export PDF/CSV. Strict per-user privacy.</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
+              <p className="text-xs font-semibold text-foreground">Welcome Banner</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Personalized greeting on the Executive Dashboard. Suppressed for the shared sp4 account.</p>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Data Refresh Policy */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-amber-500/40 bg-amber-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
