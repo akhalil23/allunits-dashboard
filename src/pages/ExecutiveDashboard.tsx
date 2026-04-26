@@ -23,8 +23,9 @@ import FilterBar from '@/components/dashboard/FilterBar';
 import ReportsTab from '@/components/executive/ReportsTab';
 import MySessionsTab from '@/components/executive/MySessionsTab';
 import WelcomeBanner from '@/components/executive/WelcomeBanner';
+import SaveSessionDialog from '@/components/executive/SaveSessionDialog';
 import { useDashboard } from '@/contexts/DashboardContext';
-import { Loader2, AlertCircle, BookOpen } from 'lucide-react';
+import { Loader2, AlertCircle, BookOpen, Bookmark } from 'lucide-react';
 
 export default function ExecutiveDashboard() {
   const [activeTab, setActiveTab] = useState<ExecutiveTab>('snapshot');
@@ -36,7 +37,8 @@ export default function ExecutiveDashboard() {
   }, []);
   const [trackerOpen, setTrackerOpen] = useState(false);
   const [metricsOpen, setMetricsOpen] = useState(false);
-  const { viewType, academicYear, term } = useDashboard();
+  const [saveOpen, setSaveOpen] = useState(false);
+  const { viewType, academicYear, term, selectedPillar, setViewType, setAcademicYear, setTerm, setSelectedPillar } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
   const queryClient = useQueryClient();
 
@@ -48,6 +50,28 @@ export default function ExecutiveDashboard() {
     if (!unitResults) return null;
     return aggregateUniversity(unitResults, viewType, term, academicYear);
   }, [unitResults, viewType, term, academicYear]);
+
+  const handleRestoreSession = useCallback((s: {
+    academic_year: string;
+    term: string;
+    view_type: string;
+    filters: Record<string, unknown>;
+  }) => {
+    if (s.academic_year === '2025-2026' || s.academic_year === '2026-2027') {
+      setAcademicYear(s.academic_year);
+    }
+    if (s.term === 'mid' || s.term === 'end') setTerm(s.term);
+    if (s.view_type === 'cumulative' || s.view_type === 'yearly') setViewType(s.view_type);
+    const p = s.filters?.selectedPillar as string | undefined;
+    if (p === 'all' || p === 'I' || p === 'II' || p === 'III' || p === 'IV' || p === 'V') {
+      setSelectedPillar(p);
+    }
+    const tab = s.filters?.activeTab as ExecutiveTab | undefined;
+    const validTabs: ExecutiveTab[] = ['snapshot', 'risk-priority', 'budget', 'comparison', 'ai-insights', 'reports', 'my-sessions', 'guide'];
+    if (tab && validTabs.includes(tab)) {
+      handleTabChange(tab);
+    }
+  }, [setAcademicYear, setTerm, setViewType, setSelectedPillar, handleTabChange]);
 
   if (isLoading) {
     return (
@@ -107,8 +131,8 @@ export default function ExecutiveDashboard() {
         />
         <WelcomeBanner />
         {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && activeTab !== 'my-sessions' && <FilterBar />}
-        {/* How Metrics Work button */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-3">
+        {/* How Metrics Work + Save to My Sessions buttons */}
+        <div className="px-4 sm:px-6 lg:px-8 pt-3 flex flex-wrap items-center gap-2">
           <button
             onClick={() => setMetricsOpen(true)}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors border border-primary/20"
@@ -116,6 +140,16 @@ export default function ExecutiveDashboard() {
             <BookOpen className="w-3.5 h-3.5" />
             How Metrics Work
           </button>
+          {activeTab !== 'my-sessions' && activeTab !== 'guide' && (
+            <button
+              onClick={() => setSaveOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity shadow-sm"
+              title="Save the current dashboard view to your private My Sessions"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+              Save to My Sessions
+            </button>
+          )}
         </div>
         <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
@@ -136,7 +170,13 @@ export default function ExecutiveDashboard() {
             {activeTab === 'comparison' && <UnitComparison aggregation={aggregation} />}
             {activeTab === 'ai-insights' && <AIExecutiveInsights aggregation={aggregation} />}
             {activeTab === 'reports' && <ReportsTab />}
-            {activeTab === 'my-sessions' && <MySessionsTab aggregation={aggregation} />}
+            {activeTab === 'my-sessions' && (
+              <MySessionsTab
+                aggregation={aggregation}
+                onRestore={handleRestoreSession}
+                onSaveCurrent={() => setSaveOpen(true)}
+              />
+            )}
             {activeTab === 'guide' && <DashboardGuide />}
           </div>
         </main>
@@ -152,6 +192,18 @@ export default function ExecutiveDashboard() {
         onClose={() => setMetricsOpen(false)}
       />
       <ExecutiveAIAdvisor aggregation={aggregation} />
+      <SaveSessionDialog
+        open={saveOpen}
+        onClose={() => setSaveOpen(false)}
+        context={{
+          activeTab,
+          academicYear,
+          term,
+          viewType,
+          selectedPillar: typeof selectedPillar === 'string' ? selectedPillar : 'all',
+        }}
+        aggregation={aggregation}
+      />
     </div>
   );
 }
