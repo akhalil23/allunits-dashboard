@@ -561,6 +561,18 @@ async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAtte
   throw new Error(`RATE_LIMITED: Google Sheets API error: 429 ${lastRateLimitBody}`);
 }
 
+function getHiddenRowIndexes(metadataData: any, pillarCount: number): Set<number>[] {
+  return Array.from({ length: pillarCount }, (_, pillarIndex) => {
+    const grid = metadataData?.sheets?.[pillarIndex]?.data?.[0];
+    const rowMetadata = grid?.rowMetadata ?? [];
+    const hidden = new Set<number>();
+    rowMetadata.forEach((meta: any, rowIndex: number) => {
+      if (meta?.hiddenByUser || meta?.hiddenByFilter) hidden.add(rowIndex);
+    });
+    return hidden;
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
