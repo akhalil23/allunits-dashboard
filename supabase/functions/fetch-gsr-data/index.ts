@@ -203,12 +203,24 @@ async function createJWT(serviceAccount: any): Promise<string> {
   return `${unsignedToken}.${signatureB64}`;
 }
 
+async function fetchWithTimeout(url: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<Response> {
+  const { timeoutMs = 20000, ...rest } = init;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...rest, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getAccessToken(serviceAccount: any): Promise<string> {
   const jwt = await createJWT(serviceAccount);
-  const resp = await fetch("https://oauth2.googleapis.com/token", {
+  const resp = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+    timeoutMs: 15000,
   });
 
   if (!resp.ok) {
@@ -496,12 +508,13 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAttempts = 4): Promise<Response> {
+async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAttempts = 3): Promise<Response> {
   let lastRateLimitBody = '';
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
+      timeoutMs: 25000,
     });
 
     if (response.status !== 429) {
@@ -513,8 +526,9 @@ async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAtte
     if (attempt < maxAttempts - 1) {
       const retryAfterHeader = response.headers.get('retry-after');
       const retryAfterMs = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) * 1000 : NaN;
+      // Cap backoff to keep total request well under the 150s edge timeout.
       const backoffMs = Number.isFinite(retryAfterMs) && retryAfterMs > 0
-        ? retryAfterMs
+        ? Math.min(retryAfterMs, 5000)
         : 1000 * Math.pow(2, attempt);
       await sleep(backoffMs + Math.floor(Math.random() * 250));
       continue;
