@@ -504,7 +504,13 @@ const gsrDataCache = gsrCacheGlobal.__gsr_data_cache__ ?? new Map<string, GsrCac
 gsrCacheGlobal.__gsr_data_cache__ = gsrDataCache;
 
 function getGsrCache(cacheKey: string): GsrCacheEntry | null {
-  return gsrDataCache.get(cacheKey) ?? null;
+  const entry = gsrDataCache.get(cacheKey) ?? null;
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    gsrDataCache.delete(cacheKey);
+    return null;
+  }
+  return entry;
 }
 
 function setGsrCache(cacheKey: string, data: any) {
