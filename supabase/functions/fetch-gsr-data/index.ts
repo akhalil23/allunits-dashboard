@@ -203,12 +203,24 @@ async function createJWT(serviceAccount: any): Promise<string> {
   return `${unsignedToken}.${signatureB64}`;
 }
 
+async function fetchWithTimeout(url: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<Response> {
+  const { timeoutMs = 20000, ...rest } = init;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...rest, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getAccessToken(serviceAccount: any): Promise<string> {
   const jwt = await createJWT(serviceAccount);
-  const resp = await fetch("https://oauth2.googleapis.com/token", {
+  const resp = await fetchWithTimeout("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+    timeoutMs: 15000,
   });
 
   if (!resp.ok) {
