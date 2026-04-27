@@ -105,6 +105,10 @@ function buildCoreOnlyRanges(pillars: PillarRange[]): { ranges: string[]; pillar
   return { ranges, pillarMap: pillars };
 }
 
+function buildRowMetadataRanges(pillars: PillarRange[]): string[] {
+  return pillars.map(p => `'${p.sheetName}'!A4:G${p.lastRow}`);
+}
+
 // ============================================================
 // Unit ID → Spreadsheet ID (server-side only)
 // ============================================================
@@ -557,6 +561,18 @@ async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAtte
   throw new Error(`RATE_LIMITED: Google Sheets API error: 429 ${lastRateLimitBody}`);
 }
 
+function getHiddenRowIndexes(metadataData: any, pillarCount: number): Set<number>[] {
+  return Array.from({ length: pillarCount }, (_, pillarIndex) => {
+    const grid = metadataData?.sheets?.[pillarIndex]?.data?.[0];
+    const rowMetadata = grid?.rowMetadata ?? [];
+    const hidden = new Set<number>();
+    rowMetadata.forEach((meta: any, rowIndex: number) => {
+      if (meta?.hiddenByUser || meta?.hiddenByFilter) hidden.add(rowIndex);
+    });
+    return hidden;
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -672,6 +688,15 @@ serve(async (req) => {
     const sheetsData = await sheetsResp.json();
     const valueRanges = sheetsData.valueRanges || [];
 
+    const metadataRanges = buildRowMetadataRanges(pillarConfig)
+      .map(range => `ranges=${encodeURIComponent(range)}`)
+      .join('&');
+    const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=true&fields=sheets(data(rowMetadata(hiddenByFilter,hiddenByUser)))&${metadataRanges}`;
+    const metadataResp = await fetchWithRateLimitRetry(metadataUrl, accessToken);
+    const hiddenRowsByPillar = metadataResp.ok
+      ? getHiddenRowIndexes(await metadataResp.json(), pillarMap.length)
+      : Array.from({ length: pillarMap.length }, () => new Set<number>());
+
     const observedAt = new Date().toISOString();
     let allItems: ActionItem[] = [];
     let totalInvalidStatuses = 0;
@@ -694,9 +719,11 @@ serve(async (req) => {
           continue;
         }
         const coreRows = coreRange.values.slice(1);
-        const termRows = coreRows.map(() => [] as any[]);
+        const hiddenRows = hiddenRowsByPillar[p] ?? new Set<number>();
+        const visibleCoreRows = coreRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
+        const termRows = visibleCoreRows.map(() => [] as any[]);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
+          pillarMap[p].id, visibleCoreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -712,8 +739,11 @@ serve(async (req) => {
         }
         const coreRows = coreRange.values.slice(1);
         const termRows = termRange.values.slice(1);
+        const hiddenRows = hiddenRowsByPillar[p] ?? new Set<number>();
+        const visibleCoreRows = coreRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
+        const visibleTermRows = termRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
+          pillarMap[p].id, visibleCoreRows, visibleTermRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
