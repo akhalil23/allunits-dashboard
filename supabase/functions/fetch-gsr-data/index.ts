@@ -233,6 +233,7 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
 }
 
 type Status = 'Not Applicable' | 'Not Started' | 'In Progress' | 'Completed – On Target' | 'Completed – Below Target';
+type StatusView = 'all' | 'cumulative' | 'yearly';
 
 function isNotApplicableRaw(raw: string | undefined | null): boolean {
   if (raw === null || raw === undefined) return true;
@@ -333,16 +334,19 @@ function extractTermData(
   termRow: any[],
   windowIdx: number,
   anomalies: AnomalyLog,
-  rowId: string
+  rowId: string,
+  statusView: StatusView = 'all'
 ): { td: TermData; invalidStatuses: number; invalidCompletions: number } {
   const offset = windowIdx * WINDOW_SIZE;
   let invalidStatuses = 0;
   let invalidCompletions = 0;
 
-  const rawSpStatus = safeGet(termRow, offset + WIN_SP_STATUS);
-  const rawYearlyStatus = safeGet(termRow, offset + WIN_YEARLY_STATUS);
-  const rawSpComp = safeGet(termRow, offset + WIN_SP_COMP);
-  const rawYearlyComp = safeGet(termRow, offset + WIN_YEARLY_COMP);
+  const readSp = statusView !== 'yearly';
+  const readYearly = statusView !== 'cumulative';
+  const rawSpStatus = readSp ? safeGet(termRow, offset + WIN_SP_STATUS) : '';
+  const rawYearlyStatus = readYearly ? safeGet(termRow, offset + WIN_YEARLY_STATUS) : '';
+  const rawSpComp = readSp ? safeGet(termRow, offset + WIN_SP_COMP) : '';
+  const rawYearlyComp = readYearly ? safeGet(termRow, offset + WIN_YEARLY_COMP) : '';
   const spStatusProvided = rawSpStatus.trim() !== '';
   const yearlyStatusProvided = rawYearlyStatus.trim() !== '';
 
@@ -383,12 +387,12 @@ function extractTermData(
       spStatusRaw: rawSpStatus,
       spStatusProvided,
       spCompletion: spCompResult.value ?? 0,
-      spTarget: safeGet(termRow, offset + WIN_SP_TARGET),
+      spTarget: readSp ? safeGet(termRow, offset + WIN_SP_TARGET) : '',
       yearlyStatus: resolvedYearlyStatus,
       yearlyStatusRaw: rawYearlyStatus,
       yearlyStatusProvided,
       yearlyCompletion: yearlyCompResult.value ?? 0,
-      yearlyTarget: safeGet(termRow, offset + WIN_YEARLY_TARGET),
+      yearlyTarget: readYearly ? safeGet(termRow, offset + WIN_YEARLY_TARGET) : '',
       supportingDoc: safeGet(termRow, offset + WIN_SUPPORTING_DOC),
     },
     invalidStatuses,
