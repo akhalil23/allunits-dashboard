@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/use-user-role';
 import { getValidAccessToken } from '@/lib/auth-session';
-import type { FetchResult } from '@/lib/types';
+import type { FetchResult, ViewType } from '@/lib/types';
 
 function isUnauthorizedFunctionError(error: unknown): error is FunctionsHttpError {
   return error instanceof FunctionsHttpError && error.context?.status === 401;
@@ -20,30 +20,30 @@ function isRateLimitedFunctionError(error: unknown): boolean {
   return /(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(message);
 }
 
-async function invokeFetch(unitId: string, accessToken: string) {
+async function invokeFetch(unitId: string, accessToken: string, viewType?: ViewType) {
   return supabase.functions.invoke('fetch-gsr-data', {
-    body: { unitId },
+    body: viewType ? { unitId, viewType } : { unitId },
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
 }
 
-async function fetchUnitData(unitId: string): Promise<FetchResult> {
+async function fetchUnitData(unitId: string, viewType?: ViewType): Promise<FetchResult> {
   const accessToken = await getValidAccessToken();
   if (!accessToken) {
     await supabase.auth.signOut();
     throw new Error('Session expired. Please sign in again.');
   }
 
-  let { data, error } = await invokeFetch(unitId, accessToken);
+  let { data, error } = await invokeFetch(unitId, accessToken, viewType);
 
   // Recover from stale/invalid session on published domains.
   if (error && isUnauthorizedFunctionError(error)) {
     const refreshedAccessToken = await getValidAccessToken({ refresh: true });
 
     if (refreshedAccessToken) {
-      const retryResult = await invokeFetch(unitId, refreshedAccessToken);
+      const retryResult = await invokeFetch(unitId, refreshedAccessToken, viewType);
       data = retryResult.data;
       error = retryResult.error;
     }
@@ -76,7 +76,7 @@ async function fetchUnitData(unitId: string): Promise<FetchResult> {
   return data as FetchResult;
 }
 
-export function useGSRData() {
+export function useGSRData(viewType?: ViewType) {
   const { unitCode } = useParams<{ unitCode: string }>();
   const resolvedUnitId = unitCode || 'GSR';
   const { isAuthenticated, isLoading: authLoading, session } = useAuth();
@@ -90,8 +90,8 @@ export function useGSRData() {
   );
 
   return useQuery<FetchResult>({
-    queryKey: ['gsr-data', resolvedUnitId, session?.user.id ?? 'anonymous'],
-    queryFn: () => fetchUnitData(resolvedUnitId),
+    queryKey: ['gsr-data', resolvedUnitId, viewType ?? 'all-views', session?.user.id ?? 'anonymous'],
+    queryFn: () => fetchUnitData(resolvedUnitId, viewType),
     enabled: !!isAuthenticated && !!hasAccess,
     staleTime: 0,
     retry: (failureCount, err) => {

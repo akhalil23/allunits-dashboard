@@ -233,6 +233,7 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
 }
 
 type Status = 'Not Applicable' | 'Not Started' | 'In Progress' | 'Completed – On Target' | 'Completed – Below Target';
+type StatusView = 'all' | 'cumulative' | 'yearly';
 
 function isNotApplicableRaw(raw: string | undefined | null): boolean {
   if (raw === null || raw === undefined) return true;
@@ -333,16 +334,19 @@ function extractTermData(
   termRow: any[],
   windowIdx: number,
   anomalies: AnomalyLog,
-  rowId: string
+  rowId: string,
+  statusView: StatusView = 'all'
 ): { td: TermData; invalidStatuses: number; invalidCompletions: number } {
   const offset = windowIdx * WINDOW_SIZE;
   let invalidStatuses = 0;
   let invalidCompletions = 0;
 
-  const rawSpStatus = safeGet(termRow, offset + WIN_SP_STATUS);
-  const rawYearlyStatus = safeGet(termRow, offset + WIN_YEARLY_STATUS);
-  const rawSpComp = safeGet(termRow, offset + WIN_SP_COMP);
-  const rawYearlyComp = safeGet(termRow, offset + WIN_YEARLY_COMP);
+  const readSp = statusView !== 'yearly';
+  const readYearly = statusView !== 'cumulative';
+  const rawSpStatus = readSp ? safeGet(termRow, offset + WIN_SP_STATUS) : '';
+  const rawYearlyStatus = readYearly ? safeGet(termRow, offset + WIN_YEARLY_STATUS) : '';
+  const rawSpComp = readSp ? safeGet(termRow, offset + WIN_SP_COMP) : '';
+  const rawYearlyComp = readYearly ? safeGet(termRow, offset + WIN_YEARLY_COMP) : '';
   const spStatusProvided = rawSpStatus.trim() !== '';
   const yearlyStatusProvided = rawYearlyStatus.trim() !== '';
 
@@ -383,12 +387,12 @@ function extractTermData(
       spStatusRaw: rawSpStatus,
       spStatusProvided,
       spCompletion: spCompResult.value ?? 0,
-      spTarget: safeGet(termRow, offset + WIN_SP_TARGET),
+      spTarget: readSp ? safeGet(termRow, offset + WIN_SP_TARGET) : '',
       yearlyStatus: resolvedYearlyStatus,
       yearlyStatusRaw: rawYearlyStatus,
       yearlyStatusProvided,
       yearlyCompletion: yearlyCompResult.value ?? 0,
-      yearlyTarget: safeGet(termRow, offset + WIN_YEARLY_TARGET),
+      yearlyTarget: readYearly ? safeGet(termRow, offset + WIN_YEARLY_TARGET) : '',
       supportingDoc: safeGet(termRow, offset + WIN_SUPPORTING_DOC),
     },
     invalidStatuses,
@@ -412,7 +416,8 @@ function processPillarData(
   pillarId: string,
   coreRows: any[][],
   termRows: any[][],
-  anomalies: AnomalyLog
+  anomalies: AnomalyLog,
+  statusView: StatusView = 'all'
 ): { items: ActionItem[]; invalidStatuses: number; invalidCompletions: number } {
   let totalInvalidStatuses = 0;
   let totalInvalidCompletions = 0;
@@ -455,7 +460,7 @@ function processPillarData(
     const terms: Record<string, TermData> = {};
 
     for (let w = 0; w < 4; w++) {
-      const { td, invalidStatuses, invalidCompletions } = extractTermData(term, w, anomalies, rowId);
+      const { td, invalidStatuses, invalidCompletions } = extractTermData(term, w, anomalies, rowId, statusView);
       terms[TERM_WINDOW_KEYS[w]] = td;
       totalInvalidStatuses += invalidStatuses;
       totalInvalidCompletions += invalidCompletions;
@@ -482,7 +487,7 @@ function processPillarData(
 // ============================================================
 
 const RATE_LIMIT_PATTERN = /(RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|RATE_LIMITED|\b429\b)/i;
-const GSR_CACHE_TTL_MS = 5 * 60 * 1000;
+const GSR_CACHE_TTL_MS = 60 * 1000;
 
 type GsrCacheEntry = {
   data: any;
@@ -498,12 +503,18 @@ const gsrCacheGlobal = globalThis as GsrCacheGlobal;
 const gsrDataCache = gsrCacheGlobal.__gsr_data_cache__ ?? new Map<string, GsrCacheEntry>();
 gsrCacheGlobal.__gsr_data_cache__ = gsrDataCache;
 
-function getGsrCache(unitId: string): GsrCacheEntry | null {
-  return gsrDataCache.get(unitId) ?? null;
+function getGsrCache(cacheKey: string): GsrCacheEntry | null {
+  const entry = gsrDataCache.get(cacheKey) ?? null;
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    gsrDataCache.delete(cacheKey);
+    return null;
+  }
+  return entry;
 }
 
-function setGsrCache(unitId: string, data: any) {
-  gsrDataCache.set(unitId, {
+function setGsrCache(cacheKey: string, data: any) {
+  gsrDataCache.set(cacheKey, {
     data,
     cachedAt: Date.now(),
     expiresAt: Date.now() + GSR_CACHE_TTL_MS,
@@ -552,6 +563,7 @@ serve(async (req) => {
   }
 
   let requestedUnitId = 'GSR';
+  let requestedStatusView: StatusView = 'all';
 
   try {
     // --- SERVER-SIDE AUTH & UNIT ISOLATION ---
@@ -585,10 +597,13 @@ serve(async (req) => {
       if (req.method === 'POST') {
         const body = await req.json();
         if (body?.unitId) requestedUnitId = body.unitId;
+        if (body?.viewType === 'cumulative' || body?.viewType === 'yearly') requestedStatusView = body.viewType;
       }
     } catch {
       // Use default
     }
+
+    const cacheKey = `${requestedUnitId}:${requestedStatusView}`;
 
     // Enforce unit isolation
     if (userRole !== 'admin') {
@@ -681,7 +696,7 @@ serve(async (req) => {
         const coreRows = coreRange.values.slice(1);
         const termRows = coreRows.map(() => [] as any[]);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies,
+          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -698,7 +713,7 @@ serve(async (req) => {
         const coreRows = coreRange.values.slice(1);
         const termRows = termRange.values.slice(1);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies,
+          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -739,7 +754,7 @@ serve(async (req) => {
       },
     };
 
-    setGsrCache(requestedUnitId, result);
+    setGsrCache(cacheKey, result);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -751,7 +766,7 @@ serve(async (req) => {
     const isServiceUnavailable = /SERVICE_UNAVAILABLE/i.test(msg);
 
     if (isRateLimited || isServiceUnavailable) {
-      const staleCache = getGsrCache(requestedUnitId);
+      const staleCache = getGsrCache(`${requestedUnitId}:${requestedStatusView}`);
       if (staleCache) {
         return new Response(JSON.stringify({
           ...staleCache.data,

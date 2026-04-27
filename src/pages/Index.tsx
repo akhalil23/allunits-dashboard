@@ -19,7 +19,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 export default function Index() {
   const { unitCode } = useParams<{ unitCode: string }>();
   const { viewType, academicYear, term, selectedPillar } = useDashboard();
-  const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
+  const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData(viewType);
   const queryClient = useQueryClient();
   const [metricsOpen, setMetricsOpen] = useState(false);
 
