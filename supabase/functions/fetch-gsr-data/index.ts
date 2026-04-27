@@ -503,12 +503,12 @@ const gsrCacheGlobal = globalThis as GsrCacheGlobal;
 const gsrDataCache = gsrCacheGlobal.__gsr_data_cache__ ?? new Map<string, GsrCacheEntry>();
 gsrCacheGlobal.__gsr_data_cache__ = gsrDataCache;
 
-function getGsrCache(unitId: string): GsrCacheEntry | null {
-  return gsrDataCache.get(unitId) ?? null;
+function getGsrCache(cacheKey: string): GsrCacheEntry | null {
+  return gsrDataCache.get(cacheKey) ?? null;
 }
 
-function setGsrCache(unitId: string, data: any) {
-  gsrDataCache.set(unitId, {
+function setGsrCache(cacheKey: string, data: any) {
+  gsrDataCache.set(cacheKey, {
     data,
     cachedAt: Date.now(),
     expiresAt: Date.now() + GSR_CACHE_TTL_MS,
@@ -557,6 +557,7 @@ serve(async (req) => {
   }
 
   let requestedUnitId = 'GSR';
+  let requestedStatusView: StatusView = 'all';
 
   try {
     // --- SERVER-SIDE AUTH & UNIT ISOLATION ---
@@ -590,10 +591,13 @@ serve(async (req) => {
       if (req.method === 'POST') {
         const body = await req.json();
         if (body?.unitId) requestedUnitId = body.unitId;
+        if (body?.viewType === 'cumulative' || body?.viewType === 'yearly') requestedStatusView = body.viewType;
       }
     } catch {
       // Use default
     }
+
+    const cacheKey = `${requestedUnitId}:${requestedStatusView}`;
 
     // Enforce unit isolation
     if (userRole !== 'admin') {
@@ -686,7 +690,7 @@ serve(async (req) => {
         const coreRows = coreRange.values.slice(1);
         const termRows = coreRows.map(() => [] as any[]);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies,
+          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -703,7 +707,7 @@ serve(async (req) => {
         const coreRows = coreRange.values.slice(1);
         const termRows = termRange.values.slice(1);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies,
+          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -744,7 +748,7 @@ serve(async (req) => {
       },
     };
 
-    setGsrCache(requestedUnitId, result);
+    setGsrCache(cacheKey, result);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -756,7 +760,7 @@ serve(async (req) => {
     const isServiceUnavailable = /SERVICE_UNAVAILABLE/i.test(msg);
 
     if (isRateLimited || isServiceUnavailable) {
-      const staleCache = getGsrCache(requestedUnitId);
+      const staleCache = getGsrCache(`${requestedUnitId}:${requestedStatusView}`);
       if (staleCache) {
         return new Response(JSON.stringify({
           ...staleCache.data,
