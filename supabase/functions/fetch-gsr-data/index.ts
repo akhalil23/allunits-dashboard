@@ -508,12 +508,13 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAttempts = 4): Promise<Response> {
+async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAttempts = 3): Promise<Response> {
   let lastRateLimitBody = '';
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
+      timeoutMs: 25000,
     });
 
     if (response.status !== 429) {
@@ -525,8 +526,9 @@ async function fetchWithRateLimitRetry(url: string, accessToken: string, maxAtte
     if (attempt < maxAttempts - 1) {
       const retryAfterHeader = response.headers.get('retry-after');
       const retryAfterMs = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) * 1000 : NaN;
+      // Cap backoff to keep total request well under the 150s edge timeout.
       const backoffMs = Number.isFinite(retryAfterMs) && retryAfterMs > 0
-        ? retryAfterMs
+        ? Math.min(retryAfterMs, 5000)
         : 1000 * Math.pow(2, attempt);
       await sleep(backoffMs + Math.floor(Math.random() * 250));
       continue;
