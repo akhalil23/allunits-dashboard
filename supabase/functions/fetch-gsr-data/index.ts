@@ -105,6 +105,10 @@ function buildCoreOnlyRanges(pillars: PillarRange[]): { ranges: string[]; pillar
   return { ranges, pillarMap: pillars };
 }
 
+function buildRowMetadataRanges(pillars: PillarRange[]): string[] {
+  return pillars.map(p => `'${p.sheetName}'!A4:G${p.lastRow}`);
+}
+
 // ============================================================
 // Unit ID → Spreadsheet ID (server-side only)
 // ============================================================
