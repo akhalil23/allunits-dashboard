@@ -688,6 +688,15 @@ serve(async (req) => {
     const sheetsData = await sheetsResp.json();
     const valueRanges = sheetsData.valueRanges || [];
 
+    const metadataRanges = buildRowMetadataRanges(pillarConfig)
+      .map(range => `ranges=${encodeURIComponent(range)}`)
+      .join('&');
+    const metadataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=true&fields=sheets(data(rowMetadata(hiddenByFilter,hiddenByUser)))&${metadataRanges}`;
+    const metadataResp = await fetchWithRateLimitRetry(metadataUrl, accessToken);
+    const hiddenRowsByPillar = metadataResp.ok
+      ? getHiddenRowIndexes(await metadataResp.json(), pillarMap.length)
+      : Array.from({ length: pillarMap.length }, () => new Set<number>());
+
     const observedAt = new Date().toISOString();
     let allItems: ActionItem[] = [];
     let totalInvalidStatuses = 0;
@@ -710,9 +719,11 @@ serve(async (req) => {
           continue;
         }
         const coreRows = coreRange.values.slice(1);
-        const termRows = coreRows.map(() => [] as any[]);
+        const hiddenRows = hiddenRowsByPillar[p] ?? new Set<number>();
+        const visibleCoreRows = coreRows.filter((_, idx) => !hiddenRows.has(idx + 1));
+        const termRows = visibleCoreRows.map(() => [] as any[]);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
+          pillarMap[p].id, visibleCoreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -728,8 +739,11 @@ serve(async (req) => {
         }
         const coreRows = coreRange.values.slice(1);
         const termRows = termRange.values.slice(1);
+        const hiddenRows = hiddenRowsByPillar[p] ?? new Set<number>();
+        const visibleCoreRows = coreRows.filter((_, idx) => !hiddenRows.has(idx + 1));
+        const visibleTermRows = termRows.filter((_, idx) => !hiddenRows.has(idx + 1));
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
+          pillarMap[p].id, visibleCoreRows, visibleTermRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
