@@ -78,31 +78,6 @@ export default function DashboardGuide() {
         </motion.div>
       </section>
 
-      {/* What's New */}
-      <section>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-emerald-500/40 bg-emerald-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4"><Sparkles className="w-4 h-4 text-emerald-500" /><span className="text-xs sm:text-sm font-medium text-emerald-500 uppercase tracking-wider">What's New</span></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
-              <p className="text-xs font-semibold text-foreground">ADM — Administration unit</p>
-              <p className="text-[10px] text-muted-foreground mt-1">25th reporting unit, fully integrated into routing, auth, ingestion, filters, comparisons, and aggregations.</p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
-              <p className="text-xs font-semibold text-foreground">Personalized board-member accounts</p>
-              <p className="text-[10px] text-muted-foreground mt-1">39 named logins (e.g. m.ahmar, f.nader). Each user gets a private workspace and welcome greeting.</p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
-              <p className="text-xs font-semibold text-foreground">My Sessions — Saved Views</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Save current dashboard state, restore later, compare two snapshots, export PDF/CSV. Strict per-user privacy.</p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-card/60 border border-border/40">
-              <p className="text-xs font-semibold text-foreground">Welcome Banner</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Personalized greeting on the Executive Dashboard. Suppressed for the shared sp4 account.</p>
-            </div>
-          </div>
-        </motion.div>
-      </section>
-
       {/* Data Refresh Policy */}
       <section>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-amber-500/40 bg-amber-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
