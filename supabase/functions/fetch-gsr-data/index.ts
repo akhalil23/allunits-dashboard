@@ -296,36 +296,17 @@ function isRowFullyBlank(row: any[]): boolean {
   return row.every((c: any) => cleanCellText(c) === '');
 }
 
-function isValidItemRow(coreRow: any[], termRow: any[]): boolean {
-  // A row qualifies as a real item only when its CORE columns have meaningful
-  // content. Pure term-row presence is NOT sufficient: blank action rows often
-  // carry empty/inherited cells in the term block (formulas, formatting, NA
-  // defaults), which would otherwise inflate "Not Applicable" counts with
-  // phantom items.
-  const colA = safeGet(coreRow, 0);              // Goal / sequence indicator
-  const action = safeGet(coreRow, CORE_ACTION);  // Action / Objective text
+function isValidItemRow(coreRow: any[], _termRow: any[]): boolean {
+  // A row is a real action item ONLY when its core columns carry meaningful
+  // content (Goal, Action, Action Step, or Owner). Stray cells in the term
+  // block — empty strings, leftover formatting, formula remnants, "NA"
+  // defaults — must NOT promote a blank row to an item, otherwise we double-
+  // count visible rows whose action step wraps across multiple sheet rows.
+  const colA = safeGet(coreRow, 0);
+  const action = safeGet(coreRow, CORE_ACTION);
   const actionStep = safeGet(coreRow, CORE_ACTION_STEP);
   const owner = safeGet(coreRow, CORE_OWNER);
-
-  if (colA !== '' || action !== '' || actionStep !== '' || owner !== '') {
-    return true;
-  }
-
-  // Fallback: only accept a term-only row when it contains a recognised
-  // status/target value (not just stray empty strings).
-  if (termRow && termRow.length > 0) {
-    for (let i = 0; i < termRow.length; i++) {
-      const cell = safeGet(termRow, i);
-      if (cell !== '' && cell !== '0' && cell.toLowerCase() !== 'na' && cell.toLowerCase() !== 'n/a') {
-        // Only treat as valid if it looks like a real status or non-trivial value
-        const isMeaningful = /[a-z]/i.test(cell) || /^[0-9]+(\.[0-9]+)?%?$/.test(cell);
-        if (isMeaningful && cell.toLowerCase() !== 'not applicable') {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
+  return colA !== '' || action !== '' || actionStep !== '' || owner !== '';
 }
 
 interface TermData {
