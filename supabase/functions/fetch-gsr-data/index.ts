@@ -416,7 +416,8 @@ function processPillarData(
   pillarId: string,
   coreRows: any[][],
   termRows: any[][],
-  anomalies: AnomalyLog
+  anomalies: AnomalyLog,
+  statusView: StatusView = 'all'
 ): { items: ActionItem[]; invalidStatuses: number; invalidCompletions: number } {
   let totalInvalidStatuses = 0;
   let totalInvalidCompletions = 0;
@@ -459,7 +460,7 @@ function processPillarData(
     const terms: Record<string, TermData> = {};
 
     for (let w = 0; w < 4; w++) {
-      const { td, invalidStatuses, invalidCompletions } = extractTermData(term, w, anomalies, rowId);
+      const { td, invalidStatuses, invalidCompletions } = extractTermData(term, w, anomalies, rowId, statusView);
       terms[TERM_WINDOW_KEYS[w]] = td;
       totalInvalidStatuses += invalidStatuses;
       totalInvalidCompletions += invalidCompletions;
@@ -486,7 +487,7 @@ function processPillarData(
 // ============================================================
 
 const RATE_LIMIT_PATTERN = /(RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|RATE_LIMITED|\b429\b)/i;
-const GSR_CACHE_TTL_MS = 5 * 60 * 1000;
+const GSR_CACHE_TTL_MS = 60 * 1000;
 
 type GsrCacheEntry = {
   data: any;
