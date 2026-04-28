@@ -8,7 +8,23 @@ const corsHeaders = {
 
 const SPREADSHEET_ID = '1jZCAJdmH1_72K8NKI0WMks660u2yCHL7c0MKbOI0KLc';
 
+// In-memory cache (per edge function instance)
+interface CacheEntry {
+  summaries: any[];
+  fetchedAt: number;
+}
+let cache: CacheEntry | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const STALE_FALLBACK_MS = 60 * 60 * 1000; // serve stale up to 1h on rate-limit
+
+// Cached access token
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
 async function getAccessToken(): Promise<string> {
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) {
+    return cachedToken.token;
+  }
+
   const raw = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
   if (!raw) throw new Error('Missing GOOGLE_SERVICE_ACCOUNT_KEY');
   const sa = JSON.parse(raw);
@@ -42,7 +58,27 @@ async function getAccessToken(): Promise<string> {
   });
   const data = await resp.json();
   if (!data.access_token) throw new Error('Failed to get access token');
+  cachedToken = { token: data.access_token, expiresAt: Date.now() + 3500_000 };
   return data.access_token;
+}
+
+async function fetchWithRetry(url: string, token: string, maxAttempts = 4): Promise<Response> {
+  let lastResp: Response | null = null;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (resp.ok) return resp;
+    lastResp = resp;
+    if (resp.status === 429 || resp.status === 503) {
+      if (attempt < maxAttempts - 1) {
+        const delay = Math.min(1000 * Math.pow(2, attempt), 8000) + Math.random() * 500;
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+    } else {
+      return resp;
+    }
+  }
+  return lastResp!;
 }
 
 serve(async (req) => {
@@ -50,34 +86,46 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const ok = (summaries: any[], extra: Record<string, unknown> = {}) =>
+    new Response(JSON.stringify({ summaries, ...extra }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  // Serve fresh cache
+  if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
+    return ok(cache.summaries, { cached: true });
+  }
+
   try {
     const token = await getAccessToken();
-
-    // Read C4:H (header at row 4, data from row 5 onward)
     const range = encodeURIComponent('C4:H1000');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?majorDimension=ROWS`;
-    const resp = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const resp = await fetchWithRetry(url, token);
 
     if (!resp.ok) {
       const errText = await resp.text();
-      throw new Error(`Sheets API error ${resp.status}: ${errText}`);
+      console.error(`Sheets API error ${resp.status}: ${errText}`);
+      // Serve stale cache on rate-limit / unavailable
+      if ((resp.status === 429 || resp.status === 503) && cache && Date.now() - cache.fetchedAt < STALE_FALLBACK_MS) {
+        return ok(cache.summaries, { cached: true, stale: true });
+      }
+      // Degrade gracefully: return empty list with a flag instead of 500
+      return ok([], {
+        error: resp.status === 429 ? 'RATE_LIMITED' : `Sheets API error ${resp.status}`,
+        fallback: true,
+      });
     }
 
     const sheet = await resp.json();
 
     if (!sheet.values || sheet.values.length < 2) {
-      return new Response(JSON.stringify({ summaries: [] }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      cache = { summaries: [], fetchedAt: Date.now() };
+      return ok([]);
     }
 
-    // Row 0 = header (C4:H4), rows 1+ = data
     const dataRows = sheet.values.slice(1);
-
     const summaries = dataRows
-      .filter((row: string[]) => row[0] && row[1] && row[2]) // Must have year, period, pillar
+      .filter((row: string[]) => row[0] && row[1] && row[2])
       .map((row: string[]) => ({
         academicYear: (row[0] || '').trim(),
         period: (row[1] || '').trim(),
@@ -87,13 +135,13 @@ serve(async (req) => {
         priorities: (row[5] || '').trim(),
       }));
 
-    return new Response(JSON.stringify({ summaries }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    cache = { summaries, fetchedAt: Date.now() };
+    return ok(summaries);
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('fetch-executive-summaries error:', err);
+    if (cache && Date.now() - cache.fetchedAt < STALE_FALLBACK_MS) {
+      return ok(cache.summaries, { cached: true, stale: true });
+    }
+    return ok([], { error: (err as Error).message, fallback: true });
   }
 });
