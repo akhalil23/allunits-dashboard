@@ -16,6 +16,7 @@ interface CacheEntry {
 let cache: CacheEntry | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const STALE_FALLBACK_MS = 60 * 60 * 1000; // serve stale up to 1h on rate-limit
+let inFlightFetch: Promise<any[]> | null = null;
 
 // Cached access token
 let cachedToken: { token: string; expiresAt: number } | null = null;
@@ -62,13 +63,15 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function fetchWithRetry(url: string, token: string, maxAttempts = 4): Promise<Response> {
+async function fetchWithRetry(url: string, token: string, maxAttempts = 3): Promise<Response> {
   let lastResp: Response | null = null;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (resp.ok) return resp;
     lastResp = resp;
-    if (resp.status === 429 || resp.status === 503) {
+    // Do not retry 429: every retry is another Sheets read and worsens the quota burst.
+    if (resp.status === 429) return resp;
+    if (resp.status === 503) {
       if (attempt < maxAttempts - 1) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 8000) + Math.random() * 500;
         await new Promise((r) => setTimeout(r, delay));
@@ -79,6 +82,34 @@ async function fetchWithRetry(url: string, token: string, maxAttempts = 4): Prom
     }
   }
   return lastResp!;
+}
+
+async function fetchSummariesFromSheet(): Promise<any[]> {
+  const token = await getAccessToken();
+  const range = encodeURIComponent('C4:H1000');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?majorDimension=ROWS`;
+  const resp = await fetchWithRetry(url, token);
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    console.error(`Sheets API error ${resp.status}: ${errText}`);
+    throw new Error(resp.status === 429 ? 'RATE_LIMITED' : `Sheets API error ${resp.status}`);
+  }
+
+  const sheet = await resp.json();
+  if (!sheet.values || sheet.values.length < 2) return [];
+
+  return sheet.values
+    .slice(1)
+    .filter((row: string[]) => row[0] && row[1] && row[2])
+    .map((row: string[]) => ({
+      academicYear: (row[0] || '').trim(),
+      period: (row[1] || '').trim(),
+      pillar: (row[2] || '').trim(),
+      achievements: (row[3] || '').trim(),
+      challenges: (row[4] || '').trim(),
+      priorities: (row[5] || '').trim(),
+    }));
 }
 
 serve(async (req) => {
@@ -97,44 +128,12 @@ serve(async (req) => {
   }
 
   try {
-    const token = await getAccessToken();
-    const range = encodeURIComponent('C4:H1000');
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?majorDimension=ROWS`;
-    const resp = await fetchWithRetry(url, token);
-
-    if (!resp.ok) {
-      const errText = await resp.text();
-      console.error(`Sheets API error ${resp.status}: ${errText}`);
-      // Serve stale cache on rate-limit / unavailable
-      if ((resp.status === 429 || resp.status === 503) && cache && Date.now() - cache.fetchedAt < STALE_FALLBACK_MS) {
-        return ok(cache.summaries, { cached: true, stale: true });
-      }
-      // Degrade gracefully: return empty list with a flag instead of 500
-      return ok([], {
-        error: resp.status === 429 ? 'RATE_LIMITED' : `Sheets API error ${resp.status}`,
-        fallback: true,
+    if (!inFlightFetch) {
+      inFlightFetch = fetchSummariesFromSheet().finally(() => {
+        inFlightFetch = null;
       });
     }
-
-    const sheet = await resp.json();
-
-    if (!sheet.values || sheet.values.length < 2) {
-      cache = { summaries: [], fetchedAt: Date.now() };
-      return ok([]);
-    }
-
-    const dataRows = sheet.values.slice(1);
-    const summaries = dataRows
-      .filter((row: string[]) => row[0] && row[1] && row[2])
-      .map((row: string[]) => ({
-        academicYear: (row[0] || '').trim(),
-        period: (row[1] || '').trim(),
-        pillar: (row[2] || '').trim(),
-        achievements: (row[3] || '').trim(),
-        challenges: (row[4] || '').trim(),
-        priorities: (row[5] || '').trim(),
-      }));
-
+    const summaries = await inFlightFetch;
     cache = { summaries, fetchedAt: Date.now() };
     return ok(summaries);
   } catch (err) {

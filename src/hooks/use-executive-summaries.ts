@@ -15,9 +15,15 @@ export function useExecutiveSummaries() {
     queryKey: ['executive-summaries'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('fetch-executive-summaries');
-      if (error) throw error;
+      if (error) {
+        console.warn('Executive summaries unavailable; continuing without them.', error);
+        return [];
+      }
       return data?.summaries || [];
     },
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 }
