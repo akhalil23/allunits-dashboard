@@ -84,6 +84,34 @@ async function fetchWithRetry(url: string, token: string, maxAttempts = 3): Prom
   return lastResp!;
 }
 
+async function fetchSummariesFromSheet(): Promise<any[]> {
+  const token = await getAccessToken();
+  const range = encodeURIComponent('C4:H1000');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?majorDimension=ROWS`;
+  const resp = await fetchWithRetry(url, token);
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    console.error(`Sheets API error ${resp.status}: ${errText}`);
+    throw new Error(resp.status === 429 ? 'RATE_LIMITED' : `Sheets API error ${resp.status}`);
+  }
+
+  const sheet = await resp.json();
+  if (!sheet.values || sheet.values.length < 2) return [];
+
+  return sheet.values
+    .slice(1)
+    .filter((row: string[]) => row[0] && row[1] && row[2])
+    .map((row: string[]) => ({
+      academicYear: (row[0] || '').trim(),
+      period: (row[1] || '').trim(),
+      pillar: (row[2] || '').trim(),
+      achievements: (row[3] || '').trim(),
+      challenges: (row[4] || '').trim(),
+      priorities: (row[5] || '').trim(),
+    }));
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -100,44 +128,12 @@ serve(async (req) => {
   }
 
   try {
-    const token = await getAccessToken();
-    const range = encodeURIComponent('C4:H1000');
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?majorDimension=ROWS`;
-    const resp = await fetchWithRetry(url, token);
-
-    if (!resp.ok) {
-      const errText = await resp.text();
-      console.error(`Sheets API error ${resp.status}: ${errText}`);
-      // Serve stale cache on rate-limit / unavailable
-      if ((resp.status === 429 || resp.status === 503) && cache && Date.now() - cache.fetchedAt < STALE_FALLBACK_MS) {
-        return ok(cache.summaries, { cached: true, stale: true });
-      }
-      // Degrade gracefully: return empty list with a flag instead of 500
-      return ok([], {
-        error: resp.status === 429 ? 'RATE_LIMITED' : `Sheets API error ${resp.status}`,
-        fallback: true,
+    if (!inFlightFetch) {
+      inFlightFetch = fetchSummariesFromSheet().finally(() => {
+        inFlightFetch = null;
       });
     }
-
-    const sheet = await resp.json();
-
-    if (!sheet.values || sheet.values.length < 2) {
-      cache = { summaries: [], fetchedAt: Date.now() };
-      return ok([]);
-    }
-
-    const dataRows = sheet.values.slice(1);
-    const summaries = dataRows
-      .filter((row: string[]) => row[0] && row[1] && row[2])
-      .map((row: string[]) => ({
-        academicYear: (row[0] || '').trim(),
-        period: (row[1] || '').trim(),
-        pillar: (row[2] || '').trim(),
-        achievements: (row[3] || '').trim(),
-        challenges: (row[4] || '').trim(),
-        priorities: (row[5] || '').trim(),
-      }));
-
+    const summaries = await inFlightFetch;
     cache = { summaries, fetchedAt: Date.now() };
     return ok(summaries);
   } catch (err) {
