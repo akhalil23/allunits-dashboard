@@ -851,6 +851,19 @@ export function computeCategories(
   const majorityNA: StepItem[] = [];
   const absoluteNA: StepItem[] = [];
 
+  // Track near-miss Absolute NA candidates so we can surface the blocking unit(s)
+  // in production logs (not just DEV) when the count comes up empty/low.
+  const nearMissCandidates: Array<{
+    sourceKey: string;
+    pillar: PillarId;
+    sheetRow: number;
+    actionStep: string;
+    naCount: number;
+    nonNaUnits: string[];
+    blankUnits: string[];
+    missingUnits: string[];
+  }> = [];
+
   // Deduplication check: track canonical keys to ensure no duplicate items
   const processedKeys = new Set<string>();
 
