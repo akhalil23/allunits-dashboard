@@ -16,6 +16,7 @@ interface CacheEntry {
 let cache: CacheEntry | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const STALE_FALLBACK_MS = 60 * 60 * 1000; // serve stale up to 1h on rate-limit
+let inFlightFetch: Promise<any[]> | null = null;
 
 // Cached access token
 let cachedToken: { token: string; expiresAt: number } | null = null;
@@ -62,13 +63,15 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function fetchWithRetry(url: string, token: string, maxAttempts = 4): Promise<Response> {
+async function fetchWithRetry(url: string, token: string, maxAttempts = 3): Promise<Response> {
   let lastResp: Response | null = null;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (resp.ok) return resp;
     lastResp = resp;
-    if (resp.status === 429 || resp.status === 503) {
+    // Do not retry 429: every retry is another Sheets read and worsens the quota burst.
+    if (resp.status === 429) return resp;
+    if (resp.status === 503) {
       if (attempt < maxAttempts - 1) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 8000) + Math.random() * 500;
         await new Promise((r) => setTimeout(r, delay));
