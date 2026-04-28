@@ -1021,7 +1021,7 @@ export function computeCategories(
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks, missing rows, and N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
     { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks, missing rows, and N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
     { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Explicitly marked Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
-    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: 'Explicitly marked Not Applicable by all 24 configured units; any missing, blank, unmatched, or non-NA unit excludes the item', count: strictAbsoluteNA.length, accent: 'na' as const, items: strictAbsoluteNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: `Explicitly marked Not Applicable by all ${totalConfiguredUnits} configured units; any missing, blank, unmatched, or non-NA unit excludes the item`, count: strictAbsoluteNA.length, accent: 'na' as const, items: strictAbsoluteNA },
   ];
 }
 
