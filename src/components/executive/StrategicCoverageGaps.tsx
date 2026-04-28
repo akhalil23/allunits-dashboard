@@ -955,6 +955,24 @@ export function computeCategories(
       });
     }
 
+    // Capture near-miss candidates: items where most units said NA but at least one didn't.
+    if (naCount >= Math.max(1, totalConfiguredUnits - 5) && !isStrictAbsoluteNA) {
+      nearMissCandidates.push({
+        sourceKey: entry.sourceKey,
+        pillar: entry.pillar,
+        sheetRow: entry.sheetRow,
+        actionStep: entry.actionStep,
+        naCount,
+        nonNaUnits: configuredUnitIds
+          .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
+          .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status ?? '?'}`),
+        blankUnits: configuredUnitIds
+          .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank')
+          .map(getUnitDisplayName),
+        missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
+      });
+    }
+
     if (isStrictAbsoluteNA) {
       absoluteNA.push({
         sourceKey: entry.sourceKey,
@@ -969,6 +987,34 @@ export function computeCategories(
       });
     }
   });
+
+  // ─── Production-visible blocker summary ────────────────────────────────
+  if (absoluteNA.length === 0 && nearMissCandidates.length > 0) {
+    const top = nearMissCandidates
+      .sort((a, b) => b.naCount - a.naCount)
+      .slice(0, 5);
+
+    const blockerFrequency = new Map<string, number>();
+    top.forEach(item => {
+      [...item.nonNaUnits.map(s => s.split('=')[0]), ...item.blankUnits, ...item.missingUnits].forEach(u => {
+        blockerFrequency.set(u, (blockerFrequency.get(u) ?? 0) + 1);
+      });
+    });
+    const rankedBlockers = [...blockerFrequency.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([unit, freq]) => `${unit} (blocks ${freq}/${top.length} top items)`);
+
+    console.warn('[CoverageGaps] Absolute NA = 0. Top blocking unit(s):', rankedBlockers);
+    console.warn('[CoverageGaps] Top near-miss items:', top.map(t => ({
+      pillar: t.pillar,
+      row: t.sheetRow,
+      step: t.actionStep,
+      naCount: `${t.naCount}/${totalConfiguredUnits}`,
+      nonNaBlockers: t.nonNaUnits,
+      blank: t.blankUnits,
+      missing: t.missingUnits,
+    })));
+  }
 
   const debugRows = buildCoverageDebugRows(stepMap, configuredUnitIds);
 
