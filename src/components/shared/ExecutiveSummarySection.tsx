@@ -77,10 +77,10 @@ export default function ExecutiveSummarySection({
         <FileText className="w-4 h-4" /> {title}
       </h3>
       <div
-        className={`grid gap-4 ${
+        className={`${
           pillarFilter === 'all'
-            ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-5'
-            : 'grid-cols-1 max-w-2xl'
+            ? 'flex flex-wrap gap-4 justify-center [&>*]:basis-full sm:[&>*]:basis-[calc(50%-0.5rem)] xl:[&>*]:basis-[calc(33.333%-0.667rem)] xl:[&>*]:max-w-[calc(33.333%-0.667rem)]'
+            : 'grid gap-4 grid-cols-1 max-w-2xl'
         }`}
       >
         {filtered.map(({ pillarId, summary }, i) => (
