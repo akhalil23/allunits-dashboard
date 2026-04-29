@@ -171,95 +171,134 @@ function downloadCsv(filename: string, content: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function deltaCell(a: number | undefined, b: number | undefined, suffix = ''): string {
-  if (typeof a !== 'number' || typeof b !== 'number') return '<td class="delta-zero">—</td>';
-  const d = b - a;
+function deltaCell(base: number | undefined, v: number | undefined, suffix = ''): string {
+  if (typeof base !== 'number' || typeof v !== 'number') return '<td class="delta-zero">—</td>';
+  const d = v - base;
   if (Math.abs(d) < 0.01) return `<td class="delta-zero">0${suffix}</td>`;
   const cls = d > 0 ? 'delta-pos' : 'delta-neg';
   const sign = d > 0 ? '+' : '';
   return `<td class="${cls}">${sign}${d.toFixed(2)}${suffix}</td>`;
 }
 
-function compareTable(a: MySessionSnapshot, b: MySessionSnapshot): string {
-  const rows: { label: string; av: unknown; bv: unknown; suffix?: string; isPct?: boolean }[] = [
-    { label: 'Completion %', av: a.completion_pct, bv: b.completion_pct, suffix: '%', isPct: true },
-    { label: 'On Track %', av: a.on_track_pct, bv: b.on_track_pct, suffix: '%', isPct: true },
-    { label: 'Below Target %', av: a.below_target_pct, bv: b.below_target_pct, suffix: '%', isPct: true },
-    { label: 'Risk Index', av: a.risk_index, bv: b.risk_index, suffix: '', isPct: false },
-    { label: 'Total Items', av: a.total_items, bv: b.total_items },
-    { label: 'Applicable Items', av: a.applicable_items, bv: b.applicable_items },
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+interface MetricRow {
+  label: string;
+  values: (number | undefined)[];
+  suffix?: string;
+  isPct?: boolean;
+}
+
+function buildMetricRows(snaps: MySessionSnapshot[]): MetricRow[] {
+  return [
+    { label: 'Completion %', values: snaps.map(s => s.completion_pct), suffix: '%', isPct: true },
+    { label: 'On Track %', values: snaps.map(s => s.on_track_pct), suffix: '%', isPct: true },
+    { label: 'Below Target %', values: snaps.map(s => s.below_target_pct), suffix: '%', isPct: true },
+    { label: 'Risk Index', values: snaps.map(s => s.risk_index), suffix: '' },
+    { label: 'Total Items', values: snaps.map(s => s.total_items) },
+    { label: 'Applicable Items', values: snaps.map(s => s.applicable_items) },
   ];
+}
+
+function compareTable(snaps: MySessionSnapshot[]): string {
+  const rows = buildMetricRows(snaps);
+  const headerCells = snaps
+    .map((s, i) => `<th>${LETTERS[i] ?? `S${i + 1}`} — ${escapeHtml(s.label)}</th>`)
+    .join('');
+  const deltaHeaders = snaps.length > 1
+    ? snaps.slice(1).map((_, i) => `<th>Δ (${LETTERS[i + 1] ?? `S${i + 2}`} − A)</th>`).join('')
+    : '';
   const body = rows.map(r => {
-    const av = typeof r.av === 'number' ? (r.isPct ? fmtPct(r.av) : fmtNum(r.av)) : '—';
-    const bv = typeof r.bv === 'number' ? (r.isPct ? fmtPct(r.bv) : fmtNum(r.bv)) : '—';
-    const delta = typeof r.av === 'number' && typeof r.bv === 'number'
-      ? deltaCell(r.av as number, r.bv as number, r.suffix ?? '')
-      : '<td class="delta-zero">—</td>';
-    return `<tr><td>${r.label}</td><td>${av}</td><td>${bv}</td>${delta}</tr>`;
+    const valueCells = r.values.map(v =>
+      typeof v === 'number' ? `<td>${r.isPct ? fmtPct(v) : (r.suffix === '' ? v.toFixed(2) : fmtNum(v))}</td>` : '<td>—</td>',
+    ).join('');
+    const base = r.values[0];
+    const deltaCells = r.values.slice(1).map(v => deltaCell(base, v, r.suffix ?? '')).join('');
+    return `<tr><td>${r.label}</td>${valueCells}${deltaCells}</tr>`;
   }).join('');
   return `
     <table>
-      <thead><tr><th>Metric</th><th>A — ${escapeHtml(a.label)}</th><th>B — ${escapeHtml(b.label)}</th><th>Δ (B − A)</th></tr></thead>
+      <thead><tr><th>Metric</th>${headerCells}${deltaHeaders}</tr></thead>
       <tbody>${body}</tbody>
     </table>
   `;
 }
 
-function filterDiffTable(a: MySessionSnapshot, b: MySessionSnapshot): string {
-  const fa = a.filters as Record<string, unknown>;
-  const fb = b.filters as Record<string, unknown>;
-  const keys = new Set([...Object.keys(fa ?? {}), ...Object.keys(fb ?? {}), 'academic_year', 'term', 'view_type']);
+function filterDiffTable(snaps: MySessionSnapshot[]): string {
+  const filterMaps = snaps.map(s => (s.filters ?? {}) as Record<string, unknown>);
+  const keys = new Set<string>(['academic_year', 'term', 'view_type']);
+  filterMaps.forEach(fm => Object.keys(fm).forEach(k => keys.add(k)));
+  const headerCells = snaps
+    .map((_, i) => `<th>${LETTERS[i] ?? `S${i + 1}`}</th>`)
+    .join('');
   const rows: string[] = [];
   for (const k of keys) {
-    const av = k === 'academic_year' ? a.academic_year : k === 'term' ? a.term : k === 'view_type' ? a.view_type : fa?.[k];
-    const bv = k === 'academic_year' ? b.academic_year : k === 'term' ? b.term : k === 'view_type' ? b.view_type : fb?.[k];
-    const same = JSON.stringify(av ?? null) === JSON.stringify(bv ?? null);
+    const values = snaps.map((s, i) => {
+      const fm = filterMaps[i];
+      if (k === 'academic_year') return s.academic_year;
+      if (k === 'term') return s.term;
+      if (k === 'view_type') return s.view_type;
+      return fm?.[k];
+    });
+    const base = JSON.stringify(values[0] ?? null);
+    const allSame = values.every(v => JSON.stringify(v ?? null) === base);
+    const valueCells = values.map(v => `<td>${escapeHtml(String(v ?? '—'))}</td>`).join('');
     rows.push(`<tr>
       <td>${escapeHtml(k)}</td>
-      <td>${escapeHtml(String(av ?? '—'))}</td>
-      <td>${escapeHtml(String(bv ?? '—'))}</td>
-      <td>${same ? '<span class="delta-zero">same</span>' : '<span class="delta-neg">changed</span>'}</td>
+      ${valueCells}
+      <td>${allSame ? '<span class="delta-zero">same</span>' : '<span class="delta-neg">changed</span>'}</td>
     </tr>`);
   }
   return `<table>
-    <thead><tr><th>Filter</th><th>Snapshot A</th><th>Snapshot B</th><th>Status</th></tr></thead>
+    <thead><tr><th>Filter</th>${headerCells}<th>Status</th></tr></thead>
     <tbody>${rows.join('')}</tbody>
   </table>`;
 }
 
-export function exportComparisonPDF(a: MySessionSnapshot, b: MySessionSnapshot) {
+export function exportComparisonPDF(snaps: MySessionSnapshot[]) {
+  if (snaps.length < 2) throw new Error('Select at least 2 sessions to compare.');
+  const sessionRows = `
+    <tr><th>Captured</th>${snaps.map(s => `<td>${fmtDate(s.created_at)}</td>`).join('')}</tr>
+    <tr><th>Reporting</th>${snaps.map(s => `<td>${escapeHtml(s.reporting_cycle)}</td>`).join('')}</tr>
+  `;
+  const sessionHeaders = snaps
+    .map((s, i) => `<th>${LETTERS[i] ?? `S${i + 1}`} — ${escapeHtml(s.label)}</th>`)
+    .join('');
   const html = `
-    <h1>Snapshot Comparison</h1>
+    <h1>Snapshot Comparison (${snaps.length} sessions)</h1>
     <div class="meta">Generated ${new Date().toLocaleString()}</div>
     <h2>Sessions</h2>
     <table>
-      <thead><tr><th></th><th>A — ${escapeHtml(a.label)}</th><th>B — ${escapeHtml(b.label)}</th></tr></thead>
-      <tbody>
-        <tr><th>Captured</th><td>${fmtDate(a.created_at)}</td><td>${fmtDate(b.created_at)}</td></tr>
-        <tr><th>Reporting</th><td>${escapeHtml(a.reporting_cycle)}</td><td>${escapeHtml(b.reporting_cycle)}</td></tr>
-      </tbody>
+      <thead><tr><th></th>${sessionHeaders}</tr></thead>
+      <tbody>${sessionRows}</tbody>
     </table>
     <h2>KPI Differences</h2>
-    ${compareTable(a, b)}
+    ${compareTable(snaps)}
     <h2>Filter / Context Differences</h2>
-    ${filterDiffTable(a, b)}
+    ${filterDiffTable(snaps)}
   `;
-  openPrintWindow(html, `Comparison · ${a.label} vs ${b.label}`);
+  const title = `Comparison · ${snaps.map(s => s.label).join(' vs ')}`;
+  openPrintWindow(html, title);
 }
 
-export function exportComparisonCSV(a: MySessionSnapshot, b: MySessionSnapshot) {
+export function exportComparisonCSV(snaps: MySessionSnapshot[]) {
+  if (snaps.length < 2) throw new Error('Select at least 2 sessions to compare.');
+  const rows = buildMetricRows(snaps);
   const lines: string[] = [];
-  lines.push('Metric,A,B,Delta (B-A)');
-  const rows: [string, number, number][] = [
-    ['Completion %', a.completion_pct, b.completion_pct],
-    ['On Track %', a.on_track_pct, b.on_track_pct],
-    ['Below Target %', a.below_target_pct, b.below_target_pct],
-    ['Risk Index', a.risk_index, b.risk_index],
-    ['Total Items', a.total_items, b.total_items],
-    ['Applicable Items', a.applicable_items, b.applicable_items],
-  ];
-  for (const [k, av, bv] of rows) {
-    lines.push([escapeCsv(k), escapeCsv(av), escapeCsv(bv), escapeCsv(bv - av)].join(','));
+  const header = ['Metric', ...snaps.map((s, i) => `${LETTERS[i] ?? `S${i + 1}`} (${s.label})`)];
+  for (let i = 1; i < snaps.length; i++) {
+    header.push(`Delta ${LETTERS[i] ?? `S${i + 1}`}-A`);
   }
-  downloadCsv(`comparison_${a.id.slice(0, 6)}_vs_${b.id.slice(0, 6)}.csv`, lines.join('\n'));
+  lines.push(header.map(escapeCsv).join(','));
+  for (const r of rows) {
+    const cols: unknown[] = [r.label, ...r.values];
+    const base = r.values[0];
+    for (let i = 1; i < r.values.length; i++) {
+      const v = r.values[i];
+      cols.push(typeof base === 'number' && typeof v === 'number' ? v - base : '');
+    }
+    lines.push(cols.map(escapeCsv).join(','));
+  }
+  const idsuffix = snaps.map(s => s.id.slice(0, 4)).join('-');
+  downloadCsv(`comparison_${idsuffix}.csv`, lines.join('\n'));
 }
