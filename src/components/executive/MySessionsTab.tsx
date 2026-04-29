@@ -263,7 +263,7 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
               My Saved Sessions
             </h3>
             <p className="text-[11px] text-muted-foreground">
-              Your private saved views — newest first. Select up to 2 to compare.
+              Your private saved views — newest first. Select 2 to {MAX_COMPARE} to compare.
             </p>
           </div>
         </header>
