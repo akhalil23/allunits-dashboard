@@ -84,7 +84,7 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
 
   const [view, setView] = useState<View>({ kind: 'list' });
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // up to 2 for compare
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // up to MAX_COMPARE for compare
 
   const accountLabel = useMemo(() => {
     if (profile?.display_name?.trim()) return profile.display_name;
