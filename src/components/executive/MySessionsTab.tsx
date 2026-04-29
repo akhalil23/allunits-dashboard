@@ -301,11 +301,9 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                           {s.view_type === 'cumulative' ? 'Cumulative' : 'Yearly'}
                         </span>
-                        {s.filters?.activeTab && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                            {String(s.filters.activeTab)}
-                          </span>
-                        )}
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          {CONTEXT_LABELS[getSessionContext(s)]}
+                        </span>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
