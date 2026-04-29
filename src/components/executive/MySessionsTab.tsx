@@ -68,10 +68,12 @@ interface Props {
   onSaveCurrent?: () => void;
 }
 
+const MAX_COMPARE = 5;
+
 type View =
   | { kind: 'list' }
   | { kind: 'detail'; id: string }
-  | { kind: 'compare'; aId: string; bId: string };
+  | { kind: 'compare'; ids: string[] };
 
 export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }: Props) {
   const { user } = useAuth();
