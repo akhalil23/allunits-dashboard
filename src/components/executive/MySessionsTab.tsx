@@ -224,8 +224,8 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
             className="flex flex-wrap items-center gap-2 px-4 py-3 rounded-xl bg-primary/[0.08] border border-primary/20"
           >
             <span className="text-xs text-foreground/80">
-              <strong>{selectedIds.length}</strong> selected for comparison
-              {selectedIds.length === 1 ? ' — pick one more' : ''}
+              <strong>{selectedIds.length}</strong> of {MAX_COMPARE} selected for comparison
+              {selectedIds.length < 2 ? ' — pick at least one more' : ''}
             </span>
             <div className="ml-auto flex gap-2">
               <Button
@@ -239,13 +239,13 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
               <Button
                 size="sm"
                 className="h-7 text-xs gap-1.5"
-                disabled={selectedIds.length !== 2}
+                disabled={selectedIds.length < 2}
                 onClick={() =>
-                  setView({ kind: 'compare', aId: selectedIds[0], bId: selectedIds[1] })
+                  setView({ kind: 'compare', ids: [...selectedIds] })
                 }
               >
                 <GitCompare className="w-3 h-3" />
-                Compare
+                Compare ({selectedIds.length})
               </Button>
             </div>
           </motion.div>
