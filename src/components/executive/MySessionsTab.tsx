@@ -48,7 +48,7 @@ import {
 } from '@/lib/my-sessions-export';
 import {
   CONTEXT_LABELS,
-  buildContextKpiRows,
+  buildContextKpiRowsMulti,
   getSessionContext,
   isKpiComparableContext,
   type SessionContext,
