@@ -58,6 +58,8 @@ export function buildSnapshotInput(
       ...(ctx.extraFilters ?? {}),
     },
     metrics: {
+      context: ctx.activeTab,
+      contextMetrics: ctx.extraMetrics ?? {},
       completionPct: agg.completionPct,
       onTrackPct: agg.onTrackPct,
       belowTargetPct: agg.belowTargetPct,
