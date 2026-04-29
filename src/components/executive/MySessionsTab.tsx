@@ -46,6 +46,13 @@ import {
   exportComparisonPDF,
   exportComparisonCSV,
 } from '@/lib/my-sessions-export';
+import {
+  CONTEXT_LABELS,
+  buildContextKpiRows,
+  getSessionContext,
+  isKpiComparableContext,
+  type SessionContext,
+} from '@/lib/session-context-kpis';
 import { toast } from 'sonner';
 
 interface RestoreInput {
