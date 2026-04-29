@@ -108,7 +108,10 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id);
-      if (prev.length >= 2) return [prev[1], id]; // keep most recent two
+      if (prev.length >= MAX_COMPARE) {
+        toast.info(`You can compare up to ${MAX_COMPARE} sessions at once.`);
+        return prev;
+      }
       return [...prev, id];
     });
   };
