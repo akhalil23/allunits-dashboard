@@ -154,13 +154,14 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
   }
 
   if (view.kind === 'compare') {
-    const a = sessionMap.get(view.aId);
-    const b = sessionMap.get(view.bId);
-    if (!a || !b) {
+    const snapshots = view.ids
+      .map(id => sessionMap.get(id))
+      .filter((s): s is MySessionSnapshot => !!s);
+    if (snapshots.length < 2) {
       setView({ kind: 'list' });
       return null;
     }
-    return <CompareView a={a} b={b} onBack={() => setView({ kind: 'list' })} />;
+    return <CompareView snapshots={snapshots} onBack={() => setView({ kind: 'list' })} />;
   }
 
   return (
