@@ -130,3 +130,77 @@ export function buildContextKpiRows(
 export function isKpiComparableContext(context: SessionContext): boolean {
   return ['snapshot', 'risk-priority', 'budget', 'comparison'].includes(context);
 }
+
+/** Multi-snapshot KPI row: values aligned to the snapshots array order. */
+export interface KpiRowMulti {
+  label: string;
+  values: number[];
+  suffix?: string;
+  isPct?: boolean;
+  isCount?: boolean;
+}
+
+interface MetricDef {
+  label: string;
+  read: (s: MySessionSnapshot) => number;
+  suffix?: string;
+  isPct?: boolean;
+  isCount?: boolean;
+}
+
+function defsForContext(context: SessionContext): MetricDef[] {
+  switch (context) {
+    case 'snapshot':
+      return [
+        { label: 'Completion', read: s => s.completion_pct, suffix: '%', isPct: true },
+        { label: 'On Track', read: s => s.on_track_pct, suffix: '%', isPct: true },
+        { label: 'Below Target', read: s => s.below_target_pct, suffix: '%', isPct: true },
+        { label: 'Risk Index', read: s => s.risk_index, suffix: '' },
+        { label: 'Total Items', read: s => s.total_items, isCount: true },
+        { label: 'Applicable Items', read: s => s.applicable_items, isCount: true },
+      ];
+    case 'risk-priority':
+      return [
+        { label: 'Risk Index', read: s => s.risk_index, suffix: '' },
+        { label: 'Below Target', read: s => s.below_target_pct, suffix: '%', isPct: true },
+        { label: 'On Track', read: s => s.on_track_pct, suffix: '%', isPct: true },
+        { label: 'Critical Items', read: s => num(s, 'criticalCount'), isCount: true },
+        { label: 'Emerging Items', read: s => num(s, 'emergingCount'), isCount: true },
+        { label: 'Realized Items', read: s => num(s, 'realizedCount'), isCount: true },
+      ];
+    case 'budget':
+      return [
+        { label: 'Budget Utilization', read: s => num(s, 'budgetUtilization'), suffix: '%', isPct: true },
+        { label: 'Commitment Ratio', read: s => num(s, 'commitmentRatio'), suffix: '%', isPct: true },
+        { label: 'Spending Ratio', read: s => num(s, 'spendingRatio'), suffix: '%', isPct: true },
+        { label: 'Total Allocation', read: s => num(s, 'totalAllocation'), isCount: true },
+        { label: 'Total Spent', read: s => num(s, 'totalSpent'), isCount: true },
+        { label: 'Total Committed', read: s => num(s, 'totalCommitted'), isCount: true },
+        { label: 'Available Balance', read: s => num(s, 'totalAvailable'), isCount: true },
+        { label: 'Unspent', read: s => num(s, 'totalUnspent'), isCount: true },
+      ];
+    case 'comparison':
+      return [
+        { label: 'Loaded Units', read: s => num(s, 'loadedUnits'), isCount: true },
+        { label: 'Avg Completion', read: s => s.completion_pct, suffix: '%', isPct: true },
+        { label: 'Avg On Track', read: s => s.on_track_pct, suffix: '%', isPct: true },
+        { label: 'Avg Risk Index', read: s => s.risk_index, suffix: '' },
+      ];
+    default:
+      return [];
+  }
+}
+
+/** Build context-aware KPI rows for N (>= 2) snapshots. */
+export function buildContextKpiRowsMulti(
+  context: SessionContext,
+  snapshots: MySessionSnapshot[],
+): KpiRowMulti[] {
+  return defsForContext(context).map(def => ({
+    label: def.label,
+    values: snapshots.map(def.read),
+    suffix: def.suffix,
+    isPct: def.isPct,
+    isCount: def.isCount,
+  }));
+}

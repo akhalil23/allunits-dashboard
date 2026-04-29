@@ -48,7 +48,7 @@ import {
 } from '@/lib/my-sessions-export';
 import {
   CONTEXT_LABELS,
-  buildContextKpiRows,
+  buildContextKpiRowsMulti,
   getSessionContext,
   isKpiComparableContext,
   type SessionContext,
@@ -68,10 +68,12 @@ interface Props {
   onSaveCurrent?: () => void;
 }
 
+const MAX_COMPARE = 5;
+
 type View =
   | { kind: 'list' }
   | { kind: 'detail'; id: string }
-  | { kind: 'compare'; aId: string; bId: string };
+  | { kind: 'compare'; ids: string[] };
 
 export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }: Props) {
   const { user } = useAuth();
@@ -82,7 +84,7 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
 
   const [view, setView] = useState<View>({ kind: 'list' });
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // up to 2 for compare
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // up to MAX_COMPARE for compare
 
   const accountLabel = useMemo(() => {
     if (profile?.display_name?.trim()) return profile.display_name;
@@ -106,7 +108,10 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id);
-      if (prev.length >= 2) return [prev[1], id]; // keep most recent two
+      if (prev.length >= MAX_COMPARE) {
+        toast.info(`You can compare up to ${MAX_COMPARE} sessions at once.`);
+        return prev;
+      }
       return [...prev, id];
     });
   };
@@ -149,13 +154,14 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
   }
 
   if (view.kind === 'compare') {
-    const a = sessionMap.get(view.aId);
-    const b = sessionMap.get(view.bId);
-    if (!a || !b) {
+    const snapshots = view.ids
+      .map(id => sessionMap.get(id))
+      .filter((s): s is MySessionSnapshot => !!s);
+    if (snapshots.length < 2) {
       setView({ kind: 'list' });
       return null;
     }
-    return <CompareView a={a} b={b} onBack={() => setView({ kind: 'list' })} />;
+    return <CompareView snapshots={snapshots} onBack={() => setView({ kind: 'list' })} />;
   }
 
   return (
@@ -218,8 +224,8 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
             className="flex flex-wrap items-center gap-2 px-4 py-3 rounded-xl bg-primary/[0.08] border border-primary/20"
           >
             <span className="text-xs text-foreground/80">
-              <strong>{selectedIds.length}</strong> selected for comparison
-              {selectedIds.length === 1 ? ' — pick one more' : ''}
+              <strong>{selectedIds.length}</strong> of {MAX_COMPARE} selected for comparison
+              {selectedIds.length < 2 ? ' — pick at least one more' : ''}
             </span>
             <div className="ml-auto flex gap-2">
               <Button
@@ -233,13 +239,13 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
               <Button
                 size="sm"
                 className="h-7 text-xs gap-1.5"
-                disabled={selectedIds.length !== 2}
+                disabled={selectedIds.length < 2}
                 onClick={() =>
-                  setView({ kind: 'compare', aId: selectedIds[0], bId: selectedIds[1] })
+                  setView({ kind: 'compare', ids: [...selectedIds] })
                 }
               >
                 <GitCompare className="w-3 h-3" />
-                Compare
+                Compare ({selectedIds.length})
               </Button>
             </div>
           </motion.div>
@@ -257,7 +263,7 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
               My Saved Sessions
             </h3>
             <p className="text-[11px] text-muted-foreground">
-              Your private saved views — newest first. Select up to 2 to compare.
+              Your private saved views — newest first. Select 2 to {MAX_COMPARE} to compare.
             </p>
           </div>
         </header>
@@ -541,49 +547,45 @@ function DetailView({
 }
 
 // ─── Compare View ─────────────────────────────────────────────────────
+const SNAPSHOT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
 function CompareView({
-  a,
-  b,
+  snapshots,
   onBack,
 }: {
-  a: MySessionSnapshot;
-  b: MySessionSnapshot;
+  snapshots: MySessionSnapshot[];
   onBack: () => void;
 }) {
-  const ctxA = getSessionContext(a);
-  const ctxB = getSessionContext(b);
-  const sameContext = ctxA === ctxB;
-  const kpiComparable = sameContext && isKpiComparableContext(ctxA);
+  const contexts = snapshots.map(getSessionContext);
+  const baseCtx = contexts[0];
+  const sameContext = contexts.every(c => c === baseCtx);
+  const kpiComparable = sameContext && isKpiComparableContext(baseCtx);
 
   const rows = useMemo(
-    () => (kpiComparable ? buildContextKpiRows(ctxA, a, b) : []),
-    [kpiComparable, ctxA, a, b],
+    () => (kpiComparable ? buildContextKpiRowsMulti(baseCtx, snapshots) : []),
+    [kpiComparable, baseCtx, snapshots],
   );
 
   const filterRows = useMemo(() => {
-    const fa = a.filters as Record<string, unknown>;
-    const fb = b.filters as Record<string, unknown>;
     const baseKeys = ['academic_year', 'term', 'view_type', 'activeTab', 'selectedPillar', 'selectedUnit'];
     return baseKeys.map(k => {
-      const av =
-        k === 'academic_year'
-          ? a.academic_year
-          : k === 'term'
-          ? a.term
-          : k === 'view_type'
-          ? a.view_type
-          : (fa?.[k] as unknown);
-      const bv =
-        k === 'academic_year'
-          ? b.academic_year
-          : k === 'term'
-          ? b.term
-          : k === 'view_type'
-          ? b.view_type
-          : (fb?.[k] as unknown);
-      return { k, av, bv, same: JSON.stringify(av ?? null) === JSON.stringify(bv ?? null) };
+      const values = snapshots.map(s => {
+        const fm = (s.filters ?? {}) as Record<string, unknown>;
+        if (k === 'academic_year') return s.academic_year;
+        if (k === 'term') return s.term;
+        if (k === 'view_type') return s.view_type;
+        return fm?.[k];
+      });
+      const baseSer = JSON.stringify(values[0] ?? null);
+      const allSame = values.every(v => JSON.stringify(v ?? null) === baseSer);
+      return { k, values, allSame };
     });
-  }, [a, b]);
+  }, [snapshots]);
+
+  const labelLine =
+    snapshots.length <= 3
+      ? snapshots.map(s => s.label).join(' vs ')
+      : `${snapshots[0].label} + ${snapshots.length - 1} others`;
 
   return (
     <div className="space-y-6">
@@ -593,39 +595,45 @@ function CompareView({
         </Button>
         <div className="flex-1 min-w-0">
           <h3 className="font-display font-semibold text-base text-foreground truncate">
-            Compare: {a.label} <span className="text-muted-foreground">vs</span> {b.label}
+            Compare ({snapshots.length}): {labelLine}
           </h3>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             {sameContext ? (
-              <>Context: <span className="text-foreground font-medium">{CONTEXT_LABELS[ctxA]}</span></>
+              <>Context: <span className="text-foreground font-medium">{CONTEXT_LABELS[baseCtx]}</span></>
             ) : (
               <>
-                Contexts:{' '}
-                <span className="text-foreground font-medium">{CONTEXT_LABELS[ctxA]}</span>
-                {' vs '}
-                <span className="text-foreground font-medium">{CONTEXT_LABELS[ctxB]}</span>
+                Mixed contexts:{' '}
+                {Array.from(new Set(contexts))
+                  .map(c => CONTEXT_LABELS[c])
+                  .join(' · ')}
               </>
             )}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" className="gap-1.5" onClick={() => exportComparisonPDF(a, b)}>
+          <Button size="sm" className="gap-1.5" onClick={() => exportComparisonPDF(snapshots)}>
             <FileDown className="w-3.5 h-3.5" /> PDF
           </Button>
           <Button
             size="sm"
             variant="outline"
             className="gap-1.5"
-            onClick={() => exportComparisonCSV(a, b)}
+            onClick={() => exportComparisonCSV(snapshots)}
           >
             <FileText className="w-3.5 h-3.5" /> CSV
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SnapshotMiniCard label="A" snapshot={a} context={ctxA} />
-        <SnapshotMiniCard label="B" snapshot={b} context={ctxB} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {snapshots.map((s, i) => (
+          <SnapshotMiniCard
+            key={s.id}
+            label={SNAPSHOT_LETTERS[i] ?? `S${i + 1}`}
+            snapshot={s}
+            context={contexts[i]}
+          />
+        ))}
       </div>
 
       {!sameContext && (
@@ -634,21 +642,21 @@ function CompareView({
           <div className="space-y-1">
             <p className="text-sm font-semibold text-foreground">Limited comparability</p>
             <p className="text-xs text-foreground/75 leading-relaxed">
-              These snapshots come from <strong>different dashboard contexts</strong>{' '}
-              (<em>{CONTEXT_LABELS[ctxA]}</em> vs <em>{CONTEXT_LABELS[ctxB]}</em>). Their KPIs are
-              not directly comparable, so KPI tables are hidden. Only metadata and filters are
-              compared below.
+              The selected snapshots come from <strong>different dashboard contexts</strong>{' '}
+              ({Array.from(new Set(contexts)).map(c => CONTEXT_LABELS[c]).join(' / ')}).
+              Their KPIs are not directly comparable, so KPI tables are hidden. Only metadata
+              and filters are compared below.
             </p>
             <p className="text-[11px] text-muted-foreground pt-1">
-              Tip: to compare KPIs side-by-side, save both snapshots from the same tab.
+              Tip: to compare KPIs side-by-side, save all snapshots from the same tab.
             </p>
           </div>
         </div>
       )}
 
-      {sameContext && !isKpiComparableContext(ctxA) && (
+      {sameContext && !isKpiComparableContext(baseCtx) && (
         <div className="rounded-2xl border border-border bg-muted/30 p-5 text-xs text-muted-foreground">
-          The <strong className="text-foreground">{CONTEXT_LABELS[ctxA]}</strong> tab does not expose
+          The <strong className="text-foreground">{CONTEXT_LABELS[baseCtx]}</strong> tab does not expose
           numerical KPIs suitable for side-by-side comparison. Showing metadata only.
         </div>
       )}
@@ -656,46 +664,60 @@ function CompareView({
       {kpiComparable && rows.length > 0 && (
         <section className="rounded-2xl bg-card border border-border p-5">
           <h4 className="font-display font-semibold text-sm text-foreground mb-1">
-            {CONTEXT_LABELS[ctxA]} — KPI Differences
+            {CONTEXT_LABELS[baseCtx]} — KPI Differences
           </h4>
           <p className="text-[11px] text-muted-foreground mb-3">
-            KPIs adapted to the snapshot's source context.
+            KPIs adapted to the snapshot's source context. Δ columns are relative to A.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
                 <tr>
                   <th className="text-left py-2">Metric</th>
-                  <th className="text-right py-2">A</th>
-                  <th className="text-right py-2">B</th>
-                  <th className="text-right py-2">Δ (B − A)</th>
+                  {snapshots.map((_, i) => (
+                    <th key={`v-${i}`} className="text-right py-2 px-2">
+                      {SNAPSHOT_LETTERS[i] ?? `S${i + 1}`}
+                    </th>
+                  ))}
+                  {snapshots.slice(1).map((_, i) => (
+                    <th key={`d-${i}`} className="text-right py-2 px-2">
+                      Δ ({SNAPSHOT_LETTERS[i + 1] ?? `S${i + 2}`} − A)
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {rows.map(r => {
-                  const d = r.bv - r.av;
-                  const cls =
-                    Math.abs(d) < 0.01
-                      ? 'text-muted-foreground'
-                      : d > 0
-                      ? 'text-emerald-500'
-                      : 'text-red-500';
                   const fmt = (n: number) =>
-                    r.isPct
-                      ? `${n.toFixed(1)}%`
-                      : r.isCount
-                      ? n.toLocaleString()
-                      : n.toFixed(2);
+                    r.isPct ? `${n.toFixed(1)}%` : r.isCount ? n.toLocaleString() : n.toFixed(2);
+                  const base = r.values[0];
                   return (
                     <tr key={r.label} className="border-b border-border/50">
                       <td className="py-2 text-foreground">{r.label}</td>
-                      <td className="py-2 text-right text-foreground">{fmt(r.av)}</td>
-                      <td className="py-2 text-right text-foreground">{fmt(r.bv)}</td>
-                      <td className={`py-2 text-right font-semibold ${cls}`}>
-                        {d > 0 ? '+' : ''}
-                        {r.isCount ? Math.round(d).toLocaleString() : d.toFixed(2)}
-                        {r.suffix ?? ''}
-                      </td>
+                      {r.values.map((v, i) => (
+                        <td key={`v-${i}`} className="py-2 px-2 text-right text-foreground">
+                          {fmt(v)}
+                        </td>
+                      ))}
+                      {r.values.slice(1).map((v, i) => {
+                        const d = v - base;
+                        const cls =
+                          Math.abs(d) < 0.01
+                            ? 'text-muted-foreground'
+                            : d > 0
+                            ? 'text-emerald-500'
+                            : 'text-red-500';
+                        return (
+                          <td
+                            key={`d-${i}`}
+                            className={`py-2 px-2 text-right font-semibold ${cls}`}
+                          >
+                            {d > 0 ? '+' : ''}
+                            {r.isCount ? Math.round(d).toLocaleString() : d.toFixed(2)}
+                            {r.suffix ?? ''}
+                          </td>
+                        );
+                      })}
                     </tr>
                   );
                 })}
@@ -714,8 +736,11 @@ function CompareView({
             <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
               <tr>
                 <th className="text-left py-2">Filter</th>
-                <th className="text-left py-2">A</th>
-                <th className="text-left py-2">B</th>
+                {snapshots.map((_, i) => (
+                  <th key={`fh-${i}`} className="text-left py-2 px-2">
+                    {SNAPSHOT_LETTERS[i] ?? `S${i + 1}`}
+                  </th>
+                ))}
                 <th className="text-left py-2">Status</th>
               </tr>
             </thead>
@@ -723,10 +748,13 @@ function CompareView({
               {filterRows.map(r => (
                 <tr key={r.k} className="border-b border-border/50">
                   <td className="py-2 text-foreground font-medium">{r.k}</td>
-                  <td className="py-2 text-muted-foreground">{String(r.av ?? '—')}</td>
-                  <td className="py-2 text-muted-foreground">{String(r.bv ?? '—')}</td>
+                  {r.values.map((v, i) => (
+                    <td key={`fv-${i}`} className="py-2 px-2 text-muted-foreground">
+                      {String(v ?? '—')}
+                    </td>
+                  ))}
                   <td className="py-2">
-                    {r.same ? (
+                    {r.allSame ? (
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                         same
                       </span>
