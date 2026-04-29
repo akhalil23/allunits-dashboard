@@ -28,6 +28,7 @@ import {
   FileDown,
   FileText,
   Check,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/contexts/DashboardContext';
