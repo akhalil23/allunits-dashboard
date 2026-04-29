@@ -6,6 +6,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUniversityData } from '@/hooks/use-university-data';
+import { useBudgetData } from '@/hooks/use-budget-data';
 import { UNIT_IDS } from '@/lib/unit-config';
 import { aggregateUniversity, type UniversityAggregation } from '@/lib/university-aggregation';
 import ExecutiveSidebar, { type ExecutiveTab } from '@/components/executive/ExecutiveSidebar';
@@ -40,6 +41,9 @@ export default function ExecutiveDashboard() {
   const [saveOpen, setSaveOpen] = useState(false);
   const { viewType, academicYear, term, selectedPillar, setViewType, setAcademicYear, setTerm, setSelectedPillar } = useDashboard();
   const { data: unitResults, isLoading, isError, error, isRefetching } = useUniversityData();
+  // Budget data fuels the Budget Intelligence tab and is also needed when the
+  // user saves a "Budget" session so we can persist context-specific KPIs.
+  const { data: budgetData } = useBudgetData({ enabled: activeTab === 'budget' || saveOpen });
   const queryClient = useQueryClient();
 
   const handleRefresh = useCallback(() => {
@@ -50,6 +54,50 @@ export default function ExecutiveDashboard() {
     if (!unitResults) return null;
     return aggregateUniversity(unitResults, viewType, term, academicYear);
   }, [unitResults, viewType, term, academicYear]);
+
+  /** Context-specific KPIs captured into the saved snapshot. */
+  const extraMetrics = useMemo<Record<string, number>>(() => {
+    if (!aggregation) return {};
+    if (activeTab === 'budget' && budgetData) {
+      const totals = Object.values(budgetData.pillars).reduce(
+        (acc, p) => {
+          acc.allocation += p.allocation || 0;
+          acc.spent += p.spent || 0;
+          acc.unspent += p.unspent || 0;
+          acc.committed += p.committed || 0;
+          acc.available += p.available || 0;
+          return acc;
+        },
+        { allocation: 0, spent: 0, unspent: 0, committed: 0, available: 0 },
+      );
+      const commitmentRatio = totals.allocation > 0 ? (1 - totals.available / totals.allocation) * 100 : 0;
+      const spendingRatio = totals.allocation > 0 ? (totals.spent / totals.allocation) * 100 : 0;
+      return {
+        totalAllocation: totals.allocation,
+        totalSpent: totals.spent,
+        totalUnspent: totals.unspent,
+        totalCommitted: totals.committed,
+        totalAvailable: totals.available,
+        budgetUtilization: commitmentRatio,
+        commitmentRatio,
+        spendingRatio,
+      };
+    }
+    if (activeTab === 'risk-priority') {
+      const byName = (name: string) =>
+        aggregation.riskDistribution.find(r => r.signal === name)?.count ?? 0;
+      return {
+        criticalCount: byName('Critical Risk (Needs Close Attention)'),
+        emergingCount: byName('Emerging Risk (Needs Monitoring)'),
+        realizedCount: byName('Realized Risk (Needs Mitigation Strategy)'),
+        noRiskCount: byName('No Risk (On Track)'),
+      };
+    }
+    if (activeTab === 'comparison') {
+      return { loadedUnits: aggregation.loadedUnits };
+    }
+    return {};
+  }, [activeTab, aggregation, budgetData]);
 
   const handleRestoreSession = useCallback((s: {
     academic_year: string;
@@ -201,6 +249,7 @@ export default function ExecutiveDashboard() {
           term,
           viewType,
           selectedPillar: typeof selectedPillar === 'string' ? selectedPillar : 'all',
+          extraMetrics,
         }}
         aggregation={aggregation}
       />

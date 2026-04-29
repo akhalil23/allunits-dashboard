@@ -28,6 +28,7 @@ import {
   FileDown,
   FileText,
   Check,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/contexts/DashboardContext';
@@ -45,6 +46,13 @@ import {
   exportComparisonPDF,
   exportComparisonCSV,
 } from '@/lib/my-sessions-export';
+import {
+  CONTEXT_LABELS,
+  buildContextKpiRows,
+  getSessionContext,
+  isKpiComparableContext,
+  type SessionContext,
+} from '@/lib/session-context-kpis';
 import { toast } from 'sonner';
 
 interface RestoreInput {
@@ -293,11 +301,9 @@ export default function MySessionsTab({ aggregation, onRestore, onSaveCurrent }:
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                           {s.view_type === 'cumulative' ? 'Cumulative' : 'Yearly'}
                         </span>
-                        {s.filters?.activeTab && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                            {String(s.filters.activeTab)}
-                          </span>
-                        )}
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          {CONTEXT_LABELS[getSessionContext(s)]}
+                        </span>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -544,20 +550,15 @@ function CompareView({
   b: MySessionSnapshot;
   onBack: () => void;
 }) {
-  const rows: { label: string; av: number; bv: number; suffix?: string; isPct?: boolean }[] = [
-    { label: 'Completion', av: a.completion_pct, bv: b.completion_pct, suffix: '%', isPct: true },
-    { label: 'On Track', av: a.on_track_pct, bv: b.on_track_pct, suffix: '%', isPct: true },
-    {
-      label: 'Below Target',
-      av: a.below_target_pct,
-      bv: b.below_target_pct,
-      suffix: '%',
-      isPct: true,
-    },
-    { label: 'Risk Index', av: a.risk_index, bv: b.risk_index, suffix: '' },
-    { label: 'Total Items', av: a.total_items, bv: b.total_items },
-    { label: 'Applicable Items', av: a.applicable_items, bv: b.applicable_items },
-  ];
+  const ctxA = getSessionContext(a);
+  const ctxB = getSessionContext(b);
+  const sameContext = ctxA === ctxB;
+  const kpiComparable = sameContext && isKpiComparableContext(ctxA);
+
+  const rows = useMemo(
+    () => (kpiComparable ? buildContextKpiRows(ctxA, a, b) : []),
+    [kpiComparable, ctxA, a, b],
+  );
 
   const filterRows = useMemo(() => {
     const fa = a.filters as Record<string, unknown>;
@@ -594,6 +595,18 @@ function CompareView({
           <h3 className="font-display font-semibold text-base text-foreground truncate">
             Compare: {a.label} <span className="text-muted-foreground">vs</span> {b.label}
           </h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {sameContext ? (
+              <>Context: <span className="text-foreground font-medium">{CONTEXT_LABELS[ctxA]}</span></>
+            ) : (
+              <>
+                Contexts:{' '}
+                <span className="text-foreground font-medium">{CONTEXT_LABELS[ctxA]}</span>
+                {' vs '}
+                <span className="text-foreground font-medium">{CONTEXT_LABELS[ctxB]}</span>
+              </>
+            )}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" className="gap-1.5" onClick={() => exportComparisonPDF(a, b)}>
@@ -611,54 +624,86 @@ function CompareView({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <SnapshotMiniCard label="A" snapshot={a} />
-        <SnapshotMiniCard label="B" snapshot={b} />
+        <SnapshotMiniCard label="A" snapshot={a} context={ctxA} />
+        <SnapshotMiniCard label="B" snapshot={b} context={ctxB} />
       </div>
 
-      <section className="rounded-2xl bg-card border border-border p-5">
-        <h4 className="font-display font-semibold text-sm text-foreground mb-3">
-          KPI Differences
-        </h4>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
-              <tr>
-                <th className="text-left py-2">Metric</th>
-                <th className="text-right py-2">A</th>
-                <th className="text-right py-2">B</th>
-                <th className="text-right py-2">Δ (B − A)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(r => {
-                const d = r.bv - r.av;
-                const cls =
-                  Math.abs(d) < 0.01
-                    ? 'text-muted-foreground'
-                    : d > 0
-                    ? 'text-emerald-500'
-                    : 'text-red-500';
-                return (
-                  <tr key={r.label} className="border-b border-border/50">
-                    <td className="py-2 text-foreground">{r.label}</td>
-                    <td className="py-2 text-right text-foreground">
-                      {r.isPct ? `${r.av.toFixed(1)}%` : r.suffix === '' ? r.av.toFixed(2) : r.av.toLocaleString()}
-                    </td>
-                    <td className="py-2 text-right text-foreground">
-                      {r.isPct ? `${r.bv.toFixed(1)}%` : r.suffix === '' ? r.bv.toFixed(2) : r.bv.toLocaleString()}
-                    </td>
-                    <td className={`py-2 text-right font-semibold ${cls}`}>
-                      {d > 0 ? '+' : ''}
-                      {d.toFixed(2)}
-                      {r.suffix ?? ''}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {!sameContext && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-5 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">Limited comparability</p>
+            <p className="text-xs text-foreground/75 leading-relaxed">
+              These snapshots come from <strong>different dashboard contexts</strong>{' '}
+              (<em>{CONTEXT_LABELS[ctxA]}</em> vs <em>{CONTEXT_LABELS[ctxB]}</em>). Their KPIs are
+              not directly comparable, so KPI tables are hidden. Only metadata and filters are
+              compared below.
+            </p>
+            <p className="text-[11px] text-muted-foreground pt-1">
+              Tip: to compare KPIs side-by-side, save both snapshots from the same tab.
+            </p>
+          </div>
         </div>
-      </section>
+      )}
+
+      {sameContext && !isKpiComparableContext(ctxA) && (
+        <div className="rounded-2xl border border-border bg-muted/30 p-5 text-xs text-muted-foreground">
+          The <strong className="text-foreground">{CONTEXT_LABELS[ctxA]}</strong> tab does not expose
+          numerical KPIs suitable for side-by-side comparison. Showing metadata only.
+        </div>
+      )}
+
+      {kpiComparable && rows.length > 0 && (
+        <section className="rounded-2xl bg-card border border-border p-5">
+          <h4 className="font-display font-semibold text-sm text-foreground mb-1">
+            {CONTEXT_LABELS[ctxA]} — KPI Differences
+          </h4>
+          <p className="text-[11px] text-muted-foreground mb-3">
+            KPIs adapted to the snapshot's source context.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                <tr>
+                  <th className="text-left py-2">Metric</th>
+                  <th className="text-right py-2">A</th>
+                  <th className="text-right py-2">B</th>
+                  <th className="text-right py-2">Δ (B − A)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(r => {
+                  const d = r.bv - r.av;
+                  const cls =
+                    Math.abs(d) < 0.01
+                      ? 'text-muted-foreground'
+                      : d > 0
+                      ? 'text-emerald-500'
+                      : 'text-red-500';
+                  const fmt = (n: number) =>
+                    r.isPct
+                      ? `${n.toFixed(1)}%`
+                      : r.isCount
+                      ? n.toLocaleString()
+                      : n.toFixed(2);
+                  return (
+                    <tr key={r.label} className="border-b border-border/50">
+                      <td className="py-2 text-foreground">{r.label}</td>
+                      <td className="py-2 text-right text-foreground">{fmt(r.av)}</td>
+                      <td className="py-2 text-right text-foreground">{fmt(r.bv)}</td>
+                      <td className={`py-2 text-right font-semibold ${cls}`}>
+                        {d > 0 ? '+' : ''}
+                        {r.isCount ? Math.round(d).toLocaleString() : d.toFixed(2)}
+                        {r.suffix ?? ''}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <section className="rounded-2xl bg-card border border-border p-5">
         <h4 className="font-display font-semibold text-sm text-foreground mb-3">
@@ -701,7 +746,15 @@ function CompareView({
   );
 }
 
-function SnapshotMiniCard({ label, snapshot }: { label: string; snapshot: MySessionSnapshot }) {
+function SnapshotMiniCard({
+  label,
+  snapshot,
+  context,
+}: {
+  label: string;
+  snapshot: MySessionSnapshot;
+  context: SessionContext;
+}) {
   return (
     <div className="rounded-2xl bg-card border border-border p-4">
       <div className="flex items-center gap-2 mb-2">
@@ -714,6 +767,9 @@ function SnapshotMiniCard({ label, snapshot }: { label: string; snapshot: MySess
         {new Date(snapshot.created_at).toLocaleString()}
       </p>
       <p className="text-[11px] text-muted-foreground mt-0.5">{snapshot.reporting_cycle}</p>
+      <span className="inline-block mt-2 text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+        {CONTEXT_LABELS[context]}
+      </span>
     </div>
   );
 }
