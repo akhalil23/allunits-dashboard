@@ -249,6 +249,7 @@ export default function ExecutiveDashboard() {
           term,
           viewType,
           selectedPillar: typeof selectedPillar === 'string' ? selectedPillar : 'all',
+          extraMetrics,
         }}
         aggregation={aggregation}
       />
