@@ -14,6 +14,12 @@ export interface CaptureContext {
   selectedPillar?: string | null;
   selectedUnit?: string | null;
   extraFilters?: Record<string, unknown>;
+  /**
+   * Context-specific KPIs (e.g. budget totals when activeTab === 'budget').
+   * Stored under metrics.contextMetrics so the comparison view can render
+   * the right KPIs for the snapshot's source context.
+   */
+  extraMetrics?: Record<string, number>;
 }
 
 export function buildSnapshotInput(
