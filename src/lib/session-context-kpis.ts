@@ -138,6 +138,7 @@ export interface KpiRowMulti {
   suffix?: string;
   isPct?: boolean;
   isCount?: boolean;
+  higherIsBetter?: boolean;
 }
 
 interface MetricDef {
@@ -146,45 +147,47 @@ interface MetricDef {
   suffix?: string;
   isPct?: boolean;
   isCount?: boolean;
+  /** Whether higher values are "better" for this metric (drives momentum coloring). */
+  higherIsBetter?: boolean;
 }
 
 function defsForContext(context: SessionContext): MetricDef[] {
   switch (context) {
     case 'snapshot':
       return [
-        { label: 'Completion', read: s => s.completion_pct, suffix: '%', isPct: true },
-        { label: 'On Track', read: s => s.on_track_pct, suffix: '%', isPct: true },
-        { label: 'Below Target', read: s => s.below_target_pct, suffix: '%', isPct: true },
-        { label: 'Risk Index', read: s => s.risk_index, suffix: '' },
-        { label: 'Total Items', read: s => s.total_items, isCount: true },
-        { label: 'Applicable Items', read: s => s.applicable_items, isCount: true },
+        { label: 'Completion', read: s => s.completion_pct, suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'On Track', read: s => s.on_track_pct, suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'Below Target', read: s => s.below_target_pct, suffix: '%', isPct: true, higherIsBetter: false },
+        { label: 'Risk Index', read: s => s.risk_index, suffix: '', higherIsBetter: false },
+        { label: 'Total Items', read: s => s.total_items, isCount: true, higherIsBetter: true },
+        { label: 'Applicable Items', read: s => s.applicable_items, isCount: true, higherIsBetter: true },
       ];
     case 'risk-priority':
       return [
-        { label: 'Risk Index', read: s => s.risk_index, suffix: '' },
-        { label: 'Below Target', read: s => s.below_target_pct, suffix: '%', isPct: true },
-        { label: 'On Track', read: s => s.on_track_pct, suffix: '%', isPct: true },
-        { label: 'Critical Items', read: s => num(s, 'criticalCount'), isCount: true },
-        { label: 'Emerging Items', read: s => num(s, 'emergingCount'), isCount: true },
-        { label: 'Realized Items', read: s => num(s, 'realizedCount'), isCount: true },
+        { label: 'Risk Index', read: s => s.risk_index, suffix: '', higherIsBetter: false },
+        { label: 'Below Target', read: s => s.below_target_pct, suffix: '%', isPct: true, higherIsBetter: false },
+        { label: 'On Track', read: s => s.on_track_pct, suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'Critical Items', read: s => num(s, 'criticalCount'), isCount: true, higherIsBetter: false },
+        { label: 'Emerging Items', read: s => num(s, 'emergingCount'), isCount: true, higherIsBetter: false },
+        { label: 'Realized Items', read: s => num(s, 'realizedCount'), isCount: true, higherIsBetter: false },
       ];
     case 'budget':
       return [
-        { label: 'Budget Utilization', read: s => num(s, 'budgetUtilization'), suffix: '%', isPct: true },
-        { label: 'Commitment Ratio', read: s => num(s, 'commitmentRatio'), suffix: '%', isPct: true },
-        { label: 'Spending Ratio', read: s => num(s, 'spendingRatio'), suffix: '%', isPct: true },
-        { label: 'Total Allocation', read: s => num(s, 'totalAllocation'), isCount: true },
-        { label: 'Total Spent', read: s => num(s, 'totalSpent'), isCount: true },
-        { label: 'Total Committed', read: s => num(s, 'totalCommitted'), isCount: true },
-        { label: 'Available Balance', read: s => num(s, 'totalAvailable'), isCount: true },
-        { label: 'Unspent', read: s => num(s, 'totalUnspent'), isCount: true },
+        { label: 'Budget Utilization', read: s => num(s, 'budgetUtilization'), suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'Commitment Ratio', read: s => num(s, 'commitmentRatio'), suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'Spending Ratio', read: s => num(s, 'spendingRatio'), suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'Total Allocation', read: s => num(s, 'totalAllocation'), isCount: true, higherIsBetter: true },
+        { label: 'Total Spent', read: s => num(s, 'totalSpent'), isCount: true, higherIsBetter: true },
+        { label: 'Total Committed', read: s => num(s, 'totalCommitted'), isCount: true, higherIsBetter: true },
+        { label: 'Available Balance', read: s => num(s, 'totalAvailable'), isCount: true, higherIsBetter: true },
+        { label: 'Unspent', read: s => num(s, 'totalUnspent'), isCount: true, higherIsBetter: false },
       ];
     case 'comparison':
       return [
-        { label: 'Loaded Units', read: s => num(s, 'loadedUnits'), isCount: true },
-        { label: 'Avg Completion', read: s => s.completion_pct, suffix: '%', isPct: true },
-        { label: 'Avg On Track', read: s => s.on_track_pct, suffix: '%', isPct: true },
-        { label: 'Avg Risk Index', read: s => s.risk_index, suffix: '' },
+        { label: 'Loaded Units', read: s => num(s, 'loadedUnits'), isCount: true, higherIsBetter: true },
+        { label: 'Avg Completion', read: s => s.completion_pct, suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'Avg On Track', read: s => s.on_track_pct, suffix: '%', isPct: true, higherIsBetter: true },
+        { label: 'Avg Risk Index', read: s => s.risk_index, suffix: '', higherIsBetter: false },
       ];
     default:
       return [];
@@ -202,5 +205,44 @@ export function buildContextKpiRowsMulti(
     suffix: def.suffix,
     isPct: def.isPct,
     isCount: def.isCount,
+    higherIsBetter: def.higherIsBetter,
   }));
+}
+
+export type Momentum = 'Improving' | 'Declining' | 'Stable' | 'Volatile';
+
+/**
+ * Compute momentum verdict for a series of values.
+ * - Stable when relative change between first and last is < 1% (or absolute < 0.01 for tiny scales).
+ * - Volatile when direction flips ≥ 2 times across the series (only possible with 4+ points).
+ * - Otherwise Improving / Declining based on first→last delta and `higherIsBetter`.
+ */
+export function computeMomentum(
+  values: number[],
+  opts: { higherIsBetter?: boolean } = {},
+): Momentum {
+  if (!values || values.length < 2) return 'Stable';
+  const higherIsBetter = opts.higherIsBetter ?? true;
+  const first = values[0];
+  const last = values[values.length - 1];
+  const delta = last - first;
+  const scale = Math.max(Math.abs(first), Math.abs(last), 1);
+  const stableThreshold = Math.max(0.01, scale * 0.01);
+
+  // Detect volatility by counting sign flips between consecutive deltas.
+  let flips = 0;
+  let prevSign = 0;
+  for (let i = 1; i < values.length; i++) {
+    const d = values[i] - values[i - 1];
+    if (Math.abs(d) < stableThreshold) continue;
+    const sign = d > 0 ? 1 : -1;
+    if (prevSign !== 0 && sign !== prevSign) flips++;
+    prevSign = sign;
+  }
+  if (flips >= 2) return 'Volatile';
+
+  if (Math.abs(delta) < stableThreshold) return 'Stable';
+  const directionPositive = delta > 0;
+  const isGood = higherIsBetter ? directionPositive : !directionPositive;
+  return isGood ? 'Improving' : 'Declining';
 }
