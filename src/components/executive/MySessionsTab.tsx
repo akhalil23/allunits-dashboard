@@ -702,6 +702,14 @@ function CompareView({
       )}
 
       {kpiComparable && rows.length > 0 && (
+        <TrajectorySection
+          contextLabel={CONTEXT_LABELS[baseCtx]}
+          rows={rows}
+          points={trendPoints}
+        />
+      )}
+
+      {kpiComparable && rows.length > 0 && (
         <section className="rounded-2xl bg-card border border-border p-5">
           <h4 className="font-display font-semibold text-sm text-foreground mb-1">
             {CONTEXT_LABELS[baseCtx]} — KPI Differences
