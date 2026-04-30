@@ -49,10 +49,23 @@ import {
 import {
   CONTEXT_LABELS,
   buildContextKpiRowsMulti,
+  computeMomentum,
   getSessionContext,
   isKpiComparableContext,
+  type Momentum,
   type SessionContext,
 } from '@/lib/session-context-kpis';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ReTooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from 'recharts';
+import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface RestoreInput {
