@@ -563,12 +563,25 @@ function DetailView({
 const SNAPSHOT_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
 function CompareView({
-  snapshots,
+  snapshots: rawSnapshots,
   onBack,
 }: {
   snapshots: MySessionSnapshot[];
   onBack: () => void;
 }) {
+  // Sort snapshots chronologically (oldest → newest) so trendlines and Δ
+  // calculations always reflect time progression, regardless of selection order.
+  const snapshots = useMemo(
+    () =>
+      [...rawSnapshots].sort((a, b) => {
+        const ta = new Date(a.created_at).getTime();
+        const tb = new Date(b.created_at).getTime();
+        if (ta !== tb) return ta - tb;
+        return a.id.localeCompare(b.id);
+      }),
+    [rawSnapshots],
+  );
+
   const contexts = snapshots.map(getSessionContext);
   const baseCtx = contexts[0];
   const sameContext = contexts.every(c => c === baseCtx);
@@ -577,6 +590,20 @@ function CompareView({
   const rows = useMemo(
     () => (kpiComparable ? buildContextKpiRowsMulti(baseCtx, snapshots) : []),
     [kpiComparable, baseCtx, snapshots],
+  );
+
+  // Chronological labels for the trendline X-axis.
+  const trendPoints = useMemo(
+    () =>
+      snapshots.map((s, i) => ({
+        idx: i,
+        key: SNAPSHOT_LETTERS[i] ?? `S${i + 1}`,
+        date: new Date(s.created_at).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+        }),
+      })),
+    [snapshots],
   );
 
   const filterRows = useMemo(() => {
