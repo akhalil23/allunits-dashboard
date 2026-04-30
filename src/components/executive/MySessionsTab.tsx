@@ -904,7 +904,7 @@ interface TrendPoint {
   date: string;
 }
 
-import type { KpiRowMulti } from '@/lib/session-context-kpis';
+
 
 function TrajectorySection({
   contextLabel,
