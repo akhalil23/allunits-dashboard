@@ -138,6 +138,7 @@ export interface KpiRowMulti {
   suffix?: string;
   isPct?: boolean;
   isCount?: boolean;
+  higherIsBetter?: boolean;
 }
 
 interface MetricDef {
