@@ -52,6 +52,7 @@ import {
   computeMomentum,
   getSessionContext,
   isKpiComparableContext,
+  type KpiRowMulti,
   type Momentum,
   type SessionContext,
 } from '@/lib/session-context-kpis';
