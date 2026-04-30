@@ -896,3 +896,174 @@ function fmtPct(v: unknown): string {
   if (typeof v !== 'number' || Number.isNaN(v)) return '—';
   return `${v.toFixed(1)}%`;
 }
+
+// ─── Trajectory Trendline ────────────────────────────────────────────
+interface TrendPoint {
+  idx: number;
+  key: string;
+  date: string;
+}
+
+import type { KpiRowMulti } from '@/lib/session-context-kpis';
+
+function TrajectorySection({
+  contextLabel,
+  rows,
+  points,
+}: {
+  contextLabel: string;
+  rows: KpiRowMulti[];
+  points: TrendPoint[];
+}) {
+  return (
+    <section className="rounded-2xl bg-card border border-border p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Activity className="w-4 h-4 text-primary" />
+        <h4 className="font-display font-semibold text-sm text-foreground">
+          Trajectory — {contextLabel}
+        </h4>
+      </div>
+      <p className="text-[11px] text-muted-foreground mb-4">
+        Snapshots ordered chronologically (oldest → newest). Dashed line marks the baseline
+        (first snapshot). Momentum reflects the overall direction across the series.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {rows.map(r => (
+          <MiniTrendChart key={r.label} row={r} points={points} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MiniTrendChart({ row, points }: { row: KpiRowMulti; points: TrendPoint[] }) {
+  const momentum = useMemo(
+    () => computeMomentum(row.values, { higherIsBetter: row.higherIsBetter ?? true }),
+    [row.values, row.higherIsBetter],
+  );
+
+  const data = points.map((p, i) => ({
+    key: p.key,
+    label: `${p.key} · ${p.date}`,
+    value: row.values[i],
+  }));
+
+  const baseline = row.values[0];
+  const fmt = (v: number) =>
+    row.isPct ? `${v.toFixed(1)}%` : row.isCount ? Math.round(v).toLocaleString() : v.toFixed(2);
+
+  // Y-axis domain with light padding
+  const min = Math.min(...row.values);
+  const max = Math.max(...row.values);
+  const pad = Math.max((max - min) * 0.15, row.isPct ? 2 : 0.1);
+  const domain: [number, number] = [Math.max(0, min - pad), max + pad];
+
+  const stroke = momentumStroke(momentum);
+
+  return (
+    <div className="rounded-xl border border-border bg-background/40 p-3">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <p className="text-xs font-semibold text-foreground truncate">{row.label}</p>
+        <MomentumPill momentum={momentum} />
+      </div>
+      <div className="h-32">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: -8 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+            <XAxis
+              dataKey="key"
+              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={{ stroke: 'hsl(var(--border))' }}
+              tickLine={false}
+            />
+            <YAxis
+              domain={domain}
+              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+              width={36}
+              tickFormatter={(v: number) => (row.isPct ? `${Math.round(v)}` : Math.round(v).toString())}
+            />
+            <ReTooltip
+              contentStyle={{
+                background: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 8,
+                fontSize: 11,
+              }}
+              formatter={(v: number) => [fmt(v), row.label]}
+              labelFormatter={(_, payload) => payload?.[0]?.payload?.label ?? ''}
+            />
+            <ReferenceLine
+              y={baseline}
+              stroke="hsl(var(--muted-foreground))"
+              strokeDasharray="4 4"
+              strokeOpacity={0.6}
+            />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke={stroke}
+              strokeWidth={2}
+              dot={{ r: 3, fill: stroke }}
+              activeDot={{ r: 5 }}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex items-center justify-between mt-2 text-[10px] text-muted-foreground">
+        <span>
+          Baseline <span className="text-foreground font-semibold">{fmt(baseline)}</span>
+        </span>
+        <span>
+          Latest{' '}
+          <span className="text-foreground font-semibold">
+            {fmt(row.values[row.values.length - 1])}
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MomentumPill({ momentum }: { momentum: Momentum }) {
+  const cfg = momentumConfig(momentum);
+  const Icon = cfg.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded ${cfg.cls}`}
+    >
+      <Icon className="w-3 h-3" />
+      {momentum}
+    </span>
+  );
+}
+
+function momentumStroke(m: Momentum): string {
+  switch (m) {
+    case 'Improving':
+      return '#10B981'; // emerald-500
+    case 'Declining':
+      return '#EF4444'; // red-500
+    case 'Volatile':
+      return '#F59E0B'; // amber-500
+    case 'Stable':
+    default:
+      return 'hsl(var(--muted-foreground))';
+  }
+}
+
+function momentumConfig(m: Momentum): { cls: string; icon: typeof TrendingUp } {
+  switch (m) {
+    case 'Improving':
+      return { cls: 'bg-emerald-500/15 text-emerald-500', icon: TrendingUp };
+    case 'Declining':
+      return { cls: 'bg-red-500/15 text-red-500', icon: TrendingDown };
+    case 'Volatile':
+      return { cls: 'bg-amber-500/15 text-amber-500', icon: Activity };
+    case 'Stable':
+    default:
+      return { cls: 'bg-muted text-muted-foreground', icon: Minus };
+  }
+}
