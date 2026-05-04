@@ -88,7 +88,7 @@ export function exportDashboardGuideBrief() {
       <tr><td>4 · Unit Comparison</td><td>Side-by-side multi-unit comparison.</td></tr>
       <tr><td>5 · AI Executive Insights</td><td>AI-generated strategic interpretation of current view.</td></tr>
       <tr><td>6 · Reports</td><td>PDF report library by scope (University, Pillar, Unit).</td></tr>
-      <tr><td>My Sessions <span class="pill new">NEW</span></td><td>Save, restore, compare and export your private dashboard views.</td></tr>
+      <tr><td>My Sessions</td><td>Save, restore, compare and export your private dashboard views.</td></tr>
       <tr><td>Dashboard Guide</td><td>This reference. Downloadable in Brief or Comprehensive form.</td></tr>
     </table>
 
