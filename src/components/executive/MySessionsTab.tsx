@@ -502,26 +502,9 @@ function DetailView({
         </div>
       </section>
 
-      <section className="rounded-2xl bg-card border border-border p-5">
-        <h4 className="font-display font-semibold text-sm text-foreground mb-3">
-          Captured KPIs
-        </h4>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <KpiBox label="Completion" value={`${snapshot.completion_pct.toFixed(1)}%`} />
-          <KpiBox label="On Track" value={`${snapshot.on_track_pct.toFixed(1)}%`} />
-          <KpiBox label="Below Target" value={`${snapshot.below_target_pct.toFixed(1)}%`} />
-          <KpiBox label="Risk Index" value={snapshot.risk_index.toFixed(2)} />
-          <KpiBox label="Total Items" value={snapshot.total_items.toLocaleString()} />
-          <KpiBox label="Applicable" value={snapshot.applicable_items.toLocaleString()} />
-          <KpiBox label="Budget Util." value={`${snapshot.budget_utilization.toFixed(1)}%`} />
-          <KpiBox
-            label="Loaded Units"
-            value={`${(snapshot.metrics as Record<string, unknown>)?.loadedUnits ?? '—'} / ${(snapshot.metrics as Record<string, unknown>)?.totalUnits ?? '—'}`}
-          />
-        </div>
-      </section>
+      <ContextKpiSection snapshot={snapshot} />
 
-      {units.length > 0 && (
+      {units.length > 0 && shouldShowUnitTable(getSessionContext(snapshot)) && (
         <section className="rounded-2xl bg-card border border-border p-5">
           <h4 className="font-display font-semibold text-sm text-foreground mb-3">
             Unit-Level Snapshot ({units.length})
