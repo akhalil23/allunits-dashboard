@@ -79,16 +79,6 @@ export function exportDashboardGuideBrief() {
       <div class="sub">Strategic Plan IV (2025–2027) · ${UNIT_IDS.length} Units · 5 Pillars · Generated ${new Date().toLocaleDateString()}</div>
     </header>
 
-    <h2>What's New</h2>
-    <div class="card">
-      <ul>
-        <li><span class="pill new">NEW</span><b>ADM</b> — Administration unit added (now ${UNIT_IDS.length} reporting units, including ADM).</li>
-        <li><span class="pill new">NEW</span><b>Personalized accounts</b> — 39 named board-member logins (e.g. <span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>) with welcome banner.</li>
-        <li><span class="pill new">NEW</span><b>My Sessions</b> — User-controlled "Saved Views": save current dashboard state, restore later, compare two snapshots, export PDF/CSV.</li>
-        <li><span class="pill new">NEW</span><b>Welcome Banner</b> — Personal greeting on login (hidden for shared <span class="formula">sp4</span> account).</li>
-      </ul>
-    </div>
-
     <h2>Tabs at a Glance</h2>
     <table>
       <tr><th style="width:32%">Tab</th><th>Purpose</th></tr>
@@ -98,7 +88,7 @@ export function exportDashboardGuideBrief() {
       <tr><td>4 · Unit Comparison</td><td>Side-by-side multi-unit comparison.</td></tr>
       <tr><td>5 · AI Executive Insights</td><td>AI-generated strategic interpretation of current view.</td></tr>
       <tr><td>6 · Reports</td><td>PDF report library by scope (University, Pillar, Unit).</td></tr>
-      <tr><td>My Sessions <span class="pill new">NEW</span></td><td>Save, restore, compare and export your private dashboard views.</td></tr>
+      <tr><td>My Sessions</td><td>Save, restore, compare and export your private dashboard views.</td></tr>
       <tr><td>Dashboard Guide</td><td>This reference. Downloadable in Brief or Comprehensive form.</td></tr>
     </table>
 
@@ -174,7 +164,7 @@ export function exportDashboardGuideComprehensive() {
     <p>AI-generated strategic interpretation aligned to current filters and dashboard context, including ADM, named user identity, and saved-session awareness.</p>
     <h3>Tab 6 — Reports</h3>
     <p>PDF library — University / Pillars / Units. Filter by Academic Year, reporting period, report type. Open inline or download.</p>
-    <h3>My Sessions <span class="pill new">NEW</span></h3>
+    <h3>My Sessions</h3>
     <p>Personal "Saved Views" tab — see Section 9.</p>
 
     <h2>5. Key Metrics — Definitions &amp; Formulas</h2>
@@ -204,7 +194,7 @@ export function exportDashboardGuideComprehensive() {
       <tr><th style="width:22%">Role</th><th>Access</th><th>Examples</th></tr>
       <tr><td>admin</td><td>Unrestricted; user lifecycle management.</td><td>—</td></tr>
       <tr><td>university_viewer / sp4</td><td>Executive Dashboard. Welcome Banner suppressed for <span class="formula">sp4</span>.</td><td><span class="formula">sp4</span></td></tr>
-      <tr><td>board_member <span class="pill new">NEW</span></td><td>Executive Dashboard with personalized welcome and private My Sessions.</td><td><span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>, <span class="formula">g.doumet</span> … (39 accounts)</td></tr>
+      <tr><td>board_member</td><td>Executive Dashboard with personalized welcome and private My Sessions.</td><td><span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>, <span class="formula">g.doumet</span> … (39 accounts)</td></tr>
       <tr><td>pillar_champion</td><td>Pillar Champions Dashboard.</td><td><span class="formula">pillar_champion</span></td></tr>
       <tr><td>unit_user</td><td>Single unit dashboard at <span class="formula">/units/&lt;unitCode&gt;</span>.</td><td>e.g. <span class="formula">adm</span> for ADM</td></tr>
     </table>
@@ -217,7 +207,7 @@ export function exportDashboardGuideComprehensive() {
       <li><b>Personal labels</b> — My Sessions uses display_name as the account label.</li>
     </ul>
 
-    <h2>9. My Sessions — Saved Views <span class="pill new">NEW</span></h2>
+    <h2>9. My Sessions — Saved Views</h2>
     <h3>Concept</h3>
     <p>A user-controlled "Saved Views" feature. No automatic tracking — users explicitly save meaningful dashboard moments.</p>
     <h3>Capture</h3>
