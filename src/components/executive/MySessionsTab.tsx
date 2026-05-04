@@ -717,6 +717,8 @@ function CompareView({
         </div>
       )}
 
+      {narrative && <NarrativeSection narrative={narrative} />}
+
       {kpiComparable && rows.length > 0 && (
         <TrajectorySection
           contextLabel={CONTEXT_LABELS[baseCtx]}
