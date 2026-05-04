@@ -1085,3 +1085,118 @@ function momentumConfig(m: Momentum): { cls: string; icon: typeof TrendingUp } {
       return { cls: 'bg-muted text-muted-foreground', icon: Minus };
   }
 }
+
+// ─── Narrative Analytics ─────────────────────────────────────────────
+function NarrativeSection({ narrative }: { narrative: NarrativeBundle }) {
+  const { headline, timeSpan, momentumMix, insights } = narrative;
+  const totalKpis =
+    momentumMix.Improving + momentumMix.Declining + momentumMix.Stable + momentumMix.Volatile;
+  const showMix = totalKpis > 0;
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Sparkle className="w-4 h-4 text-primary" />
+        <h4 className="font-display font-semibold text-sm text-foreground">
+          Narrative Analytics
+        </h4>
+        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+          {timeSpan}
+        </span>
+      </div>
+      <p className="text-sm text-foreground/85 leading-relaxed mb-4">{headline}</p>
+
+      {showMix && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {momentumMix.Improving > 0 && (
+            <MixChip label="Improving" count={momentumMix.Improving} tone="positive" />
+          )}
+          {momentumMix.Declining > 0 && (
+            <MixChip label="Declining" count={momentumMix.Declining} tone="negative" />
+          )}
+          {momentumMix.Stable > 0 && (
+            <MixChip label="Stable" count={momentumMix.Stable} tone="neutral" />
+          )}
+          {momentumMix.Volatile > 0 && (
+            <MixChip label="Volatile" count={momentumMix.Volatile} tone="mixed" />
+          )}
+        </div>
+      )}
+
+      {insights.length > 0 && (
+        <ul className="space-y-2">
+          {insights.map((ins, i) => (
+            <InsightRow key={i} insight={ins} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function InsightRow({ insight }: { insight: NarrativeInsight }) {
+  const cfg = toneConfig(insight.tone);
+  return (
+    <li className={`flex items-start gap-3 rounded-lg border p-3 ${cfg.container}`}>
+      <Lightbulb className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.icon}`} />
+      <div className="min-w-0">
+        <p className="text-xs font-semibold text-foreground">{insight.title}</p>
+        <p className="text-[11px] text-foreground/75 leading-relaxed mt-0.5">{insight.body}</p>
+      </div>
+    </li>
+  );
+}
+
+function MixChip({
+  label,
+  count,
+  tone,
+}: {
+  label: string;
+  count: number;
+  tone: NarrativeTone;
+}) {
+  const cfg = toneConfig(tone);
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.container}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {count} {label}
+    </span>
+  );
+}
+
+function toneConfig(tone: NarrativeTone): {
+  container: string;
+  icon: string;
+  dot: string;
+} {
+  switch (tone) {
+    case 'positive':
+      return {
+        container: 'bg-emerald-500/[0.06] border-emerald-500/25',
+        icon: 'text-emerald-500',
+        dot: 'bg-emerald-500',
+      };
+    case 'negative':
+      return {
+        container: 'bg-red-500/[0.06] border-red-500/25',
+        icon: 'text-red-500',
+        dot: 'bg-red-500',
+      };
+    case 'mixed':
+      return {
+        container: 'bg-amber-500/[0.06] border-amber-500/25',
+        icon: 'text-amber-500',
+        dot: 'bg-amber-500',
+      };
+    case 'neutral':
+    default:
+      return {
+        container: 'bg-muted/40 border-border',
+        icon: 'text-muted-foreground',
+        dot: 'bg-muted-foreground',
+      };
+  }
+}
