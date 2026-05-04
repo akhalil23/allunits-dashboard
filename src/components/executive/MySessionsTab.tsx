@@ -66,8 +66,15 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, Lightbulb, Sparkle } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  buildKpiNarrative,
+  buildMetadataNarrative,
+  type NarrativeBundle,
+  type NarrativeInsight,
+  type NarrativeTone,
+} from '@/lib/my-sessions-narrative';
 
 interface RestoreInput {
   academic_year: string;
