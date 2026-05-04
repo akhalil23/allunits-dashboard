@@ -79,16 +79,6 @@ export function exportDashboardGuideBrief() {
       <div class="sub">Strategic Plan IV (2025–2027) · ${UNIT_IDS.length} Units · 5 Pillars · Generated ${new Date().toLocaleDateString()}</div>
     </header>
 
-    <h2>What's New</h2>
-    <div class="card">
-      <ul>
-        <li><span class="pill new">NEW</span><b>ADM</b> — Administration unit added (now ${UNIT_IDS.length} reporting units, including ADM).</li>
-        <li><span class="pill new">NEW</span><b>Personalized accounts</b> — 39 named board-member logins (e.g. <span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>) with welcome banner.</li>
-        <li><span class="pill new">NEW</span><b>My Sessions</b> — User-controlled "Saved Views": save current dashboard state, restore later, compare two snapshots, export PDF/CSV.</li>
-        <li><span class="pill new">NEW</span><b>Welcome Banner</b> — Personal greeting on login (hidden for shared <span class="formula">sp4</span> account).</li>
-      </ul>
-    </div>
-
     <h2>Tabs at a Glance</h2>
     <table>
       <tr><th style="width:32%">Tab</th><th>Purpose</th></tr>
