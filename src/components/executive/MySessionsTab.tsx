@@ -49,10 +49,13 @@ import {
 import {
   CONTEXT_LABELS,
   buildContextKpiRowsMulti,
+  buildContextKpiRowsSingle,
   computeMomentum,
+  formatKpiValue,
   getSessionContext,
   isKpiComparableContext,
   type KpiRowMulti,
+  type KpiRowSingle,
   type Momentum,
   type SessionContext,
 } from '@/lib/session-context-kpis';
@@ -499,26 +502,9 @@ function DetailView({
         </div>
       </section>
 
-      <section className="rounded-2xl bg-card border border-border p-5">
-        <h4 className="font-display font-semibold text-sm text-foreground mb-3">
-          Captured KPIs
-        </h4>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <KpiBox label="Completion" value={`${snapshot.completion_pct.toFixed(1)}%`} />
-          <KpiBox label="On Track" value={`${snapshot.on_track_pct.toFixed(1)}%`} />
-          <KpiBox label="Below Target" value={`${snapshot.below_target_pct.toFixed(1)}%`} />
-          <KpiBox label="Risk Index" value={snapshot.risk_index.toFixed(2)} />
-          <KpiBox label="Total Items" value={snapshot.total_items.toLocaleString()} />
-          <KpiBox label="Applicable" value={snapshot.applicable_items.toLocaleString()} />
-          <KpiBox label="Budget Util." value={`${snapshot.budget_utilization.toFixed(1)}%`} />
-          <KpiBox
-            label="Loaded Units"
-            value={`${(snapshot.metrics as Record<string, unknown>)?.loadedUnits ?? '—'} / ${(snapshot.metrics as Record<string, unknown>)?.totalUnits ?? '—'}`}
-          />
-        </div>
-      </section>
+      <ContextKpiSection snapshot={snapshot} />
 
-      {units.length > 0 && (
+      {units.length > 0 && shouldShowUnitTable(getSessionContext(snapshot)) && (
         <section className="rounded-2xl bg-card border border-border p-5">
           <h4 className="font-display font-semibold text-sm text-foreground mb-3">
             Unit-Level Snapshot ({units.length})
@@ -888,6 +874,100 @@ function KpiBox({ label, value }: { label: string; value: string }) {
       </p>
       <p className="text-base font-bold text-foreground mt-0.5">{value}</p>
     </div>
+  );
+}
+
+// ─── Context-aware KPI section for the single-snapshot Detail View ───
+function shouldShowUnitTable(ctx: SessionContext): boolean {
+  // The unit table is only meaningful for context where unit aggregates matter.
+  return ctx === 'snapshot' || ctx === 'comparison' || ctx === 'risk-priority' || ctx === 'unknown';
+}
+
+const CONTEXT_DESCRIPTIONS: Partial<Record<SessionContext, string>> = {
+  'snapshot':
+    'Headline performance KPIs captured from the Executive Snapshot — completion, momentum, and risk position.',
+  'risk-priority':
+    'Risk posture captured from Strategic Risk & Priority — risk index, below-target share, and risk-tier counts.',
+  'budget':
+    'Financial posture captured from Budget Intelligence — allocation, commitment, spending, and balance.',
+  'comparison':
+    'Cross-unit aggregates captured from the Unit Comparison view at the time of save.',
+  'ai-insights':
+    'AI Executive Insights are generated on demand and not persisted in the snapshot. The session keeps the filter context so you can re-open the same view and regenerate the analysis.',
+  'reports':
+    'Reports tab does not expose numerical KPIs. The snapshot preserves your filter context so you can return to the same report scope.',
+  'guide':
+    'The Dashboard Guide is reference content. The snapshot preserves your filter context only.',
+  'my-sessions':
+    'Saved from the My Sessions tab itself. No tab-specific KPIs were captured.',
+  'unknown':
+    'This snapshot was saved before context tagging existed — only the universal aggregates below are available.',
+};
+
+function ContextKpiSection({ snapshot }: { snapshot: MySessionSnapshot }) {
+  const ctx = getSessionContext(snapshot);
+  const rows = buildContextKpiRowsSingle(ctx, snapshot);
+  const description = CONTEXT_DESCRIPTIONS[ctx];
+
+  // For non-numerical contexts (ai-insights, reports, guide, my-sessions),
+  // surface the universal aggregates as a fallback so the user always sees
+  // *something* concrete from the moment of capture.
+  const showFallback = rows.length === 0;
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-5">
+      <div className="flex items-center gap-2 mb-1 flex-wrap">
+        <h4 className="font-display font-semibold text-sm text-foreground">
+          {CONTEXT_LABELS[ctx]} — Captured Metrics
+        </h4>
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
+          {CONTEXT_LABELS[ctx]}
+        </span>
+      </div>
+      {description && (
+        <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">{description}</p>
+      )}
+
+      {rows.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {rows.map(r => (
+            <KpiBox key={r.label} label={r.label} value={formatKpiValue(r)} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="rounded-lg border border-dashed border-border bg-background/40 p-4 text-xs text-muted-foreground leading-relaxed">
+            No tab-specific numerical KPIs were captured for this session. Use{' '}
+            <strong className="text-foreground">Restore View</strong> to re-open the same{' '}
+            <strong className="text-foreground">{CONTEXT_LABELS[ctx]}</strong> context with the
+            original filters.
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <KpiBox label="Completion" value={`${snapshot.completion_pct.toFixed(1)}%`} />
+            <KpiBox label="On Track" value={`${snapshot.on_track_pct.toFixed(1)}%`} />
+            <KpiBox label="Below Target" value={`${snapshot.below_target_pct.toFixed(1)}%`} />
+            <KpiBox label="Risk Index" value={snapshot.risk_index.toFixed(2)} />
+          </div>
+        </div>
+      )}
+
+      {!showFallback && ctx !== 'snapshot' && (
+        <div className="mt-4 pt-4 border-t border-border/50">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+            Universal Aggregates (for reference)
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <KpiBox label="Completion" value={`${snapshot.completion_pct.toFixed(1)}%`} />
+            <KpiBox label="On Track" value={`${snapshot.on_track_pct.toFixed(1)}%`} />
+            <KpiBox label="Risk Index" value={snapshot.risk_index.toFixed(2)} />
+            <KpiBox
+              label="Loaded Units"
+              value={`${(snapshot.metrics as Record<string, unknown>)?.loadedUnits ?? '—'} / ${(snapshot.metrics as Record<string, unknown>)?.totalUnits ?? '—'}`}
+            />
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
