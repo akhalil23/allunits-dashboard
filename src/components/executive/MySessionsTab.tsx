@@ -630,6 +630,14 @@ function CompareView({
     });
   }, [snapshots]);
 
+  // Auto-generated narrative analytics — short, descriptive, derived from rows.
+  const narrative = useMemo<NarrativeBundle | null>(() => {
+    if (snapshots.length < 2) return null;
+    if (kpiComparable && rows.length > 0) return buildKpiNarrative(snapshots, rows);
+    if (!sameContext) return buildMetadataNarrative(snapshots);
+    return null;
+  }, [snapshots, rows, kpiComparable, sameContext]);
+
   const labelLine =
     snapshots.length <= 3
       ? snapshots.map(s => s.label).join(' vs ')
