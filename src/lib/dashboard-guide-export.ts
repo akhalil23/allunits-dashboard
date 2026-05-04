@@ -194,7 +194,7 @@ export function exportDashboardGuideComprehensive() {
       <tr><th style="width:22%">Role</th><th>Access</th><th>Examples</th></tr>
       <tr><td>admin</td><td>Unrestricted; user lifecycle management.</td><td>—</td></tr>
       <tr><td>university_viewer / sp4</td><td>Executive Dashboard. Welcome Banner suppressed for <span class="formula">sp4</span>.</td><td><span class="formula">sp4</span></td></tr>
-      <tr><td>board_member <span class="pill new">NEW</span></td><td>Executive Dashboard with personalized welcome and private My Sessions.</td><td><span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>, <span class="formula">g.doumet</span> … (39 accounts)</td></tr>
+      <tr><td>board_member</td><td>Executive Dashboard with personalized welcome and private My Sessions.</td><td><span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>, <span class="formula">g.doumet</span> … (39 accounts)</td></tr>
       <tr><td>pillar_champion</td><td>Pillar Champions Dashboard.</td><td><span class="formula">pillar_champion</span></td></tr>
       <tr><td>unit_user</td><td>Single unit dashboard at <span class="formula">/units/&lt;unitCode&gt;</span>.</td><td>e.g. <span class="formula">adm</span> for ADM</td></tr>
     </table>
