@@ -207,7 +207,7 @@ export function exportDashboardGuideComprehensive() {
       <li><b>Personal labels</b> — My Sessions uses display_name as the account label.</li>
     </ul>
 
-    <h2>9. My Sessions — Saved Views <span class="pill new">NEW</span></h2>
+    <h2>9. My Sessions — Saved Views</h2>
     <h3>Concept</h3>
     <p>A user-controlled "Saved Views" feature. No automatic tracking — users explicitly save meaningful dashboard moments.</p>
     <h3>Capture</h3>
