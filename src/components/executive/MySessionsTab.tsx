@@ -49,10 +49,13 @@ import {
 import {
   CONTEXT_LABELS,
   buildContextKpiRowsMulti,
+  buildContextKpiRowsSingle,
   computeMomentum,
+  formatKpiValue,
   getSessionContext,
   isKpiComparableContext,
   type KpiRowMulti,
+  type KpiRowSingle,
   type Momentum,
   type SessionContext,
 } from '@/lib/session-context-kpis';
