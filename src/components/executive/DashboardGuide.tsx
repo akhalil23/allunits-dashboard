@@ -123,8 +123,8 @@ export default function DashboardGuide() {
               <p className="text-xs font-semibold text-foreground">Tab 6 — Reports</p>
               <p className="text-[10px] text-muted-foreground mt-1">Central repository for university, pillar, and unit PDF reports with metadata filters.</p>
             </div>
-            <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/30">
-              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5"><Bookmark className="w-3 h-3 text-emerald-500" />My Sessions <span className="text-[9px] text-emerald-500 font-bold">NEW</span></p>
+            <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30">
+              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5"><Bookmark className="w-3 h-3 text-muted-foreground" />My Sessions</p>
               <p className="text-[10px] text-muted-foreground mt-1">Your private "Saved Views" — capture, restore, and compare dashboard snapshots.</p>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function DashboardGuide() {
             <TabGuide icon={GitCompare} title="Tab 4 — Unit Comparison" description="Side-by-side comparison of multiple units across performance dimensions, helping leadership identify outliers, anchors, and shared patterns." />
             <TabGuide icon={Brain} title="Tab 5 — AI Executive Insights" description="AI-generated strategic interpretation aligned to the current dashboard filters and executive context." />
             <TabGuide icon={FileText} title="Tab 6 — Reports" description="Browse uploaded PDF reports by scope (University, Pillars, Units), then filter by academic year, reporting period, and report type. Open reports inline or download them directly." />
-            <TabGuide icon={Bookmark} title="My Sessions — Saved Views (NEW)" description="A user-controlled 'Saved Views' workspace. Click 'Save to My Sessions' in the header to capture the current view (tab, AY, term, filters, KPIs). Open the My Sessions tab to view your private list, restore any session, dive into Detail, or pick two for side-by-side Compare with Δ deltas. Export PDF or CSV per snapshot or per comparison. Strict per-user privacy — no cross-user visibility." />
+            <TabGuide icon={Bookmark} title="My Sessions — Saved Views" description="A user-controlled 'Saved Views' workspace. Click 'Save to My Sessions' in the header to capture the current view (tab, AY, term, filters, KPIs). Open the My Sessions tab to view your private list, restore any session, dive into Detail, or pick two for side-by-side Compare with Δ deltas. Export PDF or CSV per snapshot or per comparison. Strict per-user privacy — no cross-user visibility." />
             <TabGuide icon={Camera} title="Strategic Snapshot Tracker" description="Capture and compare performance snapshots across reporting cycles." />
           </div>
         </motion.div>
