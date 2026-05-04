@@ -209,6 +209,36 @@ export function buildContextKpiRowsMulti(
   }));
 }
 
+/** Single-snapshot KPI row for context-aware detail views. */
+export interface KpiRowSingle {
+  label: string;
+  value: number;
+  suffix?: string;
+  isPct?: boolean;
+  isCount?: boolean;
+}
+
+/** Build context-aware KPI rows for a single snapshot's detail view. */
+export function buildContextKpiRowsSingle(
+  context: SessionContext,
+  snapshot: MySessionSnapshot,
+): KpiRowSingle[] {
+  return defsForContext(context).map(def => ({
+    label: def.label,
+    value: def.read(snapshot),
+    suffix: def.suffix,
+    isPct: def.isPct,
+    isCount: def.isCount,
+  }));
+}
+
+/** Format a KpiRowSingle value into a display string. */
+export function formatKpiValue(row: KpiRowSingle): string {
+  if (row.isPct) return `${row.value.toFixed(1)}%`;
+  if (row.isCount) return Math.round(row.value).toLocaleString();
+  return row.value.toFixed(2);
+}
+
 export type Momentum = 'Improving' | 'Declining' | 'Stable' | 'Volatile';
 
 /**
