@@ -164,7 +164,7 @@ export function exportDashboardGuideComprehensive() {
     <p>AI-generated strategic interpretation aligned to current filters and dashboard context, including ADM, named user identity, and saved-session awareness.</p>
     <h3>Tab 6 — Reports</h3>
     <p>PDF library — University / Pillars / Units. Filter by Academic Year, reporting period, report type. Open inline or download.</p>
-    <h3>My Sessions <span class="pill new">NEW</span></h3>
+    <h3>My Sessions</h3>
     <p>Personal "Saved Views" tab — see Section 9.</p>
 
     <h2>5. Key Metrics — Definitions &amp; Formulas</h2>
