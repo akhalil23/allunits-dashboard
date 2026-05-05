@@ -719,11 +719,13 @@ serve(async (req) => {
           continue;
         }
         const coreRows = coreRange.values.slice(1);
-        const hiddenRows = hiddenRowsByPillar[p] ?? new Set<number>();
-        const visibleCoreRows = coreRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
-        const termRows = visibleCoreRows.map(() => [] as any[]);
+        // NOTE: hidden rows are intentionally INCLUDED. They are real strategic
+        // items that some unit owners collapse in the UI; excluding them broke
+        // cross-unit aggregation (e.g. Absolute NA misses when row is hidden in
+        // Finance/HR/Procurement/ADM but visible elsewhere).
+        const termRows = coreRows.map(() => [] as any[]);
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, visibleCoreRows, termRows, anomalies, requestedStatusView,
+          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
@@ -739,11 +741,9 @@ serve(async (req) => {
         }
         const coreRows = coreRange.values.slice(1);
         const termRows = termRange.values.slice(1);
-        const hiddenRows = hiddenRowsByPillar[p] ?? new Set<number>();
-        const visibleCoreRows = coreRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
-        const visibleTermRows = termRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
+        // NOTE: hidden rows are intentionally INCLUDED — see comment above.
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, visibleCoreRows, visibleTermRows, anomalies, requestedStatusView,
+          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
