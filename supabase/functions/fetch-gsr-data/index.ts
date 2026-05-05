@@ -741,11 +741,9 @@ serve(async (req) => {
         }
         const coreRows = coreRange.values.slice(1);
         const termRows = termRange.values.slice(1);
-        const hiddenRows = hiddenRowsByPillar[p] ?? new Set<number>();
-        const visibleCoreRows = coreRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
-        const visibleTermRows = termRows.filter((_row: any[], idx: number) => !hiddenRows.has(idx + 1));
+        // NOTE: hidden rows are intentionally INCLUDED — see comment above.
         const { items, invalidStatuses, invalidCompletions } = processPillarData(
-          pillarMap[p].id, visibleCoreRows, visibleTermRows, anomalies, requestedStatusView,
+          pillarMap[p].id, coreRows, termRows, anomalies, requestedStatusView,
         );
         allItems = allItems.concat(items);
         totalInvalidStatuses += invalidStatuses;
