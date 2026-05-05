@@ -521,6 +521,12 @@ function buildCoverageAliasKeys(
   if (rowKey) {
     aliases.push({ key: rowKey, rank: 2 });
   }
+  // Step-only fallback alias: unions the same action step across units even when
+  // goal/action wording differs slightly (e.g. when newly-added units use variant
+  // phrasing). Safety net so Absolute NA stays stable as units are added.
+  if (stepKey) {
+    aliases.push({ key: `${pillar}|step:${stepKey}`, rank: 1 });
+  }
 
   return Array.from(
     aliases.reduce((map, alias) => {
