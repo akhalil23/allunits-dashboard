@@ -89,14 +89,15 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
       // Without this, the same Action Step shows up under "(Unspecified Goal)" for
       // units whose Goal cell is blank (merged) and under its true Goal for others,
       // causing duplicate entries with conflicting completion values.
-      const byPillar = new Map<PillarId, typeof ur.result.data>();
-      ur.result!.data.forEach(item => {
+      const unitItems = ur.result!.data;
+      const byPillar = new Map<PillarId, typeof unitItems>();
+      unitItems.forEach(item => {
         if (selectedPillar !== 'all' && item.pillar !== selectedPillar) return;
         if (!byPillar.has(item.pillar)) byPillar.set(item.pillar, []);
         byPillar.get(item.pillar)!.push(item);
       });
 
-      const filledItems: { item: typeof ur.result.data[number]; goal: string; objective: string; actionStep: string }[] = [];
+      const filledItems: { item: typeof unitItems[number]; goal: string; objective: string; actionStep: string }[] = [];
       byPillar.forEach(pillarItems => {
         const sorted = [...pillarItems].sort((a, b) => a.sheetRow - b.sheetRow);
         let lastGoal = '';
