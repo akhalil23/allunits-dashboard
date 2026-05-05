@@ -85,16 +85,48 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
     filtered.forEach(ur => {
       const processedKeys = new Set<string>();
 
+      // Forward-fill blank Goal/Action cells per (unit × pillar) ordered by sheetRow.
+      // Without this, the same Action Step shows up under "(Unspecified Goal)" for
+      // units whose Goal cell is blank (merged) and under its true Goal for others,
+      // causing duplicate entries with conflicting completion values.
+      const byPillar = new Map<PillarId, typeof ur.result.data>();
       ur.result!.data.forEach(item => {
         if (selectedPillar !== 'all' && item.pillar !== selectedPillar) return;
+        if (!byPillar.has(item.pillar)) byPillar.set(item.pillar, []);
+        byPillar.get(item.pillar)!.push(item);
+      });
 
+      const filledItems: { item: typeof ur.result.data[number]; goal: string; objective: string; actionStep: string }[] = [];
+      byPillar.forEach(pillarItems => {
+        const sorted = [...pillarItems].sort((a, b) => a.sheetRow - b.sheetRow);
+        let lastGoal = '';
+        let lastAction = '';
+        sorted.forEach(item => {
+          const g = normalizeHierarchyText(item.goal);
+          const a = normalizeHierarchyText(item.objective);
+          const s = normalizeHierarchyText(item.actionStep);
+          if (g) lastGoal = g;
+          if (a) lastAction = a;
+          if (!s) return; // skip rows without an action step
+          filledItems.push({ item, goal: lastGoal, objective: lastAction, actionStep: s });
+        });
+      });
+
+      filledItems.forEach(({ item, goal, objective, actionStep }) => {
         const status = getItemStatus(item, viewType, term, academicYear);
         const completion = getItemCompletion(item, viewType, term, academicYear);
         const completionValid = typeof completion === 'number' && completion >= 0 && completion <= 100;
         const signal = isNotApplicableStatus(status) ? 'Not Applicable' : mapItemToRiskSignal(status, completion, completionValid, expectedProgress);
         const gap = expectedProgress - completion;
 
-        const stepKey = getActionItemSourceKey(item);
+        // Build source key from forward-filled hierarchy so the same step has
+        // one consistent canonical key across all units.
+        const stepKey = getActionItemSourceKey({
+          ...item,
+          goal,
+          objective,
+          actionStep,
+        });
         if (processedKeys.has(stepKey)) return;
         processedKeys.add(stepKey);
 
@@ -103,23 +135,17 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
             sourceKey: stepKey,
             sheetRow: item.sheetRow,
             pillar: item.pillar,
-            goal: normalizeHierarchyText(item.goal) || '(Unspecified Goal)',
-            objective: normalizeHierarchyText(item.objective) || '(Unspecified Action)',
-            actionStep: normalizeHierarchyText(item.actionStep) || '(Unnamed Step)',
+            goal: goal || '(Unspecified Goal)',
+            objective: objective || '(Unspecified Action)',
+            actionStep: actionStep || '(Unnamed Step)',
             units: [],
           });
         }
 
         const entry = stepMap.get(stepKey)!;
-        if (entry.goal === '(Unspecified Goal)') {
-          entry.goal = normalizeHierarchyText(item.goal) || entry.goal;
-        }
-        if (entry.objective === '(Unspecified Action)') {
-          entry.objective = normalizeHierarchyText(item.objective) || entry.objective;
-        }
-        if (entry.actionStep === '(Unnamed Step)') {
-          entry.actionStep = normalizeHierarchyText(item.actionStep) || entry.actionStep;
-        }
+        if (entry.goal === '(Unspecified Goal)' && goal) entry.goal = goal;
+        if (entry.objective === '(Unspecified Action)' && objective) entry.objective = objective;
+        if (entry.actionStep === '(Unnamed Step)' && actionStep) entry.actionStep = actionStep;
 
         entry.units.push({
           unit: getUnitDisplayName(ur.unitId),
