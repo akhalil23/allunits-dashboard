@@ -18,7 +18,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [viewMode, setViewMode] = useState<ViewMode>('basic');
   const [viewType, setViewType] = useState<ViewType>('cumulative');
   const [academicYear, setAcademicYear] = useState<AcademicYear>('2025-2026');
-  const [term, setTerm] = useState<Term>('mid');
+  const [term, setTerm] = useState<Term>('end');
   const [selectedPillar, setSelectedPillar] = useState<'all' | PillarId | 'guide'>('all');
 
   return (
