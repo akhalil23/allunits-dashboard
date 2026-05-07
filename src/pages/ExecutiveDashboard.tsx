@@ -24,6 +24,7 @@ import FilterBar from '@/components/dashboard/FilterBar';
 import ReportsTab from '@/components/executive/ReportsTab';
 import MySessionsTab from '@/components/executive/MySessionsTab';
 import WelcomeBanner from '@/components/executive/WelcomeBanner';
+import FreshnessBanner from '@/components/shared/FreshnessBanner';
 import SaveSessionDialog from '@/components/executive/SaveSessionDialog';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { Loader2, AlertCircle, BookOpen, Bookmark } from 'lucide-react';
@@ -178,6 +179,9 @@ export default function ExecutiveDashboard() {
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         <WelcomeBanner />
+        <div className="px-4 sm:px-6 lg:px-8 pt-3">
+          <FreshnessBanner />
+        </div>
         {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && activeTab !== 'my-sessions' && <FilterBar />}
         {/* How Metrics Work + Save to My Sessions buttons */}
         <div className="px-4 sm:px-6 lg:px-8 pt-3 flex flex-wrap items-center gap-2">

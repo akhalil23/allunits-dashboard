@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Header from '@/components/layout/Header';
+import FreshnessBanner from '@/components/shared/FreshnessBanner';
 import FilterBar from '@/components/dashboard/FilterBar';
 import StatusOverview from '@/components/dashboard/StatusOverview';
 import PillarHealthGrid from '@/components/dashboard/PillarHealthGrid';
@@ -81,6 +82,7 @@ export default function Index() {
     <DashboardLayout>
       <Header observedAt={fetchResult.observedAt} dataQuality={fetchResult.dataQuality} onRefresh={handleRefresh} isRefreshing={isRefetching} items={filteredItems} term={term} academicYear={academicYear} viewType={viewType} integrityAudit={integrityAudit} sheetLastModified={fetchResult.sheetLastModified} sheetLastModifiedBy={fetchResult.sheetLastModifiedBy} onOpenMetrics={() => setMetricsOpen(true)} />
       <UnitMetricsExplainer open={metricsOpen} onClose={() => setMetricsOpen(false)} />
+      <div className="px-4 sm:px-6 pt-3"><FreshnessBanner /></div>
       {!isGuide && !isReports && <FilterBar />}
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-w-[1600px]">

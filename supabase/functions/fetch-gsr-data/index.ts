@@ -582,32 +582,46 @@ serve(async (req) => {
   let requestedStatusView: StatusView = 'all';
 
   try {
-    // --- SERVER-SIDE AUTH & UNIT ISOLATION ---
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Authentication required' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // --- INTERNAL SERVICE-ROLE BYPASS (used by monthly-refresh) ---
+    const internalKey = req.headers.get('x-internal-service');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const isInternal = !!internalKey && !!serviceRoleKey && internalKey === serviceRoleKey;
+
+    let userRole: string | null = null;
+    let userUnit: string | null = null;
+
+    if (!isInternal) {
+      // --- SERVER-SIDE AUTH & UNIT ISOLATION ---
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: 'Authentication required' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
+
+      const { data: { user }, error: authError } = await userClient.auth.getUser();
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: roleData } = await userClient.rpc('get_user_role', { _user_id: user.id });
+      const { data: unitData } = await userClient.rpc('get_user_unit', { _user_id: user.id });
+      userRole = roleData;
+      userUnit = unitData;
+    } else {
+      userRole = 'admin';
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { data: userRole } = await userClient.rpc('get_user_role', { _user_id: user.id });
-    const { data: userUnit } = await userClient.rpc('get_user_unit', { _user_id: user.id });
 
     try {
       if (req.method === 'POST') {

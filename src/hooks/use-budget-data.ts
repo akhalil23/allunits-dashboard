@@ -44,23 +44,15 @@ export interface BudgetDataResult {
 }
 
 async function fetchBudgetData(): Promise<BudgetDataResult> {
-  const { data, error } = await supabase.functions.invoke('fetch-budget-data');
+  const { data, error } = await supabase.functions.invoke('get-snapshot', {
+    body: { kind: 'budget' },
+  });
 
   if (error) {
-    if (/(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(error.message)) {
-      throw new Error('Budget source is temporarily rate-limited. Please retry in about a minute.');
-    }
-
-    console.error('Budget fetch error:', error);
-    throw new Error(error.message || 'Failed to fetch budget data');
+    console.error('Budget snapshot error:', error);
+    throw new Error(error.message || 'Failed to load monthly budget snapshot');
   }
-
-  if (data?.error) {
-    if (/(RATE_LIMITED|RESOURCE_EXHAUSTED|RATE_LIMIT_EXCEEDED|\b429\b)/i.test(data.error)) {
-      throw new Error('Budget source is temporarily rate-limited. Please retry in about a minute.');
-    }
-    throw new Error(data.error);
-  }
+  if (data?.error) throw new Error(data.error);
 
   return data as BudgetDataResult;
 }

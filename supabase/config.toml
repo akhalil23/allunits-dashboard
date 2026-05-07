@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.admin-reset-password]
 verify_jwt = false
+
+[functions.monthly-refresh]
+verify_jwt = false
+
+[functions.get-snapshot]
+verify_jwt = false
+
+[functions.refresh-status]
+verify_jwt = false

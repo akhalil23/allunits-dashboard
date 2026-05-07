@@ -262,16 +262,7 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Refresh */}
-            <motion.button
-              onClick={onRefresh}
-              className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.95 }}
-              title="Refresh data"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </motion.button>
+            {/* Manual refresh removed — controlled monthly snapshots only. */}
 
             {/* Logout */}
             <Tooltip>
