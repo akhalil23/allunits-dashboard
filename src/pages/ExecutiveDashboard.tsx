@@ -178,6 +178,9 @@ export default function ExecutiveDashboard() {
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         <WelcomeBanner />
+        <div className="px-4 sm:px-6 lg:px-8 pt-3">
+          <FreshnessBanner />
+        </div>
         {activeTab !== 'budget' && activeTab !== 'guide' && activeTab !== 'reports' && activeTab !== 'my-sessions' && <FilterBar />}
         {/* How Metrics Work + Save to My Sessions buttons */}
         <div className="px-4 sm:px-6 lg:px-8 pt-3 flex flex-wrap items-center gap-2">
