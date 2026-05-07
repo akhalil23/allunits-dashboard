@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Header from '@/components/layout/Header';
+import FreshnessBanner from '@/components/shared/FreshnessBanner';
 import FilterBar from '@/components/dashboard/FilterBar';
 import StatusOverview from '@/components/dashboard/StatusOverview';
 import PillarHealthGrid from '@/components/dashboard/PillarHealthGrid';
