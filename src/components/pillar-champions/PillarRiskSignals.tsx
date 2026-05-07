@@ -61,7 +61,7 @@ export default function PillarRiskSignals({ unitResults, budgetResult, viewType,
             actionStep: item.actionStep,
             status,
             completion,
-            executionGap: parseFloat((expectedProgress - completion).toFixed(1)),
+            executionGap: parseFloat((completion - expectedProgress).toFixed(1)),
             riskSignal: signal,
           });
         }
@@ -69,7 +69,7 @@ export default function PillarRiskSignals({ unitResults, budgetResult, viewType,
     });
     return items.sort((a, b) => {
       if (a.riskSignal !== b.riskSignal) return a.riskSignal.includes('Realized') ? -1 : 1;
-      return b.executionGap - a.executionGap;
+      return a.executionGap - b.executionGap;
     });
   }, [filtered, selectedPillar, viewType, term, academicYear, expectedProgress]);
 
@@ -151,7 +151,7 @@ export default function PillarRiskSignals({ unitResults, budgetResult, viewType,
                     <td className="px-3 py-2.5 text-center text-muted-foreground">{item.status}</td>
                     <td className="px-3 py-2.5 text-center font-semibold text-foreground">{item.completion}%</td>
                     <td className="px-3 py-2.5 text-center">
-                      <span className="font-semibold" style={{ color: '#DC2626' }}>+{item.executionGap}%</span>
+                      <span className="font-semibold" style={{ color: item.executionGap >= 5 ? '#16A34A' : item.executionGap <= -5 ? '#DC2626' : '#D97706' }}>{item.executionGap > 0 ? '+' : ''}{item.executionGap}%</span>
                     </td>
                     <td className="px-3 py-2.5 text-center">
                       <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: RISK_SIGNAL_COLORS[item.riskSignal] }} />

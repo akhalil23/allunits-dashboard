@@ -118,7 +118,7 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
         const completion = getItemCompletion(item, viewType, term, academicYear);
         const completionValid = typeof completion === 'number' && completion >= 0 && completion <= 100;
         const signal = isNotApplicableStatus(status) ? 'Not Applicable' : mapItemToRiskSignal(status, completion, completionValid, expectedProgress);
-        const gap = expectedProgress - completion;
+        const gap = completion - expectedProgress;
 
         // Build source key from forward-filled hierarchy so the same step has
         // one consistent canonical key across all units.
@@ -358,8 +358,8 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
                                                           <td className="px-3 py-2 text-center font-semibold text-foreground">{isNotApplicableStatus(u.status) ? '—' : `${u.completion}%`}</td>
                                                           <td className="px-3 py-2 text-center">
                                                             {isNotApplicableStatus(u.status) ? '—' : (
-                                                              <span className="font-semibold" style={{ color: u.executionGap <= 0 ? '#16A34A' : u.executionGap > 20 ? '#DC2626' : '#D97706' }}>
-                                                                {u.executionGap <= 0 ? '' : '+'}{u.executionGap}%
+                                                              <span className="font-semibold" style={{ color: u.executionGap >= 5 ? '#16A34A' : u.executionGap <= -5 ? '#DC2626' : '#D97706' }}>
+                                                                {u.executionGap > 0 ? '+' : ''}{u.executionGap}%
                                                               </span>
                                                             )}
                                                           </td>
@@ -381,8 +381,8 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
                                               Unit: <span className="text-foreground">{step.units[0].unit}</span>
                                               {!isNotApplicableStatus(step.units[0].status) && (
                                                 <span className="ml-2">
-                                                  Gap: <span className="font-semibold" style={{ color: step.units[0].executionGap <= 0 ? '#16A34A' : step.units[0].executionGap > 20 ? '#DC2626' : '#D97706' }}>
-                                                    {step.units[0].executionGap <= 0 ? '' : '+'}{step.units[0].executionGap}%
+                                                  Gap: <span className="font-semibold" style={{ color: step.units[0].executionGap >= 5 ? '#16A34A' : step.units[0].executionGap <= -5 ? '#DC2626' : '#D97706' }}>
+                                                    {step.units[0].executionGap > 0 ? '+' : ''}{step.units[0].executionGap}%
                                                   </span>
                                                 </span>
                                               )}
