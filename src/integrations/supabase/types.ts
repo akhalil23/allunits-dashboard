@@ -41,6 +41,204 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_budget_snapshots: {
+        Row: {
+          id: string
+          month: string
+          observed_at: string
+          payload: Json
+          publication_id: string
+        }
+        Insert: {
+          id?: string
+          month: string
+          observed_at?: string
+          payload: Json
+          publication_id: string
+        }
+        Update: {
+          id?: string
+          month?: string
+          observed_at?: string
+          payload?: Json
+          publication_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_budget_snapshots_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: true
+            referencedRelation: "monthly_snapshot_publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_refresh_attempts: {
+        Row: {
+          attempt_number: number
+          budget_status: string | null
+          completed_at: string | null
+          details: Json
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          month: string
+          started_at: string
+          status: string
+          triggered_by: string
+          units_failed: number
+          units_succeeded: number
+        }
+        Insert: {
+          attempt_number: number
+          budget_status?: string | null
+          completed_at?: string | null
+          details?: Json
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          month: string
+          started_at?: string
+          status?: string
+          triggered_by?: string
+          units_failed?: number
+          units_succeeded?: number
+        }
+        Update: {
+          attempt_number?: number
+          budget_status?: string | null
+          completed_at?: string | null
+          details?: Json
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          month?: string
+          started_at?: string
+          status?: string
+          triggered_by?: string
+          units_failed?: number
+          units_succeeded?: number
+        }
+        Relationships: []
+      }
+      monthly_refresh_state: {
+        Row: {
+          active_month: string | null
+          active_publication_id: string | null
+          attempts_this_month: number
+          current_status: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          last_success_at: string | null
+          next_retry_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active_month?: string | null
+          active_publication_id?: string | null
+          attempts_this_month?: number
+          current_status?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          next_retry_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active_month?: string | null
+          active_publication_id?: string | null
+          attempts_this_month?: number
+          current_status?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          next_retry_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_refresh_state_active_publication_id_fkey"
+            columns: ["active_publication_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_snapshot_publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_snapshot_publications: {
+        Row: {
+          budget_included: boolean
+          created_at: string
+          id: string
+          month: string
+          notes: string | null
+          published_at: string
+          succeeded_units: number
+          total_units: number
+        }
+        Insert: {
+          budget_included?: boolean
+          created_at?: string
+          id?: string
+          month: string
+          notes?: string | null
+          published_at?: string
+          succeeded_units: number
+          total_units: number
+        }
+        Update: {
+          budget_included?: boolean
+          created_at?: string
+          id?: string
+          month?: string
+          notes?: string | null
+          published_at?: string
+          succeeded_units?: number
+          total_units?: number
+        }
+        Relationships: []
+      }
+      monthly_unit_snapshots: {
+        Row: {
+          id: string
+          month: string
+          observed_at: string
+          payload: Json
+          publication_id: string
+          unit_id: string
+          view_type: string
+        }
+        Insert: {
+          id?: string
+          month: string
+          observed_at?: string
+          payload: Json
+          publication_id: string
+          unit_id: string
+          view_type: string
+        }
+        Update: {
+          id?: string
+          month?: string
+          observed_at?: string
+          payload?: Json
+          publication_id?: string
+          unit_id?: string
+          view_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_unit_snapshots_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_snapshot_publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           auth_email: string
