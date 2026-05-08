@@ -15,8 +15,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X, Download, LogOut, Pencil, ExternalLink, LayoutDashboard, FileText } from 'lucide-react';
+import { ArrowLeft, Key, Plus, Trash2, Loader2, Users, Shield, MessageSquare, Check, X, Download, LogOut, Pencil, ExternalLink, LayoutDashboard, FileText, Activity } from 'lucide-react';
 import ImportCenter from '@/components/admin/ImportCenter';
+import SnapshotMonitor from '@/components/admin/SnapshotMonitor';
 import { toast } from 'sonner';
 
 interface UserInfo {
