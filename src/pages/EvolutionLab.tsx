@@ -9,6 +9,7 @@ import WhatChangedPanel from '@/components/evolution/WhatChangedPanel';
 import { useGSRData } from '@/hooks/use-gsr-data';
 import { FlaskConical, Loader2, AlertCircle, ArrowLeftRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import FreshnessBanner from '@/components/shared/FreshnessBanner';
 
 export default function EvolutionLab() {
   const { data: fetchResult, isLoading, isError, error, isRefetching } = useGSRData();
