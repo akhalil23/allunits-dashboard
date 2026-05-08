@@ -70,6 +70,7 @@ export default function EvolutionLab() {
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px]">
+          <FreshnessBanner />
           {/* Title */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
