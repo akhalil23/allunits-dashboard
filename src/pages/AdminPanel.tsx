@@ -398,6 +398,7 @@ export default function AdminPanel() {
             </TabsTrigger>
             <TabsTrigger value="credentials" className="gap-1.5"><Key className="w-4 h-4" /> Credentials</TabsTrigger>
             <TabsTrigger value="import" className="gap-1.5"><FileText className="w-4 h-4" /> Import Center</TabsTrigger>
+            <TabsTrigger value="snapshot" className="gap-1.5"><Activity className="w-4 h-4" /> Snapshot Monitor</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
