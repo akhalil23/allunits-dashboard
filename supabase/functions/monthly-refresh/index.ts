@@ -136,13 +136,14 @@ serve(async (req) => {
         .eq('id', existingBudget.id);
     }
 
-    await admin.from('monthly_refresh_state').update({
+    const updates: Record<string, any> = {
       current_status: budgetPayload ? 'success' : 'pending_retry',
-      last_success_at: budgetPayload ? new Date().toISOString() : (stateRow as any)?.last_success_at,
       next_retry_at: null,
       last_error: budgetError,
       updated_at: new Date().toISOString(),
-    }).eq('id', 'singleton');
+    };
+    if (budgetPayload) updates.last_success_at = new Date().toISOString();
+    await admin.from('monthly_refresh_state').update(updates).eq('id', 'singleton');
 
     return new Response(JSON.stringify({
       ok: !!budgetPayload, mode: 'force-backfill-budget', month,
