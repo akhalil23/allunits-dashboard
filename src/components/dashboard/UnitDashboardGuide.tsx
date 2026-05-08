@@ -24,13 +24,13 @@ export default function UnitDashboardGuide() {
           </div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
-              Dashboard data is read directly from the official online reporting sheets whenever the dashboard loads or refetches.
+              The dashboard operates on <span className="font-semibold text-foreground">controlled automated monthly reporting snapshots</span>. Source data is fetched, validated, and atomically published once per cycle — never queried live.
             </p>
             <p>
-              Updates made to the source sheets should appear on the next live refresh — not on a monthly batch schedule.
+              Refreshes are <span className="font-semibold text-foreground">automatically scheduled on the 1st of each month at 02:00 UTC</span>. If a refresh fails validation, the previous validated monthly snapshot remains active and the system retries automatically.
             </p>
             <p>
-              If the source is temporarily rate-limited or unavailable, the dashboard may briefly show a clearly marked cached snapshot as a fallback.
+              The timestamp displayed at the top of every tab reflects the <span className="font-semibold text-foreground">last successful validated monthly refresh</span>. There is no manual refresh button.
             </p>
           </div>
         </motion.div>
@@ -252,7 +252,7 @@ export default function UnitDashboardGuide() {
             />
             <FAQItem
               question="How often is the dashboard updated?"
-              answer="The dashboard reads the official online reporting sheets live whenever it loads or refetches. Source-sheet edits should appear on the next live refresh. If the source is temporarily rate-limited or unavailable, the dashboard may briefly fall back to a clearly marked cached snapshot."
+              answer="The dashboard uses controlled automated monthly snapshots. Refreshes are automatically scheduled on the 1st of each month at 02:00 UTC. The previous validated monthly snapshot remains active until the new refresh fully succeeds, and the displayed timestamp always reflects the last successful validated monthly refresh."
             />
             <FAQItem
               question="How do I export a report?"

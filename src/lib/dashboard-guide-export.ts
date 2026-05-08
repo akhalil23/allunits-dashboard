@@ -240,7 +240,7 @@ export function exportDashboardGuideComprehensive() {
     </ul>
 
     <h2>12. Data Refresh Policy</h2>
-    <p>Data is read directly from official online reporting sheets on every load/refetch. Updates appear on the next live refresh — not on a monthly batch schedule. If the source is rate-limited, a clearly marked cached snapshot may briefly appear as a fallback.</p>
+    <p>Dashboard data uses controlled automated monthly snapshots. Refreshes are automatically scheduled on the 1st of each month at 02:00 UTC. The previous validated monthly snapshot remains active until the new refresh fully succeeds. The displayed timestamp reflects the last successful validated monthly refresh.</p>
 
     <h2>13. FAQ</h2>
     <table>

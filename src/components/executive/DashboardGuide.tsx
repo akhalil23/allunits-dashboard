@@ -83,9 +83,9 @@ export default function DashboardGuide() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-amber-500/40 bg-amber-500/5 shadow-sm overflow-hidden p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4"><RefreshCw className="w-4 h-4 text-amber-500" /><span className="text-xs sm:text-sm font-medium text-amber-500 uppercase tracking-wider">Data Refresh Policy</span></div>
           <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>Dashboard data is read directly from the official online reporting sheets whenever the dashboard loads or refetches.</p>
-            <p>Updates made to the source sheets should appear on the next live refresh — not on a monthly batch schedule.</p>
-            <p>If the source is temporarily rate-limited or unavailable, the dashboard may briefly show a clearly marked cached snapshot as a fallback.</p>
+            <p>The dashboard operates on <span className="font-semibold text-foreground">controlled automated monthly reporting snapshots</span>. Source data is fetched, validated, and atomically published once per cycle — the dashboard never queries the live sheets in real time.</p>
+            <p>Refreshes are <span className="font-semibold text-foreground">automatically scheduled on the 1st of each month at 02:00 UTC</span>. If a refresh fails validation, the previous validated monthly snapshot remains active and the system retries automatically.</p>
+            <p>The timestamp displayed at the top of every dashboard tab reflects the <span className="font-semibold text-foreground">last successful validated monthly refresh</span>. There is no manual refresh button.</p>
           </div>
         </motion.div>
       </section>
@@ -281,7 +281,7 @@ export default function DashboardGuide() {
             <FAQItem question="How are pillar colors assigned?" answer="Each pillar has a fixed color (PI=Blue, PII=Cyan, PIII=Violet, PIV=Pink, PV=Indigo). These never change regardless of performance values. Risk is conveyed through separate semantic colors." />
             <FAQItem question="What is the Execution Gap?" answer="Execution Gap = Actual Progress − Expected Progress. A negative gap means the unit is behind schedule. This metric appears across all tabs to identify where attention is needed." />
             <FAQItem question="How does dynamic RI work for In-Progress items?" answer="Instead of a fixed risk mapping, In-Progress items are assigned risk dynamically: if the gap between expected and actual progress exceeds 50%, it's Critical Risk; between 20-50% it's Emerging Risk; below 20% it's No Risk." />
-            <FAQItem question="What is the ADM unit?" answer="ADM (Administration) is the 25th reporting unit, fully integrated into routing, authentication, data ingestion, filters, comparisons, and university-level aggregations. Its data is fetched live from its dedicated Google Sheet by the same pipeline as all other units." />
+            <FAQItem question="What is the ADM unit?" answer="ADM (Administration) is the 25th reporting unit, fully integrated into routing, authentication, data ingestion, filters, comparisons, and university-level aggregations. Its data is captured by the same automated monthly snapshot pipeline as all other units." />
             <FAQItem question="Can other users see my saved sessions?" answer="No. The user_session_snapshots table enforces strict Row-Level Security where user_id = auth.uid(). Each board member sees only their own private workspace under any condition." />
             <FAQItem question="What's the difference between My Sessions and the Snapshot Tracker?" answer="My Sessions is your personal, user-controlled saved-views workspace (capture, restore, compare your own dashboard states). The Strategic Snapshot Tracker is the shared executive snapshot tool used to capture official performance snapshots across reporting cycles." />
           </div>

@@ -27,6 +27,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import FreshnessBanner from '@/components/shared/FreshnessBanner';
 
 export default function PillarChampionsDashboard() {
   const [activeTab, setActiveTab] = useState<PillarChampionTab>('overview');
@@ -258,6 +259,7 @@ export default function PillarChampionsDashboard() {
         {/* Main content */}
         <main ref={mainRef} className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px]">
+            <FreshnessBanner />
             {/* Section Title */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <div className="flex items-center gap-3">
