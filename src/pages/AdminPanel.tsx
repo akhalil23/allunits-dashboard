@@ -610,6 +610,10 @@ export default function AdminPanel() {
           <TabsContent value="import">
             <ImportCenter />
           </TabsContent>
+
+          <TabsContent value="snapshot">
+            <SnapshotMonitor />
+          </TabsContent>
         </Tabs>
       </div>
 
