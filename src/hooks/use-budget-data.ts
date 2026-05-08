@@ -41,7 +41,16 @@ export interface BudgetDataResult {
   actionStepBudgets: ActionStepBudget[];
   observedAt: string;
   validationErrors: string[];
+  budgetUnavailable?: boolean;
 }
+
+const emptyBudgetSnapshot = (validationErrors: string[] = []): BudgetDataResult => ({
+  pillars: {},
+  actionStepBudgets: [],
+  observedAt: new Date().toISOString(),
+  validationErrors,
+  budgetUnavailable: true,
+});
 
 async function fetchBudgetData(): Promise<BudgetDataResult> {
   const { data, error } = await supabase.functions.invoke('get-snapshot', {
@@ -50,9 +59,18 @@ async function fetchBudgetData(): Promise<BudgetDataResult> {
 
   if (error) {
     console.error('Budget snapshot error:', error);
+    const status = (error as { context?: { status?: number } }).context?.status;
+    if (status === 404 || /Budget snapshot unavailable/i.test(error.message)) {
+      return emptyBudgetSnapshot(['Budget snapshot unavailable for the active monthly publication.']);
+    }
     throw new Error(error.message || 'Failed to load monthly budget snapshot');
   }
-  if (data?.error) throw new Error(data.error);
+  if (data?.error) {
+    if (/Budget snapshot unavailable/i.test(data.error)) {
+      return emptyBudgetSnapshot([data.error]);
+    }
+    throw new Error(data.error);
+  }
 
   return data as BudgetDataResult;
 }
