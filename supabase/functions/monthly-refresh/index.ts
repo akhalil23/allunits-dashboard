@@ -101,6 +101,56 @@ serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
   }
 
+  // Force-refresh shortcut: month already published → backfill budget into the
+  // existing publication instead of re-inserting (unique constraint on month).
+  if (existing && force) {
+    const { data: existingBudget } = await admin
+      .from('monthly_budget_snapshots')
+      .select('id')
+      .eq('publication_id', existing.id)
+      .maybeSingle();
+
+    let budgetPayload: any = null;
+    let budgetError: string | null = null;
+    try {
+      const r = await callInternal('fetch-budget-data', {}, SUPABASE_URL, SERVICE_KEY);
+      if (r.ok && r.json && !r.json.error) budgetPayload = r.json;
+      else budgetError = r.json?.error ?? `HTTP ${r.status}`;
+    } catch (err) {
+      budgetError = err instanceof Error ? err.message : 'Unknown error';
+    }
+
+    if (budgetPayload && !existingBudget) {
+      await admin.from('monthly_budget_snapshots').insert({
+        publication_id: existing.id,
+        month,
+        payload: budgetPayload,
+        observed_at: budgetPayload?.observedAt ?? new Date().toISOString(),
+      });
+      await admin.from('monthly_snapshot_publications')
+        .update({ budget_included: true, notes: null })
+        .eq('id', existing.id);
+    } else if (budgetPayload && existingBudget) {
+      await admin.from('monthly_budget_snapshots')
+        .update({ payload: budgetPayload, observed_at: new Date().toISOString() })
+        .eq('id', existingBudget.id);
+    }
+
+    const updates: Record<string, any> = {
+      current_status: budgetPayload ? 'success' : 'pending_retry',
+      next_retry_at: null,
+      last_error: budgetError,
+      updated_at: new Date().toISOString(),
+    };
+    if (budgetPayload) updates.last_success_at = new Date().toISOString();
+    await admin.from('monthly_refresh_state').update(updates).eq('id', 'singleton');
+
+    return new Response(JSON.stringify({
+      ok: !!budgetPayload, mode: 'force-backfill-budget', month,
+      budget: !!budgetPayload, budgetError,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
+  }
+
   // Mark state in_progress
   const { data: stateRow } = await admin
     .from('monthly_refresh_state')
