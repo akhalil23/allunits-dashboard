@@ -130,8 +130,17 @@ serve(async (req) => {
         .eq('publication_id', pub.id)
         .maybeSingle();
       if (!row) {
-        return new Response(JSON.stringify({ error: 'Budget snapshot unavailable for this month' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        // Graceful fallback: return empty budget payload so the dashboard renders
+        // instead of blank-screening. The next monthly refresh will populate this.
+        return new Response(JSON.stringify({
+          pillars: {},
+          actionStepBudgets: [],
+          observedAt: pub.published_at,
+          validationErrors: [],
+          budgetUnavailable: true,
+          publication: pub,
+        }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       return new Response(JSON.stringify({ ...row.payload, publication: pub }), {
