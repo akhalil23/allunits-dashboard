@@ -252,7 +252,7 @@ export default function UnitDashboardGuide() {
             />
             <FAQItem
               question="How often is the dashboard updated?"
-              answer="The dashboard reads the official online reporting sheets live whenever it loads or refetches. Source-sheet edits should appear on the next live refresh. If the source is temporarily rate-limited or unavailable, the dashboard may briefly fall back to a clearly marked cached snapshot."
+              answer="The dashboard uses controlled automated monthly snapshots. Refreshes are automatically scheduled on the 1st of each month at 02:00 UTC. The previous validated monthly snapshot remains active until the new refresh fully succeeds, and the displayed timestamp always reflects the last successful validated monthly refresh."
             />
             <FAQItem
               question="How do I export a report?"
