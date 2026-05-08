@@ -27,6 +27,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import FreshnessBanner from '@/components/shared/FreshnessBanner';
 
 export default function PillarChampionsDashboard() {
   const [activeTab, setActiveTab] = useState<PillarChampionTab>('overview');
