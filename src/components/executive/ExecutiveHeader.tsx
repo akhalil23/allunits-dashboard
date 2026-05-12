@@ -3,13 +3,15 @@
  * Includes "Explore Strategic Trends" button.
  */
 
+import { useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, RefreshCw, LogOut, Camera, ArrowLeft } from 'lucide-react';
+import { Moon, Sun, RefreshCw, LogOut, Camera, ArrowLeft, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
+import ChangePasswordDialog from '@/components/auth/ChangePasswordDialog';
 
 interface ExecutiveHeaderProps {
   loadedUnits: number;
@@ -26,8 +28,11 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
   const isMobile = useIsMobile();
   const { data: userRole } = useUserRole();
   const isAdmin = userRole?.role === 'admin';
+  const isBoard = userRole?.role === 'board_member';
+  const [pwdOpen, setPwdOpen] = useState(false);
 
   return (
+    <>
     <header className={`relative overflow-hidden ${isMobile ? 'sticky top-0 z-40' : ''}`}>
       <div className="absolute inset-0 header-gradient-animated" />
       <div
@@ -117,6 +122,22 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
 
             {/* Manual refresh removed — dashboard now uses controlled monthly snapshots. */}
 
+            {isBoard && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={() => setPwdOpen(true)}
+                    className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <KeyRound className="w-4 h-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom"><p>Change password</p></TooltipContent>
+              </Tooltip>
+            )}
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.button
@@ -171,5 +192,7 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
         )}
       </div>
     </header>
+    <ChangePasswordDialog open={pwdOpen} onOpenChange={setPwdOpen} />
+    </>
   );
 }

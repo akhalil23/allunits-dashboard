@@ -18,6 +18,7 @@ import UnitComparison from '@/components/executive/UnitComparison';
 import AIExecutiveInsights from '@/components/executive/AIExecutiveInsights';
 import DashboardGuide from '@/components/executive/DashboardGuide';
 import ExecutiveAIAdvisor from '@/components/executive/ExecutiveAIAdvisor';
+import BoardMemberPasswordPrompt from '@/components/auth/BoardMemberPasswordPrompt';
 import SnapshotTrackerPanel from '@/components/executive/SnapshotTrackerPanel';
 import MetricsExplainer from '@/components/executive/MetricsExplainer';
 import FilterBar from '@/components/dashboard/FilterBar';
@@ -179,6 +180,7 @@ export default function ExecutiveDashboard() {
           onOpenSnapshotTracker={() => setTrackerOpen(true)}
         />
         <WelcomeBanner />
+        <BoardMemberPasswordPrompt />
         <div className="px-4 sm:px-6 lg:px-8 pt-3">
           <FreshnessBanner />
         </div>
