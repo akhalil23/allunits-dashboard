@@ -121,6 +121,22 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
 
             {/* Manual refresh removed — dashboard now uses controlled monthly snapshots. */}
 
+            {isBoard && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={() => setPwdOpen(true)}
+                    className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <KeyRound className="w-4 h-4" />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom"><p>Change password</p></TooltipContent>
+              </Tooltip>
+            )}
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <motion.button
