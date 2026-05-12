@@ -32,6 +32,7 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
   const [pwdOpen, setPwdOpen] = useState(false);
 
   return (
+    <>
     <header className={`relative overflow-hidden ${isMobile ? 'sticky top-0 z-40' : ''}`}>
       <div className="absolute inset-0 header-gradient-animated" />
       <div
