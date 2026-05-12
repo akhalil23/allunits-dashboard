@@ -191,5 +191,7 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
         )}
       </div>
     </header>
+    <ChangePasswordDialog open={pwdOpen} onOpenChange={setPwdOpen} />
+    </>
   );
 }
