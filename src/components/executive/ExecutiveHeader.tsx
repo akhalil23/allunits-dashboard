@@ -3,13 +3,15 @@
  * Includes "Explore Strategic Trends" button.
  */
 
+import { useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, RefreshCw, LogOut, Camera, ArrowLeft } from 'lucide-react';
+import { Moon, Sun, RefreshCw, LogOut, Camera, ArrowLeft, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
+import ChangePasswordDialog from '@/components/auth/ChangePasswordDialog';
 
 interface ExecutiveHeaderProps {
   loadedUnits: number;
