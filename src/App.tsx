@@ -12,6 +12,8 @@ import EvolutionLab from "./pages/EvolutionLab";
 import Login from "./pages/Login";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import PillarChampionsDashboard from "./pages/PillarChampionsDashboard";
+import HealthcareDashboard from "./pages/HealthcareDashboard";
+import HealthcareAnalysisReport from "./pages/HealthcareAnalysisReport";
 import AdminPanel from "./pages/AdminPanel";
 import LogoutPage from "./pages/Logout";
 import NotFound from "./pages/NotFound";
@@ -69,10 +71,21 @@ const App = () => (
               {/* Legacy route redirect */}
               <Route path="/unit/:unitId" element={<LegacyUnitRedirect />} />
               <Route path="/unit/:unitId/*" element={<LegacyUnitRedirect />} />
+              {/* Healthcare Strategic Plan dashboard (prototype) */}
+              <Route path="/healthcare" element={
+                <ProtectedRoute>
+                  <HealthcareDashboard />
+                </ProtectedRoute>
+              } />
               {/* Admin */}
               <Route path="/admin" element={
                 <ProtectedRoute>
                   <AdminPanel />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/healthcare-analysis" element={
+                <ProtectedRoute>
+                  <HealthcareAnalysisReport />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

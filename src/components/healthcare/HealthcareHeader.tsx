@@ -1,0 +1,23 @@
+import { Stethoscope } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+
+export default function HealthcareHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <header className="border-b border-border bg-card/40 backdrop-blur px-6 py-4 flex items-center justify-between shrink-0">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+          <Stethoscope className="w-4 h-4 text-emerald-300" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-lg font-display font-semibold text-foreground truncate">{title}</h2>
+          {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/5">
+          Phase 1 · Prototype
+        </Badge>
+      </div>
+    </header>
+  );
+}

@@ -49,6 +49,11 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const isUniversityRoute = location.pathname.startsWith('/university');
   const isUnitsRoute = location.pathname.startsWith('/units');
   const isPillarsRoute = location.pathname.startsWith('/pillars');
+  const isHealthcareRoute = location.pathname.startsWith('/healthcare');
+  const isHealthcareRole =
+    userRole.role === 'healthcare_admin' ||
+    userRole.role === 'healthcare_executive' ||
+    userRole.role === 'healthcare_viewer';
 
   // ──── Role-based redirect from root ────
   if (location.pathname === '/') {
@@ -56,9 +61,9 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     if (userRole.role === 'university_viewer') return <Navigate to="/university" replace />;
     if (userRole.role === 'board_member') return <Navigate to="/university" replace />;
     if (userRole.role === 'pillar_champion') return <Navigate to="/pillars" replace />;
+    if (isHealthcareRole) return <Navigate to="/healthcare" replace />;
     if (userRole.role === 'unit_user') {
       if (userRole.unitId) return <Navigate to={`/units/${userRole.unitId}`} replace />;
-      // unit_user with no unitId — misconfigured
       logout();
       return <Navigate to="/login" replace />;
     }
@@ -71,11 +76,9 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       logout();
       return <Navigate to="/login" replace />;
     }
-    // Forbidden routes
-    if (isUniversityRoute || isAdminRoute || isPillarsRoute) {
+    if (isUniversityRoute || isAdminRoute || isPillarsRoute || isHealthcareRoute) {
       return <Navigate to={`/units/${userRole.unitId}`} replace />;
     }
-    // Different unit
     if (isUnitsRoute && unitCode && unitCode !== userRole.unitId) {
       return <Navigate to={`/units/${userRole.unitId}`} replace />;
     }
@@ -83,15 +86,22 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   // ──── Guard: university_viewer & board_member ────
   if (userRole.role === 'university_viewer' || userRole.role === 'board_member') {
-    if (isUnitsRoute || isAdminRoute || isPillarsRoute) {
+    if (isUnitsRoute || isAdminRoute || isPillarsRoute || isHealthcareRoute) {
       return <Navigate to="/university" replace />;
     }
   }
 
   // ──── Guard: pillar_champion ────
   if (userRole.role === 'pillar_champion') {
-    if (isUnitsRoute || isAdminRoute || isUniversityRoute) {
+    if (isUnitsRoute || isAdminRoute || isUniversityRoute || isHealthcareRoute) {
       return <Navigate to="/pillars" replace />;
+    }
+  }
+
+  // ──── Guard: healthcare_* roles ────
+  if (isHealthcareRole) {
+    if (isUnitsRoute || isAdminRoute || isUniversityRoute || isPillarsRoute) {
+      return <Navigate to="/healthcare" replace />;
     }
   }
 
