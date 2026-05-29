@@ -670,6 +670,9 @@ export default function AdminPanel() {
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="university_viewer">University Viewer</SelectItem>
                   <SelectItem value="unit_user">Unit User</SelectItem>
+                  <SelectItem value="healthcare_admin">Healthcare Admin</SelectItem>
+                  <SelectItem value="healthcare_executive">Healthcare Executive</SelectItem>
+                  <SelectItem value="healthcare_viewer">Healthcare Viewer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -712,6 +715,9 @@ export default function AdminPanel() {
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="university_viewer">University Viewer</SelectItem>
                   <SelectItem value="unit_user">Unit User</SelectItem>
+                  <SelectItem value="healthcare_admin">Healthcare Admin</SelectItem>
+                  <SelectItem value="healthcare_executive">Healthcare Executive</SelectItem>
+                  <SelectItem value="healthcare_viewer">Healthcare Viewer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
