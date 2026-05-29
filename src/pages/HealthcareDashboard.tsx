@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import HealthcareSidebar, { type HCTab } from '@/components/healthcare/HealthcareSidebar';
 import HealthcareHeader from '@/components/healthcare/HealthcareHeader';
 import ExecutiveSnapshot from '@/components/healthcare/tabs/ExecutiveSnapshot';
@@ -27,18 +27,20 @@ export default function HealthcareDashboard() {
   const open = (id: HCTab) => setTab(id);
 
   return (
-    <DashboardLayout>
+    <div className="flex h-screen bg-background" style={{ overflow: 'clip' }}>
       <HealthcareSidebar activeTab={tab} onTabChange={open} />
-      <HealthcareHeader title={TITLES[tab].title} subtitle={TITLES[tab].subtitle} />
-      <main className="flex-1 overflow-y-auto p-5 sm:p-6">
-        {tab === 'snapshot' && <ExecutiveSnapshot />}
-        {tab === 'goals' && <StrategicGoalsOverview onOpenGoal={(c) => { setExplorerGoal(c); setTab('explorer'); }} />}
-        {tab === 'explorer' && <GoalExplorer initialGoal={explorerGoal} />}
-        {tab === 'execution' && <ExecutionIntelligence />}
-        {tab === 'budget' && <BudgetIntelligence />}
-        {tab === 'governance' && <GovernanceOwnership />}
-        {tab === 'future' && <FutureIntegrationVision />}
-      </main>
-    </DashboardLayout>
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0">
+        <HealthcareHeader title={TITLES[tab].title} subtitle={TITLES[tab].subtitle} />
+        <main className="flex-1 overflow-y-auto p-5 sm:p-6">
+          {tab === 'snapshot' && <ExecutiveSnapshot />}
+          {tab === 'goals' && <StrategicGoalsOverview onOpenGoal={(c) => { setExplorerGoal(c); setTab('explorer'); }} />}
+          {tab === 'explorer' && <GoalExplorer initialGoal={explorerGoal} />}
+          {tab === 'execution' && <ExecutionIntelligence />}
+          {tab === 'budget' && <BudgetIntelligence />}
+          {tab === 'governance' && <GovernanceOwnership />}
+          {tab === 'future' && <FutureIntegrationVision />}
+        </main>
+      </div>
+    </div>
   );
 }
