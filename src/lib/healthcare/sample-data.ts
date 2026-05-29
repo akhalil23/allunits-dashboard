@@ -4,11 +4,10 @@ import type { HCGoal, HCStep, HCStatus, HCRisk, HCFundingSource } from './types'
 
 const QPERIODS = ['Q1 2026', 'Q2 2026', 'Q3 2026', 'Q4 2026', 'Q1 2027'];
 
-function mkStep(
-  code: string,
-  title: string,
-  opts: Partial<HCStep> & { status?: HCStatus; risk?: HCRisk; budget?: number; source?: HCFundingSource; priority?: 1|2|3 } = {}
-): HCStep {
+type MkOpts = Omit<Partial<HCStep>, 'budget' | 'priority' | 'risk' | 'quarterly'> & {
+  status?: HCStatus; risk?: HCRisk; budget?: number; source?: HCFundingSource; priority?: 1 | 2 | 3;
+};
+function mkStep(code: string, title: string, opts: MkOpts = {}): HCStep {
   const status: HCStatus = opts.status ?? 'In Progress';
   const risk: HCRisk = opts.risk ?? 'Emerging';
   const progressMap: Record<HCStatus, number> = {
