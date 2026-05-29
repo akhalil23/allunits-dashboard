@@ -308,7 +308,8 @@ Deno.serve(async (req) => {
       // Update user_roles
       const updates: Record<string, unknown> = {};
       if (newRole !== undefined) {
-        if (newRole !== 'admin' && newRole !== 'unit_user' && newRole !== 'university_viewer') {
+        const ALLOWED_ROLES = ['admin', 'unit_user', 'university_viewer', 'pillar_champion', 'board_member', 'healthcare_admin', 'healthcare_executive', 'healthcare_viewer'];
+        if (!ALLOWED_ROLES.includes(newRole)) {
           return new Response(JSON.stringify({ error: "Invalid role" }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
