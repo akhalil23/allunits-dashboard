@@ -1,71 +1,128 @@
-# Add a Trajectory Trendline to My Sessions Comparison
+# Healthcare Strategic Plan Dashboard — Phase 1 (Architecture + Prototype)
 
-## The Idea (sophisticated yet simple)
+## Excel analysis (already completed)
 
-When a user compares 2–5 snapshots from the **same context**, render a small **Trajectory Trendline** at the top of the comparison view — one mini line chart per context KPI — with the snapshots placed on the X-axis in **chronological order** (by `created_at`, regardless of selection order).
+Extracted from `LAU-HS SP Complete Working file Q2 2026.xlsx` — 7 sheets, one per Strategic Goal:
 
-Around it, add two simple but high-signal touches inspired by the Snapshot Tracker and Unit Comparison tabs:
+| Goal | Title | Champion(s) | Actions | Steps |
+|---|---|---|---|---|
+| 1 | Enhance National and Regional Healthcare Leadership and Visibility | Zeina Khoury-Stevens | 3 | 13 |
+| 2 | Advance Academic-Clinical Integration and Collaborative Practice | Sola Bahous | 3 | 24 |
+| 3 | Foster Integrative Quality Clinical Services and Patient-Centered Care | Karl Jallad, Stephanie Irani | 4 | 13 |
+| 4 | Lead Digital Health Transformation and Innovation | Roy Majdalani, Camille Abou-Nasr, Christian Bejjani | 4 | 24 |
+| 5 | Position LAU Health System as an Employer of Choice | HS-COO | 2 | 5 |
+| 6 | Expand and Develop an Agile and Sustainable Integrated Academic Health System | Sami Rizk, Sally Al-Rabbaa, Christian Bejjani | 3 | 12 |
+| 7 | Develop Community-Based Health Care Outreach and Education Programs | Naser Alsharif | 2 | 8 |
 
-1. **Trajectory Trendline cards** — one compact `LineChart` per KPI defined by the active context (e.g. Completion / On Track / Risk Index for `snapshot`; Utilization / Commitment / Spending for `budget`).
-2. **Momentum Verdict pill** per KPI — a single word derived from the slope between first and last point: `Improving`, `Declining`, `Stable`, `Volatile` (volatile if direction flips ≥2 times across the series). Colored using the existing risk palette logic.
-3. **Reference baseline** — a dashed horizontal line at the value of the first (oldest) snapshot, so any later snapshot's distance from the baseline is visually instant.
+Common per-sheet structure: Champion (row 1) → Goal title → Action header → Goal-level KPIs → Action Steps table with columns:
+`Action Step | Intent | KPIs | Champion(s) | Priority | Responsible (R) | Accountable (A) | Consulted (C) | Informed (I) | Status Q1 2026 | Q2 2026 | Q3 2026 | Q4 2026 | Q1 2027 | Budget Y1–Y5 (amount + note)`.
 
-Nothing new to capture, no schema changes, no new dependencies — just a new visual layer over data the snapshots already carry.
+This will be packaged as the **Healthcare SP Analysis Report** (admin-only page) inside the app — covering all 10 sections (A–J) requested.
 
-## Why this fits
+## Scope of this phase
 
-- **Reuses what exists**: the Snapshot Tracker (`SnapshotTracker.tsx`) already uses `recharts` `LineChart` for trajectory; we lift the same pattern into `MySessionsTab` `CompareView`.
-- **Reuses context-aware KPIs**: `buildContextKpiRowsMulti` in `src/lib/session-context-kpis.ts` already returns the right metrics per context. We feed the same rows into the trendline — so a `budget` comparison shows budget trendlines, a `risk-priority` comparison shows risk trendlines. No misleading cross-context metrics.
-- **Honors the existing rule**: trendlines only render when `isKpiComparableContext(context)` is true and all selected snapshots share the same context. Mixed-context comparisons keep the existing "Limited comparability" behavior.
-- **Chronology, not selection order**: the user picks any 2–5 snapshots in any order; the trendline always plots them oldest → newest, which is what makes the line meaningful.
+Prototype only. **No** Excel ingestion, OneDrive/Graph, parsers, sync, or Healthcare DB tables. Static seed data inspired by the file. Architecture is laid out so a later phase can plug a real data layer in without UI rewrites.
 
-## What the user sees
+## Architecture
+
+### Roles (additive, non-breaking)
+
+Extend `app_role` enum with three new values via migration:
+- `healthcare_admin`
+- `healthcare_executive`
+- `healthcare_viewer`
+
+Existing university roles are untouched. A future user can hold multiple rows in `user_roles` to access both dashboards.
+
+### Routing
 
 ```text
-┌─ Trajectory (3 snapshots, oldest → newest) ──────────┐
-│  Completion %      [Improving ↑]                     │
-│  ╭──────────── line chart ─────────────╮             │
-│  │ 62 ─ ─ ─ ─ ─ ─ ─ ─ ─ baseline       │             │
-│  │      ╲___                           │             │
-│  │          ╲____                      │             │
-│  │                ╲___ 71              │             │
-│  ╰─────────────────────────────────────╯             │
-│  S1 (Sep 12)   S2 (Nov 04)   S3 (Jan 21)             │
-└──────────────────────────────────────────────────────┘
+/healthcare                    Healthcare Executive Dashboard (7 tabs)
+/admin                         Admin Panel  ← gains "Dashboard Access" section
+/admin/healthcare-analysis     Admin-only Healthcare SP Analysis Report
 ```
 
-Followed by the existing KPI table and Filters table (unchanged).
+`ProtectedRoute` guards:
+- healthcare_* roles → forced to `/healthcare`
+- admin → access everywhere (incl. healthcare + analysis report)
+- university roles → blocked from `/healthcare`
 
-## Technical Implementation
+### Prototype Healthcare account
 
-**Files touched:**
+Edge function `seed-healthcare-user` creates `SP_Healthcare / SP_Healthcare` with role `healthcare_executive`. Username login already supports Pattern B via `dashboard-login`; we add the username→email mapping.
 
-- `src/lib/session-context-kpis.ts` — add a small helper:
-  - `computeMomentum(values: number[], { higherIsBetter: boolean }): 'Improving' | 'Declining' | 'Stable' | 'Volatile'`
-  - For each KPI def, tag `higherIsBetter` (e.g. Completion = true, Risk Index = false, Below Target = false). Add this flag to the existing `MetricDef`.
+### Module layout (mirrors `/executive`)
 
-- `src/components/executive/MySessionsTab.tsx` — inside `CompareView`:
-  - Sort the selected snapshots by `created_at` ascending into `chronological`.
-  - When `sameContext && isKpiComparableContext(ctx)` and `chronological.length >= 2`, render a new `<TrajectorySection>` above the KPI table.
-  - Build series via `buildContextKpiRowsMulti(ctx, chronological)`; for each row, render a `<MiniTrendChart>` with X = snapshot label (`S1 … Sn` + short date), Y = value, plus a dashed `ReferenceLine` at `values[0]`.
-  - Show the momentum pill next to each KPI title, colored:
-    - `Improving` → `text-emerald-500`
-    - `Declining` → `text-rose-500`
-    - `Stable` → `text-muted-foreground`
-    - `Volatile` → `text-amber-500`
+```text
+src/
+  pages/HealthcareDashboard.tsx
+  components/healthcare/
+    HealthcareSidebar.tsx       (reuses ExecutiveSidebar styles)
+    HealthcareHeader.tsx
+    tabs/
+      ExecutiveSnapshot.tsx
+      StrategicGoalsOverview.tsx
+      GoalExplorer.tsx
+      ExecutionIntelligence.tsx
+      BudgetIntelligence.tsx
+      GovernanceOwnership.tsx
+      FutureIntegrationVision.tsx
+  lib/healthcare/
+    sample-data.ts              (7 goals from Excel + realistic mock metrics)
+    types.ts
+  components/admin/
+    DashboardAccessPanel.tsx    (assign University / Healthcare / Both)
+    HealthcareAnalysisReport.tsx
+```
 
-- New tiny internal component `MiniTrendChart` (in the same file, no new file needed) using the same `recharts` imports already used by `SnapshotTracker`.
+All visual primitives — cards, KPI strip, RI-meter, FilterBar shell, tooltips, typography, pillar-style accent system — are **reused** from the University dashboard. Only one subtle healthcare cue: an emerald medical accent token `--hc-accent` layered over the existing dark palette.
 
-**No backend changes.** No migrations. No new dependencies.
+## Tabs (prototype content)
 
-## Edge cases handled
+1. **Executive Snapshot** — overall progress, status distribution donut, 7-goal progress bar chart, top risks, executive insights card.
+2. **Strategic Goals Overview** — 7 goal cards (title, champion, progress, # actions, # steps, budget chip, risk chip), filter by champion / priority / risk.
+3. **Goal Explorer** — left list of goals → detail panel with actions → action steps with intent, KPIs, RACI, quarterly status, budget Y1–Y5, quarterly notes.
+4. **Execution Intelligence** — delayed initiatives, at-risk, high-priority, governance gaps (missing R/A/C/I), leadership decisions required, bottlenecks.
+5. **Budget Intelligence** — budget by goal, by funding source (mock: Operational / Capital / Grant / Philanthropy), by year (Y1–Y5), funding risk, concentration, observations.
+6. **Governance & Ownership** — Champions board, RACI distribution heatmap, missing-ownership list, governance risks.
+7. **Future Integration Vision** — phased roadmap (Phase 1/2/3), executive architecture diagram, shared-metric catalogue.
 
-- Only 2 snapshots → trendline still renders (two-point line + baseline). Momentum is `Improving`/`Declining`/`Stable` — never `Volatile`.
-- Same `created_at` collisions → stable secondary sort by `id`.
-- Mixed contexts → trajectory section is hidden; existing limited-comparability notice stays.
-- Non-comparable contexts (`ai-insights`, `reports`, `guide`) → hidden, same as today's KPI table.
+## Admin enhancements
 
-## Out of scope (kept simple on purpose)
+`AdminPanel` gains a **Dashboard Access** card per user:
+- toggle University access
+- toggle Healthcare access
+- pick Healthcare role (admin / executive / viewer)
+- reset Healthcare password (reuses existing `admin-reset-password`)
 
-- No regression line, no forecast, no per-pillar drilldown inside the trendline.
-- No new export changes in this step (PDF/CSV remain table-based). Easy follow-up if desired.
+Backed by inserting/removing rows in `user_roles` — no schema change beyond the enum.
+
+## Analysis Report page (admin-only)
+
+`/admin/healthcare-analysis` — single scrollable page with the 10 sections (A Strategic Goals, B Actions, C KPIs, D Ownership/RACI, E Budget, F Reporting, G Similarities with University, H Differences, I Data Quality Observations, J Proposed Future Data Model). Printable / PDF-export ready using existing `export-pdf.ts` helper.
+
+## Migrations
+
+Single migration:
+1. `ALTER TYPE app_role ADD VALUE 'healthcare_admin'` (+ executive, viewer)
+2. No new tables (prototype is static).
+
+Edge function: `seed-healthcare-user` (one-shot, admin-callable).
+
+## Out of scope (explicitly deferred)
+
+OneDrive, MS Graph, Excel import engine, sync, Supabase ingestion, automated refresh, Healthcare data-quality monitoring pages.
+
+## Deliverables checklist
+
+- [x] Excel analysis (done — embedded above and into the in-app report)
+- [ ] Roles migration + seed function for `SP_Healthcare`
+- [ ] Healthcare dashboard (7 tabs, sidebar, header) using University design system
+- [ ] Admin → Dashboard Access management
+- [ ] Admin → Healthcare SP Analysis Report
+- [ ] Routing + `ProtectedRoute` updates
+- [ ] Future integration roadmap (Tab 7)
+
+Estimated footprint: ~15 new files, 4 edited files, 1 migration, 1 edge function. All static data — no live integration.
+
+Approve and I'll build it end-to-end.

@@ -497,6 +497,9 @@ export type Database = {
         | "university_viewer"
         | "pillar_champion"
         | "board_member"
+        | "healthcare_admin"
+        | "healthcare_executive"
+        | "healthcare_viewer"
       report_scope: "university" | "per_pillar" | "per_unit"
       report_type: "executive" | "full"
       reporting_period: "mid_year" | "end_of_year"
@@ -633,6 +636,9 @@ export const Constants = {
         "university_viewer",
         "pillar_champion",
         "board_member",
+        "healthcare_admin",
+        "healthcare_executive",
+        "healthcare_viewer",
       ],
       report_scope: ["university", "per_pillar", "per_unit"],
       report_type: ["executive", "full"],
