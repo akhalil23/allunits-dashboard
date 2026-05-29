@@ -17,8 +17,6 @@ import HealthcareAnalysisReport from "./pages/HealthcareAnalysisReport";
 import AdminPanel from "./pages/AdminPanel";
 import LogoutPage from "./pages/Logout";
 import NotFound from "./pages/NotFound";
-import LogoutPage from "./pages/Logout";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
