@@ -132,8 +132,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      if (role !== 'admin' && role !== 'unit_user' && role !== 'university_viewer') {
-        return new Response(JSON.stringify({ error: "Invalid role. Must be admin, unit_user, or university_viewer" }), {
+      const ALLOWED_ROLES = ['admin', 'unit_user', 'university_viewer', 'pillar_champion', 'board_member', 'healthcare_admin', 'healthcare_executive', 'healthcare_viewer'];
+      if (!ALLOWED_ROLES.includes(role)) {
+        return new Response(JSON.stringify({ error: `Invalid role. Must be one of: ${ALLOWED_ROLES.join(', ')}` }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
