@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+
 import HealthcareSidebar, { type HCTab } from '@/components/healthcare/HealthcareSidebar';
 import HealthcareHeader from '@/components/healthcare/HealthcareHeader';
 import ExecutiveSnapshot from '@/components/healthcare/tabs/ExecutiveSnapshot';
