@@ -345,33 +345,26 @@ export const HEALTHCARE_GOALS: HCGoal[] = [
   },
 ];
 
-// ── Aggregations (prototype-side only) ────────────────────────────────────────
-export function allSteps(goals: HCGoal[] = HEALTHCARE_GOALS) {
-  return goals.flatMap(g => g.actions.flatMap(a => a.steps.map(s => ({ goal: g, action: a, step: s }))));
+// ── Inject realistic Healthcare blockers & RACI gaps (illustrative, from notes patterns
+// in the source file: "No budget", "Needs further discussion", "May be dropped", etc.)
+function patch(code: string, fn: (s: HCStep) => void) {
+  for (const g of HEALTHCARE_GOALS) for (const a of g.actions) for (const s of a.steps) if (s.code === code) fn(s);
 }
 
-export function goalProgress(g: HCGoal) {
-  const steps = g.actions.flatMap(a => a.steps);
-  return steps.length ? Math.round(steps.reduce((s, x) => s + x.progress, 0) / steps.length) : 0;
-}
+patch('1.2.3', s => { s.blocker = { type: 'No Budget', reason: 'Visiting-expert exchange requires philanthropy funding not yet identified.', raisedQuarter: 'Q2 2026', decisionOwner: 'EVP Health' }; });
+patch('1.3.3', s => { s.blocker = { type: 'Pending Decision', reason: 'Co-host partner and venue under negotiation; needs further discussion before commit.', raisedQuarter: 'Q2 2026', decisionOwner: 'President' }; });
+patch('2.3.4', s => { s.blocker = { type: 'Awaiting Approval', reason: 'Clinical-trials office capital request awaiting Board approval.', raisedQuarter: 'Q2 2026', decisionOwner: 'Board of Trustees' }; });
+patch('3.3.1', s => { s.blocker = { type: 'Capacity', reason: 'Care-transition navigators role definition + hiring on hold pending CNO workforce plan.', raisedQuarter: 'Q2 2026', decisionOwner: 'CNO' }; });
+patch('4.1.4', s => { s.blocker = { type: 'External Dependency', reason: 'Master Patient Index modernization depends on EHR vendor roadmap (Q4 2026).', raisedQuarter: 'Q2 2026', decisionOwner: 'CIO' }; });
+patch('4.4.2', s => { s.blocker = { type: 'May Be Dropped', reason: 'Consortium ROI unclear — flagged for potential descope at next strategy review.', raisedQuarter: 'Q2 2026', decisionOwner: 'EVP Health' }; });
+patch('6.1.4', s => { s.blocker = { type: 'Pending Decision', reason: 'Specialty-service mix awaiting market-study results before commitment.', raisedQuarter: 'Q2 2026', decisionOwner: 'HS-COO' }; });
+patch('7.2.4', s => { s.blocker = { type: 'No Budget', reason: 'Certification program requires grant funding; application not yet submitted.', raisedQuarter: 'Q2 2026', decisionOwner: 'Naser Alsharif' }; });
 
-export function goalBudget(g: HCGoal) {
-  return g.actions.flatMap(a => a.steps).reduce(
-    (sum, s) => sum + s.budget.reduce((b, y) => b + (y.amount || 0), 0), 0
-  );
-}
+// Inject a few RACI gaps to make the cockpit realistic
+patch('1.2.2', s => { s.consulted = undefined; s.informed = undefined; });
+patch('4.3.2', s => { s.accountable = undefined; });
+patch('5.2.2', s => { s.responsible = undefined; });
+patch('6.3.4', s => { s.consulted = undefined; });
 
-export function goalRisk(g: HCGoal) {
-  const steps = g.actions.flatMap(a => a.steps);
-  const order = { 'Realized': 4, 'Critical': 3, 'Emerging': 2, 'No': 1 } as const;
-  return steps.reduce((acc, s) => order[s.risk] > order[acc] ? s.risk : acc, 'No' as const);
-}
+export { HEALTHCARE_GOALS as default };
 
-export function statusDistribution(goals: HCGoal[] = HEALTHCARE_GOALS) {
-  const out: Record<string, number> = { 'Done': 0, 'On Target': 0, 'In Progress': 0, 'Below Target': 0, 'Not Started': 0, 'N/A': 0 };
-  for (const { step } of allSteps(goals)) {
-    const s = step.quarterly[0]?.status ?? 'Not Started';
-    out[s] = (out[s] || 0) + 1;
-  }
-  return out;
-}
