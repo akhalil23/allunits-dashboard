@@ -1,17 +1,26 @@
 // Healthcare SP — prototype seed inspired by LAU-HS SP Q2 2026 working file.
 // NOT live data. Used to validate architecture / executive UX before ingestion is built.
-import type { HCGoal, HCStep, HCStatus, HCRisk, HCFundingSource } from './types';
+import type { HCGoal, HCStep, HCStatus, HCRisk, HCRiskFlag, HCFundingSource, HCBlocker } from './types';
 
 const QPERIODS = ['Q1 2026', 'Q2 2026', 'Q3 2026', 'Q4 2026', 'Q1 2027'];
 
-type MkOpts = Omit<Partial<HCStep>, 'budget' | 'priority' | 'risk' | 'quarterly'> & {
-  status?: HCStatus; risk?: HCRisk; budget?: number; source?: HCFundingSource; priority?: 1 | 2 | 3;
+const RISK_TO_FLAG: Record<HCRisk, HCRiskFlag> = {
+  'No': 'None', 'Emerging': 'Low', 'Critical': 'High', 'Realized': 'High',
+};
+
+type MkOpts = Omit<Partial<HCStep>, 'budget' | 'priority' | 'risk' | 'quarterly' | 'riskFlag' | 'blocker'> & {
+  status?: HCStatus; risk?: HCRisk; riskFlag?: HCRiskFlag;
+  budget?: number; source?: HCFundingSource; priority?: 1 | 2 | 3;
+  blocker?: HCBlocker;
+  note?: string;
 };
 function mkStep(code: string, title: string, opts: MkOpts = {}): HCStep {
   const status: HCStatus = opts.status ?? 'In Progress';
   const risk: HCRisk = opts.risk ?? 'Emerging';
+  const riskFlag: HCRiskFlag = opts.riskFlag ?? RISK_TO_FLAG[risk];
   const progressMap: Record<HCStatus, number> = {
-    'Done': 100, 'On Target': 80, 'In Progress': 45, 'Below Target': 30, 'Not Started': 0, 'N/A': 0,
+    'Done': 100, 'On Target': 80, 'In Progress': 45, 'Below Target': 30,
+    'Not Started': 0, 'N/A': 0, 'Blocked': 10,
   };
   return {
     code, title,
@@ -26,7 +35,7 @@ function mkStep(code: string, title: string, opts: MkOpts = {}): HCStep {
     quarterly: QPERIODS.map((p, i) => ({
       period: p,
       status: i === 0 ? status : (i === 1 ? status : 'Not Started') as HCStatus,
-      note: i === 0 ? 'Active execution; tracking against committed timeline.' : undefined,
+      note: i === 0 ? (opts.note ?? 'Active execution; tracking against committed timeline.') : undefined,
     })),
     budget: [
       { year: 'Year 1', amount: opts.budget ?? 250000, source: opts.source ?? 'Operational' },
@@ -36,6 +45,8 @@ function mkStep(code: string, title: string, opts: MkOpts = {}): HCStep {
       { year: 'Year 5', amount: 0 },
     ],
     risk,
+    riskFlag,
+    blocker: opts.blocker,
     progress: progressMap[status],
   };
 }
