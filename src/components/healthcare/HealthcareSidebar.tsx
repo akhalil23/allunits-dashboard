@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Target, Compass, Activity, DollarSign, Users, Network,
-  ChevronRight, Menu, X, Shield, LogOut, Stethoscope,
+  LayoutDashboard, Target, Compass, CalendarClock, AlertOctagon,
+  Users, DollarSign, Network, ChevronRight, Menu, X, Shield, LogOut, Stethoscope,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo-white.png';
@@ -10,19 +10,20 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/use-user-role';
 
 export type HCTab =
-  | 'snapshot' | 'goals' | 'explorer' | 'execution'
-  | 'budget' | 'governance' | 'future';
+  | 'snapshot' | 'goals' | 'explorer' | 'quarterly'
+  | 'blockers' | 'raci' | 'budget' | 'roadmap';
 
 interface Props { activeTab: HCTab; onTabChange: (t: HCTab) => void; }
 
 const tabs: { id: HCTab; label: string; icon: React.ElementType }[] = [
-  { id: 'snapshot', label: 'Executive Snapshot', icon: LayoutDashboard },
-  { id: 'goals', label: 'Strategic Goals Overview', icon: Target },
-  { id: 'explorer', label: 'Goal Explorer', icon: Compass },
-  { id: 'execution', label: 'Execution Intelligence', icon: Activity },
-  { id: 'budget', label: 'Budget Intelligence', icon: DollarSign },
-  { id: 'governance', label: 'Governance & Ownership', icon: Users },
-  { id: 'future', label: 'Future Integration Vision', icon: Network },
+  { id: 'snapshot',  label: 'Executive Snapshot',      icon: LayoutDashboard },
+  { id: 'goals',     label: 'Goals Overview',          icon: Target },
+  { id: 'explorer',  label: 'Goal Explorer',           icon: Compass },
+  { id: 'quarterly', label: 'Quarterly Execution',     icon: CalendarClock },
+  { id: 'blockers',  label: 'Decisions & Blockers',    icon: AlertOctagon },
+  { id: 'raci',      label: 'RACI & Champion Cockpit', icon: Users },
+  { id: 'budget',    label: 'Budget Intelligence',     icon: DollarSign },
+  { id: 'roadmap',   label: 'Governance & Roadmap',    icon: Network },
 ];
 
 export default function HealthcareSidebar({ activeTab, onTabChange }: Props) {
@@ -45,7 +46,7 @@ export default function HealthcareSidebar({ activeTab, onTabChange }: Props) {
   }, []);
 
   const navItems = [
-    ...tabs.map(t => ({ ...t, active: activeTab === t.id, onClick: () => onTabChange(t.id) })),
+    ...tabs.map(t => ({ ...t, active: activeTab === t.id, onClick: () => { onTabChange(t.id); setDrawerOpen(false); } })),
     ...(isAdmin ? [{
       id: 'admin' as const, label: 'Admin Panel', icon: Shield,
       active: false, onClick: () => navigate('/admin'),
@@ -162,7 +163,7 @@ export default function HealthcareSidebar({ activeTab, onTabChange }: Props) {
         <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10">
           <p className="text-[10px] text-white/40 leading-tight">
             Healthcare Strategic Plan<br />
-            Executive Prototype<br />
+            Executive Prototype · v2<br />
             Lebanese American University
           </p>
         </div>

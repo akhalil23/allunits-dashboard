@@ -1,17 +1,26 @@
 // Healthcare SP — prototype seed inspired by LAU-HS SP Q2 2026 working file.
 // NOT live data. Used to validate architecture / executive UX before ingestion is built.
-import type { HCGoal, HCStep, HCStatus, HCRisk, HCFundingSource } from './types';
+import type { HCGoal, HCStep, HCStatus, HCRisk, HCRiskFlag, HCFundingSource, HCBlocker } from './types';
 
 const QPERIODS = ['Q1 2026', 'Q2 2026', 'Q3 2026', 'Q4 2026', 'Q1 2027'];
 
-type MkOpts = Omit<Partial<HCStep>, 'budget' | 'priority' | 'risk' | 'quarterly'> & {
-  status?: HCStatus; risk?: HCRisk; budget?: number; source?: HCFundingSource; priority?: 1 | 2 | 3;
+const RISK_TO_FLAG: Record<HCRisk, HCRiskFlag> = {
+  'No': 'None', 'Emerging': 'Low', 'Critical': 'High', 'Realized': 'High',
+};
+
+type MkOpts = Omit<Partial<HCStep>, 'budget' | 'priority' | 'risk' | 'quarterly' | 'riskFlag' | 'blocker'> & {
+  status?: HCStatus; risk?: HCRisk; riskFlag?: HCRiskFlag;
+  budget?: number; source?: HCFundingSource; priority?: 1 | 2 | 3;
+  blocker?: HCBlocker;
+  note?: string;
 };
 function mkStep(code: string, title: string, opts: MkOpts = {}): HCStep {
   const status: HCStatus = opts.status ?? 'In Progress';
   const risk: HCRisk = opts.risk ?? 'Emerging';
+  const riskFlag: HCRiskFlag = opts.riskFlag ?? RISK_TO_FLAG[risk];
   const progressMap: Record<HCStatus, number> = {
-    'Done': 100, 'On Target': 80, 'In Progress': 45, 'Below Target': 30, 'Not Started': 0, 'N/A': 0,
+    'Done': 100, 'On Target': 80, 'In Progress': 45, 'Below Target': 30,
+    'Not Started': 0, 'N/A': 0, 'Blocked': 10,
   };
   return {
     code, title,
@@ -26,7 +35,7 @@ function mkStep(code: string, title: string, opts: MkOpts = {}): HCStep {
     quarterly: QPERIODS.map((p, i) => ({
       period: p,
       status: i === 0 ? status : (i === 1 ? status : 'Not Started') as HCStatus,
-      note: i === 0 ? 'Active execution; tracking against committed timeline.' : undefined,
+      note: i === 0 ? (opts.note ?? 'Active execution; tracking against committed timeline.') : undefined,
     })),
     budget: [
       { year: 'Year 1', amount: opts.budget ?? 250000, source: opts.source ?? 'Operational' },
@@ -36,6 +45,8 @@ function mkStep(code: string, title: string, opts: MkOpts = {}): HCStep {
       { year: 'Year 5', amount: 0 },
     ],
     risk,
+    riskFlag,
+    blocker: opts.blocker,
     progress: progressMap[status],
   };
 }
@@ -334,33 +345,30 @@ export const HEALTHCARE_GOALS: HCGoal[] = [
   },
 ];
 
-// ── Aggregations (prototype-side only) ────────────────────────────────────────
-export function allSteps(goals: HCGoal[] = HEALTHCARE_GOALS) {
-  return goals.flatMap(g => g.actions.flatMap(a => a.steps.map(s => ({ goal: g, action: a, step: s }))));
+// ── Inject realistic Healthcare blockers & RACI gaps (illustrative, from notes patterns
+// in the source file: "No budget", "Needs further discussion", "May be dropped", etc.)
+function patch(code: string, fn: (s: HCStep) => void) {
+  for (const g of HEALTHCARE_GOALS) for (const a of g.actions) for (const s of a.steps) if (s.code === code) fn(s);
 }
 
-export function goalProgress(g: HCGoal) {
-  const steps = g.actions.flatMap(a => a.steps);
-  return steps.length ? Math.round(steps.reduce((s, x) => s + x.progress, 0) / steps.length) : 0;
-}
+patch('1.2.3', s => { s.blocker = { type: 'No Budget', reason: 'Visiting-expert exchange requires philanthropy funding not yet identified.', raisedQuarter: 'Q2 2026', decisionOwner: 'EVP Health' }; });
+patch('1.3.3', s => { s.blocker = { type: 'Pending Decision', reason: 'Co-host partner and venue under negotiation; needs further discussion before commit.', raisedQuarter: 'Q2 2026', decisionOwner: 'President' }; });
+patch('2.3.4', s => { s.blocker = { type: 'Awaiting Approval', reason: 'Clinical-trials office capital request awaiting Board approval.', raisedQuarter: 'Q2 2026', decisionOwner: 'Board of Trustees' }; });
+patch('3.3.1', s => { s.blocker = { type: 'Capacity', reason: 'Care-transition navigators role definition + hiring on hold pending CNO workforce plan.', raisedQuarter: 'Q2 2026', decisionOwner: 'CNO' }; });
+patch('4.1.4', s => { s.blocker = { type: 'External Dependency', reason: 'Master Patient Index modernization depends on EHR vendor roadmap (Q4 2026).', raisedQuarter: 'Q2 2026', decisionOwner: 'CIO' }; });
+patch('4.4.2', s => { s.blocker = { type: 'May Be Dropped', reason: 'Consortium ROI unclear — flagged for potential descope at next strategy review.', raisedQuarter: 'Q2 2026', decisionOwner: 'EVP Health' }; });
+patch('6.1.4', s => { s.blocker = { type: 'Pending Decision', reason: 'Specialty-service mix awaiting market-study results before commitment.', raisedQuarter: 'Q2 2026', decisionOwner: 'HS-COO' }; });
+patch('7.2.4', s => { s.blocker = { type: 'No Budget', reason: 'Certification program requires grant funding; application not yet submitted.', raisedQuarter: 'Q2 2026', decisionOwner: 'Naser Alsharif' }; });
 
-export function goalBudget(g: HCGoal) {
-  return g.actions.flatMap(a => a.steps).reduce(
-    (sum, s) => sum + s.budget.reduce((b, y) => b + (y.amount || 0), 0), 0
-  );
-}
+// Inject a few RACI gaps to make the cockpit realistic
+patch('1.2.2', s => { s.consulted = undefined; s.informed = undefined; });
+patch('4.3.2', s => { s.accountable = undefined; });
+patch('5.2.2', s => { s.responsible = undefined; });
+patch('6.3.4', s => { s.consulted = undefined; });
 
-export function goalRisk(g: HCGoal) {
-  const steps = g.actions.flatMap(a => a.steps);
-  const order = { 'Realized': 4, 'Critical': 3, 'Emerging': 2, 'No': 1 } as const;
-  return steps.reduce((acc, s) => order[s.risk] > order[acc] ? s.risk : acc, 'No' as const);
-}
+export { HEALTHCARE_GOALS as default };
 
-export function statusDistribution(goals: HCGoal[] = HEALTHCARE_GOALS) {
-  const out: Record<string, number> = { 'Done': 0, 'On Target': 0, 'In Progress': 0, 'Below Target': 0, 'Not Started': 0, 'N/A': 0 };
-  for (const { step } of allSteps(goals)) {
-    const s = step.quarterly[0]?.status ?? 'Not Started';
-    out[s] = (out[s] || 0) + 1;
-  }
-  return out;
-}
+// Backward-compat re-exports (kept so any older imports keep working)
+export { allSteps, goalProgress, goalBudget, goalRiskFlag as goalRisk, statusDistribution4 as statusDistribution } from './helpers';
+
+
