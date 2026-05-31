@@ -1,108 +1,145 @@
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { HEALTHCARE_GOALS, allSteps, goalBudget } from '@/lib/healthcare/sample-data';
-import { DollarSign, PieChart, Calendar, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { HEALTHCARE_GOALS } from '@/lib/healthcare/sample-data';
+import { allSteps, goalBudget, budgetByYear, budgetBySource, fmtCurrency } from '@/lib/healthcare/helpers';
+import { DollarSign, TrendingUp, AlertTriangle, PiggyBank } from 'lucide-react';
+
+const SRC_COLOR: Record<string, string> = {
+  Operational: 'bg-blue-500',
+  Capital: 'bg-purple-500',
+  Grant: 'bg-emerald-500',
+  Philanthropy: 'bg-amber-500',
+};
 
 export default function BudgetIntelligence() {
-  const fmt = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`;
-  const steps = allSteps();
   const total = HEALTHCARE_GOALS.reduce((s, g) => s + goalBudget(g), 0);
+  const byYear = budgetByYear();
+  const bySource = budgetBySource();
+  const maxYear = Math.max(...byYear.map(y => y.amount), 1);
 
-  const bySource: Record<string, number> = {};
-  steps.forEach(({ step }) => step.budget.forEach(y => {
-    const src = y.source ?? 'Operational';
-    bySource[src] = (bySource[src] || 0) + (y.amount || 0);
-  }));
+  // Top-funded steps
+  const topSteps = useMemo(() => {
+    return allSteps()
+      .map(({ goal, step }) => ({ goal, step, total: step.budget.reduce((s, y) => s + (y.amount || 0), 0) }))
+      .sort((a, b) => b.total - a.total).slice(0, 10);
+  }, []);
 
-  const byYear: Record<string, number> = {};
-  steps.forEach(({ step }) => step.budget.forEach(y => {
-    byYear[y.year] = (byYear[y.year] || 0) + (y.amount || 0);
-  }));
-
-  const concentration = HEALTHCARE_GOALS
-    .map(g => ({ g, b: goalBudget(g) }))
-    .sort((a, b) => b.b - a.b);
+  // Concentration
+  const goalShare = HEALTHCARE_GOALS.map(g => ({ g, b: goalBudget(g) })).sort((a, b) => b.b - a.b);
+  const top2 = goalShare.slice(0, 2).reduce((s, x) => s + x.b, 0);
+  const concentrationPct = Math.round((top2 / total) * 100);
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <BudgetKpi icon={DollarSign} label="5-yr Total" value={fmt(total)} />
-        <BudgetKpi icon={PieChart} label="Funding sources" value={String(Object.keys(bySource).length)} />
-        <BudgetKpi icon={Calendar} label="Year horizon" value="5" sub="Y1 – Y5" />
-        <BudgetKpi icon={AlertTriangle} label="Concentration top-3" value={`${Math.round((concentration.slice(0, 3).reduce((s, x) => s + x.b, 0) / total) * 100)}%`} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPI label="5-year envelope" value={fmtCurrency(total)} icon={DollarSign} />
+        <KPI label="Year 1 commit" value={fmtCurrency(byYear[0].amount)} icon={TrendingUp} />
+        <KPI label="Top-2 goals share" value={`${concentrationPct}%`} sub="Concentration risk" icon={AlertTriangle} danger={concentrationPct > 55} />
+        <KPI label="Funding sources" value={String(bySource.length)} sub={bySource.map(s => s.source).join(' · ')} icon={PiggyBank} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Year phasing */}
         <Card>
-          <CardHeader><CardTitle className="text-sm">Budget by Strategic Goal</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Budget phasing (Y1 → Y5)</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {concentration.map(({ g, b }) => {
-              const pct = total ? Math.round((b / total) * 100) : 0;
+            {byYear.map(y => {
+              const pct = Math.round((y.amount / maxYear) * 100);
               return (
-                <div key={g.code}>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-foreground truncate"><span className="text-emerald-400 font-mono">G{g.code}</span> · {g.title}</span>
-                    <span className="text-muted-foreground tabular-nums">{fmt(b)} · {pct}%</span>
+                <div key={y.year}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-foreground font-medium">{y.year}</span>
+                    <span className="text-muted-foreground tabular-nums">{fmtCurrency(y.amount)}</span>
                   </div>
-                  <Progress value={pct} className="h-1.5" />
+                  <div className="h-2 bg-card rounded overflow-hidden">
+                    <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
+                  </div>
                 </div>
               );
             })}
+            <p className="text-[10px] text-muted-foreground pt-2 border-t border-border/40">
+              Years 3–5 typically light because Champions defer multi-year commitments — flag for stakeholder review.
+            </p>
           </CardContent>
         </Card>
 
+        {/* Source mix */}
         <Card>
-          <CardHeader><CardTitle className="text-sm">Budget by Funding Source</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(bySource).sort((a, b) => b[1] - a[1]).map(([src, amt]) => {
-              const pct = total ? Math.round((amt / total) * 100) : 0;
-              return (
-                <div key={src}>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-foreground">{src}</span>
-                    <span className="text-muted-foreground tabular-nums">{fmt(amt)} · {pct}%</span>
-                  </div>
-                  <Progress value={pct} className="h-1.5" />
+          <CardHeader><CardTitle className="text-sm">Funding source mix</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex h-3 rounded overflow-hidden mb-3">
+              {bySource.map(s => (
+                <div key={s.source} className={SRC_COLOR[s.source] || 'bg-zinc-500'} style={{ width: `${(s.amount / total) * 100}%` }} title={s.source} />
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              {bySource.sort((a, b) => b.amount - a.amount).map(s => (
+                <div key={s.source} className="flex items-center gap-2 text-xs">
+                  <span className={`w-2.5 h-2.5 rounded-full ${SRC_COLOR[s.source] || 'bg-zinc-500'}`} />
+                  <span className="flex-1 text-foreground">{s.source}</span>
+                  <span className="text-muted-foreground tabular-nums">{fmtCurrency(s.amount)} · {Math.round((s.amount / total) * 100)}%</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Goal x budget */}
       <Card>
-        <CardHeader><CardTitle className="text-sm">Budget by Year</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-5 gap-3">
-          {Object.entries(byYear).map(([year, amt]) => (
-            <div key={year} className="rounded-lg bg-card/60 border border-border/50 p-3 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{year}</div>
-              <div className="text-lg font-semibold text-foreground tabular-nums mt-1">{fmt(amt)}</div>
-            </div>
-          ))}
+        <CardHeader><CardTitle className="text-sm">Budget by Strategic Goal</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {goalShare.map(({ g, b }) => {
+            const pct = Math.round((b / total) * 100);
+            return (
+              <div key={g.code}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-foreground truncate pr-2">
+                    <span className="font-mono text-emerald-400 mr-1">G{g.code}</span>{g.title}
+                  </span>
+                  <span className="text-muted-foreground tabular-nums shrink-0">{fmtCurrency(b)} · {pct}%</span>
+                </div>
+                <div className="h-1.5 bg-card rounded overflow-hidden">
+                  <div className="h-full bg-emerald-500/70" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
 
+      {/* Top funded */}
       <Card>
-        <CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-400" />Budget Observations (prototype)</CardTitle></CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>• Capital spend concentration is heavy in <span className="text-foreground">Digital Health (G4)</span> and <span className="text-foreground">Outpatient Expansion (G6)</span> — together &gt;55% of the 5-yr envelope.</p>
-          <p>• Philanthropy and Grant funding is currently aspirational and not yet tied to confirmed pledges.</p>
-          <p>• Year 1 carries the highest absolute load; cash-flow phasing should be revisited before final approval.</p>
+        <CardHeader><CardTitle className="text-sm">Top 10 funded action steps</CardTitle></CardHeader>
+        <CardContent className="space-y-1.5">
+          {topSteps.map(({ goal, step, total }) => (
+            <div key={step.code} className="flex items-center gap-3 text-xs border-b border-border/30 pb-1.5">
+              <span className="font-mono text-emerald-400/80 shrink-0 w-12">{step.code}</span>
+              <span className="flex-1 truncate text-foreground" title={step.title}>{step.title}</span>
+              <Badge variant="outline" className="text-[10px] shrink-0">G{goal.code}</Badge>
+              <span className="text-muted-foreground tabular-nums shrink-0 w-16 text-right">{fmtCurrency(total)}</span>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function BudgetKpi({ icon: Icon, label, value, sub }: { icon: React.ElementType; label: string; value: string; sub?: string }) {
+function KPI({ label, value, sub, icon: Icon, danger }: { label: string; value: string; sub?: string; icon: React.ElementType; danger?: boolean }) {
   return (
-    <Card><CardContent className="p-4 flex items-center gap-3">
-      <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-300"><Icon className="w-4 h-4" /></div>
-      <div className="min-w-0">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className="text-lg font-semibold text-foreground tabular-nums">{value}</div>
-        {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
-      </div>
-    </CardContent></Card>
+    <Card className={danger ? 'border-amber-500/40' : ''}>
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${danger ? 'text-amber-300 bg-amber-500/10 border-amber-500/30' : 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30'}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <div className="min-w-0">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+          <div className="text-xl font-semibold text-foreground tabular-nums">{value}</div>
+          {sub && <div className="text-[11px] text-muted-foreground truncate">{sub}</div>}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
