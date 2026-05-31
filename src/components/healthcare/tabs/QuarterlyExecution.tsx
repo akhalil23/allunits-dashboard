@@ -27,18 +27,20 @@ export default function QuarterlyExecution() {
   );
 
   // Aggregate per quarter (count by 4-state)
-  const heat = QUARTERS.map(period => {
-    const totals: Record<string, number> = { 'Done': 0, 'In Progress': 0, 'Not Started': 0, 'Blocked': 0 };
+  type HeatRow = { period: string; Done: number; 'In Progress': number; 'Not Started': number; Blocked: number };
+  const heat: HeatRow[] = QUARTERS.map(period => {
+    const row: HeatRow = { period, Done: 0, 'In Progress': 0, 'Not Started': 0, Blocked: 0 };
     for (const { step } of rows) {
       const q = step.quarterly.find(x => x.period === period);
       const raw = q?.status ?? 'Not Started';
-      const eff = raw === 'Done' ? 'Done'
+      const key: keyof Omit<HeatRow, 'period'> =
+        raw === 'Done' ? 'Done'
         : raw === 'Blocked' ? 'Blocked'
         : raw === 'Not Started' || raw === 'N/A' ? 'Not Started'
         : 'In Progress';
-      totals[eff]++;
+      row[key]++;
     }
-    return { period, ...totals };
+    return row;
   });
 
   return (
