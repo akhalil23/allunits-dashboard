@@ -368,3 +368,7 @@ patch('6.3.4', s => { s.consulted = undefined; });
 
 export { HEALTHCARE_GOALS as default };
 
+// Backward-compat re-exports (kept so any older imports keep working)
+export { allSteps, goalProgress, goalBudget, goalRiskFlag as goalRisk, statusDistribution4 as statusDistribution } from './helpers';
+
+
