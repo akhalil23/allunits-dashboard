@@ -1,5 +1,5 @@
 // Healthcare-native derivations. Source of truth for the dashboard.
-import type { HCGoal, HCStep, HCStatus, HCRiskFlag } from './types';
+import type { HCGoal, HCAction, HCStep, HCStatus, HCRiskFlag } from './types';
 import { HEALTHCARE_GOALS } from './sample-data';
 
 export type HC4State = 'Not Started' | 'In Progress' | 'Done' | 'Blocked';
@@ -32,13 +32,42 @@ export function statusDistribution4(goals: HCGoal[] = HEALTHCARE_GOALS) {
   return out;
 }
 
-export function goalProgress(g: HCGoal) {
-  const steps = g.actions.flatMap(a => a.steps);
-  if (!steps.length) return 0;
-  // Done=100, In Progress=50, Blocked=10, Not Started=0
-  const score = (st: HCStep) => ({ 'Done': 100, 'In Progress': 50, 'Blocked': 10, 'Not Started': 0 }[effectiveStatus(st)]);
-  return Math.round(steps.reduce((s, x) => s + score(x), 0) / steps.length);
+// ──────────────────────────────────────────────────────────────────────────
+// Completion methodology (v2 — prototype, pending stakeholder validation)
+// Blocked → excluded from denominator and reported separately.
+// ──────────────────────────────────────────────────────────────────────────
+export const COMPLETION_WEIGHTS: Record<Exclude<HC4State, 'Blocked'>, number> = {
+  'Not Started': 0,
+  'In Progress': 50,
+  'Done': 100,
+};
+
+export function stepCompletion(s: HCStep): { value: number | null; excluded: boolean } {
+  const st = effectiveStatus(s);
+  if (st === 'Blocked') return { value: null, excluded: true };
+  return { value: COMPLETION_WEIGHTS[st], excluded: false };
 }
+
+function meanCompletion(steps: HCStep[]) {
+  const vals = steps.map(stepCompletion);
+  const counted = vals.filter(v => v.value !== null).map(v => v.value as number);
+  const blocked = vals.filter(v => v.excluded).length;
+  if (!counted.length) return { value: 0, blocked, total: steps.length };
+  return {
+    value: Math.round(counted.reduce((a, b) => a + b, 0) / counted.length),
+    blocked,
+    total: steps.length,
+  };
+}
+
+export function actionCompletion(a: HCAction) { return meanCompletion(a.steps); }
+export function goalCompletion(g: HCGoal) { return meanCompletion(g.actions.flatMap(a => a.steps)); }
+export function portfolioCompletion(goals: HCGoal[] = HEALTHCARE_GOALS) {
+  return meanCompletion(goals.flatMap(g => g.actions.flatMap(a => a.steps)));
+}
+
+/** Legacy compatibility — returns just the % value (blocked excluded). */
+export function goalProgress(g: HCGoal) { return goalCompletion(g).value; }
 
 export function goalBudget(g: HCGoal) {
   return g.actions.flatMap(a => a.steps).reduce(
@@ -55,6 +84,63 @@ export function goalRiskFlag(g: HCGoal): HCRiskFlag {
 
 export function blockedItems(goals: HCGoal[] = HEALTHCARE_GOALS) {
   return allSteps(goals).filter(x => effectiveStatus(x.step) === 'Blocked');
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Risk Index (v2) — 4 equally-weighted binary signals → 0..100
+// ──────────────────────────────────────────────────────────────────────────
+export const CURRENT_QUARTER = 'Q2 2026';
+export const RISK_SIGNAL_WEIGHT = 25;
+
+export interface HCRiskSignals {
+  blocked: boolean;
+  missingUpdate: boolean;
+  fundingGap: boolean;
+  governanceGap: boolean;
+}
+
+export function riskSignals(s: HCStep): HCRiskSignals {
+  const blocked = effectiveStatus(s) === 'Blocked';
+  const cq = s.quarterly.find(q => q.period === CURRENT_QUARTER);
+  const missingUpdate = !cq || (!cq.note && (!cq.status || cq.status === 'N/A'));
+  const fundingGap = !s.budget.some(b => (b.amount || 0) > 0);
+  const governanceGap = !s.responsible || !s.accountable;
+  return { blocked, missingUpdate, fundingGap, governanceGap };
+}
+
+export function riskIndex(s: HCStep) {
+  const sig = riskSignals(s);
+  const fired = (Object.values(sig).filter(Boolean) as boolean[]).length;
+  return { score: fired * RISK_SIGNAL_WEIGHT, signals: sig, fired };
+}
+
+export function riskBand(score: number): 'Low' | 'Moderate' | 'Elevated' | 'Severe' {
+  if (score >= 75) return 'Severe';
+  if (score >= 50) return 'Elevated';
+  if (score >= 25) return 'Moderate';
+  return 'Low';
+}
+
+const meanRisk = (steps: HCStep[]) =>
+  !steps.length ? 0 : Math.round(steps.reduce((a, s) => a + riskIndex(s).score, 0) / steps.length);
+
+export function actionRiskIndex(a: HCAction) { return meanRisk(a.steps); }
+export function goalRiskIndex(g: HCGoal) { return meanRisk(g.actions.flatMap(a => a.steps)); }
+export function portfolioRiskIndex(goals: HCGoal[] = HEALTHCARE_GOALS) {
+  return meanRisk(goals.flatMap(g => g.actions.flatMap(a => a.steps)));
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Reporting coverage — % of steps with a non-empty CURRENT_QUARTER update
+// ──────────────────────────────────────────────────────────────────────────
+export function reportingCoverage(goals: HCGoal[] = HEALTHCARE_GOALS) {
+  const steps = allSteps(goals).map(x => x.step);
+  if (!steps.length) return { value: 0, reported: 0, total: 0 };
+  const reported = steps.filter(s => {
+    const cq = s.quarterly.find(q => q.period === CURRENT_QUARTER);
+    return !!cq && (!!cq.note || (!!cq.status && cq.status !== 'N/A'));
+  }).length;
+  return { value: Math.round((reported / steps.length) * 100), reported, total: steps.length };
 }
 
 export function budgetByYear(goals: HCGoal[] = HEALTHCARE_GOALS) {
