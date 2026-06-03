@@ -241,10 +241,8 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={getReportFileUrl(viewingReport.file_path)} download target="_blank" rel="noopener noreferrer">
-                    <Download className="w-3.5 h-3.5 mr-1" /> Download
-                  </a>
+                <Button variant="outline" size="sm" onClick={() => openReportFile(viewingReport.file_path)}>
+                  <Download className="w-3.5 h-3.5 mr-1" /> Download
                 </Button>
                 <Button variant="ghost" size="icon" onClick={() => setViewingReport(null)}>
                   <X className="w-4 h-4" />
@@ -252,11 +250,17 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
               </div>
             </div>
             <div className="flex-1">
-              <iframe
-                src={getReportFileUrl(viewingReport.file_path)}
-                className="w-full h-full border-0"
-                title={viewingReport.title}
-              />
+              {viewingUrl ? (
+                <iframe
+                  src={viewingUrl}
+                  className="w-full h-full border-0"
+                  title={viewingReport.title}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading report…
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -319,7 +323,6 @@ function ReportTableSection({ title, reports, onView, unitLabel, showUnitColumn 
 
 /** Inline action button for a report */
 function ReportAction({ report, onView, compact }: { report: Report; onView: () => void; compact?: boolean }) {
-  const url = getReportFileUrl(report.file_path);
   const isExecutive = report.report_type === 'executive';
   const size = compact ? 'h-7 text-[11px] px-2.5' : 'h-7 text-xs px-3';
 
@@ -331,10 +334,8 @@ function ReportAction({ report, onView, compact }: { report: Report; onView: () 
     );
   }
   return (
-    <Button variant="outline" className={`${size} gap-1`} asChild>
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        <Download className="w-3 h-3" /> {compact ? 'Open' : 'Open PDF'}
-      </a>
+    <Button variant="outline" className={`${size} gap-1`} onClick={() => openReportFile(report.file_path)}>
+      <Download className="w-3 h-3" /> {compact ? 'Open' : 'Open PDF'}
     </Button>
   );
 }

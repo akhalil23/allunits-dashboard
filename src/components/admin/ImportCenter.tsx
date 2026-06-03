@@ -3,7 +3,7 @@
  */
 
 import { useState, useRef } from 'react';
-import { useReports, useUploadReport, useUpdateReport, useDeleteReport, getReportFileUrl, type Report } from '@/hooks/use-reports';
+import { useReports, useUploadReport, useUpdateReport, useDeleteReport, openReportFile, type Report } from '@/hooks/use-reports';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -201,10 +201,8 @@ export default function ImportCenter() {
                       <TableCell>{r.pillar || r.unit_id || '—'}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right space-x-1">
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={getReportFileUrl(r.file_path)} target="_blank" rel="noopener noreferrer" title="View PDF">
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                        <Button variant="outline" size="sm" onClick={() => openReportFile(r.file_path)} title="View PDF">
+                          <ExternalLink className="w-3 h-3" />
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => openEdit(r)} title="Edit">
                           <Pencil className="w-3 h-3" />
