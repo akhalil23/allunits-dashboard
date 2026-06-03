@@ -1,9 +1,17 @@
 /**
  * Snapshot Reader
  * ---------------
- * Returns the active monthly snapshot for a single unit, all units, the budget,
- * or the publication metadata. This is the ONLY data source the dashboard
- * reads from at runtime.
+ * Returns dashboard data for a single unit, all units, the budget, or the
+ * publication metadata.
+ *
+ * MODE TOGGLE (env var SNAPSHOT_MODE):
+ *   - 'live'    (default) → bypasses the monthly snapshot tables and fetches
+ *                          straight from the source spreadsheets (via the
+ *                          fetch-gsr-data / fetch-budget-data edge functions).
+ *                          The monthly refresh pipeline remains intact in the
+ *                          codebase so it can be re-enabled at any time.
+ *   - 'monthly'           → reads the most recent published monthly snapshot
+ *                          (original behavior).
  *
  * Modes (POST body):
  *   { kind: 'unit', unitId }              → single unit payload
@@ -21,6 +29,122 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Same unit list as src/lib/unit-config.ts / monthly-refresh
+const UNIT_IDS = [
+  'GSR','SON','SArD','SOP','SOM','AKSOB','SOE','SAS','DIRA','CIL','Libraries',
+  'BDGA','SDEM','IT','Facilities','Finance','UGRC','StratCom_Alumni','Advancement',
+  'Provost','PwD','OfS','HR','Procurement','ADM',
+];
+
+// In-memory cache for live mode so we don't refetch 25 sheets on every render.
+// TTL is intentionally short — the user wants near-real-time updates.
+const LIVE_CACHE_TTL_MS = 2 * 60 * 1000;
+type CacheEntry = { value: unknown; expiresAt: number };
+const liveCache = new Map<string, CacheEntry>();
+
+function getCached(key: string): unknown | null {
+  const entry = liveCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) { liveCache.delete(key); return null; }
+  return entry.value;
+}
+function setCached(key: string, value: unknown) {
+  liveCache.set(key, { value, expiresAt: Date.now() + LIVE_CACHE_TTL_MS });
+}
+
+function currentMonth(): string {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function syntheticPublication(succeeded: number, total: number, budgetIncluded: boolean) {
+  const now = new Date().toISOString();
+  return {
+    id: 'live',
+    month: currentMonth(),
+    published_at: now,
+    total_units: total,
+    succeeded_units: succeeded,
+    budget_included: budgetIncluded,
+  };
+}
+
+async function callInternal(fnName: string, body: unknown, baseUrl: string, serviceKey: string, timeoutMs = 90000) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const resp = await fetch(`${baseUrl}/functions/v1/${fnName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-service': serviceKey,
+        'Authorization': `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify(body ?? {}),
+      signal: ctl.signal,
+    });
+    const text = await resp.text();
+    let json: unknown = null;
+    try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
+    return { ok: resp.ok, status: resp.status, json: json as any };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchLiveUnit(unitId: string, baseUrl: string, serviceKey: string) {
+  const cacheKey = `unit:${unitId}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+  const r = await callInternal('fetch-gsr-data', { unitId }, baseUrl, serviceKey);
+  if (!r.ok || !r.json || r.json?.error) {
+    throw new Error(r.json?.error || `Failed to fetch live data for unit ${unitId}`);
+  }
+  setCached(cacheKey, r.json);
+  return r.json;
+}
+
+async function fetchLiveAllUnits(baseUrl: string, serviceKey: string) {
+  const cacheKey = 'all-units';
+  const cached = getCached(cacheKey) as { units: Array<{ unitId: string; payload: unknown }>; succeeded: number } | null;
+  if (cached) return cached;
+
+  const concurrency = 5;
+  const results: Array<{ unitId: string; payload: unknown } | null> = new Array(UNIT_IDS.length).fill(null);
+  let cursor = 0;
+  const worker = async () => {
+    while (true) {
+      const idx = cursor++;
+      if (idx >= UNIT_IDS.length) return;
+      const unitId = UNIT_IDS[idx];
+      try {
+        const payload = await fetchLiveUnit(unitId, baseUrl, serviceKey);
+        results[idx] = { unitId, payload };
+      } catch (err) {
+        console.error(`get-snapshot live unit ${unitId} failed:`, err instanceof Error ? err.message : err);
+        results[idx] = null;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  const units = results.filter((u): u is { unitId: string; payload: unknown } => !!u);
+  const out = { units, succeeded: units.length };
+  setCached(cacheKey, out);
+  return out;
+}
+
+async function fetchLiveBudget(baseUrl: string, serviceKey: string) {
+  const cacheKey = 'budget';
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+  const r = await callInternal('fetch-budget-data', {}, baseUrl, serviceKey);
+  if (!r.ok || !r.json || r.json?.error) {
+    throw new Error(r.json?.error || 'Failed to fetch live budget data');
+  }
+  setCached(cacheKey, r.json);
+  return r.json;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -35,6 +159,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const MODE = (Deno.env.get('SNAPSHOT_MODE') ?? 'live').toLowerCase();
+    const isLive = MODE !== 'monthly';
 
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
@@ -53,11 +179,83 @@ serve(async (req) => {
     try { body = await req.json(); } catch { /* ok */ }
     const kind = body?.kind ?? 'publication';
 
+    // ─────────────────────────────────────────────────────────────────────
+    // LIVE MODE — fetch directly from source spreadsheets (default).
+    // ─────────────────────────────────────────────────────────────────────
+    if (isLive) {
+      if (kind === 'publication') {
+        return new Response(JSON.stringify({
+          publication: syntheticPublication(UNIT_IDS.length, UNIT_IDS.length, true),
+          mode: 'live',
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      if (kind === 'unit') {
+        const requestedUnit = body?.unitId;
+        if (!requestedUnit) {
+          return new Response(JSON.stringify({ error: 'unitId required' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        if (userRole !== 'admin' && userUnit && requestedUnit !== userUnit) {
+          return new Response(JSON.stringify({ error: 'Access denied: unit isolation' }), {
+            status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        const payload = await fetchLiveUnit(requestedUnit, SUPABASE_URL, SERVICE_KEY) as Record<string, unknown>;
+        const pub = syntheticPublication(UNIT_IDS.length, UNIT_IDS.length, true);
+        return new Response(JSON.stringify({
+          ...payload,
+          publication: pub,
+          snapshotMonth: pub.month,
+          snapshotPublishedAt: pub.published_at,
+          mode: 'live',
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      if (kind === 'all-units') {
+        const { units, succeeded } = await fetchLiveAllUnits(SUPABASE_URL, SERVICE_KEY);
+        return new Response(JSON.stringify({
+          publication: syntheticPublication(succeeded, UNIT_IDS.length, true),
+          units,
+          mode: 'live',
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      if (kind === 'budget') {
+        try {
+          const payload = await fetchLiveBudget(SUPABASE_URL, SERVICE_KEY) as Record<string, unknown>;
+          return new Response(JSON.stringify({
+            ...payload,
+            publication: syntheticPublication(UNIT_IDS.length, UNIT_IDS.length, true),
+            mode: 'live',
+          }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Failed to load live budget';
+          return new Response(JSON.stringify({
+            pillars: {},
+            actionStepBudgets: [],
+            observedAt: new Date().toISOString(),
+            validationErrors: [msg],
+            budgetUnavailable: true,
+            publication: syntheticPublication(UNIT_IDS.length, UNIT_IDS.length, false),
+            mode: 'live',
+          }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      return new Response(JSON.stringify({ error: `Unknown kind: ${kind}` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // MONTHLY MODE — original published-snapshot behavior (preserved).
+    // ─────────────────────────────────────────────────────────────────────
     const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // Get latest publication.
     const { data: pub } = await admin
       .from('monthly_snapshot_publications')
       .select('id, month, published_at, total_units, succeeded_units, budget_included')
@@ -130,8 +328,6 @@ serve(async (req) => {
         .eq('publication_id', pub.id)
         .maybeSingle();
       if (!row) {
-        // Graceful fallback: return empty budget payload so the dashboard renders
-        // instead of blank-screening. The next monthly refresh will populate this.
         return new Response(JSON.stringify({
           pillars: {},
           actionStepBudgets: [],
@@ -139,9 +335,7 @@ serve(async (req) => {
           validationErrors: [],
           budgetUnavailable: true,
           publication: pub,
-        }), {
-          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       return new Response(JSON.stringify({ ...row.payload, publication: pub }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
