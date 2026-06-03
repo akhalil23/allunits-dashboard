@@ -3,8 +3,8 @@
  * Three sections: Unit (optional, for unit dashboards), University, Pillars
  */
 
-import { useState, useMemo } from 'react';
-import { useReports, getReportFileUrl, type Report } from '@/hooks/use-reports';
+import { useState, useMemo, useEffect } from 'react';
+import { useReports, getReportFileUrl, openReportFile, type Report } from '@/hooks/use-reports';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,21 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
   const [period, setPeriod] = useState<string>('all');
   const [reportType, setReportType] = useState<string>('all');
   const [viewingReport, setViewingReport] = useState<Report | null>(null);
+  const [viewingUrl, setViewingUrl] = useState<string | null>(null);
+
+  // Load a signed URL for the viewer iframe whenever a report is opened
+  useEffect(() => {
+    if (!viewingReport) {
+      setViewingUrl(null);
+      return;
+    }
+    let cancelled = false;
+    setViewingUrl(null);
+    getReportFileUrl(viewingReport.file_path)
+      .then((u) => { if (!cancelled) setViewingUrl(u); })
+      .catch(() => { if (!cancelled) setViewingUrl(null); });
+    return () => { cancelled = true; };
+  }, [viewingReport]);
 
   // Fetch all reports — RLS handles visibility, we split client-side
   const { data: allReports = [], isLoading } = useReports();
@@ -226,10 +241,8 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={getReportFileUrl(viewingReport.file_path)} download target="_blank" rel="noopener noreferrer">
-                    <Download className="w-3.5 h-3.5 mr-1" /> Download
-                  </a>
+                <Button variant="outline" size="sm" onClick={() => openReportFile(viewingReport.file_path)}>
+                  <Download className="w-3.5 h-3.5 mr-1" /> Download
                 </Button>
                 <Button variant="ghost" size="icon" onClick={() => setViewingReport(null)}>
                   <X className="w-4 h-4" />
@@ -237,11 +250,17 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
               </div>
             </div>
             <div className="flex-1">
-              <iframe
-                src={getReportFileUrl(viewingReport.file_path)}
-                className="w-full h-full border-0"
-                title={viewingReport.title}
-              />
+              {viewingUrl ? (
+                <iframe
+                  src={viewingUrl}
+                  className="w-full h-full border-0"
+                  title={viewingReport.title}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading report…
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -304,7 +323,6 @@ function ReportTableSection({ title, reports, onView, unitLabel, showUnitColumn 
 
 /** Inline action button for a report */
 function ReportAction({ report, onView, compact }: { report: Report; onView: () => void; compact?: boolean }) {
-  const url = getReportFileUrl(report.file_path);
   const isExecutive = report.report_type === 'executive';
   const size = compact ? 'h-7 text-[11px] px-2.5' : 'h-7 text-xs px-3';
 
@@ -316,10 +334,8 @@ function ReportAction({ report, onView, compact }: { report: Report; onView: () 
     );
   }
   return (
-    <Button variant="outline" className={`${size} gap-1`} asChild>
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        <Download className="w-3 h-3" /> {compact ? 'Open' : 'Open PDF'}
-      </a>
+    <Button variant="outline" className={`${size} gap-1`} onClick={() => openReportFile(report.file_path)}>
+      <Download className="w-3 h-3" /> {compact ? 'Open' : 'Open PDF'}
     </Button>
   );
 }
