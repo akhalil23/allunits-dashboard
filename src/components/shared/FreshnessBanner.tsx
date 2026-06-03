@@ -42,7 +42,7 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
       if (error) throw new Error(error.message || 'Refresh failed');
       // Invalidate every dashboard data cache so the UI re-fetches immediately.
       await Promise.all([
-        qc.invalidateQueries({ queryKey: ['gsr-data'] }),
+        qc.invalidateQueries({ queryKey: ['unit-snapshot'] }),
         qc.invalidateQueries({ queryKey: ['university-snapshot'] }),
         qc.invalidateQueries({ queryKey: ['budget-data'] }),
         qc.invalidateQueries({ queryKey: ['snapshot-freshness'] }),
