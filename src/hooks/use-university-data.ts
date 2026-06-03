@@ -41,11 +41,11 @@ export function useUniversityData({ enabled = true }: UseUniversityDataOptions =
     queryKey: ['university-snapshot', session?.user.id ?? 'anonymous'],
     queryFn: () => fetchAllUnits(),
     enabled: enabled && !authLoading && isAuthenticated && !!session?.access_token,
-    staleTime: 60 * 60 * 1000,
-    gcTime: 6 * 60 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     retry: 1,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     refetchOnWindowFocus: false,
   });
 }
