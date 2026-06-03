@@ -2,22 +2,59 @@
  * FreshnessBanner — visible across every dashboard tab.
  * Shows the timestamp of the last successful automated monthly snapshot,
  * plus retry/failure status when applicable.
+ *
+ * Includes a manual "Refresh" button so users can re-pull data from the
+ * source spreadsheets when not all units loaded (e.g. after a 429/503).
  */
-import { Calendar, AlertTriangle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSnapshotFreshness, formatFreshnessTimestamp } from '@/hooks/use-snapshot-freshness';
+import { supabase } from '@/integrations/supabase/client';
+import { getValidAccessToken } from '@/lib/auth-session';
+import { toast } from 'sonner';
 
 interface FreshnessBannerProps {
   compact?: boolean;
 }
 
 export default function FreshnessBanner({ compact = false }: FreshnessBannerProps) {
-  const { data } = useSnapshotFreshness();
+  const { data, refetch } = useSnapshotFreshness();
+  const qc = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
   const pub = data?.publication;
   const state = data?.state;
 
   const lastUpdate = pub?.published_at ?? state?.last_success_at ?? null;
   const status = state?.current_status ?? 'idle';
   const isLive = (pub as { id?: string } | null)?.id === 'live';
+
+  async function handleManualRefresh() {
+    setRefreshing(true);
+    try {
+      const accessToken = await getValidAccessToken();
+      if (!accessToken) throw new Error('Session expired — please sign in again.');
+      // Bust the server-side live cache so the next fetch hits the spreadsheets.
+      const { error } = await supabase.functions.invoke('get-snapshot', {
+        body: { kind: 'publication', forceRefresh: true },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (error) throw new Error(error.message || 'Refresh failed');
+      // Invalidate every dashboard data cache so the UI re-fetches immediately.
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['gsr-data'] }),
+        qc.invalidateQueries({ queryKey: ['university-snapshot'] }),
+        qc.invalidateQueries({ queryKey: ['budget-data'] }),
+        qc.invalidateQueries({ queryKey: ['snapshot-freshness'] }),
+        refetch(),
+      ]);
+      toast.success('Dashboard data refreshed from source spreadsheets.');
+    } catch (e: any) {
+      toast.error(e?.message || 'Refresh failed.');
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   let statusLine: string;
   let tone: 'ok' | 'warn' | 'err' = 'ok';
@@ -47,7 +84,7 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
   }
 
   const subline = isLive
-    ? 'Changes made in the source spreadsheets are reflected in near real-time (short server-side cache).'
+    ? 'Changes made in the source spreadsheets are reflected in near real-time (short server-side cache). Use Refresh if a unit failed to load.'
     : 'Dashboard data is refreshed automatically on the 1st of each month, as stated in the Dashboard Guide.';
 
   const toneClasses = tone === 'ok'
@@ -56,11 +93,25 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
       ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-200'
       : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-200';
 
+  const RefreshButton = (
+    <button
+      type="button"
+      onClick={handleManualRefresh}
+      disabled={refreshing}
+      className={`inline-flex items-center gap-1.5 rounded-md border border-current/30 bg-background/40 px-2 py-1 text-[11px] font-semibold transition hover:bg-background/70 disabled:opacity-60 disabled:cursor-not-allowed`}
+      title="Re-pull data from the source spreadsheets"
+    >
+      <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
+      {refreshing ? 'Refreshing…' : 'Refresh'}
+    </button>
+  );
+
   if (compact) {
     return (
       <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-[11px] font-medium ${toneClasses}`}>
         <Icon className={`w-3.5 h-3.5 ${status === 'in_progress' ? 'animate-spin' : ''}`} />
-        <span className="truncate">{statusLine}</span>
+        <span className="truncate flex-1">{statusLine}</span>
+        {RefreshButton}
       </div>
     );
   }
@@ -74,6 +125,7 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
           {subline}
         </p>
       </div>
+      <div className="flex-shrink-0">{RefreshButton}</div>
     </div>
   );
 }
