@@ -67,14 +67,14 @@ export function useGSRData(_viewType?: ViewType) {
     queryKey: ['unit-snapshot', resolvedUnitId, session?.user.id ?? 'anonymous'],
     queryFn: () => fetchUnitSnapshot(resolvedUnitId),
     enabled: !!isAuthenticated && !!hasAccess,
-    staleTime: 60 * 60 * 1000, // 1h — monthly data, no need to refetch often
-    gcTime: 6 * 60 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2m — live mode, source spreadsheets may change anytime
+    gcTime: 30 * 60 * 1000,
     retry: (failureCount, err) => {
       if (/session expired/i.test(err.message)) return false;
       return failureCount < 1;
     },
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
     refetchOnWindowFocus: false,
   });
 }
