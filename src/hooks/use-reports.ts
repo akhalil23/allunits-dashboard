@@ -157,7 +157,22 @@ export function useUpdateReport() {
   });
 }
 
-export function getReportFileUrl(filePath: string): string {
-  const { data } = supabase.storage.from('reports').getPublicUrl(filePath);
-  return data.publicUrl;
+/**
+ * Returns a short-lived signed URL for a report file in the (private) reports bucket.
+ * Throws on failure. URLs expire after 1 hour.
+ */
+export async function getReportFileUrl(filePath: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('reports')
+    .createSignedUrl(filePath, 60 * 60);
+  if (error || !data?.signedUrl) {
+    throw new Error(error?.message || 'Unable to generate report URL');
+  }
+  return data.signedUrl;
+}
+
+/** Convenience helper: open the report file in a new tab using a signed URL. */
+export async function openReportFile(filePath: string): Promise<void> {
+  const url = await getReportFileUrl(filePath);
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
