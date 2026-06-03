@@ -31,6 +31,21 @@ export default function ReportsTab({ lockedPillar, hiddenUniversityScope, unitId
   const [period, setPeriod] = useState<string>('all');
   const [reportType, setReportType] = useState<string>('all');
   const [viewingReport, setViewingReport] = useState<Report | null>(null);
+  const [viewingUrl, setViewingUrl] = useState<string | null>(null);
+
+  // Load a signed URL for the viewer iframe whenever a report is opened
+  useEffect(() => {
+    if (!viewingReport) {
+      setViewingUrl(null);
+      return;
+    }
+    let cancelled = false;
+    setViewingUrl(null);
+    getReportFileUrl(viewingReport.file_path)
+      .then((u) => { if (!cancelled) setViewingUrl(u); })
+      .catch(() => { if (!cancelled) setViewingUrl(null); });
+    return () => { cancelled = true; };
+  }, [viewingReport]);
 
   // Fetch all reports — RLS handles visibility, we split client-side
   const { data: allReports = [], isLoading } = useReports();
