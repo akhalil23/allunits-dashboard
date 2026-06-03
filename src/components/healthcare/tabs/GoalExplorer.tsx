@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { HEALTHCARE_GOALS } from '@/lib/healthcare/sample-data';
-import { goalProgress, effectiveStatus, RISK_COLOR, fmtCurrency } from '@/lib/healthcare/helpers';
+import { goalCompletion, effectiveStatus, RISK_COLOR, fmtCurrency, riskSignals, riskIndex, riskBand } from '@/lib/healthcare/helpers';
 import type { HCGoal, HCStep, HCAction } from '@/lib/healthcare/types';
-import { ChevronRight, User, Target, AlertOctagon } from 'lucide-react';
+import { ChevronRight, User, Target, AlertOctagon, ShieldAlert } from 'lucide-react';
 
 const STATUS_STYLE: Record<string, string> = {
   'Done': 'border-emerald-500/40 text-emerald-300 bg-emerald-500/5',
@@ -49,7 +49,7 @@ export default function GoalExplorer({ initialGoal }: { initialGoal?: number }) 
 }
 
 function GoalHeader({ goal }: { goal: HCGoal }) {
-  const p = goalProgress(goal);
+  const c = goalCompletion(goal);
   return (
     <Card className="border-emerald-500/30">
       <CardContent className="p-5 space-y-3">
@@ -58,13 +58,18 @@ function GoalHeader({ goal }: { goal: HCGoal }) {
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /><span className="text-foreground">{goal.champion}</span></div>
           <div className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /><span>{goal.actions.length} actions · {goal.actions.reduce((s, a) => s + a.steps.length, 0)} steps</span></div>
+          {c.blocked > 0 && (
+            <Badge variant="outline" className="border-red-500/40 text-red-300 bg-red-500/5 text-[10px]">
+              {c.blocked} blocked
+            </Badge>
+          )}
         </div>
         <div>
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-muted-foreground">Goal progress</span>
-            <span className="text-foreground tabular-nums">{p}%</span>
+            <span className="text-muted-foreground">Derived completion <span className="text-amber-300/70">·excludes blocked</span></span>
+            <span className="text-foreground tabular-nums">{c.value}%</span>
           </div>
-          <Progress value={p} className="h-2" />
+          <Progress value={c.value} className="h-2" />
         </div>
       </CardContent>
     </Card>
@@ -100,6 +105,14 @@ function ActionBlock({ action }: { action: HCAction }) {
 function StepRow({ step }: { step: HCStep }) {
   const eff = effectiveStatus(step);
   const totalBudget = step.budget.reduce((s, y) => s + (y.amount || 0), 0);
+  const sig = riskSignals(step);
+  const ri = riskIndex(step);
+  const firedLabels = [
+    sig.blocked && 'Blocked',
+    sig.missingUpdate && 'Missing Q2 update',
+    sig.fundingGap && 'Funding gap',
+    sig.governanceGap && 'Governance gap',
+  ].filter(Boolean) as string[];
 
   return (
     <div className={`rounded-lg border bg-card/40 p-3 space-y-2 ${step.blocker ? 'border-red-500/40' : 'border-border/60'}`}>
@@ -113,7 +126,10 @@ function StepRow({ step }: { step: HCStep }) {
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
           <Badge variant="outline" className={STATUS_STYLE[eff]}>{eff}</Badge>
-          <Badge variant="outline" className={`text-[10px] ${RISK_COLOR[step.riskFlag]}`}>{step.riskFlag} risk</Badge>
+          <Badge variant="outline" className={`text-[10px] ${RISK_COLOR[step.riskFlag]}`}>{step.riskFlag} flag</Badge>
+          <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-200 bg-amber-500/5 gap-1">
+            <ShieldAlert className="w-2.5 h-2.5" /> RI {ri.score} · {riskBand(ri.score)}
+          </Badge>
           <span className="text-[10px] text-muted-foreground">Priority {step.priority}</span>
         </div>
       </div>
@@ -126,6 +142,16 @@ function StepRow({ step }: { step: HCStep }) {
             <span className="text-muted-foreground ml-auto">Owner: {step.blocker.decisionOwner}</span>
           </div>
           <p className="text-foreground/90 italic">"{step.blocker.reason}"</p>
+        </div>
+      )}
+
+      {firedLabels.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {firedLabels.map(l => (
+            <Badge key={l} variant="outline" className="text-[10px] border-amber-500/30 text-amber-200/90 bg-amber-500/5">
+              {l}
+            </Badge>
+          ))}
         </div>
       )}
 
