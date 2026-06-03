@@ -71,7 +71,7 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold leading-snug">{statusLine}</p>
         <p className="text-[10.5px] opacity-70 mt-0.5 leading-snug">
-          Dashboard data is refreshed automatically on the 1st of each month, as stated in the Dashboard Guide.
+          {subline}
         </p>
       </div>
     </div>
