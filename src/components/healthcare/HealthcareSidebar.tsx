@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Target, Compass, CalendarClock, AlertOctagon,
-  Users, DollarSign, Network, ChevronRight, Menu, X, Shield, LogOut, Stethoscope,
+  DollarSign, ChevronRight, Menu, X, Shield, LogOut, Stethoscope,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import lauLogo from '@/assets/lau-logo-white.png';
@@ -11,7 +11,7 @@ import { useUserRole } from '@/hooks/use-user-role';
 
 export type HCTab =
   | 'snapshot' | 'goals' | 'explorer' | 'quarterly'
-  | 'blockers' | 'raci' | 'budget' | 'roadmap';
+  | 'blockers' | 'budget';
 
 interface Props { activeTab: HCTab; onTabChange: (t: HCTab) => void; }
 
@@ -21,9 +21,7 @@ const tabs: { id: HCTab; label: string; icon: React.ElementType }[] = [
   { id: 'explorer',  label: 'Goal Explorer',           icon: Compass },
   { id: 'quarterly', label: 'Quarterly Execution',     icon: CalendarClock },
   { id: 'blockers',  label: 'Decisions & Blockers',    icon: AlertOctagon },
-  { id: 'raci',      label: 'RACI & Champion Cockpit', icon: Users },
   { id: 'budget',    label: 'Budget Intelligence',     icon: DollarSign },
-  { id: 'roadmap',   label: 'Governance & Roadmap',    icon: Network },
 ];
 
 export default function HealthcareSidebar({ activeTab, onTabChange }: Props) {

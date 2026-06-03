@@ -7,19 +7,15 @@ import StrategicGoalsOverview from '@/components/healthcare/tabs/StrategicGoalsO
 import GoalExplorer from '@/components/healthcare/tabs/GoalExplorer';
 import QuarterlyExecution from '@/components/healthcare/tabs/QuarterlyExecution';
 import DecisionBlockersBoard from '@/components/healthcare/tabs/DecisionBlockersBoard';
-import RACIChampionCockpit from '@/components/healthcare/tabs/RACIChampionCockpit';
 import BudgetIntelligence from '@/components/healthcare/tabs/BudgetIntelligence';
-import GovernanceRoadmap from '@/components/healthcare/tabs/GovernanceRoadmap';
 
 const TITLES: Record<HCTab, { title: string; subtitle: string }> = {
   'snapshot':  { title: 'Healthcare Executive Command Center', subtitle: 'Consolidated institutional briefing — Healthcare Strategic Plan' },
-  'goals':     { title: 'Strategic Goals Overview',            subtitle: 'All Healthcare goals with status, blockers and risk flags' },
+  'goals':     { title: 'Strategic Goals Overview',            subtitle: 'All Healthcare goals with derived completion, blockers and risk signals' },
   'explorer':  { title: 'Goal Explorer',                       subtitle: 'Goal → Action → Action Step drill-down with quarterly narrative' },
-  'quarterly': { title: 'Quarterly Execution Timeline',        subtitle: 'Status evolution across Q1 2026 → Q1 2027' },
+  'quarterly': { title: 'Quarterly Execution Timeline',        subtitle: 'Reporting activity and status evolution across Q1 2026 → Q1 2027' },
   'blockers':  { title: 'Decisions & Blockers Board',          subtitle: 'Items requiring executive decision or removal' },
-  'raci':      { title: 'RACI & Champion Cockpit',             subtitle: 'Ownership coverage, Champion load and accountability gaps' },
   'budget':    { title: 'Budget Intelligence',                 subtitle: 'Five-year budget phasing, funding sources and concentration' },
-  'roadmap':   { title: 'Governance & Integration Roadmap',    subtitle: 'Governance posture and path toward integrated executive dashboard' },
 };
 
 export default function HealthcareDashboard() {
@@ -37,9 +33,7 @@ export default function HealthcareDashboard() {
           {tab === 'explorer'  && <GoalExplorer initialGoal={explorerGoal} />}
           {tab === 'quarterly' && <QuarterlyExecution />}
           {tab === 'blockers'  && <DecisionBlockersBoard />}
-          {tab === 'raci'      && <RACIChampionCockpit />}
           {tab === 'budget'    && <BudgetIntelligence />}
-          {tab === 'roadmap'   && <GovernanceRoadmap />}
         </main>
       </div>
     </div>
