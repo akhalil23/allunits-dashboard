@@ -118,6 +118,26 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Require authenticated user (strategic data not for unauthenticated callers)
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const userClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } },
+  );
+  const { data: userData, error: userErr } = await userClient.auth.getUser();
+  if (userErr || !userData?.user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+
   const ok = (summaries: any[], extra: Record<string, unknown> = {}) =>
     new Response(JSON.stringify({ summaries, ...extra }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
