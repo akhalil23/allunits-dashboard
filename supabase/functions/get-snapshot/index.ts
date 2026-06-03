@@ -178,6 +178,19 @@ serve(async (req) => {
     let body: any = {};
     try { body = await req.json(); } catch { /* ok */ }
     const kind = body?.kind ?? 'publication';
+    const forceRefresh = body?.forceRefresh === true;
+
+    // Admin-triggered manual refresh: clear the live-mode server cache so the
+    // next fetch goes straight to the source spreadsheets.
+    if (forceRefresh && isLive) {
+      const isAdmin = userRole === 'admin';
+      if (kind === 'unit' && body?.unitId) {
+        // Unit users may refresh their own unit; admins may refresh anything.
+        if (isAdmin || userUnit === body.unitId) liveCache.delete(`unit:${body.unitId}`);
+      } else if (isAdmin) {
+        liveCache.clear();
+      }
+    }
 
     // ─────────────────────────────────────────────────────────────────────
     // LIVE MODE — fetch directly from source spreadsheets (default).
