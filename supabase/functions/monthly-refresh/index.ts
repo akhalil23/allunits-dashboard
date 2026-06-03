@@ -71,6 +71,33 @@ serve(async (req) => {
   const startedAt = Date.now();
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
   const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+  // AuthN/AuthZ: allow either the internal service-role bearer (used by pg_cron
+  // & internal callInternal) OR an authenticated admin user.
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let authorized = false;
+  if (bearer && bearer === SERVICE_KEY) {
+    authorized = true;
+  } else if (bearer) {
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData } = await userClient.auth.getUser();
+    if (userData?.user) {
+      const { data: isAdmin } = await userClient.rpc('has_role', {
+        _user_id: userData.user.id, _role: 'admin',
+      });
+      if (isAdmin === true) authorized = true;
+    }
+  }
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
