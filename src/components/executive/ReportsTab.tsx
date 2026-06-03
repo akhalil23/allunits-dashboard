@@ -3,8 +3,8 @@
  * Three sections: Unit (optional, for unit dashboards), University, Pillars
  */
 
-import { useState, useMemo } from 'react';
-import { useReports, getReportFileUrl, type Report } from '@/hooks/use-reports';
+import { useState, useMemo, useEffect } from 'react';
+import { useReports, getReportFileUrl, openReportFile, type Report } from '@/hooks/use-reports';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
