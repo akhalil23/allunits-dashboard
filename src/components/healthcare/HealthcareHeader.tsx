@@ -1,7 +1,11 @@
-import { Stethoscope } from 'lucide-react';
+import { useState } from 'react';
+import { Stethoscope, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import DashboardGuideDrawer from './DashboardGuideDrawer';
 
 export default function HealthcareHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  const [guideOpen, setGuideOpen] = useState(false);
   return (
     <header className="border-b border-border bg-card/40 backdrop-blur px-6 py-4 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3 min-w-0">
@@ -14,10 +18,20 @@ export default function HealthcareHeader({ title, subtitle }: { title: string; s
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/5">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setGuideOpen(true)}
+          className="h-8 text-xs gap-1.5 border-emerald-500/30 text-emerald-200 hover:text-emerald-100 hover:bg-emerald-500/10"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          Dashboard Guide
+        </Button>
+        <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/5 hidden sm:inline-flex">
           Phase 1 · Prototype
         </Badge>
       </div>
+      <DashboardGuideDrawer open={guideOpen} onOpenChange={setGuideOpen} />
     </header>
   );
 }
