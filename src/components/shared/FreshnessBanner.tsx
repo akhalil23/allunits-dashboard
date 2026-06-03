@@ -17,12 +17,16 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
 
   const lastUpdate = pub?.published_at ?? state?.last_success_at ?? null;
   const status = state?.current_status ?? 'idle';
+  const isLive = (pub as { id?: string } | null)?.id === 'live';
 
   let statusLine: string;
   let tone: 'ok' | 'warn' | 'err' = 'ok';
   let Icon = Calendar;
 
-  if (!lastUpdate) {
+  if (isLive) {
+    statusLine = 'Live data — the dashboard is reading directly from the source spreadsheets.';
+    tone = 'ok';
+  } else if (!lastUpdate) {
     statusLine = 'Awaiting first automated monthly snapshot.';
     tone = 'warn';
     Icon = Loader2;
@@ -41,6 +45,10 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
   } else {
     statusLine = `Last dashboard update: ${formatFreshnessTimestamp(lastUpdate)}.`;
   }
+
+  const subline = isLive
+    ? 'Changes made in the source spreadsheets are reflected in near real-time (short server-side cache).'
+    : 'Dashboard data is refreshed automatically on the 1st of each month, as stated in the Dashboard Guide.';
 
   const toneClasses = tone === 'ok'
     ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200'
