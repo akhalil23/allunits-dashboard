@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { Stethoscope, BookOpen } from 'lucide-react';
+import { Stethoscope, BookOpen, Moon, Sun } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTheme } from '@/hooks/use-theme';
 import DashboardGuideDrawer from './DashboardGuideDrawer';
 
 export default function HealthcareHeader({ title, subtitle }: { title: string; subtitle?: string }) {
