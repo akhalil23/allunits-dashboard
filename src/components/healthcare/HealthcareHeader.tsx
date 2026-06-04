@@ -9,6 +9,7 @@ import DashboardGuideDrawer from './DashboardGuideDrawer';
 
 export default function HealthcareHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   const [guideOpen, setGuideOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   return (
     <header className="border-b border-border bg-card/40 backdrop-blur px-6 py-4 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3 min-w-0">
