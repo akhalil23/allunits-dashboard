@@ -287,8 +287,8 @@ export default function ExecutiveSnapshot({ onJumpTo }: { onJumpTo?: (t: HCTab) 
                     return (
                       <div key={s} className="flex items-center gap-2 text-[11px]">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: STATUS_COLOR[s] }} />
-                        <span className="text-foreground truncate">{s}</span>
-                        <span className="text-muted-foreground tabular-nums ml-auto">{n} · {pct}%</span>
+                        <span className="text-foreground whitespace-normal">{s}</span>
+                        <span className="text-muted-foreground tabular-nums ml-auto shrink-0">{n} · {pct}%</span>
                       </div>
                     );
                   })}
