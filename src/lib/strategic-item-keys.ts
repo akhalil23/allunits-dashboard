@@ -15,6 +15,25 @@ export function normalizeHierarchyGroupKey(raw: string | null | undefined): stri
   return normalizeHierarchyText(raw).toLowerCase();
 }
 
+/**
+ * Aggressive, punctuation-insensitive matching key for cross-unit step union.
+ * NFKC-normalizes, lowercases, folds Unicode dashes/quotes/apostrophes to ASCII,
+ * strips all non-alphanumeric characters. Used ONLY for matching (e.g. uniting
+ * the same action step across 24 unit sheets when one sheet uses a non-breaking
+ * hyphen, smart quote, or trailing punctuation). Never used for display.
+ */
+export function normalizeHierarchyMatchKey(raw: string | null | undefined): string {
+  if (!raw) return '';
+  let s = raw.normalize('NFKC');
+  // Fold Unicode dashes/hyphens to ASCII hyphen
+  s = s.replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
+  // Fold smart quotes/apostrophes
+  s = s.replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'");
+  s = s.replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"');
+  // Strip every non-alphanumeric char (drops spaces, punctuation, control chars)
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
 export function buildSourceRowKey(pillar: PillarId, sheetRow: number): string {
   return `${pillar}|row-${sheetRow}`;
 }
