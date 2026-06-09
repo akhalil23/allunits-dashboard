@@ -245,4 +245,97 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items).toHaveLength(1);
     expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_IDS.length);
   });
+
+  it('unifies action steps across units when one uses a non-breaking hyphen', () => {
+    const baseStep = 'Produce a template for an optional co-curricular transcript';
+    const nbspHyphenStep = 'Produce a template for an optional co\u2011curricular transcript';
+
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => createUnitResult(unitId, {
+        items: [createActionItem('Not Applicable', {
+          actionStep: index === 0 ? nbspHyphenStep : baseStep,
+          // Distinct sourceKey/sheetRow so they only merge via the step-match alias.
+          sourceKey: index === 0 ? 'II|row-99' : 'II|row-5',
+          sheetRow: index === 0 ? 99 : 5,
+          pillar: 'II',
+        })],
+      })),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_IDS.length);
+  });
+
+  it('unifies action steps across units when one has a trailing period', () => {
+    const baseStep = 'Produce a template for an optional co-curricular transcript';
+    const withPeriod = baseStep + '.';
+
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => createUnitResult(unitId, {
+        items: [createActionItem('Not Applicable', {
+          actionStep: index === 0 ? withPeriod : baseStep,
+          sourceKey: index === 0 ? 'II|row-99' : 'II|row-5',
+          sheetRow: index === 0 ? 99 : 5,
+          pillar: 'II',
+        })],
+      })),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_IDS.length);
+  });
+
+  it('unifies action steps with smart-quote vs straight-quote variants', () => {
+    const baseStep = "Publish the dean's annual report";
+    const smartStep = 'Publish the dean\u2019s annual report';
+
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => createUnitResult(unitId, {
+        items: [createActionItem('Not Applicable', {
+          actionStep: index === 0 ? smartStep : baseStep,
+          sourceKey: index === 0 ? 'II|row-99' : 'II|row-5',
+          sheetRow: index === 0 ? 99 : 5,
+          pillar: 'II',
+        })],
+      })),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_IDS.length);
+  });
+
+  it('does NOT merge genuinely different action steps (negative case)', () => {
+    const baseStep = 'Produce a template for an optional co-curricular transcript';
+    const differentStep = 'Produce a template for a co-curricular newsletter';
+
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => createUnitResult(unitId, {
+        items: [createActionItem('Not Applicable', {
+          actionStep: index === 0 ? differentStep : baseStep,
+          sourceKey: index === 0 ? 'II|row-99' : 'II|row-5',
+          sheetRow: index === 0 ? 99 : 5,
+          pillar: 'II',
+        })],
+      })),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+    // Two distinct steps → neither has 24/24 → both excluded.
+    expect(absoluteNa?.items).toHaveLength(0);
+  });
 });
