@@ -522,10 +522,13 @@ function buildCoverageAliasKeys(
     aliases.push({ key: rowKey, rank: 2 });
   }
   // Step-only fallback alias: unions the same action step across units even when
-  // goal/action wording differs slightly (e.g. when newly-added units use variant
-  // phrasing). Safety net so Absolute NA stays stable as units are added.
-  if (stepKey) {
-    aliases.push({ key: `${pillar}|step:${stepKey}`, rank: 1 });
+  // goal/action wording differs slightly OR when the step text itself has cosmetic
+  // differences (non-breaking hyphen vs ASCII hyphen, smart quote vs straight,
+  // trailing period/colon, extra parentheses, etc.). Punctuation-insensitive so
+  // Absolute NA stays stable across data-entry variants.
+  const stepMatchKey = normalizeHierarchyMatchKey(actionStep);
+  if (stepMatchKey) {
+    aliases.push({ key: `${pillar}|stepmatch:${stepMatchKey}`, rank: 1 });
   }
 
   return Array.from(
