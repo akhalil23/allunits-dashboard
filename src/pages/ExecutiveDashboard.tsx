@@ -49,7 +49,7 @@ export default function ExecutiveDashboard() {
   const queryClient = useQueryClient();
 
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['university-data'] });
+    queryClient.invalidateQueries({ queryKey: ['university-snapshot'] });
   }, [queryClient]);
 
   const aggregation = useMemo<UniversityAggregation | null>(() => {
