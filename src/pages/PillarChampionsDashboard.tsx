@@ -51,7 +51,7 @@ export default function PillarChampionsDashboard() {
   const { data: budgetResult } = useBudgetData();
 
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['university-data'] });
+    queryClient.invalidateQueries({ queryKey: ['university-snapshot'] });
     queryClient.invalidateQueries({ queryKey: ['budget-data'] });
   }, [queryClient]);
 

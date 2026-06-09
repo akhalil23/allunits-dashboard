@@ -695,7 +695,7 @@ function buildCoverageDebugRows(
         missingCount,
         included,
         exclusionReason: included
-          ? 'included: explicit Not Applicable in all 24 configured units'
+          ? `included: explicit Not Applicable in all ${totalUnits} configured units`
           : [
               nonNaCount > 0 ? `non-NA=${nonNaCount}` : null,
               blankCount > 0 ? `blank=${blankCount}` : null,
@@ -944,7 +944,7 @@ export function computeCategories(
       .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
     const isStrictAbsoluteNA = naCount === totalConfiguredUnits && nonNaCount === 0 && blankCount === 0 && missingUnitIds.length === 0;
     const inclusionReason = isStrictAbsoluteNA
-      ? 'included: explicit Not Applicable in all 24 configured units'
+      ? `included: explicit Not Applicable in all ${totalConfiguredUnits} configured units`
       : nonNaCount > 0
         ? `excluded: ${nonNaCount} unit(s) are present but not Not Applicable`
         : blankCount > 0
@@ -1063,7 +1063,7 @@ export function computeCategories(
     if (isMandatoryAbsoluteNaDebugFilter) {
       console.table(debugRows);
       if (strictAbsoluteNA.length === 0) {
-        console.info('[CoverageGaps] No item has NA_count = 24 out of 24 loaded units.');
+        console.info(`[CoverageGaps] No item has NA_count = ${totalConfiguredUnits} out of ${totalConfiguredUnits} configured units.`);
       }
     }
     if (majorityOnlyNA.length > 0) {

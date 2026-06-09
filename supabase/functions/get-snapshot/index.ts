@@ -104,13 +104,51 @@ async function fetchLiveUnit(unitId: string, baseUrl: string, serviceKey: string
   return r.json;
 }
 
-async function fetchLiveAllUnits(baseUrl: string, serviceKey: string) {
+async function fetchLatestMonthlyUnitFallbacks(admin: ReturnType<typeof createClient>) {
+  const { data: pub } = await admin
+    .from('monthly_snapshot_publications')
+    .select('id, month, published_at, total_units, succeeded_units, budget_included')
+    .order('published_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!pub) return { publication: null, unitsById: new Map<string, unknown>() };
+
+  const { data: rows } = await admin
+    .from('monthly_unit_snapshots')
+    .select('unit_id, payload, observed_at')
+    .eq('publication_id', pub.id)
+    .eq('view_type', 'all');
+
+  return {
+    publication: pub,
+    unitsById: new Map((rows ?? []).map((row: any) => [row.unit_id, row.payload as unknown])),
+  };
+}
+
+function annotateSnapshotFallback(payload: unknown, unitId: string, publishedAt?: string) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  return {
+    ...(payload as Record<string, unknown>),
+    stale: true,
+    warning: `Unit ${unitId} is using the latest validated snapshot because its live source sheet could not be loaded right now.`,
+    cache: {
+      hit: true,
+      stale: true,
+      source: 'monthly_snapshot',
+      snapshotPublishedAt: publishedAt ?? null,
+    },
+  };
+}
+
+async function fetchLiveAllUnits(baseUrl: string, serviceKey: string, admin: ReturnType<typeof createClient>) {
   const cacheKey = 'all-units';
-  const cached = getCached(cacheKey) as { units: Array<{ unitId: string; payload: unknown }>; succeeded: number } | null;
+  const cached = getCached(cacheKey) as { units: Array<{ unitId: string; payload: unknown }>; succeeded: number; fallbackUnits: string[]; failedUnits: string[] } | null;
   if (cached) return cached;
 
   const concurrency = 5;
   const results: Array<{ unitId: string; payload: unknown } | null> = new Array(UNIT_IDS.length).fill(null);
+  const failedByUnit = new Map<string, string>();
   let cursor = 0;
   const worker = async () => {
     while (true) {
@@ -121,15 +159,34 @@ async function fetchLiveAllUnits(baseUrl: string, serviceKey: string) {
         const payload = await fetchLiveUnit(unitId, baseUrl, serviceKey);
         results[idx] = { unitId, payload };
       } catch (err) {
-        console.error(`get-snapshot live unit ${unitId} failed:`, err instanceof Error ? err.message : err);
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`get-snapshot live unit ${unitId} failed:`, message);
+        failedByUnit.set(unitId, message);
         results[idx] = null;
       }
     }
   };
   await Promise.all(Array.from({ length: concurrency }, () => worker()));
+
+  const fallbackUnits: string[] = [];
+  if (failedByUnit.size > 0) {
+    const fallback = await fetchLatestMonthlyUnitFallbacks(admin);
+    UNIT_IDS.forEach((unitId, idx) => {
+      if (results[idx]) return;
+      const payload = fallback.unitsById.get(unitId);
+      if (!payload) return;
+      results[idx] = {
+        unitId,
+        payload: annotateSnapshotFallback(payload, unitId, fallback.publication?.published_at),
+      };
+      fallbackUnits.push(unitId);
+    });
+  }
+
   const units = results.filter((u): u is { unitId: string; payload: unknown } => !!u);
-  const out = { units, succeeded: units.length };
-  setCached(cacheKey, out);
+  const failedUnits = UNIT_IDS.filter((unitId, idx) => !results[idx]);
+  const out = { units, succeeded: UNIT_IDS.length - failedByUnit.size, fallbackUnits, failedUnits };
+  if (units.length === UNIT_IDS.length) setCached(cacheKey, out);
   return out;
 }
 
@@ -203,6 +260,10 @@ serve(async (req) => {
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+      const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+
       if (kind === 'unit') {
         const requestedUnit = body?.unitId;
         if (!requestedUnit) {
@@ -215,7 +276,15 @@ serve(async (req) => {
             status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        const payload = await fetchLiveUnit(requestedUnit, SUPABASE_URL, SERVICE_KEY) as Record<string, unknown>;
+        let payload: Record<string, unknown>;
+        try {
+          payload = await fetchLiveUnit(requestedUnit, SUPABASE_URL, SERVICE_KEY) as Record<string, unknown>;
+        } catch (err) {
+          const fallback = await fetchLatestMonthlyUnitFallbacks(admin);
+          const fallbackPayload = fallback.unitsById.get(requestedUnit);
+          if (!fallbackPayload) throw err;
+          payload = annotateSnapshotFallback(fallbackPayload, requestedUnit, fallback.publication?.published_at) as Record<string, unknown>;
+        }
         const pub = syntheticPublication(UNIT_IDS.length, UNIT_IDS.length, true);
         return new Response(JSON.stringify({
           ...payload,
@@ -227,10 +296,13 @@ serve(async (req) => {
       }
 
       if (kind === 'all-units') {
-        const { units, succeeded } = await fetchLiveAllUnits(SUPABASE_URL, SERVICE_KEY);
+        const { units, succeeded, fallbackUnits, failedUnits } = await fetchLiveAllUnits(SUPABASE_URL, SERVICE_KEY, admin);
         return new Response(JSON.stringify({
-          publication: syntheticPublication(succeeded, UNIT_IDS.length, true),
+          publication: syntheticPublication(units.length, UNIT_IDS.length, true),
           units,
+          liveSucceededUnits: succeeded,
+          fallbackUnits,
+          failedUnits,
           mode: 'live',
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
