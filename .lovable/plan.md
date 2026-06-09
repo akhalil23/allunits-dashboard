@@ -1,76 +1,67 @@
+## Diagnostic Report
 
-# Healthcare SP Dashboard v2 — Remaining Implementation
+**Verdict: TRUE bug.** Real inconsistency between Pillar Champions → Action Explorer and University → Items Requiring Immediate Attention → Absolute NA. The aggregation math is correct in isolation; the two views just disagree on what counts as "Not Applicable".
 
-`helpers.ts` (revised methodology) is already done. This plan covers the rest of v2.
+### Root cause
 
-## 1. Navigation simplification
-**`HealthcareSidebar.tsx`** — Reduce `HCTab` union and `tabs[]` to 6 items: Executive Snapshot, Goals Overview, Goal Explorer, Quarterly Execution, Decisions & Blockers, Budget Intelligence. Remove `raci` and `roadmap` from nav (components kept on disk, referenced from Dashboard Guide as "future phases").
+Two different status classifiers run on the same `ActionItem.terms[mid-2025-2026]`:
 
-**`HealthcareDashboard.tsx`** — Drop `raci` and `roadmap` from `TITLES` and the render switch; keep file imports unused-safe by removing them.
+**Pillar Champion → Action Explorer** (`src/components/pillar-champions/ActionExplorer.tsx:117–120`)
+- Reads `getItemStatus(item, …)` → returns the typed `td.spStatus` (`src/lib/intelligence.ts:92–95`).
+- Uses `isNotApplicableStatus(status)` (`src/lib/types.ts:105–110`), which treats `null`, `undefined`, empty string, `-`, `—`, `NA`, `N/A`, and any case of `"Not Applicable"` as Not Applicable.
+- Net effect: a cell the spreadsheet **left blank** is still rendered as "NA" in the per-unit list, because `spStatus` defaults to `'Not Applicable'` when the cell is empty.
 
-## 2. Header + Dashboard Guide
-**`HealthcareHeader.tsx`** — Add a "Dashboard Guide" button (BookOpen icon) next to the Phase 1 badge, opens `DashboardGuideDrawer`.
+**University → StrategicCoverageGaps** (`src/components/executive/StrategicCoverageGaps.tsx:596–610`)
+- Uses `classifyCoverageUnitStatus`, which:
+  1. Returns `'blank'` whenever `spStatusProvided === false` (cell was empty / merged / default-filled), even if `spStatus === 'Not Applicable'`.
+  2. Returns `'blank'` if the raw `spStatus` string is anything other than the five exact values in `VALID_STATUSES` (line 102–108). So `"NA"`, `"N/A"`, `"not applicable"`, or a trailing-whitespace variant ends up as `blank` even though `isNotApplicableStatus()` would say NA.
+- Absolute NA only fires when `naCount === 24 && blankCount === 0 && missingCount === 0` (line 937).
 
-**`DashboardGuideDrawer.tsx` (new)** — Right-side sheet using existing `Sheet` component. 10 sections:
-1. Purpose & audience
-2. How to navigate (6 tabs)
-3. Completion methodology (weights table, blocked exclusion rule)
-4. Risk Index methodology (4 binary signals × 25, bands)
-5. Reporting Coverage definition
-6. Budget assumptions (5-year phasing, funding-source treatment)
-7. Status taxonomy (4-state Healthcare-native model)
-8. Data source & refresh cadence (prototype data note)
-9. Assumptions requiring stakeholder validation
-10. Future phases (RACI cockpit, Governance roadmap, integrated executive view)
+For **Pillar II → Goal 1 → Action 5 → Action Step 5 ("Produce a template for an optional co-curricular transcript")**, at least one of the 24 unit sheets leaves the mid-year cell empty (or types `"NA"` instead of `"Not Applicable"`). Action Explorer silently coerces that to NA and shows 24/24. Strategic Coverage Gaps correctly labels it `blank` and excludes the item from Absolute NA. Both views are internally consistent; they answer slightly different questions.
 
-Each section uses `Collapsible` for scannability. Premium executive tone, no jargon.
+### Scope
 
-## 3. Executive Snapshot rebuild
-**`ExecutiveSnapshot.tsx`** — Replace current layout with:
-- **KPI row (5)**: Portfolio Completion % (excl. blocked, with "X steps blocked / Y" sub), Reporting Coverage % (Q2 2026), Risk Signals Fired, Active Blockers, 5-Year Budget.
-- **Progress by Goal** card: derived completion %, blocked-count chip per goal.
-- **Risk Signals card**: 4 signals listed with count fired and bar — no composite/decorative score, fully auditable.
-- **Status donut** (4-state).
-- **Decisions & Blockers preview** (top 5, jump link).
-- **Budget vs Derived Completion** scatter (recharts) with prominent "Derived — based on prototype completion rules" badge and tooltip showing raw budget, derived %, blocked count.
-- **Funding Source mix** stacked bar.
+- **Affected:** University → Items Requiring Immediate Attention → **Absolute NA** and **Majority NA** (both gated on `blankCount === 0` implicitly through the strict path and the cleaned `naCount`).
+- **Not affected:** KPI cards, Risk Index, Completion %, Pillar Health Grid, Risk Distribution, Unit Heat Map, AI Insights — `src/lib/university-aggregation.ts` (`countStatuses`, lines ~109–161) already uses `isNotApplicableStatus()` and excludes blanks from both numerator and denominator. So percentages are unaffected; only the **Items Requiring Immediate Attention** panel under-reports.
+- **Likely additional cases:** Any action step that is "Not Applicable" in most units but typed as `NA`/`N/A`/blank in one or two sheets will exhibit the same symptom. Pillar II is one example; the same can appear in any pillar.
 
-## 4. Quarterly Execution rebuild
-**`QuarterlyExecution.tsx`** — Replace status-matrix with 4 visuals derived from `step.quarterly[]`:
-1. **Activity Heatmap** — goals × quarters, cell intensity = count of updates recorded.
-2. **Updates by Quarter** — bar chart of update counts (real data, not derived).
-3. **Status Evolution Strip** — per-goal horizontal strip showing status transitions Q1 2026 → Q1 2027.
-4. **Latest Quarter Narratives** — collapsible list with "Missing Q2 update" badges where applicable.
+### Recommended fix (single source of truth)
 
-## 5. Budget Intelligence enhancements
-**`BudgetIntelligence.tsx`** — Add:
-- Budget vs Derived Completion scatter (with methodology badge).
-- Funding source concentration (Herfindahl-style note in tooltip).
-- Per-goal budget table with derived-completion column and blocked-steps column.
-Keep existing 5-year phasing visual.
+Make the University view use the **same NA semantics** as the rest of the codebase (`isNotApplicableStatus`) so the two dashboards agree.
 
-## 6. Decisions & Blockers enhancements
-**`DecisionBlockersBoard.tsx`** — Add filters (by decision owner, blocker type), show risk-signals chips per blocker, and link each blocker to its goal in Goal Explorer.
+In `src/components/executive/StrategicCoverageGaps.tsx`, change `classifyCoverageUnitStatus` (~lines 596–610):
 
-## 7. Goal Explorer
-**`GoalExplorer.tsx`** — Inline absorb of RACI strip (Responsible/Accountable/Consulted/Informed badges), Champion + Priority + Blocker chips, and risk-signal chips per step. No nav change required beyond surfacing.
+```text
+1. Drop the VALID_STATUSES gate. Anything matching isNotApplicableStatus()
+   → 'na', regardless of spStatusProvided or surface variants ("NA", "N/A",
+   "not applicable", "-", "—", blank).
+2. Only classify as 'non-na' when status is one of the 4 non-NA canonical
+   values (Not Started / In Progress / Completed – On Target /
+   Completed – Below Target).
+3. Reserve 'blank' strictly for unrecognized typed text (typos), not for
+   empty cells.
+```
 
-## 8. Strategic Goals Overview
-**`StrategicGoalsOverview.tsx`** — Switch progress numbers to derived completion (excl. blocked); add blocked-count chip and risk-signals-fired chip per goal card.
+Effect:
+- `Goal 1 → Action 5 → Action Step 5` (and any peers) will now appear under Absolute NA whenever all 24 units are NA in any of those equivalent forms — matching what the Pillar Champion Action Explorer already shows.
+- "Items typed something invalid" still surface as `blank` and stay out (data-quality protection preserved).
+- KPI math is untouched (it lives in `university-aggregation.ts` and already uses `isNotApplicableStatus`).
 
----
+### Validation
 
-### Technical notes
-- All percentages must come from `helpers.ts` v2 functions (`portfolioCompletion`, `goalCompletion`, `riskIndex`, `reportingCoverage`).
-- Every derived metric surface must carry a small "Derived" badge or methodology tooltip linking to the Dashboard Guide.
-- Components removed from nav (`RACIChampionCockpit.tsx`, `GovernanceRoadmap.tsx`) stay on disk and are referenced from the Guide's "Future phases" section.
-- Premium dark aesthetic preserved (pure white text on medium-grey, emerald accent, no pastels).
+- Update `src/test/strategic-coverage-gaps.test.ts`: add a case where 23 units have explicit `"Not Applicable"` and 1 unit leaves the cell blank — must now appear in Absolute NA.
+- Add a case with one unit typed `"NA"` — must also appear in Absolute NA.
+- Existing tests (non-NA blocker, failed-unit, alias merging) should continue to pass: a unit with a real non-NA status still blocks inclusion.
+- Manual check after deploy: Pillar II → Goal 1 → Action 5 → Action Step 5 visible in **Absolute NA** mid-year.
 
-### Build order
-1. Sidebar + Dashboard page (nav reduction)
-2. Header + Guide Drawer
-3. Executive Snapshot
-4. Quarterly Execution
-5. Budget Intelligence
-6. Decisions & Blockers
-7. Goal Explorer + Goals Overview polish
+### Impact summary
+
+| Area | Affected? |
+|---|---|
+| Absolute NA / Majority NA visibility | Yes — fixed |
+| KPI percentages (Progress, Completion, Risk Index) | No |
+| Pillar Health Grid, Risk Distribution, Unit Heat Map | No |
+| Pillar Champions dashboard | No |
+| Monthly snapshot / cache / refresh logic | No |
+
+Scope is a single-file logic change plus test additions.
