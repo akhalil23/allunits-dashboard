@@ -594,19 +594,24 @@ function buildCoverageAliasComponentMap(aliasGroups: CoverageAliasKey[][]): Map<
 }
 
 function classifyCoverageUnitStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): CoverageUnitStatus {
-  const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
+  const { status } = getSelectedStatusMeta(item, viewType, term, academicYear);
 
-  if (!isProvided) {
-    return { classification: 'blank', status: '(blank)' };
+  // Treat any NA-equivalent value (blank cell, "NA", "N/A", "-", "—", case-insensitive
+  // "not applicable") as 'na' — matches the Pillar Champion Action Explorer and the
+  // university KPI aggregation in src/lib/university-aggregation.ts, so the same
+  // action step is classified identically across all views.
+  if (isNotApplicableStatus(status)) {
+    return { classification: 'na', status: status || 'Not Applicable' };
   }
 
+  // Any non-NA value must be one of the four canonical in-flight statuses;
+  // anything else is a data-entry typo and stays in the 'blank' bucket so it
+  // doesn't accidentally count toward Absolute NA or Majority NS.
   if (!VALID_STATUSES.has(status)) {
     return { classification: 'blank', status: status || '(blank)' };
   }
 
-  return isNotApplicableStatus(status)
-    ? { classification: 'na', status }
-    : { classification: 'non-na', status };
+  return { classification: 'non-na', status };
 }
 
 function selectCanonicalCoverageKeyForComponent(
