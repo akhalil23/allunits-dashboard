@@ -260,6 +260,10 @@ serve(async (req) => {
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+      const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+
       if (kind === 'unit') {
         const requestedUnit = body?.unitId;
         if (!requestedUnit) {
@@ -272,7 +276,15 @@ serve(async (req) => {
             status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        const payload = await fetchLiveUnit(requestedUnit, SUPABASE_URL, SERVICE_KEY) as Record<string, unknown>;
+        let payload: Record<string, unknown>;
+        try {
+          payload = await fetchLiveUnit(requestedUnit, SUPABASE_URL, SERVICE_KEY) as Record<string, unknown>;
+        } catch (err) {
+          const fallback = await fetchLatestMonthlyUnitFallbacks(admin);
+          const fallbackPayload = fallback.unitsById.get(requestedUnit);
+          if (!fallbackPayload) throw err;
+          payload = annotateSnapshotFallback(fallbackPayload, requestedUnit, fallback.publication?.published_at) as Record<string, unknown>;
+        }
         const pub = syntheticPublication(UNIT_IDS.length, UNIT_IDS.length, true);
         return new Response(JSON.stringify({
           ...payload,
@@ -284,10 +296,13 @@ serve(async (req) => {
       }
 
       if (kind === 'all-units') {
-        const { units, succeeded } = await fetchLiveAllUnits(SUPABASE_URL, SERVICE_KEY);
+        const { units, succeeded, fallbackUnits, failedUnits } = await fetchLiveAllUnits(SUPABASE_URL, SERVICE_KEY, admin);
         return new Response(JSON.stringify({
-          publication: syntheticPublication(succeeded, UNIT_IDS.length, true),
+          publication: syntheticPublication(units.length, UNIT_IDS.length, true),
           units,
+          liveSucceededUnits: succeeded,
+          fallbackUnits,
+          failedUnits,
           mode: 'live',
         }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
