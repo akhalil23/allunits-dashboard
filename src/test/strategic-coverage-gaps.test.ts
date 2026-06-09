@@ -191,4 +191,58 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items[0]?.naUnits).toHaveLength(UNIT_COUNT);
     expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
+
+  it('treats a blank/unprovided cell as Not Applicable (matches Action Explorer semantics)', () => {
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => {
+        if (index === 0) {
+          // Simulate a unit that left the cell blank — spStatus defaults to
+          // 'Not Applicable' but spStatusProvided is false.
+          const item = createActionItem('Not Applicable');
+          Object.values(item.terms).forEach(td => {
+            td.spStatusProvided = false;
+            td.spStatusRaw = '';
+            td.yearlyStatusProvided = false;
+            td.yearlyStatusRaw = '';
+          });
+          return createUnitResult(unitId, { items: [item] });
+        }
+        return createUnitResult(unitId);
+      }),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_IDS.length);
+  });
+
+  it('treats raw "NA" / "N/A" variants as Not Applicable', () => {
+    const categories = computeCategories(
+      UNIT_IDS.map((unitId, index) => {
+        const item = createActionItem('Not Applicable');
+        if (index === 0 || index === 1) {
+          Object.values(item.terms).forEach(td => {
+            // Surface a non-canonical raw value that isNotApplicableStatus recognizes.
+            td.spStatus = (index === 0 ? 'NA' : 'N/A') as Status;
+            td.spStatusRaw = index === 0 ? 'NA' : 'N/A';
+            td.yearlyStatus = (index === 0 ? 'NA' : 'N/A') as Status;
+            td.yearlyStatusRaw = index === 0 ? 'NA' : 'N/A';
+          });
+        }
+        return createUnitResult(unitId, { items: [item] });
+      }),
+      'cumulative',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_IDS.length);
+  });
 });
