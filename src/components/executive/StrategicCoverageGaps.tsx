@@ -1046,6 +1046,9 @@ export function computeCategories(
   const debugRows = buildCoverageDebugRows(stepMap, configuredUnitIds);
 
   const strictAbsoluteNA = absoluteNA.filter(item => {
+    // New semantics: every configured unit must be implicitly or explicitly NA
+    // (no active in-flight status anywhere). naUnits already contains the full
+    // implicit-NA set built above, so its length should equal totalConfiguredUnits.
     const isValid = item.naUnits.length === totalConfiguredUnits && item.totalUnits === totalConfiguredUnits;
 
     if (!isValid) {
