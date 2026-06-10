@@ -344,7 +344,12 @@ describe('computeCategories Absolute NA', () => {
     );
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
-    // Two distinct steps → neither has 24/24 → both excluded.
-    expect(absoluteNa?.items).toHaveLength(0);
+    // Both distinct steps qualify: every unit either explicitly reports NA
+    // (the unit that holds the variant) or implicitly NA (units without that
+    // variant — same fallback the Action Explorer applies). The two steps must
+    // remain SEPARATE entries — never merged.
+    expect(absoluteNa?.items).toHaveLength(2);
+    const steps = absoluteNa?.items.map(i => i.actionStep).sort() ?? [];
+    expect(steps).toEqual([differentStep, baseStep].sort());
   });
 });
