@@ -505,7 +505,6 @@ function buildCoverageAliasKeys(
   actionStep: string,
   item: Pick<ActionItem, 'sheetRow' | 'sourceKey'>,
 ): CoverageAliasKey[] {
-  const rowKey = item.sourceKey || buildSourceRowKey(pillar, item.sheetRow);
   const goalKey = normalizeHierarchyGroupKey(goal);
   const actionKey = normalizeHierarchyGroupKey(action);
   const stepKey = normalizeHierarchyGroupKey(actionStep);
