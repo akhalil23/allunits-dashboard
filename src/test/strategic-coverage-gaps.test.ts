@@ -69,7 +69,7 @@ function createUnitResult(unitId: string, options?: { items?: ActionItem[]; erro
 describe('computeCategories Absolute NA', () => {
   const UNIT_COUNT = UNIT_IDS.length;
 
-  it('includes an item only when every loaded unit explicitly reports Not Applicable', () => {
+  it('includes an item when every loaded unit explicitly reports Not Applicable', () => {
     const categories = computeCategories(
       UNIT_IDS.map(unitId => createUnitResult(unitId)),
       'cumulative',
@@ -105,7 +105,11 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
 
-  it('excludes the item when one unit has no matching row or explicit status', () => {
+  it('treats a missing row in one unit as implicit NA (matches Action Explorer fallback)', () => {
+    // Action Explorer's getItemStatus → getTermData defaults to 'Not Applicable'
+    // when a unit has no matching row, so the university dashboard must treat
+    // missing rows the same way. Otherwise the item silently disappears here
+    // while the Action Explorer still shows it as "NA in 25/25".
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => createUnitResult(unitId, index === 0 ? { items: [] } : undefined)),
       'cumulative',
@@ -115,7 +119,8 @@ describe('computeCategories Absolute NA', () => {
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
-    expect(absoluteNa?.items).toHaveLength(0);
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
 
   it('excludes the item when one unit reports a non-NA status', () => {
@@ -133,7 +138,10 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items).toHaveLength(0);
   });
 
-  it('excludes the item when one unit fails to load', () => {
+  it('treats a failed-to-load unit as implicit NA so the item still surfaces', () => {
+    // With the monthly-snapshot fallback in get-snapshot, hard load failures
+    // are rare. When they do occur, the failed unit is treated as implicit NA
+    // (same as a blank/missing row) to match the Action Explorer's behavior.
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => createUnitResult(unitId, index === 0 ? { error: 'SERVICE_UNAVAILABLE' } : undefined)),
       'cumulative',
@@ -143,7 +151,8 @@ describe('computeCategories Absolute NA', () => {
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
-    expect(absoluteNa?.items).toHaveLength(0);
+    expect(absoluteNa?.items).toHaveLength(1);
+    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
 
   it('merges alias-linked matches before applying the strict 24/24 NA rule', () => {
