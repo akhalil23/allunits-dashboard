@@ -13,7 +13,7 @@ import { useUniversityData } from '@/hooks/use-university-data';
 import { isNotApplicableStatus, getTermWindowKey } from '@/lib/types';
 import { getUnitDisplayName, UNIT_IDS } from '@/lib/unit-config';
 import { PILLAR_FULL } from '@/lib/pillar-labels';
-import { buildSourceRowKey, normalizeHierarchyGroupKey, normalizeHierarchyMatchKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
+import { normalizeHierarchyGroupKey, normalizeHierarchyMatchKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import {
   Popover,
   PopoverContent,
