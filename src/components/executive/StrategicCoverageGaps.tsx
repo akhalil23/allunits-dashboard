@@ -906,6 +906,41 @@ export function computeCategories(
     const nonNaCount = nonNaUnitIds.length;
     const blankCount = blankUnitIds.length;
 
+    // ─── Targeted diagnostic: co-curricular transcript item ──────────────
+    // Always-on (not just DEV) probe for the known "Pillar II / Goal 1 /
+    // Action 5 / Step 5 — Produce a template for an optional co-curricular
+    // transcript" item. Surfaces the exact live classification across the 25
+    // units so we can see why it is or isn't in Absolute NA. Remove once the
+    // root cause is confirmed and stable.
+    const probeStepMatch = normalizeHierarchyMatchKey(entry.actionStep);
+    if (
+      entry.pillar === 'II'
+      && probeStepMatch.includes('produceatemplateforanoptionalcocurriculartranscript')
+      && viewType === 'cumulative'
+      && term === 'mid'
+      && academicYear === '2025-2026'
+    ) {
+      const perUnit = configuredUnitIds.map(unitId => {
+        const s = entry.statusByUnit.get(unitId);
+        return `${getUnitDisplayName(unitId)}=${s ? `${s.classification}:${s.status}` : 'missing'}`;
+      });
+      console.warn('[CoverageGaps][TranscriptProbe] Pillar II / Goal 1 / Action 5 / Step 5 — live classification', {
+        canonicalKey: key,
+        sourceKey: entry.sourceKey,
+        goal: entry.goal,
+        action: entry.action,
+        actionStep: entry.actionStep,
+        sheetRow: entry.sheetRow,
+        naCount,
+        nonNaCount,
+        blankCount,
+        missingCount: totalConfiguredUnits - reportingCount,
+        wouldBeIncluded: nonNaCount === 0 && naCount > 0,
+        aliasIds: Array.from(entry.aliases),
+        perUnit,
+      });
+    }
+
     if (activeCount > 0) {
       const nsItem: StepItem = {
         sourceKey: entry.sourceKey,
