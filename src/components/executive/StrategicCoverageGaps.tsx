@@ -916,9 +916,6 @@ export function computeCategories(
     if (
       entry.pillar === 'II'
       && probeStepMatch.includes('produceatemplateforanoptionalcocurriculartranscript')
-      && viewType === 'cumulative'
-      && term === 'mid'
-      && academicYear === '2025-2026'
     ) {
       const perUnit = configuredUnitIds.map(unitId => {
         const s = entry.statusByUnit.get(unitId);
