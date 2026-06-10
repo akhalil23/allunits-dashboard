@@ -942,34 +942,46 @@ export function computeCategories(
     const blockingUnitStatuses = configuredUnitIds
       .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
       .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
-    const isStrictAbsoluteNA = naCount === totalConfiguredUnits && nonNaCount === 0 && blankCount === 0 && missingUnitIds.length === 0;
+
+    // Implicit-NA semantics — must match the Pillar Champion Action Explorer.
+    // That view uses getItemStatus() → getTermData(), which falls back to
+    // DEFAULT_TERM_DATA.spStatus = 'Not Applicable' whenever a unit lacks the
+    // row, the term window, or has a blank/unrecognized status cell. So a unit
+    // is "NA" iff it does NOT report an active in-flight status. Treat 'blank'
+    // and 'missing' as implicit NA to keep both views consistent. Only an
+    // explicit non-NA (active) status disqualifies a step from Absolute NA.
+    const implicitNaUnitIds = configuredUnitIds.filter(unitId => {
+      const cls = entry.statusByUnit.get(unitId)?.classification;
+      return cls === undefined || cls === 'blank' || cls === 'na';
+    });
+    const isStrictAbsoluteNA = nonNaCount === 0 && naCount > 0;
     const inclusionReason = isStrictAbsoluteNA
-      ? `included: explicit Not Applicable in all ${totalConfiguredUnits} configured units`
+      ? `included: no unit reports an active status (${naCount} explicit NA, ${blankCount} blank, ${missingUnitIds.length} missing — all treated as NA, matching Action Explorer)`
       : nonNaCount > 0
-        ? `excluded: ${nonNaCount} unit(s) are present but not Not Applicable`
-        : blankCount > 0
-          ? `excluded: blank status in ${blankCount} unit(s)`
-      : missingUnitIds.length > 0
-        ? `excluded: missing, blank, unmatched, or unloaded in ${missingUnitIds.length} unit(s)`
-        : 'excluded: no item has NA_count = 24 out of 24 loaded units';
+        ? `excluded: ${nonNaCount} unit(s) report an active status — [${blockingUnitStatuses.join(', ')}]`
+        : `excluded: no unit explicitly classifies this step as Not Applicable`;
 
     if (import.meta.env.DEV) {
       console.info('[CoverageGaps][Absolute NA candidate]', {
         uniqueItemKey: entry.sourceKey,
+        actionStep: entry.actionStep,
         totalUnits: totalConfiguredUnits,
         matchedUnitsCount: reportingCount,
         naCount,
         nonNaCount,
         blankCount,
         missingCount: missingUnitIds.length,
-        matchedUnits: sortedNaUnits.map(getUnitDisplayName),
+        implicitNaCount: implicitNaUnitIds.length,
+        explicitNaUnits: sortedNaUnits.map(getUnitDisplayName),
+        blankUnits: blankUnitIds.map(getUnitDisplayName),
         missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
         ...(blockingUnitStatuses.length > 0 ? { blockingUnits: blockingUnitStatuses } : {}),
         finalReason: inclusionReason,
       });
     }
 
-    // Capture near-miss candidates: items where most units said NA but at least one didn't.
+    // Capture near-miss candidates: items where ≥1 unit said NA but a non-NA
+    // status blocks inclusion. Useful for surfacing data-entry inconsistencies.
     if (naCount >= Math.max(1, totalConfiguredUnits - 5) && !isStrictAbsoluteNA) {
       nearMissCandidates.push({
         sourceKey: entry.sourceKey,
@@ -980,14 +992,15 @@ export function computeCategories(
         nonNaUnits: configuredUnitIds
           .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
           .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status ?? '?'}`),
-        blankUnits: configuredUnitIds
-          .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank')
-          .map(getUnitDisplayName),
+        blankUnits: blankUnitIds.map(getUnitDisplayName),
         missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
       });
     }
 
     if (isStrictAbsoluteNA) {
+      // Show every unit in the popover (explicit + implicit NA) so the count
+      // matches the Action Explorer's "NA in 25/25" framing.
+      const allNaUnitIds = sortUnitIds(implicitNaUnitIds, configuredUnitIds);
       absoluteNA.push({
         sourceKey: entry.sourceKey,
         sheetRow: entry.sheetRow,
@@ -996,7 +1009,7 @@ export function computeCategories(
         goal: entry.goal,
         action: entry.action,
         nsUnits: sortedNsUnits,
-        naUnits: sortedNaUnits,
+        naUnits: allNaUnitIds,
         totalUnits: totalConfiguredUnits,
       });
     }
