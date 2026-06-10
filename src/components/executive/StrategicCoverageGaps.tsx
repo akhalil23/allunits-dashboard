@@ -518,9 +518,10 @@ function buildCoverageAliasKeys(
   if (actionKey && stepKey) {
     aliases.push({ key: `${pillar}|action:${actionKey}|step:${stepKey}`, rank: 3 });
   }
-  if (rowKey) {
-    aliases.push({ key: rowKey, rank: 2 });
-  }
+  // Do NOT include the source row as a cross-unit alias when a real step text is
+  // present. Some sheets shift rows by one, so the same row number can point to
+  // different action steps across units; using it in the alias graph can merge
+  // an adjacent active item into an otherwise Absolute NA item.
   // Step-only fallback alias: unions the same action step across units even when
   // goal/action wording differs slightly OR when the step text itself has cosmetic
   // differences (non-breaking hyphen vs ASCII hyphen, smart quote vs straight,
