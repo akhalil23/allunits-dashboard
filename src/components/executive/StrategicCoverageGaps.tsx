@@ -189,6 +189,31 @@ export default function StrategicCoverageGaps() {
   const activeData = activeCategory ? categories.find(c => c.key === activeCategory) : null;
   const grouped = activeData ? groupByPillar(activeData.items) : [];
 
+  useEffect(() => {
+    if (!activeData || activeData.key !== 'absolute-na') return;
+
+    const transcriptItem = activeData.items.find(item => isTranscriptActionStep(item.actionStep));
+    const transcriptGroup = grouped.flatMap(pillar => pillar.goals.flatMap(goal => goal.actions.flatMap(action => (
+      action.steps
+        .filter(step => isTranscriptActionStep(step.actionStep))
+        .map(step => ({ pillar: pillar.pillar, goal: goal.goal, action: action.action, step }))
+    ))))[0];
+
+    console.warn('[CoverageGaps][TranscriptProbe][RenderTrace] Absolute NA render path', {
+      activeCategory: activeData.key,
+      classifiedAsAbsoluteNA: Boolean(transcriptItem),
+      entersAbsoluteNAArray: Boolean(transcriptItem),
+      absoluteNAArrayCount: activeData.items.length,
+      groupedRenderCount: countGroupedSteps(grouped),
+      groupedUnder: transcriptGroup
+        ? { pillar: transcriptGroup.pillar, goal: transcriptGroup.goal, action: transcriptGroup.action }
+        : null,
+      filteredOutBeforeRendering: Boolean(transcriptItem) && !transcriptGroup,
+      sourceKey: transcriptItem?.sourceKey,
+      actionStep: transcriptItem?.actionStep,
+    });
+  }, [activeData, grouped]);
+
   const handleCardClick = (key: CategoryKey) => {
     setActiveCategory(prev => prev === key ? null : key);
   };
@@ -524,13 +549,19 @@ function buildCoverageAliasKeys(
   const goalKey = normalizeHierarchyGroupKey(goal);
   const actionKey = normalizeHierarchyGroupKey(action);
   const stepKey = normalizeHierarchyGroupKey(actionStep);
+  const goalMatchKey = normalizeHierarchyMatchKey(goal);
+  const actionMatchKey = normalizeHierarchyMatchKey(action);
+  const stepMatchKey = normalizeHierarchyMatchKey(actionStep);
 
   const aliases: CoverageAliasKey[] = [];
 
+  if (goalMatchKey && actionMatchKey && stepMatchKey) {
+    aliases.push({ key: `${pillar}|goalmatch:${goalMatchKey}|actionmatch:${actionMatchKey}|stepmatch:${stepMatchKey}`, rank: 5 });
+  }
   if (goalKey && actionKey && stepKey) {
     aliases.push({ key: `${pillar}|goal:${goalKey}|action:${actionKey}|step:${stepKey}`, rank: 4 });
   }
-  if (actionKey && stepKey) {
+  if (!goalMatchKey && actionKey && stepKey) {
     aliases.push({ key: `${pillar}|action:${actionKey}|step:${stepKey}`, rank: 3 });
   }
   // Do NOT include the source row as a cross-unit alias when a real step text is
@@ -542,8 +573,7 @@ function buildCoverageAliasKeys(
   // differences (non-breaking hyphen vs ASCII hyphen, smart quote vs straight,
   // trailing period/colon, extra parentheses, etc.). Punctuation-insensitive so
   // Absolute NA stays stable across data-entry variants.
-  const stepMatchKey = normalizeHierarchyMatchKey(actionStep);
-  if (stepMatchKey) {
+  if (stepMatchKey && (!goalMatchKey || !actionMatchKey)) {
     aliases.push({ key: `${pillar}|stepmatch:${stepMatchKey}`, rank: 1 });
   }
 
