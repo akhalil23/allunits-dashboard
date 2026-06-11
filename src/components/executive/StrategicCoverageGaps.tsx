@@ -1194,7 +1194,7 @@ export function computeCategories(
 
 // ─── Grouping: Pillar → Goal → Action → Steps (deduplicated) ────────────────
 
-function groupByPillar(items: StepItem[]): PillarGroup[] {
+export function groupByPillar(items: StepItem[]): PillarGroup[] {
   const pillarMap = new Map<PillarId, Map<string, {
     goal: string;
     firstRow: number;
