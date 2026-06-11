@@ -558,6 +558,9 @@ function buildCoverageAliasKeys(
   if (goalMatchKey && actionMatchKey && stepMatchKey) {
     aliases.push({ key: `${pillar}|goalmatch:${goalMatchKey}|actionmatch:${actionMatchKey}|stepmatch:${stepMatchKey}`, rank: 5 });
   }
+  if (goalMatchKey && stepMatchKey) {
+    aliases.push({ key: `${pillar}|goalmatch:${goalMatchKey}|stepmatch:${stepMatchKey}`, rank: 2 });
+  }
   if (goalKey && actionKey && stepKey) {
     aliases.push({ key: `${pillar}|goal:${goalKey}|action:${actionKey}|step:${stepKey}`, rank: 4 });
   }
