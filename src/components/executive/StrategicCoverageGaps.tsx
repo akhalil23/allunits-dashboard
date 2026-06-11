@@ -964,13 +964,15 @@ export function computeCategories(
     const probeStepMatch = normalizeHierarchyMatchKey(entry.actionStep);
     if (
       entry.pillar === 'II'
-      && probeStepMatch.includes('produceatemplateforanoptionalcocurriculartranscript')
+      && (probeStepMatch.includes('produceatemplateforanoptionalcocurriculartranscript')
+        || probeStepMatch.includes('transcript')
+        || probeStepMatch.includes('cocurricular'))
     ) {
       const perUnit = configuredUnitIds.map(unitId => {
         const s = entry.statusByUnit.get(unitId);
         return `${getUnitDisplayName(unitId)}=${s ? `${s.classification}:${s.status}` : 'missing'}`;
       });
-      console.warn('[CoverageGaps][TranscriptProbe] Pillar II / Goal 1 / Action 5 / Step 5 — live classification', {
+      console.warn('[CoverageGaps][TranscriptProbe] Pillar II transcript-bearing entry', {
         canonicalKey: key,
         sourceKey: entry.sourceKey,
         goal: entry.goal,
