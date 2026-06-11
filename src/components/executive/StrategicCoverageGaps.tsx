@@ -555,29 +555,29 @@ function buildCoverageAliasKeys(
 
   const aliases: CoverageAliasKey[] = [];
 
+  // STRONG ALIAS ONLY — full normalized hierarchy (pillar+goal+action+step).
+  // normalizeHierarchyMatchKey is punctuation-insensitive (folds NBSP, smart
+  // quotes, Unicode dashes, trailing periods, etc.) so the same logical item
+  // matches across all 25 unit sheets even with cosmetic differences. We
+  // intentionally do NOT emit weaker aliases (goal+step or step-only) because
+  // those can incorrectly merge two *different* action steps that happen to
+  // share text fragments — that was the root cause of the "Produce a template
+  // for an optional co-curricular transcript" item disappearing from Absolute
+  // NA: its data was being folded into a different entry whose canonical text
+  // was something else, and that other entry had an active unit, blocking
+  // inclusion.
   if (goalMatchKey && actionMatchKey && stepMatchKey) {
     aliases.push({ key: `${pillar}|goalmatch:${goalMatchKey}|actionmatch:${actionMatchKey}|stepmatch:${stepMatchKey}`, rank: 5 });
+  } else if (actionMatchKey && stepMatchKey) {
+    aliases.push({ key: `${pillar}|actionmatch:${actionMatchKey}|stepmatch:${stepMatchKey}`, rank: 3 });
+  } else if (stepMatchKey) {
+    aliases.push({ key: `${pillar}|stepmatch:${stepMatchKey}`, rank: 1 });
   }
-  if (goalMatchKey && stepMatchKey) {
-    aliases.push({ key: `${pillar}|goalmatch:${goalMatchKey}|stepmatch:${stepMatchKey}`, rank: 2 });
-  }
+
+  // Loose group-key full-hierarchy alias as a safety net to union variants
+  // where group-key normalization differs from match-key normalization.
   if (goalKey && actionKey && stepKey) {
     aliases.push({ key: `${pillar}|goal:${goalKey}|action:${actionKey}|step:${stepKey}`, rank: 4 });
-  }
-  if (!goalMatchKey && actionKey && stepKey) {
-    aliases.push({ key: `${pillar}|action:${actionKey}|step:${stepKey}`, rank: 3 });
-  }
-  // Do NOT include the source row as a cross-unit alias when a real step text is
-  // present. Some sheets shift rows by one, so the same row number can point to
-  // different action steps across units; using it in the alias graph can merge
-  // an adjacent active item into an otherwise Absolute NA item.
-  // Step-only fallback alias: unions the same action step across units even when
-  // goal/action wording differs slightly OR when the step text itself has cosmetic
-  // differences (non-breaking hyphen vs ASCII hyphen, smart quote vs straight,
-  // trailing period/colon, extra parentheses, etc.). Punctuation-insensitive so
-  // Absolute NA stays stable across data-entry variants.
-  if (stepMatchKey && (!goalMatchKey || !actionMatchKey)) {
-    aliases.push({ key: `${pillar}|stepmatch:${stepMatchKey}`, rank: 1 });
   }
 
   return Array.from(
