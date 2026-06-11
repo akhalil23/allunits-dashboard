@@ -107,6 +107,22 @@ const VALID_STATUSES = new Set([
   'Completed – Below Target',
 ]);
 
+const TRANSCRIPT_STEP_MATCH = 'produceatemplateforanoptionalcocurriculartranscript';
+
+function isTranscriptActionStep(step: string): boolean {
+  return normalizeHierarchyMatchKey(step).includes(TRANSCRIPT_STEP_MATCH);
+}
+
+function countGroupedSteps(groups: PillarGroup[]): number {
+  return groups.reduce(
+    (pillarTotal, pillar) => pillarTotal + pillar.goals.reduce(
+      (goalTotal, goal) => goalTotal + goal.actions.reduce((actionTotal, action) => actionTotal + action.steps.length, 0),
+      0,
+    ),
+    0,
+  );
+}
+
 // ─── Forward-fill logic ─────────────────────────────────────────────────────
 
 /**
