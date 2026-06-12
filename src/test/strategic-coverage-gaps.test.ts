@@ -155,7 +155,13 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
 
-  it('merges alias-linked matches before applying the strict 24/24 NA rule', () => {
+  it('keeps semantically different Action labels as separate entries (strong-alias semantics)', () => {
+    // 'Action 1' vs 'Action One' are NOT cosmetic variants of each other under
+    // normalizeHierarchyMatchKey, so they must stay separate entries. Merging
+    // them via weak (goal+step / step-only) aliases was the root cause of the
+    // transcript regression. Real unit sheets are textually identical across
+    // all 25 units, so no weak bridging is needed. Both entries still qualify
+    // for Absolute NA because every unit is explicitly or implicitly NA.
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => {
         if (index < 8) {
@@ -169,20 +175,9 @@ describe('computeCategories Absolute NA', () => {
           });
         }
 
-        if (index < 16) {
-          return createUnitResult(unitId, {
-            items: [createActionItem('Not Applicable', {
-              sourceKey: 'I|row-5',
-              goal: 'Goal 1',
-              objective: 'Action One',
-              actionStep: 'Action Step 1',
-            })],
-          });
-        }
-
         return createUnitResult(unitId, {
           items: [createActionItem('Not Applicable', {
-            sourceKey: 'I|row-9',
+            sourceKey: index < 16 ? 'I|row-5' : 'I|row-9',
             goal: 'Goal 1',
             objective: 'Action One',
             actionStep: 'Action Step 1',
@@ -196,10 +191,15 @@ describe('computeCategories Absolute NA', () => {
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
-    expect(absoluteNa?.items).toHaveLength(1);
-    expect(absoluteNa?.items[0]?.naUnits).toHaveLength(UNIT_COUNT);
-    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
+    expect(absoluteNa?.items).toHaveLength(2);
+    absoluteNa?.items.forEach(item => {
+      expect(item.naUnits).toHaveLength(UNIT_COUNT);
+      expect(item.totalUnits).toBe(UNIT_COUNT);
+    });
+    const actions = absoluteNa?.items.map(i => i.action).sort();
+    expect(actions).toEqual(['Action 1', 'Action One']);
   });
+
 
   it('treats a blank/unprovided cell as Not Applicable (matches Action Explorer semantics)', () => {
     const categories = computeCategories(
