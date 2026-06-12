@@ -6,11 +6,11 @@
  * Run: bun scripts/audit-coverage.ts [yearly|cumulative]
  */
 import { readFileSync } from 'fs';
-import { computeCategories, groupByPillar } from '@/components/executive/StrategicCoverageGaps';
-import { UNIT_CONFIGS, UNIT_IDS } from '@/lib/unit-config';
-import type { ActionItem, FetchResult, ViewType } from '@/lib/types';
-import { isNotApplicableStatus, getTermWindowKey } from '@/lib/types';
-import type { UnitFetchResult } from '@/lib/university-aggregation';
+import { computeCategories, groupByPillar } from '../src/components/executive/StrategicCoverageGaps';
+import { UNIT_CONFIGS, UNIT_IDS } from '../src/lib/unit-config';
+import type { ActionItem, FetchResult, ViewType } from '../src/lib/types';
+import { isNotApplicableStatus, getTermWindowKey } from '../src/lib/types';
+import type { UnitFetchResult } from '../src/lib/university-aggregation';
 
 const viewType = (process.argv[2] === 'cumulative' ? 'cumulative' : 'yearly') as ViewType;
 const term = 'mid' as const;
