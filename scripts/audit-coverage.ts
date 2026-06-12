@@ -122,3 +122,25 @@ const pipePerPillar = new Map<string, number>();
 absNA.items.forEach(i => pipePerPillar.set(i.pillar, (pipePerPillar.get(i.pillar) ?? 0) + 1));
 console.log('\nPer-pillar truth vs pipeline:');
 ['I', 'II', 'III', 'IV', 'V'].forEach(p => console.log(`  ${p}: truth=${perPillar.get(p) ?? 0} pipeline=${pipePerPillar.get(p) ?? 0}`));
+
+// ─── Full grouping audit across all categories ──────────────────────────────
+const truthParents = new Map<string, { goal: string; action: string }>();
+truth.forEach(e => truthParents.set(`${e.pillar}|${mk(e.step)}|${mk(e.goal)}|${mk(e.action)}`, { goal: e.goal, action: e.action }));
+let totalSteps = 0, badParents = 0, countMismatch = 0;
+for (const cat of categories) {
+  const g = groupByPillar(cat.items);
+  const rendered = g.reduce((t, pg) => t + pg.goals.reduce((t2, gg) => t2 + gg.actions.reduce((t3, ag) => t3 + ag.steps.length, 0), 0), 0);
+  if (rendered !== cat.count || cat.count !== cat.items.length) {
+    countMismatch++;
+    console.log(`COUNT/TREE MISMATCH in ${cat.key}: count=${cat.count} items=${cat.items.length} rendered=${rendered}`);
+  }
+  for (const pg of g) for (const gg of pg.goals) for (const ag of gg.actions) for (const st of ag.steps) {
+    totalSteps++;
+    const k = `${pg.pillar}|${mk(st.actionStep)}|${mk(gg.goal)}|${mk(ag.action)}`;
+    if (!truthParents.has(k)) {
+      badParents++;
+      console.log(`BAD PARENT in ${cat.key}: [${pg.pillar}] "${st.actionStep.slice(0,60)}" under "${gg.goal.slice(0,40)}" / "${ag.action.slice(0,50)}"`);
+    }
+  }
+}
+console.log(`\nAll-category grouping audit: ${totalSteps} rendered steps, badParents=${badParents}, categoriesWithCountMismatch=${countMismatch}`);
