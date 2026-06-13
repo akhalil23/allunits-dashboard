@@ -688,6 +688,51 @@ function mergeCoverageUnitStatus(
   return current;
 }
 
+function applyConsensusHierarchy(entry: CoverageAggregateEntry): void {
+  const best = Array.from(entry.hierarchyVotes.values())
+    .sort((left, right) => {
+      const unitDiff = right.unitIds.size - left.unitIds.size;
+      if (unitDiff !== 0) return unitDiff;
+      return left.sheetRow - right.sheetRow;
+    })[0];
+
+  if (!best) return;
+
+  entry.goal = best.goal || entry.goal;
+  entry.action = best.action || entry.action;
+  entry.actionStep = best.actionStep || entry.actionStep;
+  entry.sheetRow = best.sheetRow;
+}
+
+function recordHierarchyVote(
+  entry: CoverageAggregateEntry,
+  unitId: string,
+  goal: string,
+  action: string,
+  actionStep: string,
+  sheetRow: number,
+): void {
+  const voteKey = [
+    normalizeHierarchyGroupKey(goal),
+    normalizeHierarchyGroupKey(action),
+    normalizeHierarchyGroupKey(actionStep),
+  ].join('|');
+
+  if (!entry.hierarchyVotes.has(voteKey)) {
+    entry.hierarchyVotes.set(voteKey, {
+      goal: goal || '(Unspecified Goal)',
+      action: action || '(Unspecified Action)',
+      actionStep: actionStep || '(Unnamed Step)',
+      sheetRow,
+      unitIds: new Set(),
+    });
+  }
+
+  const vote = entry.hierarchyVotes.get(voteKey)!;
+  vote.unitIds.add(unitId);
+  vote.sheetRow = Math.min(vote.sheetRow, sheetRow);
+}
+
 function buildCoverageDebugRows(
   stepMap: Map<string, CoverageAggregateEntry>,
   configuredUnitIds: readonly string[],
