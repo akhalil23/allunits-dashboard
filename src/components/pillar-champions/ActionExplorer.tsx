@@ -16,6 +16,12 @@ import { getActionItemSourceKey, normalizeHierarchyGroupKey, normalizeHierarchyT
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 import type { PillarId, ViewType, Term, AcademicYear } from '@/lib/types';
 
+function isSyntheticActionHeaderStep(objective: string, actionStep: string): boolean {
+  const objectiveKey = normalizeHierarchyGroupKey(objective).replace(/[^a-z0-9]+/g, '');
+  const stepKey = normalizeHierarchyGroupKey(actionStep).replace(/[^a-z0-9]+/g, '');
+  return objectiveKey.length > 0 && objectiveKey === stepKey;
+}
+
 interface Props {
   unitResults: UnitFetchResult[];
   viewType: ViewType;
@@ -109,6 +115,7 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
           if (g) lastGoal = g;
           if (a) lastAction = a;
           if (!s) return; // skip rows without an action step
+          if (isSyntheticActionHeaderStep(lastAction, s)) return;
           filledItems.push({ item, goal: lastGoal, objective: lastAction, actionStep: s });
         });
       });
