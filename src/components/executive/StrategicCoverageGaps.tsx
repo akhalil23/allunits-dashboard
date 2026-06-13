@@ -891,6 +891,7 @@ export function computeCategories(
             goal: normalizedGoal || '(Unspecified Goal)',
             action: normalizedAction || '(Unspecified Action)',
             aliases: new Set(),
+            hierarchyVotes: new Map(),
             statusByUnit: new Map(),
           });
         }
@@ -900,12 +901,7 @@ export function computeCategories(
           entry.aliases.add(key);
         });
 
-        if (entry.goal === '(Unspecified Goal)') {
-          entry.goal = normalizedGoal || entry.goal;
-        }
-        if (entry.action === '(Unspecified Action)') {
-          entry.action = normalizedAction || entry.action;
-        }
+        recordHierarchyVote(entry, ur.unitId, normalizedGoal, normalizedAction, cleanedStep, item.sheetRow);
         entry.sheetRow = Math.min(entry.sheetRow, item.sheetRow);
 
         const dedupeKey = `${canonicalKey}::${ur.unitId}`;
@@ -920,6 +916,8 @@ export function computeCategories(
       });
     });
   });
+
+  stepMap.forEach(applyConsensusHierarchy);
 
   // Categorize using per-step denominators
   const majorityNS: StepItem[] = [];
