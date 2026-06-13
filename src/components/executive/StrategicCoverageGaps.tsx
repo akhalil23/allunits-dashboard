@@ -94,18 +94,6 @@ interface CoverageAliasKey {
   rank: number;
 }
 
-interface CoverageDebugRow {
-  itemKey: string;
-  totalUnits: number;
-  matchedUnitsCount: number;
-  naCount: number;
-  nonNaCount: number;
-  blankCount: number;
-  missingCount: number;
-  included: boolean;
-  exclusionReason: string;
-}
-
 const VALID_STATUSES = new Set([
   'Not Applicable',
   'Not Started',
@@ -737,41 +725,6 @@ function recordHierarchyVote(
   const vote = entry.hierarchyVotes.get(voteKey)!;
   vote.unitIds.add(unitId);
   vote.sheetRow = Math.min(vote.sheetRow, sheetRow);
-}
-
-function buildCoverageDebugRows(
-  stepMap: Map<string, CoverageAggregateEntry>,
-  configuredUnitIds: readonly string[],
-): CoverageDebugRow[] {
-  return Array.from(stepMap.entries())
-    .map(([itemKey, entry]) => {
-      const totalUnits = configuredUnitIds.length;
-      const matchedUnitsCount = configuredUnitIds.filter(unitId => entry.statusByUnit.has(unitId)).length;
-      const naCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'na').length;
-      const nonNaCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na').length;
-      const blankCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank').length;
-      const missingCount = configuredUnitIds.length - matchedUnitsCount;
-      const included = naCount === totalUnits && nonNaCount === 0 && blankCount === 0 && missingCount === 0;
-
-      return {
-        itemKey,
-        totalUnits,
-        matchedUnitsCount,
-        naCount,
-        nonNaCount,
-        blankCount,
-        missingCount,
-        included,
-        exclusionReason: included
-          ? `included: explicit Not Applicable in all ${totalUnits} configured units`
-          : [
-              nonNaCount > 0 ? `non-NA=${nonNaCount}` : null,
-              blankCount > 0 ? `blank=${blankCount}` : null,
-              missingCount > 0 ? `missing=${missingCount}` : null,
-            ].filter(Boolean).join(', '),
-      };
-    })
-    .sort((left, right) => right.naCount - left.naCount || left.itemKey.localeCompare(right.itemKey));
 }
 
 // ─── Computation ─────────────────────────────────────────────────────────────
