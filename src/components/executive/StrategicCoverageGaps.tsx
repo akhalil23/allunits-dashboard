@@ -960,37 +960,10 @@ export function computeCategories(
     }
 
     const missingUnitIds = configuredUnitIds.filter(unitId => !entry.statusByUnit.has(unitId));
-    const blockingUnitStatuses = configuredUnitIds
-      .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
-      .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
-
     const isStrictAbsoluteNA = naCount === totalConfiguredUnits
       && nonNaCount === 0
       && blankCount === 0
       && missingUnitIds.length === 0;
-    const inclusionReason = isStrictAbsoluteNA
-      ? `included: explicitly Not Applicable in all ${totalConfiguredUnits} configured units`
-      : nonNaCount > 0
-        ? `excluded: ${nonNaCount} unit(s) report an active status — [${blockingUnitStatuses.join(', ')}]`
-        : `excluded: explicit NA consensus incomplete (${naCount}/${totalConfiguredUnits}; blank=${blankCount}; missing=${missingUnitIds.length})`;
-
-    if (import.meta.env.DEV) {
-      console.info('[CoverageGaps][Absolute NA candidate]', {
-        uniqueItemKey: entry.sourceKey,
-        actionStep: entry.actionStep,
-        totalUnits: totalConfiguredUnits,
-        matchedUnitsCount: reportingCount,
-        naCount,
-        nonNaCount,
-        blankCount,
-        missingCount: missingUnitIds.length,
-        explicitNaUnits: sortedNaUnits.map(getUnitDisplayName),
-        blankUnits: blankUnitIds.map(getUnitDisplayName),
-        missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
-        ...(blockingUnitStatuses.length > 0 ? { blockingUnits: blockingUnitStatuses } : {}),
-        finalReason: inclusionReason,
-      });
-    }
 
     // Capture near-miss candidates: items where ≥1 unit said NA but a non-NA
     // status blocks inclusion. Useful for surfacing data-entry inconsistencies.
@@ -1052,8 +1025,6 @@ export function computeCategories(
     })));
   }
 
-  const debugRows = buildCoverageDebugRows(stepMap, configuredUnitIds);
-
   const strictAbsoluteNA = absoluteNA.filter(item => {
     // Every configured unit must explicitly report Not Applicable.
     const isValid = item.naUnits.length === totalConfiguredUnits && item.totalUnits === totalConfiguredUnits;
@@ -1080,15 +1051,8 @@ export function computeCategories(
 
   // ─── Debug summary (dev only) ──────────────────────────────────────────
   if (import.meta.env.DEV) {
-    const isMandatoryAbsoluteNaDebugFilter = viewType === 'cumulative' && term === 'mid' && academicYear === '2025-2026';
     const absoluteNAKeys = new Set(strictAbsoluteNA.map(i => i.sourceKey));
     const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
-    if (isMandatoryAbsoluteNaDebugFilter) {
-      console.table(debugRows);
-      if (strictAbsoluteNA.length === 0) {
-        console.info(`[CoverageGaps] No item has NA_count = ${totalConfiguredUnits} out of ${totalConfiguredUnits} configured units.`);
-      }
-    }
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
       majorityOnlyNA.forEach(item => {
