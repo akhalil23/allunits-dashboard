@@ -145,6 +145,12 @@ function forwardFill(items: ActionItem[]): { goal: string; action: string; actio
   });
 }
 
+function isSyntheticActionHeaderStep(action: string, actionStep: string): boolean {
+  const actionKey = normalizeHierarchyMatchKey(action);
+  const stepKey = normalizeHierarchyMatchKey(actionStep);
+  return actionKey.length > 0 && actionKey === stepKey;
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function StrategicCoverageGaps() {
@@ -810,6 +816,7 @@ export function computeCategories(
       forwardFill(pillarItems).forEach(({ goal, action, actionStep, pillar, item }) => {
         const cleanedStep = normalizeHierarchyText(actionStep);
         if (!cleanedStep) return;
+        if (isSyntheticActionHeaderStep(action, cleanedStep)) return;
 
         const aliasKeys = buildCoverageAliasKeys(
           pillar,
@@ -865,6 +872,7 @@ export function computeCategories(
 
         const normalizedGoal = normalizeHierarchyText(goal);
         const normalizedAction = normalizeHierarchyText(action);
+        if (isSyntheticActionHeaderStep(normalizedAction, cleanedStep)) return;
 
         const statusMeta = classifyCoverageUnitStatus(item, viewType, term, academicYear);
         const aliasKeys = buildCoverageAliasKeys(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
