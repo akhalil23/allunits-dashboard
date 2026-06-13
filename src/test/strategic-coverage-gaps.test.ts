@@ -133,6 +133,24 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items).toHaveLength(0);
   });
 
+  it('skips action header rows that were previously promoted into fake steps', () => {
+    const categories = computeCategories(
+      UNIT_IDS.map(unitId => createUnitResult(unitId, {
+        items: [createActionItem('Not Applicable', {
+          objective: 'Action 4. Provide stipends to attract and retain top graduate students',
+          actionStep: 'Action 4. Provide stipends to attract and retain top graduate students',
+        })],
+      })),
+      'yearly',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+
+    expect(absoluteNa?.items).toHaveLength(0);
+  });
+
   it('excludes Absolute NA when a configured unit fails to load', () => {
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => createUnitResult(unitId, index === 0 ? { error: 'SERVICE_UNAVAILABLE' } : undefined)),
