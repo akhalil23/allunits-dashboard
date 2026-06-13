@@ -105,11 +105,7 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
   });
 
-  it('treats a missing row in one unit as implicit NA (matches Action Explorer fallback)', () => {
-    // Action Explorer's getItemStatus → getTermData defaults to 'Not Applicable'
-    // when a unit has no matching row, so the university dashboard must treat
-    // missing rows the same way. Otherwise the item silently disappears here
-    // while the Action Explorer still shows it as "NA in 25/25".
+  it('excludes Absolute NA when a configured unit is missing the row', () => {
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => createUnitResult(unitId, index === 0 ? { items: [] } : undefined)),
       'cumulative',
@@ -119,8 +115,7 @@ describe('computeCategories Absolute NA', () => {
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
-    expect(absoluteNa?.items).toHaveLength(1);
-    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
+    expect(absoluteNa?.items).toHaveLength(0);
   });
 
   it('excludes the item when one unit reports a non-NA status', () => {
@@ -138,10 +133,25 @@ describe('computeCategories Absolute NA', () => {
     expect(absoluteNa?.items).toHaveLength(0);
   });
 
-  it('treats a failed-to-load unit as implicit NA so the item still surfaces', () => {
-    // With the monthly-snapshot fallback in get-snapshot, hard load failures
-    // are rare. When they do occur, the failed unit is treated as implicit NA
-    // (same as a blank/missing row) to match the Action Explorer's behavior.
+  it('skips action header rows that were previously promoted into fake steps', () => {
+    const categories = computeCategories(
+      UNIT_IDS.map(unitId => createUnitResult(unitId, {
+        items: [createActionItem('Not Applicable', {
+          objective: 'Action 4. Provide stipends to attract and retain top graduate students',
+          actionStep: 'Action 4. Provide stipends to attract and retain top graduate students',
+        })],
+      })),
+      'yearly',
+      'mid',
+      '2025-2026',
+    );
+
+    const absoluteNa = categories.find(category => category.key === 'absolute-na');
+
+    expect(absoluteNa?.items).toHaveLength(0);
+  });
+
+  it('excludes Absolute NA when a configured unit fails to load', () => {
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => createUnitResult(unitId, index === 0 ? { error: 'SERVICE_UNAVAILABLE' } : undefined)),
       'cumulative',
@@ -151,17 +161,15 @@ describe('computeCategories Absolute NA', () => {
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
-    expect(absoluteNa?.items).toHaveLength(1);
-    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_COUNT);
+    expect(absoluteNa?.items).toHaveLength(0);
   });
 
   it('keeps semantically different Action labels as separate entries (strong-alias semantics)', () => {
     // 'Action 1' vs 'Action One' are NOT cosmetic variants of each other under
     // normalizeHierarchyMatchKey, so they must stay separate entries. Merging
     // them via weak (goal+step / step-only) aliases was the root cause of the
-    // transcript regression. Real unit sheets are textually identical across
-    // all 25 units, so no weak bridging is needed. Both entries still qualify
-    // for Absolute NA because every unit is explicitly or implicitly NA.
+    // transcript regression. Neither entry qualifies for Absolute NA because
+    // each has only partial explicit 25-unit consensus.
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => {
         if (index < 8) {
@@ -191,17 +199,11 @@ describe('computeCategories Absolute NA', () => {
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
-    expect(absoluteNa?.items).toHaveLength(2);
-    absoluteNa?.items.forEach(item => {
-      expect(item.naUnits).toHaveLength(UNIT_COUNT);
-      expect(item.totalUnits).toBe(UNIT_COUNT);
-    });
-    const actions = absoluteNa?.items.map(i => i.action).sort();
-    expect(actions).toEqual(['Action 1', 'Action One']);
+    expect(absoluteNa?.items).toHaveLength(0);
   });
 
 
-  it('treats a blank/unprovided cell as Not Applicable (matches Action Explorer semantics)', () => {
+  it('excludes Absolute NA when a unit has a blank/unprovided status cell', () => {
     const categories = computeCategories(
       UNIT_IDS.map((unitId, index) => {
         if (index === 0) {
@@ -225,8 +227,7 @@ describe('computeCategories Absolute NA', () => {
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
 
-    expect(absoluteNa?.items).toHaveLength(1);
-    expect(absoluteNa?.items[0]?.totalUnits).toBe(UNIT_IDS.length);
+    expect(absoluteNa?.items).toHaveLength(0);
   });
 
   it('treats raw "NA" / "N/A" variants as Not Applicable', () => {
@@ -344,12 +345,8 @@ describe('computeCategories Absolute NA', () => {
     );
 
     const absoluteNa = categories.find(category => category.key === 'absolute-na');
-    // Both distinct steps qualify: every unit either explicitly reports NA
-    // (the unit that holds the variant) or implicitly NA (units without that
-    // variant — same fallback the Action Explorer applies). The two steps must
-    // remain SEPARATE entries — never merged.
-    expect(absoluteNa?.items).toHaveLength(2);
-    const steps = absoluteNa?.items.map(i => i.actionStep).sort() ?? [];
-    expect(steps).toEqual([differentStep, baseStep].sort());
+    // The two steps must remain separate and neither can qualify with only
+    // partial explicit consensus.
+    expect(absoluteNa?.items).toHaveLength(0);
   });
 });

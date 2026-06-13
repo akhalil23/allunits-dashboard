@@ -72,6 +72,13 @@ interface CoverageAggregateEntry {
   goal: string;
   action: string;
   aliases: Set<string>;
+  hierarchyVotes: Map<string, {
+    goal: string;
+    action: string;
+    actionStep: string;
+    sheetRow: number;
+    unitIds: Set<string>;
+  }>;
   statusByUnit: Map<string, CoverageUnitStatus>;
 }
 
@@ -87,18 +94,6 @@ interface CoverageAliasKey {
   rank: number;
 }
 
-interface CoverageDebugRow {
-  itemKey: string;
-  totalUnits: number;
-  matchedUnitsCount: number;
-  naCount: number;
-  nonNaCount: number;
-  blankCount: number;
-  missingCount: number;
-  included: boolean;
-  exclusionReason: string;
-}
-
 const VALID_STATUSES = new Set([
   'Not Applicable',
   'Not Started',
@@ -106,22 +101,6 @@ const VALID_STATUSES = new Set([
   'Completed – On Target',
   'Completed – Below Target',
 ]);
-
-const TRANSCRIPT_STEP_MATCH = 'produceatemplateforanoptionalcocurriculartranscript';
-
-function isTranscriptActionStep(step: string): boolean {
-  return normalizeHierarchyMatchKey(step).includes(TRANSCRIPT_STEP_MATCH);
-}
-
-function countGroupedSteps(groups: PillarGroup[]): number {
-  return groups.reduce(
-    (pillarTotal, pillar) => pillarTotal + pillar.goals.reduce(
-      (goalTotal, goal) => goalTotal + goal.actions.reduce((actionTotal, action) => actionTotal + action.steps.length, 0),
-      0,
-    ),
-    0,
-  );
-}
 
 // ─── Forward-fill logic ─────────────────────────────────────────────────────
 
@@ -152,6 +131,12 @@ function forwardFill(items: ActionItem[]): { goal: string; action: string; actio
       item,
     };
   });
+}
+
+function isSyntheticActionHeaderStep(action: string, actionStep: string): boolean {
+  const actionKey = normalizeHierarchyMatchKey(action);
+  const stepKey = normalizeHierarchyMatchKey(actionStep);
+  return actionKey.length > 0 && actionKey === stepKey;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -188,31 +173,6 @@ export default function StrategicCoverageGaps() {
 
   const activeData = activeCategory ? categories.find(c => c.key === activeCategory) : null;
   const grouped = activeData ? groupByPillar(activeData.items) : [];
-
-  useEffect(() => {
-    if (!activeData || activeData.key !== 'absolute-na') return;
-
-    const transcriptItem = activeData.items.find(item => isTranscriptActionStep(item.actionStep));
-    const transcriptGroup = grouped.flatMap(pillar => pillar.goals.flatMap(goal => goal.actions.flatMap(action => (
-      action.steps
-        .filter(step => isTranscriptActionStep(step.actionStep))
-        .map(step => ({ pillar: pillar.pillar, goal: goal.goal, action: action.action, step }))
-    ))))[0];
-
-    console.warn('[CoverageGaps][TranscriptProbe][RenderTrace] Absolute NA render path', {
-      activeCategory: activeData.key,
-      classifiedAsAbsoluteNA: Boolean(transcriptItem),
-      entersAbsoluteNAArray: Boolean(transcriptItem),
-      absoluteNAArrayCount: activeData.items.length,
-      groupedRenderCount: countGroupedSteps(grouped),
-      groupedUnder: transcriptGroup
-        ? { pillar: transcriptGroup.pillar, goal: transcriptGroup.goal, action: transcriptGroup.action }
-        : null,
-      filteredOutBeforeRendering: Boolean(transcriptItem) && !transcriptGroup,
-      sourceKey: transcriptItem?.sourceKey,
-      actionStep: transcriptItem?.actionStep,
-    });
-  }, [activeData, grouped]);
 
   const handleCardClick = (key: CategoryKey) => {
     setActiveCategory(prev => prev === key ? null : key);
@@ -646,12 +606,14 @@ function buildCoverageAliasComponentMap(aliasGroups: CoverageAliasKey[][]): Map<
 }
 
 function classifyCoverageUnitStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): CoverageUnitStatus {
-  const { status } = getSelectedStatusMeta(item, viewType, term, academicYear);
+  const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
 
-  // Treat any NA-equivalent value (blank cell, "NA", "N/A", "-", "—", case-insensitive
-  // "not applicable") as 'na' — matches the Pillar Champion Action Explorer and the
-  // university KPI aggregation in src/lib/university-aggregation.ts, so the same
-  // action step is classified identically across all views.
+  if (!isProvided) {
+    return { classification: 'blank', status: status || '(blank)' };
+  }
+
+  // Treat only explicitly provided NA-equivalent values as 'na'. Blank/unprovided
+  // cells are not a 25-unit NA consensus and must not qualify for Absolute NA.
   if (isNotApplicableStatus(status)) {
     return { classification: 'na', status: status || 'Not Applicable' };
   }
@@ -720,39 +682,49 @@ function mergeCoverageUnitStatus(
   return current;
 }
 
-function buildCoverageDebugRows(
-  stepMap: Map<string, CoverageAggregateEntry>,
-  configuredUnitIds: readonly string[],
-): CoverageDebugRow[] {
-  return Array.from(stepMap.entries())
-    .map(([itemKey, entry]) => {
-      const totalUnits = configuredUnitIds.length;
-      const matchedUnitsCount = configuredUnitIds.filter(unitId => entry.statusByUnit.has(unitId)).length;
-      const naCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'na').length;
-      const nonNaCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na').length;
-      const blankCount = configuredUnitIds.filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'blank').length;
-      const missingCount = configuredUnitIds.length - matchedUnitsCount;
-      const included = naCount === totalUnits && nonNaCount === 0 && blankCount === 0 && missingCount === 0;
+function applyConsensusHierarchy(entry: CoverageAggregateEntry): void {
+  const best = Array.from(entry.hierarchyVotes.values())
+    .sort((left, right) => {
+      const unitDiff = right.unitIds.size - left.unitIds.size;
+      if (unitDiff !== 0) return unitDiff;
+      return left.sheetRow - right.sheetRow;
+    })[0];
 
-      return {
-        itemKey,
-        totalUnits,
-        matchedUnitsCount,
-        naCount,
-        nonNaCount,
-        blankCount,
-        missingCount,
-        included,
-        exclusionReason: included
-          ? `included: explicit Not Applicable in all ${totalUnits} configured units`
-          : [
-              nonNaCount > 0 ? `non-NA=${nonNaCount}` : null,
-              blankCount > 0 ? `blank=${blankCount}` : null,
-              missingCount > 0 ? `missing=${missingCount}` : null,
-            ].filter(Boolean).join(', '),
-      };
-    })
-    .sort((left, right) => right.naCount - left.naCount || left.itemKey.localeCompare(right.itemKey));
+  if (!best) return;
+
+  entry.goal = best.goal || entry.goal;
+  entry.action = best.action || entry.action;
+  entry.actionStep = best.actionStep || entry.actionStep;
+  entry.sheetRow = best.sheetRow;
+}
+
+function recordHierarchyVote(
+  entry: CoverageAggregateEntry,
+  unitId: string,
+  goal: string,
+  action: string,
+  actionStep: string,
+  sheetRow: number,
+): void {
+  const voteKey = [
+    normalizeHierarchyGroupKey(goal),
+    normalizeHierarchyGroupKey(action),
+    normalizeHierarchyGroupKey(actionStep),
+  ].join('|');
+
+  if (!entry.hierarchyVotes.has(voteKey)) {
+    entry.hierarchyVotes.set(voteKey, {
+      goal: goal || '(Unspecified Goal)',
+      action: action || '(Unspecified Action)',
+      actionStep: actionStep || '(Unnamed Step)',
+      sheetRow,
+      unitIds: new Set(),
+    });
+  }
+
+  const vote = entry.hierarchyVotes.get(voteKey)!;
+  vote.unitIds.add(unitId);
+  vote.sheetRow = Math.min(vote.sheetRow, sheetRow);
 }
 
 // ─── Computation ─────────────────────────────────────────────────────────────
@@ -797,6 +769,7 @@ export function computeCategories(
       forwardFill(pillarItems).forEach(({ goal, action, actionStep, pillar, item }) => {
         const cleanedStep = normalizeHierarchyText(actionStep);
         if (!cleanedStep) return;
+        if (isSyntheticActionHeaderStep(action, cleanedStep)) return;
 
         const aliasKeys = buildCoverageAliasKeys(
           pillar,
@@ -852,6 +825,7 @@ export function computeCategories(
 
         const normalizedGoal = normalizeHierarchyText(goal);
         const normalizedAction = normalizeHierarchyText(action);
+        if (isSyntheticActionHeaderStep(normalizedAction, cleanedStep)) return;
 
         const statusMeta = classifyCoverageUnitStatus(item, viewType, term, academicYear);
         const aliasKeys = buildCoverageAliasKeys(pillar, normalizedGoal, normalizedAction, cleanedStep, item);
@@ -878,6 +852,7 @@ export function computeCategories(
             goal: normalizedGoal || '(Unspecified Goal)',
             action: normalizedAction || '(Unspecified Action)',
             aliases: new Set(),
+            hierarchyVotes: new Map(),
             statusByUnit: new Map(),
           });
         }
@@ -887,12 +862,7 @@ export function computeCategories(
           entry.aliases.add(key);
         });
 
-        if (entry.goal === '(Unspecified Goal)') {
-          entry.goal = normalizedGoal || entry.goal;
-        }
-        if (entry.action === '(Unspecified Action)') {
-          entry.action = normalizedAction || entry.action;
-        }
+        recordHierarchyVote(entry, ur.unitId, normalizedGoal, normalizedAction, cleanedStep, item.sheetRow);
         entry.sheetRow = Math.min(entry.sheetRow, item.sheetRow);
 
         const dedupeKey = `${canonicalKey}::${ur.unitId}`;
@@ -907,6 +877,8 @@ export function computeCategories(
       });
     });
   });
+
+  stepMap.forEach(applyConsensusHierarchy);
 
   // Categorize using per-step denominators
   const majorityNS: StepItem[] = [];
@@ -955,40 +927,6 @@ export function computeCategories(
     const nonNaCount = nonNaUnitIds.length;
     const blankCount = blankUnitIds.length;
 
-    // ─── Targeted diagnostic: co-curricular transcript item ──────────────
-    // Always-on (not just DEV) probe for the known "Pillar II / Goal 1 /
-    // Action 5 / Step 5 — Produce a template for an optional co-curricular
-    // transcript" item. Surfaces the exact live classification across the 25
-    // units so we can see why it is or isn't in Absolute NA. Remove once the
-    // root cause is confirmed and stable.
-    const probeStepMatch = normalizeHierarchyMatchKey(entry.actionStep);
-    if (
-      entry.pillar === 'II'
-      && (probeStepMatch.includes('produceatemplateforanoptionalcocurriculartranscript')
-        || probeStepMatch.includes('transcript')
-        || probeStepMatch.includes('cocurricular'))
-    ) {
-      const perUnit = configuredUnitIds.map(unitId => {
-        const s = entry.statusByUnit.get(unitId);
-        return `${getUnitDisplayName(unitId)}=${s ? `${s.classification}:${s.status}` : 'missing'}`;
-      });
-      console.warn('[CoverageGaps][TranscriptProbe] Pillar II transcript-bearing entry', {
-        canonicalKey: key,
-        sourceKey: entry.sourceKey,
-        goal: entry.goal,
-        action: entry.action,
-        actionStep: entry.actionStep,
-        sheetRow: entry.sheetRow,
-        naCount,
-        nonNaCount,
-        blankCount,
-        missingCount: totalConfiguredUnits - reportingCount,
-        wouldBeIncluded: nonNaCount === 0 && naCount > 0,
-        aliasIds: Array.from(entry.aliases),
-        perUnit,
-      });
-    }
-
     if (activeCount > 0) {
       const nsItem: StepItem = {
         sourceKey: entry.sourceKey,
@@ -1022,46 +960,10 @@ export function computeCategories(
     }
 
     const missingUnitIds = configuredUnitIds.filter(unitId => !entry.statusByUnit.has(unitId));
-    const blockingUnitStatuses = configuredUnitIds
-      .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
-      .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
-
-    // Implicit-NA semantics — must match the Pillar Champion Action Explorer.
-    // That view uses getItemStatus() → getTermData(), which falls back to
-    // DEFAULT_TERM_DATA.spStatus = 'Not Applicable' whenever a unit lacks the
-    // row, the term window, or has a blank/unrecognized status cell. So a unit
-    // is "NA" iff it does NOT report an active in-flight status. Treat 'blank'
-    // and 'missing' as implicit NA to keep both views consistent. Only an
-    // explicit non-NA (active) status disqualifies a step from Absolute NA.
-    const implicitNaUnitIds = configuredUnitIds.filter(unitId => {
-      const cls = entry.statusByUnit.get(unitId)?.classification;
-      return cls === undefined || cls === 'blank' || cls === 'na';
-    });
-    const isStrictAbsoluteNA = nonNaCount === 0 && naCount > 0;
-    const inclusionReason = isStrictAbsoluteNA
-      ? `included: no unit reports an active status (${naCount} explicit NA, ${blankCount} blank, ${missingUnitIds.length} missing — all treated as NA, matching Action Explorer)`
-      : nonNaCount > 0
-        ? `excluded: ${nonNaCount} unit(s) report an active status — [${blockingUnitStatuses.join(', ')}]`
-        : `excluded: no unit explicitly classifies this step as Not Applicable`;
-
-    if (import.meta.env.DEV) {
-      console.info('[CoverageGaps][Absolute NA candidate]', {
-        uniqueItemKey: entry.sourceKey,
-        actionStep: entry.actionStep,
-        totalUnits: totalConfiguredUnits,
-        matchedUnitsCount: reportingCount,
-        naCount,
-        nonNaCount,
-        blankCount,
-        missingCount: missingUnitIds.length,
-        implicitNaCount: implicitNaUnitIds.length,
-        explicitNaUnits: sortedNaUnits.map(getUnitDisplayName),
-        blankUnits: blankUnitIds.map(getUnitDisplayName),
-        missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
-        ...(blockingUnitStatuses.length > 0 ? { blockingUnits: blockingUnitStatuses } : {}),
-        finalReason: inclusionReason,
-      });
-    }
+    const isStrictAbsoluteNA = naCount === totalConfiguredUnits
+      && nonNaCount === 0
+      && blankCount === 0
+      && missingUnitIds.length === 0;
 
     // Capture near-miss candidates: items where ≥1 unit said NA but a non-NA
     // status blocks inclusion. Useful for surfacing data-entry inconsistencies.
@@ -1081,9 +983,6 @@ export function computeCategories(
     }
 
     if (isStrictAbsoluteNA) {
-      // Show every unit in the popover (explicit + implicit NA) so the count
-      // matches the Action Explorer's "NA in 25/25" framing.
-      const allNaUnitIds = sortUnitIds(implicitNaUnitIds, configuredUnitIds);
       absoluteNA.push({
         sourceKey: entry.sourceKey,
         sheetRow: entry.sheetRow,
@@ -1092,7 +991,7 @@ export function computeCategories(
         goal: entry.goal,
         action: entry.action,
         nsUnits: sortedNsUnits,
-        naUnits: allNaUnitIds,
+        naUnits: sortedNaUnits,
         totalUnits: totalConfiguredUnits,
       });
     }
@@ -1126,12 +1025,8 @@ export function computeCategories(
     })));
   }
 
-  const debugRows = buildCoverageDebugRows(stepMap, configuredUnitIds);
-
   const strictAbsoluteNA = absoluteNA.filter(item => {
-    // New semantics: every configured unit must be implicitly or explicitly NA
-    // (no active in-flight status anywhere). naUnits already contains the full
-    // implicit-NA set built above, so its length should equal totalConfiguredUnits.
+    // Every configured unit must explicitly report Not Applicable.
     const isValid = item.naUnits.length === totalConfiguredUnits && item.totalUnits === totalConfiguredUnits;
 
     if (!isValid) {
@@ -1156,15 +1051,8 @@ export function computeCategories(
 
   // ─── Debug summary (dev only) ──────────────────────────────────────────
   if (import.meta.env.DEV) {
-    const isMandatoryAbsoluteNaDebugFilter = viewType === 'cumulative' && term === 'mid' && academicYear === '2025-2026';
     const absoluteNAKeys = new Set(strictAbsoluteNA.map(i => i.sourceKey));
     const majorityOnlyNA = majorityNA.filter(i => !absoluteNAKeys.has(i.sourceKey));
-    if (isMandatoryAbsoluteNaDebugFilter) {
-      console.table(debugRows);
-      if (strictAbsoluteNA.length === 0) {
-        console.info(`[CoverageGaps] No item has NA_count = ${totalConfiguredUnits} out of ${totalConfiguredUnits} configured units.`);
-      }
-    }
     if (majorityOnlyNA.length > 0) {
       console.info(`[CoverageGaps] ${majorityOnlyNA.length} items in Majority NA but NOT Absolute NA:`);
       majorityOnlyNA.forEach(item => {
@@ -1193,7 +1081,7 @@ export function computeCategories(
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks, missing rows, and N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
     { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks, missing rows, and N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
     { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Explicitly marked Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
-    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: `Not Applicable across all ${totalConfiguredUnits} units (no unit reports an active in-flight status)`, count: strictAbsoluteNA.length, accent: 'na' as const, items: strictAbsoluteNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: `Explicitly marked Not Applicable across all ${totalConfiguredUnits} units`, count: strictAbsoluteNA.length, accent: 'na' as const, items: strictAbsoluteNA },
   ];
 }
 

@@ -12,9 +12,31 @@ import { isNotApplicableStatus } from '@/lib/types';
 import { PILLAR_COLORS } from '@/lib/pillar-colors';
 import { PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getUnitDisplayName } from '@/lib/unit-config';
-import { getActionItemSourceKey, normalizeHierarchyGroupKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
+import { normalizeHierarchyGroupKey, normalizeHierarchyMatchKey, normalizeHierarchyText } from '@/lib/strategic-item-keys';
 import type { UnitFetchResult } from '@/lib/university-aggregation';
 import type { PillarId, ViewType, Term, AcademicYear } from '@/lib/types';
+
+function isSyntheticActionHeaderStep(objective: string, actionStep: string): boolean {
+  const objectiveKey = normalizeHierarchyGroupKey(objective).replace(/[^a-z0-9]+/g, '');
+  const stepKey = normalizeHierarchyGroupKey(actionStep).replace(/[^a-z0-9]+/g, '');
+  return objectiveKey.length > 0 && objectiveKey === stepKey;
+}
+
+function buildExplorerStepKey(pillar: PillarId, goal: string, objective: string, actionStep: string): string {
+  const goalKey = normalizeHierarchyMatchKey(goal);
+  const objectiveKey = normalizeHierarchyMatchKey(objective);
+  const stepKey = normalizeHierarchyMatchKey(actionStep);
+
+  if (goalKey && objectiveKey && stepKey) {
+    return `${pillar}|goalmatch:${goalKey}|actionmatch:${objectiveKey}|stepmatch:${stepKey}`;
+  }
+
+  if (objectiveKey && stepKey) {
+    return `${pillar}|actionmatch:${objectiveKey}|stepmatch:${stepKey}`;
+  }
+
+  return `${pillar}|stepmatch:${stepKey}`;
+}
 
 interface Props {
   unitResults: UnitFetchResult[];
@@ -109,6 +131,7 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
           if (g) lastGoal = g;
           if (a) lastAction = a;
           if (!s) return; // skip rows without an action step
+          if (isSyntheticActionHeaderStep(lastAction, s)) return;
           filledItems.push({ item, goal: lastGoal, objective: lastAction, actionStep: s });
         });
       });
@@ -120,14 +143,10 @@ export default function ActionExplorer({ unitResults, viewType, term, academicYe
         const signal = isNotApplicableStatus(status) ? 'Not Applicable' : mapItemToRiskSignal(status, completion, completionValid, expectedProgress);
         const gap = completion - expectedProgress;
 
-        // Build source key from forward-filled hierarchy so the same step has
-        // one consistent canonical key across all units.
-        const stepKey = getActionItemSourceKey({
-          ...item,
-          goal,
-          objective,
-          actionStep,
-        });
+        // Same strong hierarchy key semantics as the University coverage gaps:
+        // Pillar + Goal + Action + Action Step. This prevents row-shift or
+        // source-row differences from placing steps under the wrong action.
+        const stepKey = buildExplorerStepKey(item.pillar, goal, objective, actionStep);
         if (processedKeys.has(stepKey)) return;
         processedKeys.add(stepKey);
 
