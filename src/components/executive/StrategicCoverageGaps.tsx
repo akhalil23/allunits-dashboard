@@ -966,40 +966,6 @@ export function computeCategories(
     const nonNaCount = nonNaUnitIds.length;
     const blankCount = blankUnitIds.length;
 
-    // ─── Targeted diagnostic: co-curricular transcript item ──────────────
-    // Always-on (not just DEV) probe for the known "Pillar II / Goal 1 /
-    // Action 5 / Step 5 — Produce a template for an optional co-curricular
-    // transcript" item. Surfaces the exact live classification across the 25
-    // units so we can see why it is or isn't in Absolute NA. Remove once the
-    // root cause is confirmed and stable.
-    const probeStepMatch = normalizeHierarchyMatchKey(entry.actionStep);
-    if (
-      entry.pillar === 'II'
-      && (probeStepMatch.includes('produceatemplateforanoptionalcocurriculartranscript')
-        || probeStepMatch.includes('transcript')
-        || probeStepMatch.includes('cocurricular'))
-    ) {
-      const perUnit = configuredUnitIds.map(unitId => {
-        const s = entry.statusByUnit.get(unitId);
-        return `${getUnitDisplayName(unitId)}=${s ? `${s.classification}:${s.status}` : 'missing'}`;
-      });
-      console.warn('[CoverageGaps][TranscriptProbe] Pillar II transcript-bearing entry', {
-        canonicalKey: key,
-        sourceKey: entry.sourceKey,
-        goal: entry.goal,
-        action: entry.action,
-        actionStep: entry.actionStep,
-        sheetRow: entry.sheetRow,
-        naCount,
-        nonNaCount,
-        blankCount,
-        missingCount: totalConfiguredUnits - reportingCount,
-        wouldBeIncluded: nonNaCount === 0 && naCount > 0,
-        aliasIds: Array.from(entry.aliases),
-        perUnit,
-      });
-    }
-
     if (activeCount > 0) {
       const nsItem: StepItem = {
         sourceKey: entry.sourceKey,
@@ -1037,23 +1003,15 @@ export function computeCategories(
       .filter(unitId => entry.statusByUnit.get(unitId)?.classification === 'non-na')
       .map(unitId => `${getUnitDisplayName(unitId)}=${entry.statusByUnit.get(unitId)?.status}`);
 
-    // Implicit-NA semantics — must match the Pillar Champion Action Explorer.
-    // That view uses getItemStatus() → getTermData(), which falls back to
-    // DEFAULT_TERM_DATA.spStatus = 'Not Applicable' whenever a unit lacks the
-    // row, the term window, or has a blank/unrecognized status cell. So a unit
-    // is "NA" iff it does NOT report an active in-flight status. Treat 'blank'
-    // and 'missing' as implicit NA to keep both views consistent. Only an
-    // explicit non-NA (active) status disqualifies a step from Absolute NA.
-    const implicitNaUnitIds = configuredUnitIds.filter(unitId => {
-      const cls = entry.statusByUnit.get(unitId)?.classification;
-      return cls === undefined || cls === 'blank' || cls === 'na';
-    });
-    const isStrictAbsoluteNA = nonNaCount === 0 && naCount > 0;
+    const isStrictAbsoluteNA = naCount === totalConfiguredUnits
+      && nonNaCount === 0
+      && blankCount === 0
+      && missingUnitIds.length === 0;
     const inclusionReason = isStrictAbsoluteNA
-      ? `included: no unit reports an active status (${naCount} explicit NA, ${blankCount} blank, ${missingUnitIds.length} missing — all treated as NA, matching Action Explorer)`
+      ? `included: explicitly Not Applicable in all ${totalConfiguredUnits} configured units`
       : nonNaCount > 0
         ? `excluded: ${nonNaCount} unit(s) report an active status — [${blockingUnitStatuses.join(', ')}]`
-        : `excluded: no unit explicitly classifies this step as Not Applicable`;
+        : `excluded: explicit NA consensus incomplete (${naCount}/${totalConfiguredUnits}; blank=${blankCount}; missing=${missingUnitIds.length})`;
 
     if (import.meta.env.DEV) {
       console.info('[CoverageGaps][Absolute NA candidate]', {
@@ -1065,7 +1023,6 @@ export function computeCategories(
         nonNaCount,
         blankCount,
         missingCount: missingUnitIds.length,
-        implicitNaCount: implicitNaUnitIds.length,
         explicitNaUnits: sortedNaUnits.map(getUnitDisplayName),
         blankUnits: blankUnitIds.map(getUnitDisplayName),
         missingUnits: sortUnitIds(missingUnitIds, configuredUnitIds).map(getUnitDisplayName),
@@ -1092,9 +1049,6 @@ export function computeCategories(
     }
 
     if (isStrictAbsoluteNA) {
-      // Show every unit in the popover (explicit + implicit NA) so the count
-      // matches the Action Explorer's "NA in 25/25" framing.
-      const allNaUnitIds = sortUnitIds(implicitNaUnitIds, configuredUnitIds);
       absoluteNA.push({
         sourceKey: entry.sourceKey,
         sheetRow: entry.sheetRow,
@@ -1103,7 +1057,7 @@ export function computeCategories(
         goal: entry.goal,
         action: entry.action,
         nsUnits: sortedNsUnits,
-        naUnits: allNaUnitIds,
+        naUnits: sortedNaUnits,
         totalUnits: totalConfiguredUnits,
       });
     }
@@ -1140,9 +1094,7 @@ export function computeCategories(
   const debugRows = buildCoverageDebugRows(stepMap, configuredUnitIds);
 
   const strictAbsoluteNA = absoluteNA.filter(item => {
-    // New semantics: every configured unit must be implicitly or explicitly NA
-    // (no active in-flight status anywhere). naUnits already contains the full
-    // implicit-NA set built above, so its length should equal totalConfiguredUnits.
+    // Every configured unit must explicitly report Not Applicable.
     const isValid = item.naUnits.length === totalConfiguredUnits && item.totalUnits === totalConfiguredUnits;
 
     if (!isValid) {
@@ -1204,7 +1156,7 @@ export function computeCategories(
     { key: 'majority-ns' as CategoryKey, title: 'Majority Not Started', definition: 'Not Started by ≥ 75% of active units (excluding blanks, missing rows, and N/A)', count: majorityNS.length, accent: 'ns' as const, items: majorityNS },
     { key: 'absolute-ns' as CategoryKey, title: 'Absolute Not Started', definition: 'Not Started by all active units (excluding blanks, missing rows, and N/A)', count: absoluteNS.length, accent: 'ns' as const, items: absoluteNS },
     { key: 'majority-na' as CategoryKey, title: 'Majority Not Applicable', definition: 'Explicitly marked Not Applicable by ≥ 75% of reporting units', count: majorityNA.length, accent: 'na' as const, items: majorityNA },
-    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: `Not Applicable across all ${totalConfiguredUnits} units (no unit reports an active in-flight status)`, count: strictAbsoluteNA.length, accent: 'na' as const, items: strictAbsoluteNA },
+    { key: 'absolute-na' as CategoryKey, title: 'Absolute Not Applicable', definition: `Explicitly marked Not Applicable across all ${totalConfiguredUnits} units`, count: strictAbsoluteNA.length, accent: 'na' as const, items: strictAbsoluteNA },
   ];
 }
 
