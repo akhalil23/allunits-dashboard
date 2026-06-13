@@ -446,15 +446,20 @@ function processPillarData(
     }
     consecutiveBlanks = 0;
 
-    if (!isValidItemRow(core, term)) continue;
-
     const actionStep = safeGet(core, CORE_ACTION_STEP);
     const rawGoal = safeGet(core, CORE_GOAL);
     const rawAction = safeGet(core, CORE_ACTION);
 
+    if (!isValidItemRow(core, term)) continue;
+
     // Forward-fill: use last non-empty value if current is blank
     if (rawGoal !== '') lastGoal = rawGoal;
     if (rawAction !== '') lastAction = rawAction;
+
+    // Goal/action header rows define hierarchy only. They are not strategic
+    // action steps and must not be promoted into fake items; doing so made
+    // action labels such as "Provide stipends..." appear as Absolute NA steps.
+    if (actionStep === '') continue;
 
     const goal = rawGoal || lastGoal;
     const action = rawAction || lastAction;
@@ -475,7 +480,7 @@ function processPillarData(
       pillar: pillarId,
       goal,
       objective: action,
-      actionStep: actionStep || action || `Action ${pillarId}.${items.length + 1}`,
+      actionStep,
       owner: safeGet(core, CORE_OWNER),
       terms,
       sheetRow: i + 5,
