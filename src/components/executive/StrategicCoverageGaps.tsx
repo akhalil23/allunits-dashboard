@@ -114,16 +114,6 @@ const VALID_STATUSES = new Set([
   'Completed – Below Target',
 ]);
 
-function countGroupedSteps(groups: PillarGroup[]): number {
-  return groups.reduce(
-    (pillarTotal, pillar) => pillarTotal + pillar.goals.reduce(
-      (goalTotal, goal) => goalTotal + goal.actions.reduce((actionTotal, action) => actionTotal + action.steps.length, 0),
-      0,
-    ),
-    0,
-  );
-}
-
 // ─── Forward-fill logic ─────────────────────────────────────────────────────
 
 /**
@@ -622,12 +612,14 @@ function buildCoverageAliasComponentMap(aliasGroups: CoverageAliasKey[][]): Map<
 }
 
 function classifyCoverageUnitStatus(item: ActionItem, viewType: ViewType, term: Term, academicYear: AcademicYear): CoverageUnitStatus {
-  const { status } = getSelectedStatusMeta(item, viewType, term, academicYear);
+  const { status, isProvided } = getSelectedStatusMeta(item, viewType, term, academicYear);
 
-  // Treat any NA-equivalent value (blank cell, "NA", "N/A", "-", "—", case-insensitive
-  // "not applicable") as 'na' — matches the Pillar Champion Action Explorer and the
-  // university KPI aggregation in src/lib/university-aggregation.ts, so the same
-  // action step is classified identically across all views.
+  if (!isProvided) {
+    return { classification: 'blank', status: status || '(blank)' };
+  }
+
+  // Treat only explicitly provided NA-equivalent values as 'na'. Blank/unprovided
+  // cells are not a 25-unit NA consensus and must not qualify for Absolute NA.
   if (isNotApplicableStatus(status)) {
     return { classification: 'na', status: status || 'Not Applicable' };
   }
