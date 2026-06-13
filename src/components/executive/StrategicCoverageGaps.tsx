@@ -72,6 +72,13 @@ interface CoverageAggregateEntry {
   goal: string;
   action: string;
   aliases: Set<string>;
+  hierarchyVotes: Map<string, {
+    goal: string;
+    action: string;
+    actionStep: string;
+    sheetRow: number;
+    unitIds: Set<string>;
+  }>;
   statusByUnit: Map<string, CoverageUnitStatus>;
 }
 
@@ -106,12 +113,6 @@ const VALID_STATUSES = new Set([
   'Completed – On Target',
   'Completed – Below Target',
 ]);
-
-const TRANSCRIPT_STEP_MATCH = 'produceatemplateforanoptionalcocurriculartranscript';
-
-function isTranscriptActionStep(step: string): boolean {
-  return normalizeHierarchyMatchKey(step).includes(TRANSCRIPT_STEP_MATCH);
-}
 
 function countGroupedSteps(groups: PillarGroup[]): number {
   return groups.reduce(
@@ -188,31 +189,6 @@ export default function StrategicCoverageGaps() {
 
   const activeData = activeCategory ? categories.find(c => c.key === activeCategory) : null;
   const grouped = activeData ? groupByPillar(activeData.items) : [];
-
-  useEffect(() => {
-    if (!activeData || activeData.key !== 'absolute-na') return;
-
-    const transcriptItem = activeData.items.find(item => isTranscriptActionStep(item.actionStep));
-    const transcriptGroup = grouped.flatMap(pillar => pillar.goals.flatMap(goal => goal.actions.flatMap(action => (
-      action.steps
-        .filter(step => isTranscriptActionStep(step.actionStep))
-        .map(step => ({ pillar: pillar.pillar, goal: goal.goal, action: action.action, step }))
-    ))))[0];
-
-    console.warn('[CoverageGaps][TranscriptProbe][RenderTrace] Absolute NA render path', {
-      activeCategory: activeData.key,
-      classifiedAsAbsoluteNA: Boolean(transcriptItem),
-      entersAbsoluteNAArray: Boolean(transcriptItem),
-      absoluteNAArrayCount: activeData.items.length,
-      groupedRenderCount: countGroupedSteps(grouped),
-      groupedUnder: transcriptGroup
-        ? { pillar: transcriptGroup.pillar, goal: transcriptGroup.goal, action: transcriptGroup.action }
-        : null,
-      filteredOutBeforeRendering: Boolean(transcriptItem) && !transcriptGroup,
-      sourceKey: transcriptItem?.sourceKey,
-      actionStep: transcriptItem?.actionStep,
-    });
-  }, [activeData, grouped]);
 
   const handleCardClick = (key: CategoryKey) => {
     setActiveCategory(prev => prev === key ? null : key);
