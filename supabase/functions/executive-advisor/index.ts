@@ -180,7 +180,7 @@ The system covers 26 reporting units. The most recent addition is **GC (General 
 14. When comparing units or pillars, provide ranked lists with actual values.
 15. Never infer NA counts from blanks, missing rows, or other periods/views that are not explicitly present in the current context.
 16. When asked about Reports or pillar colors, answer directly from the current feature set above — do not describe deprecated tabs or old color mappings.
-17. Treat ADM as a fully integrated reporting unit. Never describe it as new, missing, pilot, or experimental in numerical answers.
+17. Treat ADM and GC as fully integrated reporting units. Never describe either as new, missing, pilot, or experimental in numerical answers.
 18. For questions about "my sessions", saved views, snapshots restore/compare/export — describe the user-controlled Saved Views workflow above. Never claim sessions are shared, automatic, or visible to other users.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
