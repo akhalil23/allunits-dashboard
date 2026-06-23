@@ -33,7 +33,7 @@ const corsHeaders = {
 const UNIT_IDS = [
   'GSR','SON','SArD','SOP','SOM','AKSOB','SOE','SAS','DIRA','CIL','Libraries',
   'BDGA','SDEM','IT','Facilities','Finance','UGRC','StratCom_Alumni','Advancement',
-  'Provost','PwD','OfS','HR','Procurement','ADM',
+  'Provost','PwD','OfS','HR','Procurement','ADM','GC',
 ];
 
 // In-memory cache for live mode so we don't refetch 25 sheets on every render.
