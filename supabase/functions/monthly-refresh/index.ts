@@ -23,7 +23,7 @@ const corsHeaders = {
 const UNIT_IDS = [
   'GSR','SON','SArD','SOP','SOM','AKSOB','SOE','SAS','DIRA','CIL','Libraries',
   'BDGA','SDEM','IT','Facilities','Finance','UGRC','StratCom_Alumni','Advancement',
-  'Provost','PwD','OfS','HR','Procurement','ADM',
+  'Provost','PwD','OfS','HR','Procurement','ADM','GC',
 ];
 
 function currentMonth(): string {
