@@ -252,7 +252,7 @@ export function exportDashboardGuideComprehensive() {
       <tr><td>How is alignment communicated?</td><td>Descriptive analytics — per-pillar diagnostic sentence with Execution Gap as the highlighted value.</td></tr>
       <tr><td>How are pillar colors assigned?</td><td>Fixed identity colors — PI Blue, PII Cyan, PIII Violet, PIV Pink, PV Indigo. Performance is conveyed by separate semantic colors.</td></tr>
       <tr><td>How does dynamic RI work?</td><td>For In-Progress items: Gap &gt; 50% → Critical; 20–50% → Emerging; &lt; 20% → No Risk. Where Gap = Expected − Actual.</td></tr>
-      <tr><td>Where is ADM data fetched from?</td><td>The dedicated ADM Google Sheet, ingested by the same <span class="formula">fetch-gsr-data</span> pipeline as all other units.</td></tr>
+      <tr><td>Where is ADM/GC data fetched from?</td><td>Each unit's dedicated Google Sheet (including ADM and General Counsel), ingested by the same <span class="formula">fetch-gsr-data</span> pipeline as all other units.</td></tr>
       <tr><td>Can other users see my saved sessions?</td><td>No. RLS enforces strict per-user isolation on <span class="formula">user_session_snapshots</span>.</td></tr>
     </table>
 
