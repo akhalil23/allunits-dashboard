@@ -139,6 +139,7 @@ const UNIT_SPREADSHEETS: Record<string, string> = {
   HR: '1OsPfYkNQ1gVqBbFyGkulNFwfRR1WvyHYWMX1hLPAkGY',
   Procurement: '1bmH7Y_yKEOFJmo6hXB1WPNpkG15x673ai9DVjLbXMLA',
   ADM: '1Uy1r2ZGzAB-Gb2uTfrd9heKkwBu75IDP1ME2sL5lrWs',
+  GC: '1BBdnLpuTbt8xuWR49Sw_ZA-iZCTLA9RWkfkOUr5Hby4',
 };
 
 // ============================================================
