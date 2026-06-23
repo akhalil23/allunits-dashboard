@@ -137,8 +137,8 @@ Bands: 85–100% Highly Stable · 70–84% Stable · 50–69% Watch · <50% Unst
 - Pillar IV — Advance & Educate Beyond Boundaries
 - Pillar V — Strategic Accelerator: Empower with Purpose, Agility, and Sustainability
 
-### Reporting Units (25 total)
-The system covers 25 reporting units. The most recent addition is **ADM (Administration)** — fully integrated into routing, authentication, data ingestion, filters, comparisons, and all university-level aggregations. Treat ADM exactly like any other unit when ranking, comparing, or aggregating. Coverage Gap denominators (Majority NA = ≥75% of reporting units, Absolute NA = 100% of configured units) reflect the 25-unit total.
+### Reporting Units (26 total)
+The system covers 26 reporting units. The most recent addition is **GC (General Counsel)** — fully integrated into routing, authentication, data ingestion, filters, comparisons, and all university-level aggregations. The previously added **ADM (Administration)** remains a fully integrated reporting unit. Treat both GC and ADM exactly like any other unit when ranking, comparing, or aggregating. Coverage Gap denominators (Majority NA = ≥75% of reporting units, Absolute NA = 100% of configured units) reflect the 26-unit total.
 
 ### Executive Dashboard Structure
 - Tab 1: Executive Snapshot
