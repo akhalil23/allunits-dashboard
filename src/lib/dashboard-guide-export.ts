@@ -135,7 +135,8 @@ export function exportDashboardGuideComprehensive() {
     <h2>1. Recent Amendments</h2>
     <table>
       <tr><th style="width:24%">Update</th><th>Description</th></tr>
-      <tr><td>ADM unit added</td><td>Administration (<span class="formula">adm</span> / <span class="formula">adm</span>) is the ${UNIT_IDS.length}th unit. Fully integrated into routing, authentication, data ingestion, filters, comparisons, and university aggregations.</td></tr>
+      <tr><td>GC unit added</td><td>General Counsel (<span class="formula">gc</span> / <span class="formula">gc</span>) is the ${UNIT_IDS.length}th unit. Fully integrated into routing, authentication, data ingestion, filters, comparisons, and university aggregations.</td></tr>
+      <tr><td>ADM unit added</td><td>Administration (<span class="formula">adm</span> / <span class="formula">adm</span>) — fully integrated reporting unit.</td></tr>
       <tr><td>Named board-member accounts</td><td>39 personal accounts created (e.g. <span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>, <span class="formula">g.doumet</span>) with role <i>board_member</i> and <i>display_name</i> stored on profile.</td></tr>
       <tr><td>Welcome Banner</td><td>Personal greeting at top of Executive Dashboard. Hidden for shared <span class="formula">sp4</span> account.</td></tr>
       <tr><td>My Sessions (Saved Views)</td><td>User-controlled snapshot system replacing automatic tracking — see Section 9.</td></tr>
@@ -251,7 +252,7 @@ export function exportDashboardGuideComprehensive() {
       <tr><td>How is alignment communicated?</td><td>Descriptive analytics — per-pillar diagnostic sentence with Execution Gap as the highlighted value.</td></tr>
       <tr><td>How are pillar colors assigned?</td><td>Fixed identity colors — PI Blue, PII Cyan, PIII Violet, PIV Pink, PV Indigo. Performance is conveyed by separate semantic colors.</td></tr>
       <tr><td>How does dynamic RI work?</td><td>For In-Progress items: Gap &gt; 50% → Critical; 20–50% → Emerging; &lt; 20% → No Risk. Where Gap = Expected − Actual.</td></tr>
-      <tr><td>Where is ADM data fetched from?</td><td>The dedicated ADM Google Sheet, ingested by the same <span class="formula">fetch-gsr-data</span> pipeline as all other units.</td></tr>
+      <tr><td>Where is ADM/GC data fetched from?</td><td>Each unit's dedicated Google Sheet (including ADM and General Counsel), ingested by the same <span class="formula">fetch-gsr-data</span> pipeline as all other units.</td></tr>
       <tr><td>Can other users see my saved sessions?</td><td>No. RLS enforces strict per-user isolation on <span class="formula">user_session_snapshots</span>.</td></tr>
     </table>
 
