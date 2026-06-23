@@ -135,7 +135,8 @@ export function exportDashboardGuideComprehensive() {
     <h2>1. Recent Amendments</h2>
     <table>
       <tr><th style="width:24%">Update</th><th>Description</th></tr>
-      <tr><td>ADM unit added</td><td>Administration (<span class="formula">adm</span> / <span class="formula">adm</span>) is the ${UNIT_IDS.length}th unit. Fully integrated into routing, authentication, data ingestion, filters, comparisons, and university aggregations.</td></tr>
+      <tr><td>GC unit added</td><td>General Counsel (<span class="formula">gc</span> / <span class="formula">gc</span>) is the ${UNIT_IDS.length}th unit. Fully integrated into routing, authentication, data ingestion, filters, comparisons, and university aggregations.</td></tr>
+      <tr><td>ADM unit added</td><td>Administration (<span class="formula">adm</span> / <span class="formula">adm</span>) — fully integrated reporting unit.</td></tr>
       <tr><td>Named board-member accounts</td><td>39 personal accounts created (e.g. <span class="formula">m.ahmar</span>, <span class="formula">f.nader</span>, <span class="formula">g.doumet</span>) with role <i>board_member</i> and <i>display_name</i> stored on profile.</td></tr>
       <tr><td>Welcome Banner</td><td>Personal greeting at top of Executive Dashboard. Hidden for shared <span class="formula">sp4</span> account.</td></tr>
       <tr><td>My Sessions (Saved Views)</td><td>User-controlled snapshot system replacing automatic tracking — see Section 9.</td></tr>
