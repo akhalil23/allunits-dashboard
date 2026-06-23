@@ -57,7 +57,7 @@ const STANDARD_UNITS = new Set([
   'AKSOB', 'BDGA', 'CIL', 'DIRA', 'Facilities', 'Finance', 'IT',
   'Advancement', 'PwD', 'Provost', 'SAS', 'SDEM', 'SOE', 'SOM',
   'SON', 'SOP', 'StratCom_Alumni', 'UGRC', 'OfS', 'HR', 'Procurement',
-  'ADM',
+  'ADM', 'GC',
 ]);
 
 function getPillarConfig(unitId: string): PillarRange[] {
