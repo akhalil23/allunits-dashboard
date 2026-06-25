@@ -149,24 +149,47 @@ async function fetchLiveAllUnits(baseUrl: string, serviceKey: string, admin: Ret
   const concurrency = 5;
   const results: Array<{ unitId: string; payload: unknown } | null> = new Array(UNIT_IDS.length).fill(null);
   const failedByUnit = new Map<string, string>();
-  let cursor = 0;
-  const worker = async () => {
-    while (true) {
-      const idx = cursor++;
-      if (idx >= UNIT_IDS.length) return;
-      const unitId = UNIT_IDS[idx];
-      try {
-        const payload = await fetchLiveUnit(unitId, baseUrl, serviceKey);
-        results[idx] = { unitId, payload };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error(`get-snapshot live unit ${unitId} failed:`, message);
-        failedByUnit.set(unitId, message);
-        results[idx] = null;
+
+  // Run the unit fetcher with a configurable index list so retries can re-target
+  // only the units that failed in the previous pass.
+  const runPass = async (indices: number[]) => {
+    let cursor = 0;
+    const worker = async () => {
+      while (true) {
+        const localIdx = cursor++;
+        if (localIdx >= indices.length) return;
+        const idx = indices[localIdx];
+        const unitId = UNIT_IDS[idx];
+        try {
+          const payload = await fetchLiveUnit(unitId, baseUrl, serviceKey);
+          results[idx] = { unitId, payload };
+          failedByUnit.delete(unitId);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`get-snapshot live unit ${unitId} failed:`, message);
+          failedByUnit.set(unitId, message);
+          results[idx] = null;
+        }
       }
-    }
+    };
+    await Promise.all(Array.from({ length: Math.min(concurrency, indices.length) }, () => worker()));
   };
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+
+  await runPass(UNIT_IDS.map((_, i) => i));
+
+  // Retry pass — transient rate-limits / network blips frequently leave one
+  // unit missing on the first attempt. Re-fetch only the failed indices with a
+  // short backoff before falling back to the monthly snapshot.
+  if (failedByUnit.size > 0) {
+    const failedIndices = UNIT_IDS.map((u, i) => failedByUnit.has(u) ? i : -1).filter(i => i >= 0);
+    await new Promise(r => setTimeout(r, 750));
+    await runPass(failedIndices);
+  }
+  if (failedByUnit.size > 0) {
+    const failedIndices = UNIT_IDS.map((u, i) => failedByUnit.has(u) ? i : -1).filter(i => i >= 0);
+    await new Promise(r => setTimeout(r, 1500));
+    await runPass(failedIndices);
+  }
 
   const fallbackUnits: string[] = [];
   if (failedByUnit.size > 0) {
