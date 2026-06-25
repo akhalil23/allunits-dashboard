@@ -22,20 +22,23 @@ function isSyntheticActionHeaderStep(objective: string, actionStep: string): boo
   return objectiveKey.length > 0 && objectiveKey === stepKey;
 }
 
-function buildExplorerStepKey(pillar: PillarId, goal: string, objective: string, actionStep: string): string {
+function buildExplorerStepKey(
+  pillar: PillarId,
+  goal: string,
+  objectiveOrdinal: number,
+  actionStep: string,
+): string {
   const goalKey = normalizeHierarchyMatchKey(goal);
-  const objectiveKey = normalizeHierarchyMatchKey(objective);
   const stepKey = normalizeHierarchyMatchKey(actionStep);
+  const ordKey = `act#${objectiveOrdinal}`;
 
-  if (goalKey && objectiveKey && stepKey) {
-    return `${pillar}|goalmatch:${goalKey}|actionmatch:${objectiveKey}|stepmatch:${stepKey}`;
+  if (goalKey && stepKey) {
+    return `${pillar}|goalmatch:${goalKey}|${ordKey}|stepmatch:${stepKey}`;
   }
-
-  if (objectiveKey && stepKey) {
-    return `${pillar}|actionmatch:${objectiveKey}|stepmatch:${stepKey}`;
+  if (stepKey) {
+    return `${pillar}|${ordKey}|stepmatch:${stepKey}`;
   }
-
-  return `${pillar}|stepmatch:${stepKey}`;
+  return `${pillar}|goalmatch:${goalKey}|${ordKey}|step#${actionStep}`;
 }
 
 interface Props {
