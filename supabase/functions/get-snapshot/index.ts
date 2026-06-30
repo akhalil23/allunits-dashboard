@@ -422,15 +422,26 @@ serve(async (req) => {
     }
 
     if (kind === 'all-units') {
+      const cacheKey = `monthly:all-units:${pub.id}`;
+      const cached = getCached(cacheKey) as { body: string } | null;
+      if (cached) {
+        return new Response(cached.body, {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       const { data: rows } = await admin
         .from('monthly_unit_snapshots')
-        .select('unit_id, payload, observed_at')
+        .select('unit_id, payload')
         .eq('publication_id', pub.id)
         .eq('view_type', 'all');
-      return new Response(JSON.stringify({
+      const body = JSON.stringify({
         publication: pub,
         units: (rows ?? []).map(r => ({ unitId: r.unit_id, payload: r.payload })),
-      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      });
+      setCached(cacheKey, { body });
+      return new Response(body, {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     if (kind === 'budget') {
