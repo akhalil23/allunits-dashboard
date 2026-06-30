@@ -239,12 +239,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    // Default mode is 'monthly' — dashboards display the approved monthly
-    // snapshot and only refresh from source spreadsheets at the start of each
-    // month via the monthly-refresh job. Set SNAPSHOT_MODE=live to re-enable
-    // continuous live fetching from source sheets.
-    const MODE = (Deno.env.get('SNAPSHOT_MODE') ?? 'monthly').toLowerCase();
-    const isLive = MODE === 'live';
+    const MODE = (Deno.env.get('SNAPSHOT_MODE') ?? 'live').toLowerCase();
+    const isLive = MODE !== 'monthly';
 
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
@@ -389,29 +385,6 @@ serve(async (req) => {
       });
     }
 
-    // Helper — backfill a unit missing from the current monthly publication by
-    // fetching it live and persisting it so subsequent reads stay fast and the
-    // 26-unit roster is always complete (covers units added mid-cycle, e.g. GC).
-    const backfillUnit = async (unitId: string): Promise<unknown | null> => {
-      try {
-        const payload = await fetchLiveUnit(unitId, SUPABASE_URL, SERVICE_KEY);
-        await admin.from('monthly_unit_snapshots').upsert({
-          publication_id: pub.id,
-          unit_id: unitId,
-          view_type: 'all',
-          payload,
-          observed_at: new Date().toISOString(),
-        }, { onConflict: 'publication_id,unit_id,view_type' });
-        // Invalidate the cached all-units bundle so the next caller sees the
-        // backfilled unit.
-        liveCache.delete(`monthly:all-units:${pub.id}`);
-        return payload;
-      } catch (err) {
-        console.error(`monthly backfill failed for ${unitId}:`, err instanceof Error ? err.message : err);
-        return null;
-      }
-    };
-
     if (kind === 'unit') {
       const requestedUnit = body?.unitId;
       if (!requestedUnit) {
@@ -431,17 +404,13 @@ serve(async (req) => {
         .eq('unit_id', requestedUnit)
         .eq('view_type', 'all')
         .maybeSingle();
-      let payload: unknown | null = row?.payload ?? null;
-      if (!payload && UNIT_IDS.includes(requestedUnit)) {
-        payload = await backfillUnit(requestedUnit);
-      }
-      if (!payload) {
+      if (!row) {
         return new Response(JSON.stringify({ error: `No snapshot found for unit ${requestedUnit}` }), {
           status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       return new Response(JSON.stringify({
-        ...(payload as Record<string, unknown>),
+        ...row.payload,
         publication: pub,
         snapshotMonth: pub.month,
         snapshotPublishedAt: pub.published_at,
@@ -449,42 +418,16 @@ serve(async (req) => {
     }
 
     if (kind === 'all-units') {
-      const cacheKey = `monthly:all-units:${pub.id}`;
-      const cached = getCached(cacheKey) as { body: string } | null;
-      if (cached) {
-        return new Response(cached.body, {
-          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
       const { data: rows } = await admin
         .from('monthly_unit_snapshots')
-        .select('unit_id, payload')
+        .select('unit_id, payload, observed_at')
         .eq('publication_id', pub.id)
         .eq('view_type', 'all');
-      const byUnit = new Map<string, unknown>((rows ?? []).map(r => [r.unit_id as string, r.payload]));
-
-      // Ensure every configured unit is present — backfill any missing from the
-      // live source so the roster stays at the expected count (26 today).
-      const missing = UNIT_IDS.filter(u => !byUnit.has(u));
-      if (missing.length > 0) {
-        await Promise.all(missing.map(async (unitId) => {
-          const payload = await backfillUnit(unitId);
-          if (payload) byUnit.set(unitId, payload);
-        }));
-      }
-
-      const units = UNIT_IDS
-        .filter(u => byUnit.has(u))
-        .map(u => ({ unitId: u, payload: byUnit.get(u) }));
-      const body = JSON.stringify({ publication: pub, units });
-      // Only cache when we have the full roster, so a transient backfill miss
-      // doesn't get pinned for the cache TTL.
-      if (units.length === UNIT_IDS.length) setCached(cacheKey, { body });
-      return new Response(body, {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(JSON.stringify({
+        publication: pub,
+        units: (rows ?? []).map(r => ({ unitId: r.unit_id, payload: r.payload })),
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-
 
     if (kind === 'budget') {
       const { data: row } = await admin

@@ -120,22 +120,7 @@ export default function ExecutiveHeader({ loadedUnits, totalUnits, onRefresh, is
               <span className="hidden sm:inline">{loadedUnits}/{totalUnits} Units</span>
             </motion.div>
 
-            {isAdmin && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.button
-                    onClick={onRefresh}
-                    disabled={isRefreshing}
-                    className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-50"
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  </motion.button>
-                </TooltipTrigger>
-                <TooltipContent>Admin: force refresh from source sheets</TooltipContent>
-              </Tooltip>
-            )}
+            {/* Manual refresh removed — dashboard now uses controlled monthly snapshots. */}
 
             {isBoard && (
               <Tooltip>
