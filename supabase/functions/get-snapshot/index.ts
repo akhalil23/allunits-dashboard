@@ -239,8 +239,12 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
     const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const MODE = (Deno.env.get('SNAPSHOT_MODE') ?? 'live').toLowerCase();
-    const isLive = MODE !== 'monthly';
+    // Default mode is 'monthly' — dashboards display the approved monthly
+    // snapshot and only refresh from source spreadsheets at the start of each
+    // month via the monthly-refresh job. Set SNAPSHOT_MODE=live to re-enable
+    // continuous live fetching from source sheets.
+    const MODE = (Deno.env.get('SNAPSHOT_MODE') ?? 'monthly').toLowerCase();
+    const isLive = MODE === 'live';
 
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
