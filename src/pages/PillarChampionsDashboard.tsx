@@ -180,15 +180,17 @@ export default function PillarChampionsDashboard() {
                   <span className="hidden sm:inline">{loadedCount}/{totalCount} Units</span>
                 </motion.div>
 
-                <motion.button
-                  onClick={handleRefresh}
-                  className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                  title="Refresh all units"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-                </motion.button>
+                {isAdmin && (
+                  <motion.button
+                    onClick={handleRefresh}
+                    className="p-2 rounded-lg bg-white/[0.08] text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Admin: force refresh from source sheets"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+                  </motion.button>
+                )}
 
                 <Tooltip>
                   <TooltipTrigger asChild>
