@@ -262,7 +262,22 @@ export default function Header({ observedAt, dataQuality, onRefresh, isRefreshin
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Manual refresh removed — controlled monthly snapshots only. */}
+            {isAdmin && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={onRefresh}
+                    disabled={isRefreshing}
+                    className="p-2 rounded-lg bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-colors duration-200 border border-white/5 disabled:opacity-50"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent>Admin: force refresh from source sheets</TooltipContent>
+              </Tooltip>
+            )}
 
             {/* Logout */}
             <Tooltip>
