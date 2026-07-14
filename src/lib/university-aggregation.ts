@@ -161,9 +161,9 @@ function countStatuses(
 }
 
 /**
- * Compute the average target-achievement completion across applicable items.
- * Rules:
- *   COT → 100%, CBT → 100%, In Progress → actual %, Not Started → 0%
+ * Compute Completion Rate = (On Target + Below Target) / Applicable items.
+ * Canonical definition — excludes In Progress and Not Started from the numerator.
+ * Matches the Pillar Champions dashboard so both views agree.
  */
 function computeAvgCompletion(
   items: ActionItem[],
@@ -171,33 +171,22 @@ function computeAvgCompletion(
   term: Term,
   academicYear: AcademicYear
 ): number {
-  let sum = 0;
+  let completed = 0;
   let applicable = 0;
 
   items.forEach(item => {
     const status = getItemStatus(item, viewType, term, academicYear);
     if (isNotApplicableStatus(status)) return;
     applicable++;
-    switch (status) {
-      case 'Completed – On Target':
-        sum += 100;
-        break;
-      case 'Completed – Below Target':
-        // Completed action → 100% (item was completed, regardless of target outcome)
-        sum += 100;
-        break;
-      case 'In Progress':
-        sum += getItemCompletion(item, viewType, term, academicYear);
-        break;
-      case 'Not Started':
-        sum += 0;
-        break;
+    if (status === 'Completed – On Target' || status === 'Completed – Below Target') {
+      completed++;
     }
   });
 
   if (applicable === 0) return 0;
-  return parseFloat((sum / applicable).toFixed(1));
+  return parseFloat((completed / applicable * 100).toFixed(1));
 }
+
 
 // ─── Compute RiskIndex from raw counts ───────────────────────────────────────
 
