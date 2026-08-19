@@ -60,7 +60,10 @@ hc_period(code, label, start_date, end_date, is_current)   -- config, kills CURR
 ```
 Dotted codes (`3.1.1`) are the stable natural keys; `code + goal` is the import upsert key. Blockers and Milestones are **not** separate tables — they are fields on the quarterly update (matching Excel), surfaced as derived views.
 
-`direction` (higher-is-better / lower-is-better) and `measurable` are DERIVED at import with manual override, since the workbook has no such column.
+**Import traceability:** every `hc_*` row carries `import_batch_id` (plus `first_seen_batch_id` on entities), and quarterly updates are stored append-only per batch rather than overwritten. This gives quarter-over-quarter comparison, audit history, rollback to a prior batch, and per-batch validation review. `hc_import_batch` records filename, uploader, timestamp, status, row counts, and the validation report.
+
+`direction` (higher-is-better / lower-is-better) and `measurable` are **not auto-inferred unless unambiguous** (e.g. explicit "reduce"/"increase" wording or a clearly directional KPI type). Otherwise the KPI is stored as `direction = 'unvalidated'`, flagged in the validation report for manual confirmation, and remains configurable per KPI. Achievement % is not computed while direction is unvalidated.
+
 
 ## 3. Calculation layer (all DERIVED OUTPUT)
 
