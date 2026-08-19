@@ -80,8 +80,12 @@ Dotted codes (`3.1.1`) are the stable natural keys; `code + goal` is the import 
 - **Milestones**: Overdue (expected date < today, status ≠ Completed), Upcoming (next 90 days), Adherence % = met ÷ due.
 - **Budget**: planned by step/action/goal/year, top funded actions, concentration, budget vs progress. **A Funding Gap is never inferred from planned budget = 0** — zero may legitimately mean no budget is required. Funding Gap is derived only from explicit structured data (e.g. a required-vs-allocated field or a Funding blocker) once such data exists. No funding source, spend, variance, or forecast is invented.
 
+## 4. Ingestion & validation
 
-Pilot: Admin uploads the workbook → parser (two-row header, forward-fill merged Goal/Action, `\xa0` normalization, 5 fixed quarter blocks read from row 1 band labels so periods come from the file) → validation report → preview diff → approve → persist as an import batch. Nothing silently coerced.
+Pilot scope: **Goal 3 only.** The parser reads only the `Goal 3 reviewed` sheet; Goals 1, 2, 4–7 are neither migrated, populated, nor altered. The schema and parser are goal-agnostic so later sheets plug in unchanged.
+
+Admin uploads the workbook → parser (two-row header, forward-fill merged Goal/Action, `\xa0` normalization, quarter blocks read from row 1 band labels so periods come from the file) → validation report → preview diff against the previous batch → approve → persist as a new `hc_import_batch`. Nothing silently coerced; every row links to its batch, and a batch can be rolled back.
+
 
 Validations: goal/action/step code format and uniqueness; step code prefix matches its action; status in enum; progress 0–100 numeric; blocker category in enum when Blocker=Yes; target value numeric when KPI type is numeric; target/milestone dates parseable (quarter or date); budget numeric; required fields (code, title). Warnings vs errors separated; errors block the batch, warnings are shown and importable.
 
