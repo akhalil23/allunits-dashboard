@@ -60,26 +60,32 @@ hc_period(code, label, start_date, end_date, is_current)   -- config, kills CURR
 ```
 Dotted codes (`3.1.1`) are the stable natural keys; `code + goal` is the import upsert key. Blockers and Milestones are **not** separate tables — they are fields on the quarterly update (matching Excel), surfaced as derived views.
 
-`direction` (higher-is-better / lower-is-better) and `measurable` are DERIVED at import with manual override, since the workbook has no such column.
+**Import traceability:** every `hc_*` row carries `import_batch_id` (plus `first_seen_batch_id` on entities), and quarterly updates are stored append-only per batch rather than overwritten. This gives quarter-over-quarter comparison, audit history, rollback to a prior batch, and per-batch validation review. `hc_import_batch` records filename, uploader, timestamp, status, row counts, and the validation report.
+
+`direction` (higher-is-better / lower-is-better) and `measurable` are **not auto-inferred unless unambiguous** (e.g. explicit "reduce"/"increase" wording or a clearly directional KPI type). Otherwise the KPI is stored as `direction = 'unvalidated'`, flagged in the validation report for manual confirmation, and remains configurable per KPI. Achievement % is not computed while direction is unvalidated.
+
 
 ## 3. Calculation layer (all DERIVED OUTPUT)
 
-- **Step progress** = latest non-null `execution_progress_pct` from the most recent period with data. Fallback ladder only when null: status map (Not Started 0 / In Progress null-flagged / Completed 100), and the step is marked `progress_source = 'status_fallback'` so the UI can label it.
-- **Action / Goal progress** = unweighted mean over applicable steps (weights column reserved in the model for future use).
-- **Portfolio progress** = mean over all goals, enabled only after Goals 1–7 migrate.
-- **KPI Achievement %** = actual/target×100 for higher-is-better, target/actual×100 for lower-is-better; null when target or actual missing → `Not Yet Measurable`.
-- **KPI classification**: Achieved (≥100%), On Target (≥ expected trajectory), Below Target, Not Yet Measurable.
-- **On-Target Rate** = On-Target measurable KPIs ÷ total measurable KPIs.
-- **Expected Progress** — pluggable strategy (`linear` default, `milestone`, `manual`), computed from period start → target date. Flagged PROVISIONAL in UI and guide. Schedule Variance = actual − expected.
-- **At-Risk** — signal list, each returning a human reason: Blocked status / Blocker=Yes; progress below expected by threshold; KPI below expected trajectory; milestone overdue; zero budget with priority 1; missing current-period update. Item is At Risk if ≥1 signal; reasons always rendered.
-- **Risk Index** — Phase 1: no composite score; show signals + At-Risk only. Phase 2 optional weighted index with a config object. The authored `riskFlag` field is removed; single framework.
-- **Reporting Coverage** = steps with a valid update in the current period (status or comments or progress) ÷ steps expected to report; overall, by goal, plus a missing-update list with Owner/Responsible.
+- **Step progress** = latest non-null `execution_progress_pct` — the primary and preferred real-data source. When blank, a fallback applies **only** for: Not Started → 0%, Completed → 100%. **In Progress and Blocked receive no inferred percentage** — progress is `null` / "Not reported", excluded from averages, and counted in a "progress not reported" indicator. Every value carries `progress_source = 'reported' | 'status_fallback' | 'not_reported'` and the UI labels non-reported values.
+- **Action / Goal progress** = unweighted mean over applicable steps with a usable value; steps with `not_reported` are excluded from the numerator and denominator and shown as a coverage caveat next to the figure. Weighting hook reserved for later.
+- **Portfolio progress** = mean across goals, enabled only after Goals 1–7 migrate.
+- **KPI Achievement %** = actual/target×100 for higher-is-better, target/actual×100 for lower-is-better; null when target, actual, or a validated direction is missing → `Not Yet Measurable`.
+- **KPI classification**: Achieved (≥100%), On Target, Below Target, Not Yet Measurable. On/Below Target require a validated Expected Progress rule; until then measurable KPIs with no verdict report as `Pending methodology`.
+- **On-Target Rate** = On-Target measurable KPIs ÷ total measurable KPIs (only shown once the methodology is approved).
+- **Expected Progress** — strategies `linear | milestone | manual` are all supported, but the **default is `not_defined` (pending stakeholder validation)**. No trajectory is assumed and no Actual-vs-Expected, Schedule Variance, or trajectory-based verdict is computed until a rule is selected in configuration; the UI shows "Expected progress not defined" instead of a number.
+- **At-Risk** — signal list, each returning a human reason: Blocked status / Blocker = Yes; overdue milestone; missing current-period update; progress or KPI materially below expected **(only active once an expected-progress rule is approved)**. An item is At Risk if ≥1 signal fires; reasons are always rendered. Zero planned budget is **not** a signal on its own.
+- **Risk Index** — Phase 1: no composite score; signals + At-Risk only. Phase 2 optional weighted index with a documented, configurable weight set. The authored `riskFlag` is removed; one framework.
+- **Reporting Coverage (Goal 3 pilot)** = action steps with a valid current-period update ÷ **all applicable Goal 3 action steps**. The "expected to report" population is a configurable rule for later phases. Reported overall and by goal, with a missing-update list including Owner/Responsible.
 - **Milestones**: Overdue (expected date < today, status ≠ Completed), Upcoming (next 90 days), Adherence % = met ÷ due.
-- **Budget**: planned by step/action/goal/year, top funded actions, concentration, budget vs progress. Funding source and funding gap only if a source column is added later. No spend/variance/forecast invented.
+- **Budget**: planned by step/action/goal/year, top funded actions, concentration, budget vs progress. **A Funding Gap is never inferred from planned budget = 0** — zero may legitimately mean no budget is required. Funding Gap is derived only from explicit structured data (e.g. a required-vs-allocated field or a Funding blocker) once such data exists. No funding source, spend, variance, or forecast is invented.
 
 ## 4. Ingestion & validation
 
-Pilot: Admin uploads the workbook → parser (two-row header, forward-fill merged Goal/Action, `\xa0` normalization, 5 fixed quarter blocks read from row 1 band labels so periods come from the file) → validation report → preview diff → approve → persist as an import batch. Nothing silently coerced.
+Pilot scope: **Goal 3 only.** The parser reads only the `Goal 3 reviewed` sheet; Goals 1, 2, 4–7 are neither migrated, populated, nor altered. The schema and parser are goal-agnostic so later sheets plug in unchanged.
+
+Admin uploads the workbook → parser (two-row header, forward-fill merged Goal/Action, `\xa0` normalization, quarter blocks read from row 1 band labels so periods come from the file) → validation report → preview diff against the previous batch → approve → persist as a new `hc_import_batch`. Nothing silently coerced; every row links to its batch, and a batch can be rolled back.
+
 
 Validations: goal/action/step code format and uniqueness; step code prefix matches its action; status in enum; progress 0–100 numeric; blocker category in enum when Blocker=Yes; target value numeric when KPI type is numeric; target/milestone dates parseable (quarter or date); budget numeric; required fields (code, title). Warnings vs errors separated; errors block the batch, warnings are shown and importable.
 
@@ -99,18 +105,19 @@ Future OneDrive: Power Automate / Graph pushes the same workbook to a Healthcare
 
 ## 7. Protected / untouched
 
-`ProtectedRoute`, `AuthContext`, main login, `use-user-role`, Admin user lifecycle, University routes, `DashboardContext`, `university-aggregation.ts`, `unit-config.ts`, University edge functions and tables, Unit and Pillar Champion dashboards, domain/publish config. All Healthcare tables, functions, routes and role usage are strictly additive. Only additive touchpoint anticipated: new `/healthcare/admin` route entry and new `hc_*` tables with their own RLS + grants keyed to the existing healthcare roles — no enum or guard change needed.
+`ProtectedRoute`, `AuthContext`, main login, `use-user-role`, Admin user lifecycle, University routes, `DashboardContext`, `university-aggregation.ts`, `unit-config.ts`, University edge functions and tables, Unit and Pillar Champion dashboards, shared calculations, domain/publish config — all remain functionally identical. Every Healthcare table, function, route and role usage is strictly additive. Only additive touchpoint anticipated: a new `/healthcare/admin` route entry and new `hc_*` tables with their own RLS + grants keyed to the existing healthcare roles — no enum, guard, or shared-logic change.
 
 ## 8. Pilot sequence
 
-1. Finalize Goal 3 workbook fields. 2. Persistence + controlled import. 3. Calculation layer. 4. Validate every Goal 3 output against Excel. 5. Refine progress / target alignment / at-risk. 6. Extend to Goals 1–7. 7. OneDrive via Power Automate/Graph. 8. Refresh logs, versioning, audit.
+1. Finalize Goal 3 workbook fields. 2. Persistence + batch-traceable Goal 3 import. 3. Calculation layer. 4. Validate every Goal 3 output against Excel cell by cell. 5. Stakeholder review of expected-progress, KPI direction, at-risk and risk methodologies. 6. Only after sign-off, extend to Goals 1–7. 7. OneDrive via Power Automate/Graph. 8. Refresh logs, versioning, audit and rollback UI.
 
 ## 9. Open business rules for stakeholder validation
 
-- Expected-progress methodology (linear vs milestone-based) and the variance threshold for "materially below".
-- What to display when Execution Progress % is blank but a status exists (current sheet is fully blank on these columns).
-- KPI direction per KPI (no column exists) and which KPIs are non-measurable by nature.
+- Expected-progress methodology (linear / milestone / manual) and the variance threshold for "materially below" — **default is undefined until approved**, so Actual-vs-Expected, Schedule Variance and On/Below Target stay dormant.
+- How to present In Progress / Blocked steps with a blank Execution Progress % (currently "Not reported", excluded from averages).
+- KPI direction per KPI where wording is ambiguous, and which KPIs are non-measurable by nature.
 - Whether Action/Goal progress should stay unweighted or use priority weighting.
-- Funding source and any actual-spend fields — not in the workbook today.
+- The definition of "expected to report" beyond the Goal 3 pilot rule (currently all applicable steps).
+- Whether any explicit funding-requirement, funding-source or actual-spend fields will be added — required before any Funding Gap metric can exist.
 - Whether target dates stay quarter-granular (`Q4 2026`) or move to real dates.
-- Which steps are "expected to report" each quarter (all, or only started ones).
+
