@@ -105,18 +105,19 @@ Future OneDrive: Power Automate / Graph pushes the same workbook to a Healthcare
 
 ## 7. Protected / untouched
 
-`ProtectedRoute`, `AuthContext`, main login, `use-user-role`, Admin user lifecycle, University routes, `DashboardContext`, `university-aggregation.ts`, `unit-config.ts`, University edge functions and tables, Unit and Pillar Champion dashboards, domain/publish config. All Healthcare tables, functions, routes and role usage are strictly additive. Only additive touchpoint anticipated: new `/healthcare/admin` route entry and new `hc_*` tables with their own RLS + grants keyed to the existing healthcare roles — no enum or guard change needed.
+`ProtectedRoute`, `AuthContext`, main login, `use-user-role`, Admin user lifecycle, University routes, `DashboardContext`, `university-aggregation.ts`, `unit-config.ts`, University edge functions and tables, Unit and Pillar Champion dashboards, shared calculations, domain/publish config — all remain functionally identical. Every Healthcare table, function, route and role usage is strictly additive. Only additive touchpoint anticipated: a new `/healthcare/admin` route entry and new `hc_*` tables with their own RLS + grants keyed to the existing healthcare roles — no enum, guard, or shared-logic change.
 
 ## 8. Pilot sequence
 
-1. Finalize Goal 3 workbook fields. 2. Persistence + controlled import. 3. Calculation layer. 4. Validate every Goal 3 output against Excel. 5. Refine progress / target alignment / at-risk. 6. Extend to Goals 1–7. 7. OneDrive via Power Automate/Graph. 8. Refresh logs, versioning, audit.
+1. Finalize Goal 3 workbook fields. 2. Persistence + batch-traceable Goal 3 import. 3. Calculation layer. 4. Validate every Goal 3 output against Excel cell by cell. 5. Stakeholder review of expected-progress, KPI direction, at-risk and risk methodologies. 6. Only after sign-off, extend to Goals 1–7. 7. OneDrive via Power Automate/Graph. 8. Refresh logs, versioning, audit and rollback UI.
 
 ## 9. Open business rules for stakeholder validation
 
-- Expected-progress methodology (linear vs milestone-based) and the variance threshold for "materially below".
-- What to display when Execution Progress % is blank but a status exists (current sheet is fully blank on these columns).
-- KPI direction per KPI (no column exists) and which KPIs are non-measurable by nature.
+- Expected-progress methodology (linear / milestone / manual) and the variance threshold for "materially below" — **default is undefined until approved**, so Actual-vs-Expected, Schedule Variance and On/Below Target stay dormant.
+- How to present In Progress / Blocked steps with a blank Execution Progress % (currently "Not reported", excluded from averages).
+- KPI direction per KPI where wording is ambiguous, and which KPIs are non-measurable by nature.
 - Whether Action/Goal progress should stay unweighted or use priority weighting.
-- Funding source and any actual-spend fields — not in the workbook today.
+- The definition of "expected to report" beyond the Goal 3 pilot rule (currently all applicable steps).
+- Whether any explicit funding-requirement, funding-source or actual-spend fields will be added — required before any Funding Gap metric can exist.
 - Whether target dates stay quarter-granular (`Q4 2026`) or move to real dates.
-- Which steps are "expected to report" each quarter (all, or only started ones).
+
