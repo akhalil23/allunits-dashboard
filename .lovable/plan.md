@@ -67,20 +67,19 @@ Dotted codes (`3.1.1`) are the stable natural keys; `code + goal` is the import 
 
 ## 3. Calculation layer (all DERIVED OUTPUT)
 
-- **Step progress** = latest non-null `execution_progress_pct` from the most recent period with data. Fallback ladder only when null: status map (Not Started 0 / In Progress null-flagged / Completed 100), and the step is marked `progress_source = 'status_fallback'` so the UI can label it.
-- **Action / Goal progress** = unweighted mean over applicable steps (weights column reserved in the model for future use).
-- **Portfolio progress** = mean over all goals, enabled only after Goals 1–7 migrate.
-- **KPI Achievement %** = actual/target×100 for higher-is-better, target/actual×100 for lower-is-better; null when target or actual missing → `Not Yet Measurable`.
-- **KPI classification**: Achieved (≥100%), On Target (≥ expected trajectory), Below Target, Not Yet Measurable.
-- **On-Target Rate** = On-Target measurable KPIs ÷ total measurable KPIs.
-- **Expected Progress** — pluggable strategy (`linear` default, `milestone`, `manual`), computed from period start → target date. Flagged PROVISIONAL in UI and guide. Schedule Variance = actual − expected.
-- **At-Risk** — signal list, each returning a human reason: Blocked status / Blocker=Yes; progress below expected by threshold; KPI below expected trajectory; milestone overdue; zero budget with priority 1; missing current-period update. Item is At Risk if ≥1 signal; reasons always rendered.
-- **Risk Index** — Phase 1: no composite score; show signals + At-Risk only. Phase 2 optional weighted index with a config object. The authored `riskFlag` field is removed; single framework.
-- **Reporting Coverage** = steps with a valid update in the current period (status or comments or progress) ÷ steps expected to report; overall, by goal, plus a missing-update list with Owner/Responsible.
+- **Step progress** = latest non-null `execution_progress_pct` — the primary and preferred real-data source. When blank, a fallback applies **only** for: Not Started → 0%, Completed → 100%. **In Progress and Blocked receive no inferred percentage** — progress is `null` / "Not reported", excluded from averages, and counted in a "progress not reported" indicator. Every value carries `progress_source = 'reported' | 'status_fallback' | 'not_reported'` and the UI labels non-reported values.
+- **Action / Goal progress** = unweighted mean over applicable steps with a usable value; steps with `not_reported` are excluded from the numerator and denominator and shown as a coverage caveat next to the figure. Weighting hook reserved for later.
+- **Portfolio progress** = mean across goals, enabled only after Goals 1–7 migrate.
+- **KPI Achievement %** = actual/target×100 for higher-is-better, target/actual×100 for lower-is-better; null when target, actual, or a validated direction is missing → `Not Yet Measurable`.
+- **KPI classification**: Achieved (≥100%), On Target, Below Target, Not Yet Measurable. On/Below Target require a validated Expected Progress rule; until then measurable KPIs with no verdict report as `Pending methodology`.
+- **On-Target Rate** = On-Target measurable KPIs ÷ total measurable KPIs (only shown once the methodology is approved).
+- **Expected Progress** — strategies `linear | milestone | manual` are all supported, but the **default is `not_defined` (pending stakeholder validation)**. No trajectory is assumed and no Actual-vs-Expected, Schedule Variance, or trajectory-based verdict is computed until a rule is selected in configuration; the UI shows "Expected progress not defined" instead of a number.
+- **At-Risk** — signal list, each returning a human reason: Blocked status / Blocker = Yes; overdue milestone; missing current-period update; progress or KPI materially below expected **(only active once an expected-progress rule is approved)**. An item is At Risk if ≥1 signal fires; reasons are always rendered. Zero planned budget is **not** a signal on its own.
+- **Risk Index** — Phase 1: no composite score; signals + At-Risk only. Phase 2 optional weighted index with a documented, configurable weight set. The authored `riskFlag` is removed; one framework.
+- **Reporting Coverage (Goal 3 pilot)** = action steps with a valid current-period update ÷ **all applicable Goal 3 action steps**. The "expected to report" population is a configurable rule for later phases. Reported overall and by goal, with a missing-update list including Owner/Responsible.
 - **Milestones**: Overdue (expected date < today, status ≠ Completed), Upcoming (next 90 days), Adherence % = met ÷ due.
-- **Budget**: planned by step/action/goal/year, top funded actions, concentration, budget vs progress. Funding source and funding gap only if a source column is added later. No spend/variance/forecast invented.
+- **Budget**: planned by step/action/goal/year, top funded actions, concentration, budget vs progress. **A Funding Gap is never inferred from planned budget = 0** — zero may legitimately mean no budget is required. Funding Gap is derived only from explicit structured data (e.g. a required-vs-allocated field or a Funding blocker) once such data exists. No funding source, spend, variance, or forecast is invented.
 
-## 4. Ingestion & validation
 
 Pilot: Admin uploads the workbook → parser (two-row header, forward-fill merged Goal/Action, `\xa0` normalization, 5 fixed quarter blocks read from row 1 band labels so periods come from the file) → validation report → preview diff → approve → persist as an import batch. Nothing silently coerced.
 
