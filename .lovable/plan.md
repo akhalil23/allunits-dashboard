@@ -111,6 +111,13 @@ Future OneDrive: Power Automate / Graph pushes the same workbook to a Healthcare
 
 1. Finalize Goal 3 workbook fields. 2. Persistence + batch-traceable Goal 3 import. 3. Calculation layer. 4. Validate every Goal 3 output against Excel cell by cell. 5. Stakeholder review of expected-progress, KPI direction, at-risk and risk methodologies. 6. Only after sign-off, extend to Goals 1–7. 7. OneDrive via Power Automate/Graph. 8. Refresh logs, versioning, audit and rollback UI.
 
+### Build-mode scope for this pilot
+
+Latest workbook (`...Q3_2026-2.xlsx`) re-checked: Goal 3 rows 3–15 still have **empty** Status, Execution Progress %, KPI Actual, Blocker and Milestone columns across all five quarter blocks; only Progress Update / Comments, KPI target fields and budget rows carry values. These are imported and displayed as **missing data** — nothing is inferred from the narrative comments, and the dashboard shows "Not reported" states rather than derived numbers.
+
+Consequently, this build ships with Expected Progress, On/Below Target and Schedule Variance **disabled** behind the configuration flag, Goal 3 only, no other Healthcare goal touched, and no University file modified. Delivery ends with a reconciliation summary that compares every imported record and every displayed metric back to the source cells.
+
+
 ## 9. Open business rules for stakeholder validation
 
 - Expected-progress methodology (linear / milestone / manual) and the variance threshold for "materially below" — **default is undefined until approved**, so Actual-vs-Expected, Schedule Variance and On/Below Target stay dormant.
