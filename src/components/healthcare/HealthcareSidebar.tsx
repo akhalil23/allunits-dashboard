@@ -161,7 +161,7 @@ export default function HealthcareSidebar({ activeTab, onTabChange }: Props) {
         <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10">
           <p className="text-[10px] text-white/40 leading-tight">
             Healthcare Strategic Plan<br />
-            Executive Prototype · v2<br />
+            Goal 3 Real-Data Pilot<br />
             Lebanese American University
           </p>
         </div>
