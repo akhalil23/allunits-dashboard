@@ -41,6 +41,506 @@ export type Database = {
         }
         Relationships: []
       }
+      hc_action_steps: {
+        Row: {
+          accountable: string | null
+          action_id: string
+          code: string
+          consulted: string | null
+          created_at: string
+          display_order: number
+          first_seen_batch_id: string | null
+          id: string
+          import_batch_id: string | null
+          informed: string | null
+          intent: string | null
+          owner: string | null
+          priority: number | null
+          responsible: string | null
+          source_row: number | null
+          title: string
+        }
+        Insert: {
+          accountable?: string | null
+          action_id: string
+          code: string
+          consulted?: string | null
+          created_at?: string
+          display_order?: number
+          first_seen_batch_id?: string | null
+          id?: string
+          import_batch_id?: string | null
+          informed?: string | null
+          intent?: string | null
+          owner?: string | null
+          priority?: number | null
+          responsible?: string | null
+          source_row?: number | null
+          title: string
+        }
+        Update: {
+          accountable?: string | null
+          action_id?: string
+          code?: string
+          consulted?: string | null
+          created_at?: string
+          display_order?: number
+          first_seen_batch_id?: string | null
+          id?: string
+          import_batch_id?: string | null
+          informed?: string | null
+          intent?: string | null
+          owner?: string | null
+          priority?: number | null
+          responsible?: string | null
+          source_row?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hc_action_steps_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "hc_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_action_steps_first_seen_batch_id_fkey"
+            columns: ["first_seen_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_action_steps_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hc_actions: {
+        Row: {
+          action_kpi_text: string | null
+          code: string
+          created_at: string
+          display_order: number
+          first_seen_batch_id: string | null
+          goal_id: string
+          id: string
+          import_batch_id: string | null
+          spoc: string | null
+          title: string
+        }
+        Insert: {
+          action_kpi_text?: string | null
+          code: string
+          created_at?: string
+          display_order?: number
+          first_seen_batch_id?: string | null
+          goal_id: string
+          id?: string
+          import_batch_id?: string | null
+          spoc?: string | null
+          title: string
+        }
+        Update: {
+          action_kpi_text?: string | null
+          code?: string
+          created_at?: string
+          display_order?: number
+          first_seen_batch_id?: string | null
+          goal_id?: string
+          id?: string
+          import_batch_id?: string | null
+          spoc?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hc_actions_first_seen_batch_id_fkey"
+            columns: ["first_seen_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_actions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "hc_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_actions_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hc_budget_years: {
+        Row: {
+          amount: number | null
+          amount_raw: string | null
+          created_at: string
+          id: string
+          import_batch_id: string | null
+          note: string | null
+          step_id: string
+          year_label: string
+        }
+        Insert: {
+          amount?: number | null
+          amount_raw?: string | null
+          created_at?: string
+          id?: string
+          import_batch_id?: string | null
+          note?: string | null
+          step_id: string
+          year_label: string
+        }
+        Update: {
+          amount?: number | null
+          amount_raw?: string | null
+          created_at?: string
+          id?: string
+          import_batch_id?: string | null
+          note?: string | null
+          step_id?: string
+          year_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hc_budget_years_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_budget_years_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "hc_action_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hc_config: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      hc_goals: {
+        Row: {
+          champion: string | null
+          code: number
+          created_at: string
+          display_order: number
+          first_seen_batch_id: string | null
+          id: string
+          import_batch_id: string | null
+          title: string
+        }
+        Insert: {
+          champion?: string | null
+          code: number
+          created_at?: string
+          display_order?: number
+          first_seen_batch_id?: string | null
+          id?: string
+          import_batch_id?: string | null
+          title: string
+        }
+        Update: {
+          champion?: string | null
+          code?: number
+          created_at?: string
+          display_order?: number
+          first_seen_batch_id?: string | null
+          id?: string
+          import_batch_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hc_goals_first_seen_batch_id_fkey"
+            columns: ["first_seen_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_goals_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hc_import_batches: {
+        Row: {
+          error_count: number
+          filename: string
+          goal_scope: string
+          id: string
+          imported_at: string
+          imported_by: string | null
+          notes: string | null
+          row_count: number
+          source_sheet: string
+          status: string
+          warning_count: number
+        }
+        Insert: {
+          error_count?: number
+          filename: string
+          goal_scope?: string
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          notes?: string | null
+          row_count?: number
+          source_sheet: string
+          status?: string
+          warning_count?: number
+        }
+        Update: {
+          error_count?: number
+          filename?: string
+          goal_scope?: string
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          notes?: string | null
+          row_count?: number
+          source_sheet?: string
+          status?: string
+          warning_count?: number
+        }
+        Relationships: []
+      }
+      hc_kpis: {
+        Row: {
+          created_at: string
+          direction: string
+          id: string
+          import_batch_id: string | null
+          kpi_type: string | null
+          measurable: boolean
+          original_text: string | null
+          step_id: string
+          target_date_raw: string | null
+          target_unit: string | null
+          target_value: number | null
+          target_value_raw: string | null
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          id?: string
+          import_batch_id?: string | null
+          kpi_type?: string | null
+          measurable?: boolean
+          original_text?: string | null
+          step_id: string
+          target_date_raw?: string | null
+          target_unit?: string | null
+          target_value?: number | null
+          target_value_raw?: string | null
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          id?: string
+          import_batch_id?: string | null
+          kpi_type?: string | null
+          measurable?: boolean
+          original_text?: string | null
+          step_id?: string
+          target_date_raw?: string | null
+          target_unit?: string | null
+          target_value?: number | null
+          target_value_raw?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hc_kpis_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_kpis_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "hc_action_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hc_periods: {
+        Row: {
+          code: string
+          is_current: boolean
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          is_current?: boolean
+          label: string
+          sort_order: number
+        }
+        Update: {
+          code?: string
+          is_current?: boolean
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      hc_quarterly_updates: {
+        Row: {
+          blocker_category: string | null
+          blocker_details: string | null
+          blocker_flag: string | null
+          comments: string | null
+          created_at: string
+          evidence: string | null
+          execution_progress_pct: number | null
+          expected_milestone_date_raw: string | null
+          id: string
+          import_batch_id: string | null
+          kpi_actual_raw: string | null
+          kpi_actual_value: number | null
+          next_milestone: string | null
+          period_code: string
+          status: string | null
+          step_id: string
+        }
+        Insert: {
+          blocker_category?: string | null
+          blocker_details?: string | null
+          blocker_flag?: string | null
+          comments?: string | null
+          created_at?: string
+          evidence?: string | null
+          execution_progress_pct?: number | null
+          expected_milestone_date_raw?: string | null
+          id?: string
+          import_batch_id?: string | null
+          kpi_actual_raw?: string | null
+          kpi_actual_value?: number | null
+          next_milestone?: string | null
+          period_code: string
+          status?: string | null
+          step_id: string
+        }
+        Update: {
+          blocker_category?: string | null
+          blocker_details?: string | null
+          blocker_flag?: string | null
+          comments?: string | null
+          created_at?: string
+          evidence?: string | null
+          execution_progress_pct?: number | null
+          expected_milestone_date_raw?: string | null
+          id?: string
+          import_batch_id?: string | null
+          kpi_actual_raw?: string | null
+          kpi_actual_value?: number | null
+          next_milestone?: string | null
+          period_code?: string
+          status?: string | null
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hc_quarterly_updates_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hc_quarterly_updates_period_code_fkey"
+            columns: ["period_code"]
+            isOneToOne: false
+            referencedRelation: "hc_periods"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "hc_quarterly_updates_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "hc_action_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hc_validation_issues: {
+        Row: {
+          batch_id: string
+          created_at: string
+          field: string | null
+          id: string
+          issue_code: string
+          message: string
+          row_ref: string | null
+          severity: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          field?: string | null
+          id?: string
+          issue_code: string
+          message: string
+          row_ref?: string | null
+          severity: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          field?: string | null
+          id?: string
+          issue_code?: string
+          message?: string
+          row_ref?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hc_validation_issues_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "hc_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_budget_snapshots: {
         Row: {
           id: string
@@ -489,6 +989,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      hc_can_read: { Args: { _user_id: string }; Returns: boolean }
+      hc_can_write: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role:
