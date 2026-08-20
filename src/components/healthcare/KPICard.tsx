@@ -25,7 +25,7 @@ export default function KPICard({ label, value, subtitle, color, tooltip, derive
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2">
             <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
-            {tooltip && <InfoTip content={tooltip} />}
+            {tooltip && <InfoTip text={tooltip} />}
           </div>
           <div
             className={`mt-2 font-semibold tabular-nums ${missing ? 'text-base text-muted-foreground italic' : 'text-2xl'}`}
