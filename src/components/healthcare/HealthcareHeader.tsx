@@ -32,7 +32,7 @@ export default function HealthcareHeader({ title, subtitle }: { title: string; s
           Dashboard Guide
         </Button>
         <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/5 hidden sm:inline-flex">
-          Phase 1 · Prototype
+          Goal 3 · Real Data
         </Badge>
         <Tooltip>
           <TooltipTrigger asChild>
