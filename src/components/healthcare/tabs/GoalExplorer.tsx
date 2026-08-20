@@ -1,189 +1,180 @@
-import { useState, useMemo } from 'react';
+/** Healthcare — Goal Explorer (Goal 3 pilot, real data). Full drill-down with "Not reported" states. */
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { HEALTHCARE_GOALS } from '@/lib/healthcare/sample-data';
-import { goalCompletion, effectiveStatus, RISK_COLOR, fmtCurrency, riskSignals, riskIndex, riskBand } from '@/lib/healthcare/helpers';
-import type { HCGoal, HCStep, HCAction } from '@/lib/healthcare/types';
-import { ChevronRight, User, Target, AlertOctagon, ShieldAlert } from 'lucide-react';
-
-const STATUS_STYLE: Record<string, string> = {
-  'Done': 'border-emerald-500/40 text-emerald-300 bg-emerald-500/5',
-  'In Progress': 'border-blue-500/40 text-blue-300 bg-blue-500/5',
-  'Not Started': 'border-zinc-500/40 text-zinc-300 bg-zinc-500/5',
-  'Blocked': 'border-red-500/40 text-red-300 bg-red-500/5',
-  'On Target': 'border-emerald-500/40 text-emerald-300 bg-emerald-500/5',
-  'Below Target': 'border-amber-500/40 text-amber-300 bg-amber-500/5',
-  'N/A': 'border-zinc-700/40 text-zinc-400 bg-zinc-700/5',
-};
+import { useHealthcareData } from '@/lib/healthcare/HealthcareDataProvider';
+import {
+  actionProgress, goalProgressAgg, stepProgress, latestStatus, updateFor, evaluateKpi,
+  atRiskSignals, budgetTotal, fmtCurrency, textOr,
+} from '@/lib/healthcare/metrics';
+import type { HCStepRecord } from '@/lib/healthcare/model';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function GoalExplorer({ initialGoal }: { initialGoal?: number }) {
-  const [selected, setSelected] = useState<number>(initialGoal ?? HEALTHCARE_GOALS[0].code);
-  const goal = useMemo(() => HEALTHCARE_GOALS.find(g => g.code === selected) ?? HEALTHCARE_GOALS[0], [selected]);
+  const { data } = useHealthcareData();
+  const { goals, config, currentPeriod } = data;
+  const goal = goals.find(g => g.code === initialGoal) ?? goals[0];
+  const [open, setOpen] = useState<string | null>(null);
+
+  if (!goal) return <p className="text-sm text-muted-foreground">No Healthcare goal data imported yet.</p>;
+
+  const gp = goalProgressAgg(goal);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
-      <Card className="h-fit lg:sticky lg:top-4">
-        <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Strategic Goals</CardTitle></CardHeader>
-        <CardContent className="space-y-1 p-2">
-          {HEALTHCARE_GOALS.map(g => {
-            const active = g.code === selected;
-            return (
-              <button key={g.code} onClick={() => setSelected(g.code)}
-                className={`w-full text-left px-2.5 py-2 rounded-md text-xs flex items-start gap-2 transition-colors
-                  ${active ? 'bg-emerald-500/10 border border-emerald-500/30 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-card/60'}`}>
-                <span className="font-mono shrink-0">G{g.code}</span>
-                <span className="leading-snug">{g.title}</span>
-              </button>
-            );
-          })}
+    <div className="space-y-5">
+      <Card className="border-border/60 bg-card/70">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm leading-snug">Goal {goal.code} — {goal.title}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-xs text-muted-foreground flex flex-wrap gap-x-6 gap-y-1">
+          <span>Champion: <span className="text-foreground">{textOr(goal.champion)}</span></span>
+          <span>Progress: <span className="text-foreground">{gp.value === null ? 'Not reported' : `${gp.value}%`}</span></span>
+          <span>Steps: <span className="text-foreground">{gp.total}</span></span>
+          <span>Current period: <span className="text-foreground">{currentPeriod ?? 'n/a'}</span></span>
         </CardContent>
       </Card>
 
-      <div className="space-y-5">
-        <GoalHeader goal={goal} />
-        {goal.actions.map(a => <ActionBlock key={a.code} action={a} />)}
-      </div>
+      {goal.actions.map(a => {
+        const ap = actionProgress(a);
+        const ab = budgetTotal(a.steps);
+        return (
+          <Card key={a.id} className="border-border/60 bg-card/70">
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between gap-3">
+                <CardTitle className="text-sm leading-snug">Action {a.code} — {a.title}</CardTitle>
+                <div className="flex gap-2 shrink-0">
+                  <Badge variant="outline" className="text-[10px]">{ap.value === null ? 'Progress not reported' : `${ap.value}%`}</Badge>
+                  <Badge variant="outline" className="text-[10px]">{fmtCurrency(ab.total)}</Badge>
+                </div>
+              </div>
+              <div className="text-[11px] text-muted-foreground pt-1">
+                SPOC: {textOr(a.spoc)} · Action KPI: {a.actionKpiText ? <span className="whitespace-pre-line">{a.actionKpiText}</span> : 'Not reported'}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {a.steps.map(s => (
+                <StepRow
+                  key={s.id}
+                  step={s}
+                  expanded={open === s.id}
+                  onToggle={() => setOpen(open === s.id ? null : s.id)}
+                  currentPeriod={currentPeriod}
+                  config={config}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
 
-function GoalHeader({ goal }: { goal: HCGoal }) {
-  const c = goalCompletion(goal);
-  return (
-    <Card className="border-emerald-500/30">
-      <CardContent className="p-5 space-y-3">
-        <div className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider">Goal {goal.code}</div>
-        <h3 className="text-lg font-display font-semibold text-foreground">{goal.title}</h3>
-        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /><span className="text-foreground">{goal.champion}</span></div>
-          <div className="flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /><span>{goal.actions.length} actions · {goal.actions.reduce((s, a) => s + a.steps.length, 0)} steps</span></div>
-          {c.blocked > 0 && (
-            <Badge variant="outline" className="border-red-500/40 text-red-300 bg-red-500/5 text-[10px]">
-              {c.blocked} blocked
-            </Badge>
-          )}
-        </div>
-        <div>
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-muted-foreground">Derived completion <span className="text-amber-300/70">·excludes blocked</span></span>
-            <span className="text-foreground tabular-nums">{c.value}%</span>
-          </div>
-          <Progress value={c.value} className="h-2" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ActionBlock({ action }: { action: HCAction }) {
-  const [open, setOpen] = useState(true);
-  return (
-    <Card>
-      <CardHeader className="pb-2 cursor-pointer" onClick={() => setOpen(!open)}>
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-sm">
-            <span className="font-mono text-emerald-400 mr-2">{action.code}</span>{action.title}
-          </CardTitle>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`} />
-        </div>
-        {action.kpis && action.kpis.length > 0 && (
-          <ul className="mt-2 text-xs text-muted-foreground space-y-0.5 list-disc pl-4">
-            {action.kpis.map((k, i) => <li key={i}>{k}</li>)}
-          </ul>
-        )}
-      </CardHeader>
-      {open && (
-        <CardContent className="space-y-3 pt-2">
-          {action.steps.map(s => <StepRow key={s.code} step={s} />)}
-        </CardContent>
-      )}
-    </Card>
-  );
-}
-
-function StepRow({ step }: { step: HCStep }) {
-  const eff = effectiveStatus(step);
-  const totalBudget = step.budget.reduce((s, y) => s + (y.amount || 0), 0);
-  const sig = riskSignals(step);
-  const ri = riskIndex(step);
-  const firedLabels = [
-    sig.blocked && 'Blocked',
-    sig.missingUpdate && 'Missing Q2 update',
-    sig.fundingGap && 'Funding gap',
-    sig.governanceGap && 'Governance gap',
-  ].filter(Boolean) as string[];
+function StepRow({
+  step, expanded, onToggle, currentPeriod, config,
+}: {
+  step: HCStepRecord; expanded: boolean; onToggle: () => void;
+  currentPeriod: string | null; config: ReturnType<typeof useHealthcareData>['data']['config'];
+}) {
+  const p = stepProgress(step);
+  const { status } = latestStatus(step);
+  const cur = updateFor(step, currentPeriod);
+  const kpi = evaluateKpi(step, config, currentPeriod);
+  const signals = atRiskSignals(step, config, currentPeriod);
+  const budget = budgetTotal([step]);
 
   return (
-    <div className={`rounded-lg border bg-card/40 p-3 space-y-2 ${step.blocker ? 'border-red-500/40' : 'border-border/60'}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-sm font-medium text-foreground">
-            <span className="font-mono text-emerald-400/80 mr-2">{step.code}</span>{step.title}
-          </div>
-          {step.intent && <div className="text-xs text-muted-foreground mt-1">{step.intent}</div>}
-          {step.kpis && <div className="text-xs text-emerald-300/80 mt-1">KPI: {step.kpis}</div>}
-        </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <Badge variant="outline" className={STATUS_STYLE[eff]}>{eff}</Badge>
-          <Badge variant="outline" className={`text-[10px] ${RISK_COLOR[step.riskFlag]}`}>{step.riskFlag} flag</Badge>
-          <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-200 bg-amber-500/5 gap-1">
-            <ShieldAlert className="w-2.5 h-2.5" /> RI {ri.score} · {riskBand(ri.score)}
-          </Badge>
-          <span className="text-[10px] text-muted-foreground">Priority {step.priority}</span>
-        </div>
-      </div>
+    <div className="rounded-md border border-border/60">
+      <button onClick={onToggle} className="w-full flex items-center gap-3 p-3 text-left">
+        {expanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+        <span className="text-xs text-muted-foreground shrink-0">{step.code}</span>
+        <span className="text-sm flex-1 min-w-0 truncate">{step.title}</span>
+        <Badge variant="outline" className="text-[10px] shrink-0">{status ?? 'Status not reported'}</Badge>
+        <span className="text-xs tabular-nums w-28 text-right shrink-0">
+          {p.value === null ? <span className="italic text-muted-foreground">Progress N/R</span> : `${p.value}%`}
+        </span>
+        {signals.length > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-300 shrink-0">At Risk</Badge>}
+      </button>
 
-      {step.blocker && (
-        <div className="rounded-md border border-red-500/40 bg-red-500/5 p-2.5 text-xs">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertOctagon className="w-3.5 h-3.5 text-red-400" />
-            <span className="text-red-300 font-medium">Blocker · {step.blocker.type}</span>
-            <span className="text-muted-foreground ml-auto">Owner: {step.blocker.decisionOwner}</span>
+      {expanded && (
+        <div className="border-t border-border/60 p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+          <div className="space-y-1.5">
+            <Field label="Intent" value={textOr(step.intent)} />
+            <Field label="Owner" value={textOr(step.owner)} />
+            <Field label="Priority" value={step.priority !== null ? String(step.priority) : 'Not reported'} />
+            <Field label="Responsible (R)" value={textOr(step.responsible)} />
+            <Field label="Accountable (A)" value={textOr(step.accountable)} />
+            <Field label="Consulted (C)" value={textOr(step.consulted)} />
+            <Field label="Informed (I)" value={textOr(step.informed)} />
+            <Field label="Planned budget" value={fmtCurrency(budget.total)} />
+            {step.budget.map(b => (
+              <Field key={b.year} label={b.year} value={
+                b.amount !== null ? `${fmtCurrency(b.amount)}${b.note ? ` — ${b.note}` : ''}`
+                  : b.amountRaw ? `${b.amountRaw} (non-numeric)${b.note ? ` — ${b.note}` : ''}` : 'Not reported'
+              } />
+            ))}
           </div>
-          <p className="text-foreground/90 italic">"{step.blocker.reason}"</p>
+
+          <div className="space-y-1.5">
+            <Field label="KPI (source wording)" value={textOr(step.kpi?.originalText ?? null)} />
+            <Field label="KPI type" value={textOr(step.kpi?.kpiType ?? null)} />
+            <Field label="KPI target" value={
+              step.kpi?.targetValue !== null && step.kpi?.targetValue !== undefined
+                ? `${step.kpi.targetValue}${step.kpi.targetUnit ? ` ${step.kpi.targetUnit}` : ''}`
+                : textOr(step.kpi?.targetValueRaw ?? null)
+            } />
+            <Field label="KPI target date" value={textOr(step.kpi?.targetDate ?? null)} />
+            <Field label="KPI actual" value={kpi.actual !== null ? String(kpi.actual) : 'Not reported'} />
+            <Field label="Achievement %" value={kpi.achievementPct !== null ? `${kpi.achievementPct}%` : `Not Yet Measurable — ${kpi.reason}`} />
+            <Field label="Performance vs target" value={config.onBelowTargetEnabled ? kpi.verdict : 'Disabled pending methodology'} />
+            <Field label="Expected progress" value="Not defined (pending stakeholder validation)" />
+            <Field label="Blocker?" value={textOr(cur?.blockerFlag ?? null)} />
+            <Field label="Blocker category" value={textOr(cur?.blockerCategory ?? null)} />
+            <Field label="Blocker details" value={textOr(cur?.blockerDetails ?? null)} />
+            <Field label="Next milestone" value={textOr(cur?.nextMilestone ?? null)} />
+            <Field label="Expected milestone date" value={textOr(cur?.expectedMilestoneDate ?? null)} />
+            <Field label="Supporting evidence" value={textOr(cur?.evidence ?? null)} />
+          </div>
+
+          <div className="lg:col-span-2 space-y-2">
+            {signals.length > 0 && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+                <div className="text-[11px] uppercase tracking-wide text-amber-300 mb-1">At-risk reasons</div>
+                <ul className="space-y-1">
+                  {signals.map(s => <li key={s.key} className="text-[11px] text-muted-foreground">• <span className="text-foreground">{s.label}</span> — {s.reason}</li>)}
+                </ul>
+              </div>
+            )}
+            <div className="rounded-md border border-border/60 p-3">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Quarterly reporting</div>
+              <div className="space-y-2">
+                {step.updates.map(u => (
+                  <div key={u.period} className="grid grid-cols-[90px_1fr] gap-3">
+                    <span className="text-[11px] text-muted-foreground">{u.period}</span>
+                    <div>
+                      <div className="text-[11px]">
+                        <span className="text-muted-foreground">Status: </span>{u.status ?? 'Not reported'}
+                        <span className="text-muted-foreground"> · Progress: </span>{u.executionProgressPct !== null ? `${u.executionProgressPct}%` : 'Not reported'}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground whitespace-pre-line mt-0.5">{u.comments ?? 'No narrative update reported'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
-
-      {firedLabels.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {firedLabels.map(l => (
-            <Badge key={l} variant="outline" className="text-[10px] border-amber-500/30 text-amber-200/90 bg-amber-500/5">
-              {l}
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
-        <RACI label="Responsible" value={step.responsible} />
-        <RACI label="Accountable" value={step.accountable} />
-        <RACI label="Consulted" value={step.consulted} />
-        <RACI label="Informed" value={step.informed} />
-      </div>
-
-      <div className="flex flex-wrap gap-1.5 pt-1">
-        {step.quarterly.map(q => (
-          <Badge key={q.period} variant="outline" className={`text-[10px] ${STATUS_STYLE[q.status]}`} title={q.note}>
-            {q.period}: {q.status}
-          </Badge>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
-        <span className="text-muted-foreground">5-yr budget</span>
-        <span className="text-foreground tabular-nums font-medium">{fmtCurrency(totalBudget)}</span>
-      </div>
     </div>
   );
 }
 
-function RACI({ label, value }: { label: string; value?: string }) {
-  const missing = !value;
+function Field({ label, value }: { label: string; value: string }) {
+  const missing = value.startsWith('Not reported') || value.startsWith('Not defined') || value.startsWith('Not Yet Measurable') || value.startsWith('Disabled');
   return (
-    <div className={`rounded-md px-2 py-1.5 ${missing ? 'bg-amber-500/5 border border-amber-500/30' : 'bg-card/60 border border-border/50'}`}>
-      <div className={`text-[9px] uppercase tracking-wider ${missing ? 'text-amber-300' : 'text-muted-foreground'}`}>{label}</div>
-      <div className={`truncate ${missing ? 'text-amber-200 italic' : 'text-foreground'}`} title={value}>{value || 'missing'}</div>
+    <div className="grid grid-cols-[150px_1fr] gap-2">
+      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className={`text-[12px] whitespace-pre-line ${missing ? 'italic text-muted-foreground' : ''}`}>{value}</span>
     </div>
   );
 }

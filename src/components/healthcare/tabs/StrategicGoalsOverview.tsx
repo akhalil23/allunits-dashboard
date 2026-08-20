@@ -1,92 +1,66 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+/** Healthcare — Strategic Goals Overview (Goal 3 pilot, real data). */
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { HEALTHCARE_GOALS } from '@/lib/healthcare/sample-data';
+import { useHealthcareData } from '@/lib/healthcare/HealthcareDataProvider';
 import {
-  goalCompletion, goalBudget, goalRiskFlag, fmtCurrency, RISK_COLOR, blockedItems,
-  riskSignals, allSteps,
-} from '@/lib/healthcare/helpers';
-import { User, Target as TargetIcon, DollarSign, AlertOctagon, Search, ShieldAlert } from 'lucide-react';
+  goalProgressAgg, goalSteps, budgetTotal, fmtCurrency, atRiskSignals, reportingCoverage,
+} from '@/lib/healthcare/metrics';
+import { ArrowRight } from 'lucide-react';
 
-export default function StrategicGoalsOverview({ onOpenGoal }: { onOpenGoal: (code: number) => void }) {
-  const [q, setQ] = useState('');
-  const blockersByGoal = useMemo(() => {
-    const m: Record<number, number> = {};
-    for (const b of blockedItems()) m[b.goal.code] = (m[b.goal.code] || 0) + 1;
-    return m;
-  }, []);
-  const signalsByGoal = useMemo(() => {
-    const m: Record<number, number> = {};
-    for (const { goal, step } of allSteps()) {
-      const s = riskSignals(step);
-      const fired = (s.blocked ? 1 : 0) + (s.missingUpdate ? 1 : 0) + (s.fundingGap ? 1 : 0) + (s.governanceGap ? 1 : 0);
-      m[goal.code] = (m[goal.code] || 0) + fired;
-    }
-    return m;
-  }, []);
-
-  const goals = HEALTHCARE_GOALS.filter(g =>
-    !q || g.title.toLowerCase().includes(q.toLowerCase()) || g.champion.toLowerCase().includes(q.toLowerCase())
-  );
+export default function StrategicGoalsOverview({ onOpenGoal }: { onOpenGoal?: (code: number) => void }) {
+  const { data } = useHealthcareData();
+  const { goals, config, currentPeriod } = data;
 
   return (
     <div className="space-y-5">
-      <div className="relative max-w-md">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Search goals or champions…" className="pl-9 h-9 text-sm" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <p className="text-xs text-muted-foreground">
+        Pilot scope: Goal 3 only. Goals 1, 2 and 4–7 are not imported and are intentionally absent.
+      </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {goals.map(g => {
-          const c = goalCompletion(g);
-          const b = goalBudget(g);
-          const rf = goalRiskFlag(g);
-          const steps = g.actions.reduce((s, a) => s + a.steps.length, 0);
-          const blk = blockersByGoal[g.code] || 0;
-          const sig = signalsByGoal[g.code] || 0;
+          const p = goalProgressAgg(g);
+          const steps = goalSteps(g);
+          const budget = budgetTotal(steps);
+          const risk = steps.filter(s => atRiskSignals(s, config, currentPeriod).length > 0).length;
+          const cov = reportingCoverage([g], currentPeriod);
           return (
-            <Card key={g.code} className="cursor-pointer hover:border-emerald-500/40 transition-colors" onClick={() => onOpenGoal(g.code)}>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wider">Goal {g.code}</span>
-                  <Badge variant="outline" className={`text-[10px] ${RISK_COLOR[rf]}`}>{rf} risk</Badge>
+            <Card key={g.id} className="border-border/60 bg-card/70">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-3">
+                  <CardTitle className="text-sm leading-snug">Goal {g.code} — {g.title}</CardTitle>
+                  <Badge variant="outline" className="text-[10px] shrink-0">{g.champion ?? 'Champion not reported'}</Badge>
                 </div>
-                <h3 className="text-sm font-semibold text-foreground leading-snug min-h-[2.5rem]">{g.title}</h3>
-                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <User className="w-3 h-3" /><span className="truncate">{g.champion}</span>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <Metric label="Progress" value={p.value === null ? 'Not reported' : `${p.value}%`} />
+                  <Metric label="Coverage" value={cov.value === null ? 'Not reported' : `${cov.value}%`} />
+                  <Metric label="At Risk" value={`${risk} / ${steps.length}`} />
+                  <Metric label="Planned budget" value={fmtCurrency(budget.total)} />
                 </div>
-                <div>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="text-muted-foreground">Completion <span className="text-amber-300/70">·derived</span></span>
-                    <span className="text-foreground tabular-nums">{c.value}%</span>
-                  </div>
-                  <Progress value={c.value} className="h-1.5" />
+                <div className="text-[11px] text-muted-foreground">
+                  {g.actions.length} actions · {steps.length} action steps · {p.notReported} step{p.notReported === 1 ? '' : 's'} without a usable progress value
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="text-[10px] border-border/60">
-                    {g.actions.length}A · {steps}S
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px] border-border/60">
-                    {fmtCurrency(b)}
-                  </Badge>
-                  {blk > 0 && (
-                    <Badge variant="outline" className="text-[10px] border-red-500/40 text-red-300 bg-red-500/5 gap-1">
-                      <AlertOctagon className="w-2.5 h-2.5" />{blk} blocked
-                    </Badge>
-                  )}
-                  {sig > 0 && (
-                    <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-200 bg-amber-500/5 gap-1">
-                      <ShieldAlert className="w-2.5 h-2.5" />{sig} signals
-                    </Badge>
-                  )}
-                </div>
+                {onOpenGoal && (
+                  <button onClick={() => onOpenGoal(g.code)} className="text-xs text-primary flex items-center gap-1">
+                    Open in Goal Explorer <ArrowRight className="h-3 w-3" />
+                  </button>
+                )}
               </CardContent>
             </Card>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  const missing = value === 'Not reported';
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={`mt-0.5 tabular-nums ${missing ? 'italic text-muted-foreground' : 'text-foreground font-medium'}`}>{value}</div>
     </div>
   );
 }
