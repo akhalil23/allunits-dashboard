@@ -1,0 +1,1448 @@
+{
+ "champion": "Champion: Karl Jallad",
+ "rows": [
+  {
+   "row": 3,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.1: Strengthen Comprehensive and Holistic Patient-Centered Services",
+   "action_kpi": "> 80% of all staff and trainee underwent training on empathy and cultural sensitivity\n\u226550% patient participating in screening/prevention services by Q4 2027.\n\u226560% of chronic care patients use integrated holistic care plans by Q4 2027\n\u226570% of referred patients report improved care coordination in surveys by Q4 2027.",
+   "spoc": null,
+   "code": "3.1.1",
+   "title": "Provide training on Interprofessional Teams building for Empathy and Culturally Sensitive Care",
+   "step_raw": "3.1.1 Provide training on Interprofessional Teams building for Empathy and Culturally Sensitive Care",
+   "intent": "Build soft skills, language of care and collaboration among staff and trainees in Medicine, Nursing, Pharmacy and Nutrition around real patient cases.",
+   "owner": "HR",
+   "priority": 1,
+   "responsible": "HS Group CNO + HR Manager + Group Quality and Risk Management Director",
+   "accountable": "HR Manager",
+   "consulted": "HS Group CMO",
+   "informed": "HS Group CMO + CEO",
+   "kpi_text": "KPI: Training completion rate\nTarget: 80% completion rate of all staff and trainee",
+   "kpi_type": "Percentage",
+   "kpi_target_value": 0.8,
+   "kpi_target_unit": "Percentage",
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Planning",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "The HS Group CNO, HR Manager, and Group Quality & Risk Management Director have jointly prepared a draft plan to be integrated in the General Orientation Program across all staff. Training materials have been prepared, staff groups have been established, and implementation is planned to begin in October 2026.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 20000,
+     "note": null
+    },
+    {
+     "year": "Year 2",
+     "amount": 10000,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": 10000,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": 10000,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": 10000,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 4,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.1: Strengthen Comprehensive and Holistic Patient-Centered Services",
+   "action_kpi": "> 80% of all staff and trainee underwent training on empathy and cultural sensitivity\n\u226550% patient participating in screening/prevention services by Q4 2027.\n\u226560% of chronic care patients use integrated holistic care plans by Q4 2027\n\u226570% of referred patients report improved care coordination in surveys by Q4 2027.",
+   "spoc": null,
+   "code": "3.1.2",
+   "title": "Introduce Holistic Care Models by offering wellness programs",
+   "step_raw": "3.1.2 Introduce Holistic Care Models by offering wellness programs",
+   "intent": "Offer wellness programs incorporating but not limited to nutrition counseling, mind-body therapies and social services.",
+   "owner": null,
+   "priority": 2,
+   "responsible": "CNO + Clinical educators + HR + Medical Rep",
+   "accountable": "HR Manager",
+   "consulted": "CMO, Rehab, Nutrition, Psychology",
+   "informed": null,
+   "kpi_text": "At least 3 wellness programs (nutrition, mind-body therapy, social services) launched by Q4 2026",
+   "kpi_type": "Count",
+   "kpi_target_value": 3,
+   "kpi_target_unit": "Count",
+   "kpi_target_date": "Q4 2026",
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "We will start training Q4 2026 as we delayed things due to political circumstances",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 150000,
+     "note": "4 FTE"
+    },
+    {
+     "year": "Year 2",
+     "amount": 130000,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": null,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 5,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.1: Strengthen Comprehensive and Holistic Patient-Centered Services",
+   "action_kpi": "> 80% of all staff and trainee underwent training on empathy and cultural sensitivity\n\u226550% patient participating in screening/prevention services by Q4 2027.\n\u226560% of chronic care patients use integrated holistic care plans by Q4 2027\n\u226570% of referred patients report improved care coordination in surveys by Q4 2027.",
+   "spoc": null,
+   "code": "3.1.3",
+   "title": "Launch Integrated Behavioral and supportive Health Services for chronic diseases in Primary & Specialty Clinics",
+   "step_raw": "3.1.3 Launch Integrated Behavioral and supportive Health Services for chronic diseases in Primary & Specialty Clinics",
+   "intent": "Embed psychologists, clinical pharmacists, dietitians, social workers, and nurse specialists within primary care and specialty clinics to support comprehensive management of chronic diseases (e.g., diabetes with depression, heart failure, COPD)",
+   "owner": null,
+   "priority": 3,
+   "responsible": "Primary Care Director/ Dr Sakr",
+   "accountable": "CMO",
+   "consulted": "Psychiatry, Nursing, Finance",
+   "informed": null,
+   "kpi_text": "Multidisciplinary support team embedded in \u22653 primary/specialty clinics by Q4 2026",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Start communication and concept buildup by Q3 2026",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 150000,
+     "note": "4  FTE"
+    },
+    {
+     "year": "Year 2",
+     "amount": 130000,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": null,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 6,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.1: Strengthen Comprehensive and Holistic Patient-Centered Services",
+   "action_kpi": "> 80% of all staff and trainee underwent training on empathy and cultural sensitivity\n\u226550% patient participating in screening/prevention services by Q4 2027.\n\u226560% of chronic care patients use integrated holistic care plans by Q4 2027\n\u226570% of referred patients report improved care coordination in surveys by Q4 2027.",
+   "spoc": null,
+   "code": "3.1.4",
+   "title": "Implement a Unified Patient Navigation Program across LAU Health network",
+   "step_raw": "3.1.4 Implement a Unified Patient Navigation Program across LAU Health network",
+   "intent": "Implement patient navigation services across LAU Health network to enhance coordination, reduce delays in care, and improve patient satisfaction including a patient transportation (ambulance service) and inter-facility coordination plan",
+   "owner": "HS Group COO",
+   "priority": 1,
+   "responsible": "HS Group CNO + HS Group COO + Group Quality and Risk Management Director",
+   "accountable": "HS Group CNO + HS Group COO + Group Quality and Risk Management Director + HS Group CMO + Head of Marcom",
+   "consulted": "HS Group CMO + Head of Marcom",
+   "informed": "HS Group CMO + CEO",
+   "kpi_text": "KPI: Planned navigation and transport services fully implemented and operational across both hospitals rate by the end of Q1 2027.\nTarget:\n- 100% implementation across both hospitals by Q1 2027 of the planned services.\n- \u226570% of referred patients report improved care coordination in surveys by Q4 2027.)",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Tender for two ambulances is currently under technical assessment, due on 24/06/2026, with the financial assessment due by the 10th.\nThe Interfacility Transfer Policy has been finalized and validated by both LAUMCs.\nThe Interfacility Transfer Form has been finalized and implemented across both LAUMCs.\nDedicated transfer and referral email addresses and a WhatsApp number have been established and activated.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "Ambulance technical assessment has been completed; implementation is pending, along with a Quality review of the service from an accreditation perspective.\nThe Interfacility Transfer Policy has been finalized and validated by both hospitals, and implementation has commenced.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 250000,
+     "note": "4 Fte per Hospital Ambulances $300,000"
+    },
+    {
+     "year": "Year 2",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": null,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 7,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.2: Expand Core Clinical Service Lines to Address Critical Gaps",
+   "action_kpi": "\u226510% annual increase in activity across upgraded and newly implemented clinical services and service lines.\nAccreditation of at least two subspecialty fellowship programs by Q4 2028.\n\u226515% increase in patient referrals through partner centers by Q4 2027.",
+   "spoc": null,
+   "code": "3.2.1",
+   "title": "Identify and Establish High-Demand missing clinical service lines",
+   "step_raw": "3.2.1 Identify and Establish High-Demand missing clinical service lines",
+   "intent": "Identify and Establish several High-Demand missing clinical service lines (i.e palliative care, geriatrics, mental health, rehabilitation, home health) to address service gaps, improve continuity of care, and enhance overall patient experience.",
+   "owner": "Chairs of Departments",
+   "priority": 1,
+   "responsible": "CEO + HS Group CMO + Department Chairs",
+   "accountable": "HS Group CMO",
+   "consulted": "HS Group CMO, Finance, EVP Health",
+   "informed": "CEO, HS Group COO, Finance, EVP Health",
+   "kpi_text": "KPI: Number of new priority services successfully launched and fully operational.\nTarget: \u22653 new priority services launched and operational by Q2 2027.",
+   "kpi_type": "Count",
+   "kpi_target_value": 3,
+   "kpi_target_unit": "Count",
+   "kpi_target_date": "Q2 2027",
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Palliative Care Program: Implementation planned to commence in Q3 2026.\nGeriatrics: Specialist recruitment is currently in progress.\nMental Health: Potential affiliation with a specialized center is being explored to support the provision of appropriate mental health services, targeted for Q4 2026.\nRehabilitation: Affiliation with Ghosta Rehabilitation Center is currently in progress.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning  and Follow up",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "Palliative Care Program: Implementation initiated in Q4 2026.\nGeriatrics: Specialist successfully recruited.\nMental Health: Potential affiliation with a specialized center to support the provision of appropriate mental health services is in progress, with completion targeted for Q4 2026.\nRehabilitation: Affiliation with Ghosta Rehabilitation Center is in progress.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 500000,
+     "note": "per service line"
+    },
+    {
+     "year": "Year 2",
+     "amount": 500000,
+     "note": "per service line"
+    },
+    {
+     "year": "Year 3",
+     "amount": 500000,
+     "note": "per service line"
+    },
+    {
+     "year": "Year 4",
+     "amount": 500000,
+     "note": "per service line"
+    },
+    {
+     "year": "Year 5",
+     "amount": 500000,
+     "note": "per service line"
+    }
+   ]
+  },
+  {
+   "row": 8,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.2: Expand Core Clinical Service Lines to Address Critical Gaps",
+   "action_kpi": "\u226510% annual increase in activity across upgraded and newly implemented clinical services and service lines.\nAccreditation of at least two subspecialty fellowship programs by Q4 2028.\n\u226515% increase in patient referrals through partner centers by Q4 2027.",
+   "spoc": null,
+   "code": "3.2.2",
+   "title": "Operationalize approved service lines",
+   "step_raw": "3.2.2 Operationalize approved service lines",
+   "intent": "Operationalize approved service lines (among others \u2013 psychiatry, renal transplant, radiation therapy, and robotic surgery units) targeting an increase in patient volume and training opportunities.",
+   "owner": "HS Group CMO",
+   "priority": 1,
+   "responsible": "CEO + HS Group CMO + Department Chairs",
+   "accountable": "HS Group CMO",
+   "consulted": "Biomedical Director, HS Group COO + Head of Marcom",
+   "informed": "CEO, HS Group COO, Finance, EVP Health",
+   "kpi_text": "KPI: Number of approved services fully activated and operational by Q4 2027.\nTarget: \u22654 approved services fully activated by Q4 2027.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Robotic Surgery: Service launched in June 2026.\nRadiation Therapy: Service launch planned for September 2026.\nPsychiatry and Renal Transplant: Service development is currently under discussion and evaluation.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning  and Follow up",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "Robotic Surgery: Service is operational.\nRadiation Therapy: Service launch is scheduled for October 2026.\nPsychiatry and Renal Transplant: Service development and implementation discussions are in progress",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 50000,
+     "note": "2 FTE\nRobotics: BOT approved"
+    },
+    {
+     "year": "Year 2",
+     "amount": 75000,
+     "note": "3 FTE\nRadiation Therapy: Loan"
+    },
+    {
+     "year": "Year 3",
+     "amount": 125000,
+     "note": "2 + 3 FTE"
+    },
+    {
+     "year": "Year 4",
+     "amount": 125000,
+     "note": "2 + 3 FTE"
+    },
+    {
+     "year": "Year 5",
+     "amount": 125000,
+     "note": "2 + 3 FTE"
+    }
+   ]
+  },
+  {
+   "row": 9,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.2: Expand Core Clinical Service Lines to Address Critical Gaps",
+   "action_kpi": "\u226510% annual increase in activity across upgraded and newly implemented clinical services and service lines.\nAccreditation of at least two subspecialty fellowship programs by Q4 2028.\n\u226515% increase in patient referrals through partner centers by Q4 2027.",
+   "spoc": null,
+   "code": "3.2.3",
+   "title": "Enhance preexisting clinical services and high-impact specialties",
+   "step_raw": "3.2.3 Enhance preexisting clinical services and high-impact specialties",
+   "intent": "Enhance preexisting clinical services to meet the standards of academic medical centers, by completing the proposed scope of expertise, addressing subspecialty gaps, and aligning with best practices.",
+   "owner": "Chairs of Departments",
+   "priority": 1,
+   "responsible": "CEO + HS Group CMO + Department Chairs",
+   "accountable": "HS Group CMO",
+   "consulted": "HS Group COO + Head of Marcom",
+   "informed": "CEO, HS Group COO, Finance, EVP Health System",
+   "kpi_text": "KPI: Number of prioritized clinical services with approved business plans successfully enhanced and fully implemented.\nTarget: \u22654 clinical services fully implemented by Q4 2027, including enhanced protocols, equipment acquisition/upgrades, specialist recruitment, and aligned clinical pathways.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "OBGYN Service Line: Completed, with four new specialists recruited in Maternal-Fetal Medicine (MFM), Reproductive Endocrinology and Infertility (REI), Minimally Invasive Surgery (MIS), and Gynecologic Oncology.\nCardiology and Stroke Services: Enhancement and development in progress.\nUrology: Specialist recruitment planned for September 2026.\nPulmonology: Specialist recruitment planned for August 2026.\nOther Clinical Services: To be assessed and updated progressively based on identified priorities and implementation progress.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning  and Follow up",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "OBGYN Service Line: Substantially completed, with MFM, REI, and MIS specialists successfully recruited; Gynecologic Oncology recruitment remains pending.\nCardiology and Stroke Services: Development of the Cardiology Center of Excellence has been initiated and is currently in progress.\nUrology: Specialist successfully recruited, with a planned start date of September 1, 2026.\nPulmonology: Recruitment process completed; however, the selected candidate declined the position. Recruitment remains pending.\nOther Clinical Services: To be updated progressively based on priorities and implementation progress.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 50000,
+     "note": "2FTE"
+    },
+    {
+     "year": "Year 2",
+     "amount": 50000,
+     "note": "2FTE"
+    },
+    {
+     "year": "Year 3",
+     "amount": 50000,
+     "note": "2FTE"
+    },
+    {
+     "year": "Year 4",
+     "amount": 50000,
+     "note": "2FTE"
+    },
+    {
+     "year": "Year 5",
+     "amount": 50000,
+     "note": "2FTE"
+    }
+   ]
+  },
+  {
+   "row": 10,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.2: Expand Core Clinical Service Lines to Address Critical Gaps",
+   "action_kpi": "\u226510% annual increase in activity across upgraded and newly implemented clinical services and service lines.\nAccreditation of at least two subspecialty fellowship programs by Q4 2028.\n\u226515% increase in patient referrals through partner centers by Q4 2027.",
+   "spoc": null,
+   "code": "3.2.4",
+   "title": "Identify and Establish Subspecialty Clinical and Training Programs",
+   "step_raw": "3.2.4 Identify and Establish Subspecialty Clinical and Training Programs",
+   "intent": "Develop Subspecialty Clinical and Training Programs (i.e. Minimally Invasive Cardiology, Robotic surgery) to enhance expertise, improve patient outcomes, and drive research and innovation while meeting growing demand for specialized services, and strengthen academic excellence.",
+   "owner": "Chairs of Departments",
+   "priority": 2,
+   "responsible": "HS Group CMO + Department Chairs +  Program Director",
+   "accountable": "HS Group CMO",
+   "consulted": "HS Group CMO + HR Manager + Deans",
+   "informed": "CEO, EVP Health System",
+   "kpi_text": "KPI: Number of high-priority subspecialty programs successfully launched and operational.\nTarget: \u22652 high-priority subspecialty programs launched and operational by Q4 2027.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Cardiology: Manager successfully recruited and in position since March 2026.\nRobotic Surgery: Robot procured, and the multidisciplinary Robotic Surgery Committee has been established and initiated its meetings.\nPerioperative Services: Director successfully recruited, with a planned start date in the second half of May 2026.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning  and Follow up",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "Cardiology: Manager recruited and onboarded since March 2026; development of the Cardiology Center of Excellence pathway has been initiated and is in progress.\nRobotic Surgery: Robotic system is fully functional and operational.\nPerioperative Services: Perioperative Director successfully recruited and onboarded.\nMaternal-Fetal Medicine: Advanced Maternal-Fetal Medicine Unit established, supported by an advanced ultrasound setup.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 50000,
+     "note": null
+    },
+    {
+     "year": "Year 2",
+     "amount": 50000,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": 50000,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": 50000,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": 50000,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 11,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.2: Expand Core Clinical Service Lines to Address Critical Gaps",
+   "action_kpi": "\u226510% annual increase in activity across upgraded and newly implemented clinical services and service lines.\nAccreditation of at least two subspecialty fellowship programs by Q4 2028.\n\u226515% increase in patient referrals through partner centers by Q4 2027.",
+   "spoc": null,
+   "code": "3.2.5",
+   "title": "Expand strategic affiliations with remote healthcare institutions and non-hospital-based healthcare providers",
+   "step_raw": "3.2.5 Expand strategic affiliations with remote healthcare institutions and non-hospital-based healthcare providers",
+   "intent": "Expand strategic affiliations with remote healthcare institutions and non-hospital-based healthcare providers (e.g., IVF, gynecoplasty, rehab centers) to broaden service offerings and referral while maintaining academic and quality oversight.",
+   "owner": "EVP Health System + HS Group CMO",
+   "priority": 1,
+   "responsible": "Strategy + Business Development",
+   "accountable": "EVP Health System",
+   "consulted": "Legal, CMO, Partner Institutions, COO",
+   "informed": "CEO, EVP Health System",
+   "kpi_text": "KPI: Number of strategic affiliation agreements successfully finalized and formally established.\nTarget: \u22653 affiliation agreements finalized by Q4 2026.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "OEN Tripoli: Affiliation contract signed; soft launch initiated in June 2026.\nSMC: Affiliation completed.\nAbou Jaoude, Trad Hospital, CMC, and Mounla: Affiliation processes are currently in progress.\nReferral Network Expansion: Plans are underway to initiate affiliations with local and regional clinics to further expand the referral network.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning  and Follow up",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "OEN Tripoli: Contract signed and soft launch completed in June 2026.\nSMC: Affiliation agreement finalized.\nAbou Jaoude, Trad Hospital, CMC, and Mounla: Affiliation agreements currently in progress.\nReferral Network Expansion: Further affiliations with local and regional clinics are planned to strengthen and expand the referral network.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 2",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": null,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 12,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.3: Develop Multidisciplinary Programs and Centers of Excellence",
+   "action_kpi": "\u226510% annual increase in activity across multidisciplinary programs.\n \u226580% of defined CoE quality benchmarks achieved by Q2 2028",
+   "spoc": null,
+   "code": "3.3.1",
+   "title": "Develop Patient-Centered Multidisciplinary Ambulatory Programs",
+   "step_raw": "3.3.1 Develop Patient-Centered Multidisciplinary Ambulatory Programs",
+   "intent": "Develop Multidisciplinary Clinical Programs by promoting collaborative care models that integrate specialties, improve patient outcomes, and enhance learning and research environments.",
+   "owner": "Chairs of Departments",
+   "priority": 2,
+   "responsible": "HS Group CMO + Department Chairs",
+   "accountable": "HS Group CMO",
+   "consulted": "HS Group CNO + HS Group COO + Group Quality and Risk Management Director +EVP Health System",
+   "informed": "CEO, EVP Health System",
+   "kpi_text": "KPI: Number of multidisciplinary clinical programs successfully launched and fully operational.\nTarget: \u22653 multidisciplinary programs launched and operational by Q4 2027.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Breast Unit: Development and implementation are currently in progress.\nSports Medicine Unit: Establishment is under discussion and evaluation.\nAllergy and Asthma Unit: Establishment is under discussion and evaluation.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning  and Follow up",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "In process of starting a breast unit - in process\nUnder discussion: possibility of sports unit  + Allergy and Asthma unit-  in process; woman health and genetics process (done)",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": 50000,
+     "note": "2FTEs"
+    },
+    {
+     "year": "Year 2",
+     "amount": 100000,
+     "note": "2 + 2 FTEs"
+    },
+    {
+     "year": "Year 3",
+     "amount": 150000,
+     "note": "2 + 2 + 2 FTEs"
+    },
+    {
+     "year": "Year 4",
+     "amount": 150000,
+     "note": "2 + 2 + 2 FTEs"
+    },
+    {
+     "year": "Year 5",
+     "amount": 150000,
+     "note": "2 + 2 + 2 FTEs"
+    }
+   ]
+  },
+  {
+   "row": 13,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.3: Develop Multidisciplinary Programs and Centers of Excellence",
+   "action_kpi": "\u226510% annual increase in activity across multidisciplinary programs.\n \u226580% of defined CoE quality benchmarks achieved by Q2 2028",
+   "spoc": null,
+   "code": "3.3.2",
+   "title": "Launch Centers of Excellence (CoEs) Based on Institutional Strengths",
+   "step_raw": "3.3.2 Launch Centers of Excellence (CoEs) Based on Institutional Strengths",
+   "intent": "Establish Centers of Excellence (CoEs) (e.g., cardiology, oncology, Neuroscience) to consolidate the position of LAU Health as a tertiary referral and academic hub that integrate clinical care, education, and research.",
+   "owner": "CEO",
+   "priority": 2,
+   "responsible": "HS Group CMO + Department Chairs",
+   "accountable": "HS Group CMO",
+   "consulted": "HS Group CMO, HS Group CMO, HS Group COO, EVP Health System",
+   "informed": "CEO, EVP Health System",
+   "kpi_text": "KPI: Number of Centers of Excellence in priority service lines successfully designed, established, and operational.\nTarget: \u22652 Centers of Excellence fully implemented by Q4 2027, incorporating required infrastructure, service bundles, academic modules, and branding.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Cardiology Center of Excellence: Manager recruited and actively working on the development of the Center of Excellence.\nNeuroscience: Coordinator role is under discussion to support progression toward a Center of Excellence; meanwhile, commercialization efforts and care package development with TPAs are underway.\nMother & Baby: A new Lead Nurse/Coordinator role is being finalized as part of the new organizational structure to support preparation for a potential Center of Excellence.\nOncology: A similar Lead/Coordinator structure is planned, with finalization underway as part of the new organizational structure to support future Center of Excellence development.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning  and Follow up",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "Cardiology Center of Excellence: Established and operational, with implementation and further development underway.\nNeuroscience Center of Excellence: In progress, including development of the coordinator role, commercialization strategy, and care packages with TPAs.\nMother & Baby Center of Excellence: In progress, with the Lead Nurse/Coordinator structure being finalized as part of the new organizational structure.\nOncology Center of Excellence: In progress, with the Lead/Coordinator structure being developed and finalized.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": "$ 500,000-1,000,000",
+     "note": "per CoE"
+    },
+    {
+     "year": "Year 2",
+     "amount": "$ 500,000-1,000,000",
+     "note": "per CoE"
+    },
+    {
+     "year": "Year 3",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": "$ 500,000-1,000,000",
+     "note": "per CoE"
+    },
+    {
+     "year": "Year 5",
+     "amount": null,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 14,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.4: Advance Quality, Safety, and Accreditation Standards",
+   "action_kpi": "JCI accreditation achieved by Q4 2027\nMagnet\u00ae Recognition journey in progress by Q4 2029",
+   "spoc": null,
+   "code": "3.4.1",
+   "title": "Achieve Joint Commission International (JCI) accreditation journey for LAUMC-RH and LAUMC-SJH",
+   "step_raw": "3.4.1 Achieve Joint Commission International (JCI) accreditation journey for LAUMC-RH and LAUMC-SJH",
+   "intent": "Launch the Joint Commission International (JCI) accreditation journey for LAUMC-RH and LAUMC-SJH to improve hospital-wide quality, safety, and patient-centered care. POSITIONING IN THE MARKET",
+   "owner": "Group Quality and Risk Management Director",
+   "priority": 1,
+   "responsible": "Group Quality and Risk Management Director",
+   "accountable": "HS Group CMO, CEOs, HS Group CNO",
+   "consulted": "HS Group CMO, HS Group COO, HS Group CNO, EVP Health System",
+   "informed": "CEO, EVP Health System",
+   "kpi_text": "KPI: JCI Standards Compliance Rate.\nTarget: \u226580% overall compliance with applicable JCI standards.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Quality Leadership: Group Quality & Risk Management Director recruited and onboarded; alignment initiated with the CEO, CMO, COO, and CNO across both hospitals to support JCI accreditation readiness and implementation.\nJCI Consultancy: Consultant tender process is nearing completion, with shortlisting finalized and kick-off targeted for Q3 2026.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "JCI Consultancy: Discussions and tender process with VMarch are ongoing.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "JCI Mock Survey: Planned for September 2027, to assess organizational readiness and identify remaining gaps prior to accreditation.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": "Consultancy\n$ 250,000",
+     "note": "Infra structure\n$ 500,000"
+    },
+    {
+     "year": "Year 2",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": null,
+     "note": null
+    }
+   ]
+  },
+  {
+   "row": 15,
+   "goal_title": "GOAL 3 : Foster Integrative Quality Clinical Services and Patient-Centered Care",
+   "action_raw": "Action 3.4: Advance Quality, Safety, and Accreditation Standards",
+   "action_kpi": "JCI accreditation achieved by Q4 2027\nMagnet\u00ae Recognition journey in progress by Q4 2029",
+   "spoc": null,
+   "code": "3.4.2",
+   "title": "Seek Magnet\u00ae Recognition for LAUMC-RH and LAUMC-SJH",
+   "step_raw": "3.4.2 Seek Magnet\u00ae Recognition for LAUMC-RH and LAUMC-SJH",
+   "intent": "Initiate the Magnet\u00ae Recognition Program for LAUMC-RH and LAUMC-SJH as a pathway to nursing excellence, professional development, and improved patient outcomes.",
+   "owner": "HS Group CNO, Group Quality and Risk Management Director",
+   "priority": 2,
+   "responsible": "Group Quality and Risk Management Director + HS Group CNO",
+   "accountable": "HS Group CMO, CEOs, HS Group CNO",
+   "consulted": "HS Group CMO, HS Group COO, HS Group CNO, EVP Health System",
+   "informed": "CEO, EVP Health System, HS Group CMO",
+   "kpi_text": "KPI: Magnet Standards Compliance and Readiness Rate.\nTarget: \u226580% compliance with applicable Magnet standards, with the gap analysis completed by Q4 2027, Pathway to Excellence implemented by Q2 2028, and Magnet application submitted by Q2 2029.",
+   "kpi_type": null,
+   "kpi_target_value": null,
+   "kpi_target_unit": null,
+   "kpi_target_date": null,
+   "quarterly": {
+    "Q1 2026": {
+     "comments": "Magnet Accreditation: To be discussed and aligned with the Group CNO during the next quarter to define the roadmap, priorities, and next steps.",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q2 2026": {
+     "comments": "Planning",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q3 2026": {
+     "comments": "Planning",
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q4 2026": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    },
+    "Q1 2027": {
+     "comments": null,
+     "status": null,
+     "execution_progress_pct": null,
+     "kpi_actual_value": null,
+     "blocker_flag": null,
+     "blocker_category": null,
+     "blocker_details": null,
+     "next_milestone": null,
+     "expected_milestone_date": null,
+     "evidence": null
+    }
+   },
+   "budget": [
+    {
+     "year": "Year 1",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 2",
+     "amount": 200000,
+     "note": null
+    },
+    {
+     "year": "Year 3",
+     "amount": 300000,
+     "note": null
+    },
+    {
+     "year": "Year 4",
+     "amount": null,
+     "note": null
+    },
+    {
+     "year": "Year 5",
+     "amount": null,
+     "note": null
+    }
+   ]
+  }
+ ]
+}
