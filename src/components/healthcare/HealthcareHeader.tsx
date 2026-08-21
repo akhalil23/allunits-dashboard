@@ -71,6 +71,8 @@ export default function HealthcareHeader({ title, subtitle, assistantScope }: { 
         </Tooltip>
       </div>
       <DashboardGuideDrawer open={guideOpen} onOpenChange={setGuideOpen} />
+      <HealthcareAssistant open={assistantOpen} onOpenChange={setAssistantOpen} scope={assistantScope} />
     </header>
   );
 }
+
