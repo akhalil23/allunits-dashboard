@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { Stethoscope, BookOpen, Moon, Sun } from 'lucide-react';
+import { Stethoscope, BookOpen, Moon, Sun, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTheme } from '@/hooks/use-theme';
 import DashboardGuideDrawer from './DashboardGuideDrawer';
+import HealthcareAssistant from './HealthcareAssistant';
+import type { HCAssistantScope } from '@/lib/healthcare/assistant-context';
 
-export default function HealthcareHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export default function HealthcareHeader({ title, subtitle, assistantScope }: { title: string; subtitle?: string; assistantScope?: HCAssistantScope }) {
   const [guideOpen, setGuideOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   return (
     <header className="border-b border-border bg-card/40 backdrop-blur px-6 py-4 flex items-center justify-between shrink-0">
@@ -23,17 +26,26 @@ export default function HealthcareHeader({ title, subtitle }: { title: string; s
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <Button
+          size="sm"
+          onClick={() => setAssistantOpen(true)}
+          className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">SP Assistant</span>
+        </Button>
+        <Button
           variant="outline"
           size="sm"
           onClick={() => setGuideOpen(true)}
           className="h-8 text-xs gap-1.5 border-emerald-500/30 text-emerald-200 hover:text-emerald-100 hover:bg-emerald-500/10"
         >
           <BookOpen className="w-3.5 h-3.5" />
-          Dashboard Guide
+          <span className="hidden sm:inline">Dashboard Guide</span>
         </Button>
-        <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/5 hidden sm:inline-flex">
+        <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 bg-emerald-500/5 hidden lg:inline-flex">
           Goal 3 · Real Data
         </Badge>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <motion.button
