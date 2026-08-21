@@ -29,7 +29,12 @@ function HealthcareBody() {
     <div className="flex h-screen bg-background" style={{ overflow: 'clip' }}>
       <HealthcareSidebar activeTab={tab} onTabChange={setTab} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0">
-        <HealthcareHeader title={TITLES[tab].title} subtitle={TITLES[tab].subtitle} />
+        <HealthcareHeader
+          title={TITLES[tab].title}
+          subtitle={TITLES[tab].subtitle}
+          assistantScope={{ tab: TITLES[tab].title, goalCode: tab === 'explorer' ? explorerGoal ?? null : null }}
+        />
+
         <main className="flex-1 overflow-y-auto p-5 sm:p-6">
           {isLoading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
