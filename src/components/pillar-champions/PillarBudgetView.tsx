@@ -14,17 +14,31 @@ import { PILLAR_COLORS } from '@/lib/pillar-colors';
 import { PILLAR_SHORT, PILLAR_ABBREV } from '@/lib/pillar-labels';
 import { getLivePillarBudget, formatCurrency, formatCurrencyFull, computeBudgetHealth, computeSpendingHealth } from '@/lib/budget-data';
 import { InfoTip } from '@/components/ui/info-tip';
-import type { PillarId } from '@/lib/types';
+import { buildStepCompletionLookup, lookupStepAverageCompletion } from '@/lib/pillar-champions/action-explorer-model';
+import type { UnitFetchResult } from '@/lib/university-aggregation';
+import type { PillarId, ViewType, Term, AcademicYear } from '@/lib/types';
 import type { BudgetDataResult, ActionStepBudget } from '@/hooks/use-budget-data';
 
 interface Props {
   budgetResult: BudgetDataResult | undefined;
   selectedPillar: 'all' | PillarId;
+  unitResults: UnitFetchResult[];
+  viewType: ViewType;
+  term: Term;
+  academicYear: AcademicYear;
+  selectedUnits: string[];
 }
 
 const PILLAR_IDS: PillarId[] = ['I', 'II', 'III', 'IV', 'V'];
 
-export default function PillarBudgetView({ budgetResult, selectedPillar }: Props) {
+export default function PillarBudgetView({ budgetResult, selectedPillar, unitResults, viewType, term, academicYear, selectedUnits }: Props) {
+  // Average Completion % per action step — reuses the exact Action Explorer model
+  // (same source, filters, reporting period and N/A handling). No separate math.
+  const completionLookup = useMemo(
+    () => buildStepCompletionLookup({ unitResults, viewType, term, academicYear, selectedPillar, selectedUnits }),
+    [unitResults, viewType, term, academicYear, selectedPillar, selectedUnits],
+  );
+
   const pillarBudgets = useMemo(() => {
     const pillars = selectedPillar === 'all' ? PILLAR_IDS : [selectedPillar];
     return pillars.map(p => {
@@ -161,13 +175,14 @@ export default function PillarBudgetView({ budgetResult, selectedPillar }: Props
       <ActionStepBudgetTable
         actionSteps={actionStepBudgets}
         selectedPillar={selectedPillar}
+        completionLookup={completionLookup}
       />
     </div>
   );
 }
 
 /** Action Step Budget Table — grouped by Goal → Objective → Action Step */
-function ActionStepBudgetTable({ actionSteps, selectedPillar }: { actionSteps: ActionStepBudget[]; selectedPillar: 'all' | PillarId }) {
+function ActionStepBudgetTable({ actionSteps, selectedPillar, completionLookup }: { actionSteps: ActionStepBudget[]; selectedPillar: 'all' | PillarId; completionLookup: Map<string, number | null> }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
 
@@ -223,7 +238,7 @@ function ActionStepBudgetTable({ actionSteps, selectedPillar }: { actionSteps: A
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Action Step Budget Breakdown</h4>
-          <InfoTip text="Budget allocation, spending, and commitment for each action step from the Finance spreadsheet." />
+          <InfoTip text="Budget allocation, spending, and commitment for each action step from the Finance spreadsheet. Avg Completion % is the same value shown in Action Explorer (average across reporting units for the active filters; N/A when no unit reports a valid completion)." />
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">{totalSteps} action steps • {goalGroups.length} goals</span>
@@ -273,6 +288,7 @@ function ActionStepBudgetTable({ actionSteps, selectedPillar }: { actionSteps: A
                     <thead>
                       <tr className="bg-muted/20">
                         <th className="text-left px-3 py-2 font-semibold text-muted-foreground min-w-[200px]">Action Step</th>
+                        <th className="text-right px-3 py-2 font-semibold text-muted-foreground whitespace-nowrap">Avg Completion %</th>
                         <th className="text-right px-3 py-2 font-semibold text-muted-foreground whitespace-nowrap">Yr 4</th>
                         <th className="text-right px-3 py-2 font-semibold text-muted-foreground whitespace-nowrap">Yr 5</th>
                         <th className="text-right px-3 py-2 font-semibold text-muted-foreground">Allocated</th>
@@ -285,6 +301,7 @@ function ActionStepBudgetTable({ actionSteps, selectedPillar }: { actionSteps: A
                     <tbody>
                       {g.items.map((item, idx) => {
                         const cr = item.allocation > 0 ? (item.committed / item.allocation) * 100 : 0;
+                        const avgCompletion = lookupStepAverageCompletion(completionLookup, item.pillar, item.goal, item.actionStep);
                         const crHealth = computeBudgetHealth(item.available, item.allocation);
                         return (
                           <tr key={idx} className="border-t border-border/20 hover:bg-muted/10">
@@ -295,6 +312,11 @@ function ActionStepBudgetTable({ actionSteps, selectedPillar }: { actionSteps: A
                                   <p className="text-[9px] text-muted-foreground truncate" title={item.objective}>{item.objective}</p>
                                 )}
                               </div>
+                            </td>
+                            <td className="px-3 py-2 text-right whitespace-nowrap">
+                              {avgCompletion === null
+                                ? <span className="text-muted-foreground">N/A</span>
+                                : <span className="font-semibold text-foreground">{avgCompletion}%</span>}
                             </td>
                             <td className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">{item.year4 > 0 ? formatCurrency(item.year4) : '—'}</td>
                             <td className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">{item.year5 > 0 ? formatCurrency(item.year5) : '—'}</td>
@@ -313,6 +335,7 @@ function ActionStepBudgetTable({ actionSteps, selectedPillar }: { actionSteps: A
                       {/* Goal subtotal row */}
                       <tr className="border-t-2 border-border/60 bg-muted/30 font-semibold">
                         <td className="px-3 py-2 text-foreground">Subtotal</td>
+                        <td className="px-3 py-2 text-right text-muted-foreground">—</td>
                         <td className="px-3 py-2 text-right text-foreground">{formatCurrency(g.items.reduce((s, i) => s + i.year4, 0))}</td>
                         <td className="px-3 py-2 text-right text-foreground">{formatCurrency(g.items.reduce((s, i) => s + i.year5, 0))}</td>
                         <td className="px-3 py-2 text-right text-foreground">{formatCurrency(g.totalAllocation)}</td>
