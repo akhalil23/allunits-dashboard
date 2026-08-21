@@ -311,8 +311,14 @@ export default function PillarChampionsDashboard() {
               <PillarBudgetView
                 budgetResult={budgetResult}
                 selectedPillar={selectedPillar}
+                unitResults={unitResults}
+                viewType={viewType}
+                term={term}
+                academicYear={academicYear}
+                selectedUnits={selectedUnits}
               />
             )}
+
 
             {activeTab === 'risk' && (
               <PillarRiskSignals
