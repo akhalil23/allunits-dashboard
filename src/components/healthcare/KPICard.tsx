@@ -22,13 +22,13 @@ export default function KPICard({ label, value, subtitle, color, tooltip, derive
       transition={{ duration: 0.25, delay: index * 0.03 }}
     >
       <Card className="border-border/60 bg-card/70 h-full">
-        <CardContent className="p-4">
+        <CardContent className="p-3 sm:p-4">
           <div className="flex items-start justify-between gap-2">
-            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground leading-tight">{label}</span>
             {tooltip && <InfoTip text={tooltip} />}
           </div>
           <div
-            className={`mt-2 font-semibold tabular-nums ${missing ? 'text-base text-muted-foreground italic' : 'text-2xl'}`}
+            className={`mt-1.5 sm:mt-2 font-semibold tabular-nums break-words ${missing ? 'text-sm sm:text-base text-muted-foreground italic' : 'text-lg sm:text-2xl'}`}
             style={missing ? undefined : { color }}
           >
             {value}

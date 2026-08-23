@@ -85,19 +85,32 @@ function StepRow({
 
   return (
     <div className="rounded-md border border-border/60">
-      <button onClick={onToggle} className="w-full flex items-center gap-3 p-3 text-left">
-        {expanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
-        <span className="text-xs text-muted-foreground shrink-0">{step.code}</span>
-        <span className="text-sm flex-1 min-w-0 truncate">{step.title}</span>
-        <Badge variant="outline" className="text-[10px] shrink-0">{status ?? 'Status not reported'}</Badge>
-        <span className="text-xs tabular-nums w-28 text-right shrink-0">
-          {p.value === null ? <span className="italic text-muted-foreground">Progress N/R</span> : `${p.value}%`}
-        </span>
-        {signals.length > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-300 shrink-0">At Risk</Badge>}
+      <button onClick={onToggle} className="w-full flex items-start gap-2 sm:gap-3 p-3 text-left">
+        {expanded ? <ChevronDown className="h-4 w-4 shrink-0 mt-0.5" /> : <ChevronRight className="h-4 w-4 shrink-0 mt-0.5" />}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xs text-muted-foreground shrink-0">{step.code}</span>
+            <span className="text-sm min-w-0 break-words">{step.title}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5 sm:hidden">
+            <Badge variant="outline" className="text-[10px]">{status ?? 'Status not reported'}</Badge>
+            <Badge variant="outline" className="text-[10px]">
+              {p.value === null ? 'Progress N/R' : `${p.value}%`}
+            </Badge>
+            {signals.length > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-300">At Risk</Badge>}
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
+          <Badge variant="outline" className="text-[10px]">{status ?? 'Status not reported'}</Badge>
+          <span className="text-xs tabular-nums w-28 text-right">
+            {p.value === null ? <span className="italic text-muted-foreground">Progress N/R</span> : `${p.value}%`}
+          </span>
+          {signals.length > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-300">At Risk</Badge>}
+        </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-border/60 p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+        <div className="border-t border-border/60 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
           <div className="space-y-1.5">
             <Field label="Intent" value={textOr(step.intent)} />
             <Field label="Owner" value={textOr(step.owner)} />
