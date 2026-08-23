@@ -16,12 +16,12 @@ export default function QuarterlyExecution() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible -mx-3 px-3 sm:mx-0 sm:px-0 pb-1">
         {periods.map(p => (
           <button
             key={p.code}
             onClick={() => setPeriod(p.code)}
-            className={`px-3 py-1.5 rounded-md border text-xs ${active === p.code ? 'border-primary text-primary bg-primary/10' : 'border-border/60 text-muted-foreground'}`}
+            className={`px-3 py-1.5 rounded-md border text-xs whitespace-nowrap shrink-0 ${active === p.code ? 'border-primary text-primary bg-primary/10' : 'border-border/60 text-muted-foreground'}`}
           >
             {p.label}{p.isCurrent ? ' · current' : ''}
           </button>
@@ -43,12 +43,12 @@ export default function QuarterlyExecution() {
             const reported = !!u && (u.status !== null || u.executionProgressPct !== null || !!u.comments);
             return (
               <div key={step.id} className="rounded-md border border-border/60 p-3">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
                   <div className="min-w-0">
                     <div className="text-[11px] text-muted-foreground">{action.code} · {step.code}</div>
-                    <div className="text-sm">{step.title}</div>
+                    <div className="text-sm break-words">{step.title}</div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 sm:shrink-0">
                     <Badge variant="outline" className="text-[10px]">{u?.status ?? 'Status not reported'}</Badge>
                     <Badge variant="outline" className="text-[10px]">
                       {u?.executionProgressPct !== null && u?.executionProgressPct !== undefined ? `${u.executionProgressPct}%` : 'Progress not reported'}
@@ -72,9 +72,9 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   const missing = value === 'Not reported';
   return (
     <Card className="border-border/60 bg-card/70">
-      <CardContent className="p-4">
-        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className={`mt-1 tabular-nums ${missing ? 'italic text-muted-foreground text-base' : 'text-xl font-semibold'}`}>{value}</div>
+      <CardContent className="p-3 sm:p-4">
+        <div className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground leading-tight">{label}</div>
+        <div className={`mt-1 tabular-nums break-words ${missing ? 'italic text-muted-foreground text-sm sm:text-base' : 'text-lg sm:text-xl font-semibold'}`}>{value}</div>
         {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
       </CardContent>
     </Card>

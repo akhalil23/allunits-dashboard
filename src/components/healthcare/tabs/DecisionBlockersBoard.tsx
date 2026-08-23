@@ -38,12 +38,12 @@ export default function DecisionBlockersBoard() {
             const { status } = latestStatus(step);
             return (
               <div key={step.id} className="rounded-md border border-border/60 p-3">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
                   <div className="min-w-0">
                     <div className="text-[11px] text-muted-foreground">{action.code} · {step.code}</div>
-                    <div className="text-sm">{step.title}</div>
+                    <div className="text-sm break-words">{step.title}</div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 sm:shrink-0">
                     <Badge variant="outline" className="text-[10px]">{status ?? 'Status not reported'}</Badge>
                     <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-300">At Risk</Badge>
                   </div>
@@ -73,9 +73,9 @@ export default function DecisionBlockersBoard() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <Card className="border-border/60 bg-card/70">
-      <CardContent className="p-4">
-        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className="mt-1 text-xl font-semibold tabular-nums">{value}</div>
+      <CardContent className="p-3 sm:p-4">
+        <div className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground leading-tight">{label}</div>
+        <div className="mt-1 text-lg sm:text-xl font-semibold tabular-nums break-words">{value}</div>
       </CardContent>
     </Card>
   );

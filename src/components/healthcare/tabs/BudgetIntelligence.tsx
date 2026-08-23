@@ -36,7 +36,7 @@ export default function BudgetIntelligence() {
 
       <Card className="border-border/60 bg-card/70">
         <CardHeader className="pb-2"><CardTitle className="text-sm">Planned Budget Phasing (Years 1–5)</CardTitle></CardHeader>
-        <CardContent className="h-[260px]">
+        <CardContent className="h-[220px] sm:h-[260px] px-2 sm:px-6">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={years}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -60,12 +60,12 @@ export default function BudgetIntelligence() {
               const goal = goals.find(g => g.actions.some(x => x.code === a.code));
               const gp = goal ? goalProgressAgg(goal) : null;
               return (
-                <div key={a.code} className="flex items-center justify-between gap-3 rounded-md border border-border/60 p-3">
+                <div key={a.code} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-md border border-border/60 p-3">
                   <div className="min-w-0">
                     <div className="text-[11px] text-muted-foreground">Action {a.code}</div>
-                    <div className="text-sm truncate">{a.title}</div>
+                    <div className="text-sm break-words sm:truncate">{a.title}</div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 sm:shrink-0">
                     <Badge variant="outline" className="text-[10px]">{fmtCurrency(a.total)}</Badge>
                     <Badge variant="outline" className="text-[10px]">
                       {gp?.value === null || gp === null ? 'Progress not reported' : `Goal ${gp.value}%`}
@@ -107,9 +107,9 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   const missing = value === 'Not reported';
   return (
     <Card className="border-border/60 bg-card/70">
-      <CardContent className="p-4">
-        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className={`mt-1 tabular-nums ${missing ? 'italic text-muted-foreground text-base' : 'text-xl font-semibold'}`}>{value}</div>
+      <CardContent className="p-3 sm:p-4">
+        <div className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground leading-tight">{label}</div>
+        <div className={`mt-1 tabular-nums break-words ${missing ? 'italic text-muted-foreground text-sm sm:text-base' : 'text-lg sm:text-xl font-semibold'}`}>{value}</div>
         {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
       </CardContent>
     </Card>

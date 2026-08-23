@@ -40,9 +40,9 @@ export default function GoalExplorer({ initialGoal }: { initialGoal?: number }) 
         return (
           <Card key={a.id} className="border-border/60 bg-card/70">
             <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-3">
-                <CardTitle className="text-sm leading-snug">Action {a.code} — {a.title}</CardTitle>
-                <div className="flex gap-2 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
+                <CardTitle className="text-sm leading-snug break-words">Action {a.code} — {a.title}</CardTitle>
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
                   <Badge variant="outline" className="text-[10px]">{ap.value === null ? 'Progress not reported' : `${ap.value}%`}</Badge>
                   <Badge variant="outline" className="text-[10px]">{fmtCurrency(ab.total)}</Badge>
                 </div>
@@ -85,19 +85,32 @@ function StepRow({
 
   return (
     <div className="rounded-md border border-border/60">
-      <button onClick={onToggle} className="w-full flex items-center gap-3 p-3 text-left">
-        {expanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
-        <span className="text-xs text-muted-foreground shrink-0">{step.code}</span>
-        <span className="text-sm flex-1 min-w-0 truncate">{step.title}</span>
-        <Badge variant="outline" className="text-[10px] shrink-0">{status ?? 'Status not reported'}</Badge>
-        <span className="text-xs tabular-nums w-28 text-right shrink-0">
-          {p.value === null ? <span className="italic text-muted-foreground">Progress N/R</span> : `${p.value}%`}
-        </span>
-        {signals.length > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-300 shrink-0">At Risk</Badge>}
+      <button onClick={onToggle} className="w-full flex items-start gap-2 sm:gap-3 p-3 text-left">
+        {expanded ? <ChevronDown className="h-4 w-4 shrink-0 mt-0.5" /> : <ChevronRight className="h-4 w-4 shrink-0 mt-0.5" />}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xs text-muted-foreground shrink-0">{step.code}</span>
+            <span className="text-sm min-w-0 break-words">{step.title}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5 sm:hidden">
+            <Badge variant="outline" className="text-[10px]">{status ?? 'Status not reported'}</Badge>
+            <Badge variant="outline" className="text-[10px]">
+              {p.value === null ? 'Progress N/R' : `${p.value}%`}
+            </Badge>
+            {signals.length > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-300">At Risk</Badge>}
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 shrink-0">
+          <Badge variant="outline" className="text-[10px]">{status ?? 'Status not reported'}</Badge>
+          <span className="text-xs tabular-nums w-28 text-right">
+            {p.value === null ? <span className="italic text-muted-foreground">Progress N/R</span> : `${p.value}%`}
+          </span>
+          {signals.length > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/50 text-amber-300">At Risk</Badge>}
+        </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-border/60 p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+        <div className="border-t border-border/60 p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
           <div className="space-y-1.5">
             <Field label="Intent" value={textOr(step.intent)} />
             <Field label="Owner" value={textOr(step.owner)} />
@@ -149,7 +162,7 @@ function StepRow({
               <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Quarterly reporting</div>
               <div className="space-y-2">
                 {step.updates.map(u => (
-                  <div key={u.period} className="grid grid-cols-[90px_1fr] gap-3">
+                  <div key={u.period} className="grid grid-cols-1 sm:grid-cols-[90px_1fr] gap-1 sm:gap-3">
                     <span className="text-[11px] text-muted-foreground">{u.period}</span>
                     <div>
                       <div className="text-[11px]">
@@ -172,9 +185,9 @@ function StepRow({
 function Field({ label, value }: { label: string; value: string }) {
   const missing = value.startsWith('Not reported') || value.startsWith('Not defined') || value.startsWith('Not Yet Measurable') || value.startsWith('Disabled');
   return (
-    <div className="grid grid-cols-[150px_1fr] gap-2">
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className={`text-[12px] whitespace-pre-line ${missing ? 'italic text-muted-foreground' : ''}`}>{value}</span>
+    <div className="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-0.5 sm:gap-2">
+      <span className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className={`text-[12px] whitespace-pre-line break-words ${missing ? 'italic text-muted-foreground' : ''}`}>{value}</span>
     </div>
   );
 }

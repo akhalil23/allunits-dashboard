@@ -55,7 +55,7 @@ export default function ExecutiveSnapshot({ onJumpTo }: { onJumpTo?: (t: HCTab) 
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       <Card className="border-amber-500/40 bg-amber-500/5">
         <CardContent className="p-4 flex items-start gap-3">
           <Info className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
@@ -123,12 +123,12 @@ export default function ExecutiveSnapshot({ onJumpTo }: { onJumpTo?: (t: HCTab) 
         />
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         <Card className="border-border/60 bg-card/70">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Reported Status Distribution</CardTitle>
           </CardHeader>
-          <CardContent className="h-[260px]">
+          <CardContent className="h-[220px] sm:h-[260px] px-2 sm:px-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={donut} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
@@ -156,25 +156,25 @@ export default function ExecutiveSnapshot({ onJumpTo }: { onJumpTo?: (t: HCTab) 
               ['Blocker?', fields.blocker],
               ['Next Milestone', fields.milestone],
             ].map(([label, count]) => (
-              <div key={label as string} className="flex items-center gap-3">
-                <span className="w-52 shrink-0 text-xs text-muted-foreground">{label}</span>
+              <div key={label as string} className="flex items-center gap-2 sm:gap-3">
+                <span className="w-28 sm:w-52 shrink-0 text-[10px] sm:text-xs text-muted-foreground leading-tight">{label}</span>
                 <div className="flex-1 h-2 rounded bg-muted/40 overflow-hidden">
                   <div
                     className="h-full rounded bg-primary"
                     style={{ width: `${fields.total ? ((count as number) / fields.total) * 100 : 0}%` }}
                   />
                 </div>
-                <span className="w-16 text-right text-xs tabular-nums">{count as number}/{fields.total}</span>
+                <span className="w-12 sm:w-16 text-right text-[10px] sm:text-xs tabular-nums">{count as number}/{fields.total}</span>
               </div>
             ))}
           </CardContent>
         </Card>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         <Card className="border-border/60 bg-card/70">
           <CardHeader className="pb-2"><CardTitle className="text-sm">Progress by Goal</CardTitle></CardHeader>
-          <CardContent className="h-[240px]">
+          <CardContent className="h-[210px] sm:h-[240px] px-2 sm:px-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={goalBars}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -192,7 +192,7 @@ export default function ExecutiveSnapshot({ onJumpTo }: { onJumpTo?: (t: HCTab) 
 
         <Card className="border-border/60 bg-card/70">
           <CardHeader className="pb-2"><CardTitle className="text-sm">Planned Budget by Year</CardTitle></CardHeader>
-          <CardContent className="h-[240px]">
+          <CardContent className="h-[210px] sm:h-[240px] px-2 sm:px-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={years}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -209,9 +209,9 @@ export default function ExecutiveSnapshot({ onJumpTo }: { onJumpTo?: (t: HCTab) 
         </Card>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         <Card className="border-border/60 bg-card/70 lg:col-span-2">
-          <CardHeader className="pb-2 flex-row items-center justify-between">
+          <CardHeader className="pb-2 flex-row items-center justify-between gap-2">
             <CardTitle className="text-sm flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-amber-400" /> At-Risk Steps & Reasons</CardTitle>
             {onJumpTo && (
               <button className="text-xs text-primary flex items-center gap-1" onClick={() => onJumpTo('blockers')}>
@@ -226,7 +226,7 @@ export default function ExecutiveSnapshot({ onJumpTo }: { onJumpTo?: (t: HCTab) 
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-xs text-muted-foreground">{action.code} · {step.code}</div>
-                    <div className="text-sm truncate">{step.title}</div>
+                    <div className="text-sm break-words">{step.title}</div>
                   </div>
                   <Badge variant="outline" className="text-[10px] shrink-0">At Risk</Badge>
                 </div>

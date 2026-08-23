@@ -26,9 +26,9 @@ export default function StrategicGoalsOverview({ onOpenGoal }: { onOpenGoal?: (c
           return (
             <Card key={g.id} className="border-border/60 bg-card/70">
               <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-3">
-                  <CardTitle className="text-sm leading-snug">Goal {g.code} — {g.title}</CardTitle>
-                  <Badge variant="outline" className="text-[10px] shrink-0">{g.champion ?? 'Champion not reported'}</Badge>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
+                  <CardTitle className="text-sm leading-snug break-words">Goal {g.code} — {g.title}</CardTitle>
+                  <Badge variant="outline" className="text-[10px] w-fit sm:shrink-0">{g.champion ?? 'Champion not reported'}</Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">

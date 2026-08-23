@@ -35,7 +35,7 @@ function HealthcareBody() {
           assistantScope={{ tab: TITLES[tab].title, goalCode: tab === 'explorer' ? explorerGoal ?? null : null }}
         />
 
-        <main className="flex-1 overflow-y-auto p-5 sm:p-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-6">
           {isLoading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading Healthcare data…
