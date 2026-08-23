@@ -40,9 +40,9 @@ export default function GoalExplorer({ initialGoal }: { initialGoal?: number }) 
         return (
           <Card key={a.id} className="border-border/60 bg-card/70">
             <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-3">
-                <CardTitle className="text-sm leading-snug">Action {a.code} — {a.title}</CardTitle>
-                <div className="flex gap-2 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
+                <CardTitle className="text-sm leading-snug break-words">Action {a.code} — {a.title}</CardTitle>
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
                   <Badge variant="outline" className="text-[10px]">{ap.value === null ? 'Progress not reported' : `${ap.value}%`}</Badge>
                   <Badge variant="outline" className="text-[10px]">{fmtCurrency(ab.total)}</Badge>
                 </div>
@@ -162,7 +162,7 @@ function StepRow({
               <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Quarterly reporting</div>
               <div className="space-y-2">
                 {step.updates.map(u => (
-                  <div key={u.period} className="grid grid-cols-[90px_1fr] gap-3">
+                  <div key={u.period} className="grid grid-cols-1 sm:grid-cols-[90px_1fr] gap-1 sm:gap-3">
                     <span className="text-[11px] text-muted-foreground">{u.period}</span>
                     <div>
                       <div className="text-[11px]">
@@ -185,9 +185,9 @@ function StepRow({
 function Field({ label, value }: { label: string; value: string }) {
   const missing = value.startsWith('Not reported') || value.startsWith('Not defined') || value.startsWith('Not Yet Measurable') || value.startsWith('Disabled');
   return (
-    <div className="grid grid-cols-[150px_1fr] gap-2">
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className={`text-[12px] whitespace-pre-line ${missing ? 'italic text-muted-foreground' : ''}`}>{value}</span>
+    <div className="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-0.5 sm:gap-2">
+      <span className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className={`text-[12px] whitespace-pre-line break-words ${missing ? 'italic text-muted-foreground' : ''}`}>{value}</span>
     </div>
   );
 }
