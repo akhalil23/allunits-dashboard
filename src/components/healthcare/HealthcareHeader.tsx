@@ -14,17 +14,17 @@ export default function HealthcareHeader({ title, subtitle, assistantScope }: { 
   const [assistantOpen, setAssistantOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   return (
-    <header className="border-b border-border bg-card/40 backdrop-blur px-6 py-4 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+    <header className="border-b border-border bg-card/40 backdrop-blur pl-14 pr-3 py-3 md:px-6 md:py-4 flex items-center justify-between gap-2 shrink-0">
+      <div className="flex items-center gap-2 md:gap-3 min-w-0">
+        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 hidden sm:flex items-center justify-center shrink-0">
           <Stethoscope className="w-4 h-4 text-emerald-300" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-base sm:text-lg font-display font-semibold text-foreground truncate">{title}</h2>
-          {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
+          <h2 className="text-sm sm:text-lg font-display font-semibold text-foreground truncate">{title}</h2>
+          {subtitle && <p className="text-[11px] sm:text-xs text-muted-foreground truncate hidden sm:block">{subtitle}</p>}
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <Button
           size="sm"
           onClick={() => setAssistantOpen(true)}
