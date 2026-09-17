@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSnapshotFreshness, formatFreshnessTimestamp } from '@/hooks/use-snapshot-freshness';
 import { supabase } from '@/integrations/supabase/client';
 import { getValidAccessToken } from '@/lib/auth-session';
+import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 
 interface FreshnessBannerProps {
@@ -22,6 +23,8 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
   const { data, refetch } = useSnapshotFreshness();
   const qc = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const { data: userRole } = useUserRole();
+  const isAdmin = userRole?.role === 'admin';
   const pub = data?.publication;
   const state = data?.state;
 
@@ -93,7 +96,7 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
       ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-200'
       : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-200';
 
-  const RefreshButton = (
+  const RefreshButton = !isAdmin ? null : (
     <button
       type="button"
       onClick={handleManualRefresh}
