@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSnapshotFreshness, formatFreshnessTimestamp } from '@/hooks/use-snapshot-freshness';
 import { supabase } from '@/integrations/supabase/client';
 import { getValidAccessToken } from '@/lib/auth-session';
+import { useUserRole } from '@/hooks/use-user-role';
 import { toast } from 'sonner';
 
 interface FreshnessBannerProps {
