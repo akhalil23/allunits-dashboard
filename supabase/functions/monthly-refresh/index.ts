@@ -77,8 +77,12 @@ serve(async (req) => {
   // & internal callInternal) OR an authenticated admin user.
   const authHeader = req.headers.get('Authorization') ?? '';
   const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  const CRON_TOKEN = Deno.env.get('MONTHLY_REFRESH_TOKEN') ?? '';
+  const internalHeader = req.headers.get('x-internal-service') ?? '';
   let authorized = false;
   if (bearer && bearer === SERVICE_KEY) {
+    authorized = true;
+  } else if (CRON_TOKEN && (internalHeader === CRON_TOKEN || bearer === CRON_TOKEN)) {
     authorized = true;
   } else if (bearer) {
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
