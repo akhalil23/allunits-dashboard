@@ -5,13 +5,13 @@
  * publication metadata.
  *
  * MODE TOGGLE (env var SNAPSHOT_MODE):
- *   - 'live'    (default) → bypasses the monthly snapshot tables and fetches
- *                          straight from the source spreadsheets (via the
- *                          fetch-gsr-data / fetch-budget-data edge functions).
- *                          The monthly refresh pipeline remains intact in the
- *                          codebase so it can be re-enabled at any time.
- *   - 'monthly'           → reads the most recent published monthly snapshot
- *                          (original behavior).
+ *   - 'monthly' (default) → reads the most recent published monthly snapshot.
+ *                          Source spreadsheets are synchronized once at the
+ *                          beginning of each month by the monthly-refresh job;
+ *                          dashboards then use that snapshot all month long.
+ *   - 'live'              → temporary override that bypasses the snapshot
+ *                          tables and fetches straight from the source
+ *                          spreadsheets (kept for debugging only).
  *
  * Modes (POST body):
  *   { kind: 'unit', unitId }              → single unit payload
