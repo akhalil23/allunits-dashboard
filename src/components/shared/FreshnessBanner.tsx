@@ -23,6 +23,8 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
   const { data, refetch } = useSnapshotFreshness();
   const qc = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const { data: userRole } = useUserRole();
+  const isAdmin = userRole?.role === 'admin';
   const pub = data?.publication;
   const state = data?.state;
 
