@@ -77,14 +77,23 @@ serve(async (req) => {
   // & internal callInternal) OR an authenticated admin user.
   const authHeader = req.headers.get('Authorization') ?? '';
   const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  const CRON_TOKEN = Deno.env.get('MONTHLY_REFRESH_TOKEN') ?? '';
   const internalHeader = req.headers.get('x-internal-service') ?? '';
   let authorized = false;
   if (bearer && bearer === SERVICE_KEY) {
     authorized = true;
-  } else if (CRON_TOKEN && (internalHeader === CRON_TOKEN || bearer === CRON_TOKEN)) {
-    authorized = true;
-  } else if (bearer) {
+  } else if (internalHeader) {
+    // pg_cron sends the job token stored in public.internal_job_tokens.
+    const tokenClient = createClient(SUPABASE_URL, SERVICE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: tokenRow } = await tokenClient
+      .from('internal_job_tokens')
+      .select('token')
+      .eq('name', 'monthly-refresh')
+      .maybeSingle();
+    if (tokenRow?.token && tokenRow.token === internalHeader) authorized = true;
+  }
+  if (!authorized && bearer) {
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
