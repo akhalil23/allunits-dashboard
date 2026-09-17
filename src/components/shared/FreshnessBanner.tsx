@@ -96,7 +96,7 @@ export default function FreshnessBanner({ compact = false }: FreshnessBannerProp
       ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-200'
       : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-200';
 
-  const RefreshButton = (
+  const RefreshButton = !isAdmin ? null : (
     <button
       type="button"
       onClick={handleManualRefresh}
